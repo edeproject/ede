@@ -298,8 +298,8 @@ void do_cut_copy_fbrowser(bool m_copy) {
 
 	// Clear cut/copy buffer and optionally ungray the previously cutted icons
 	if (cut_copy_buffer) {
-		for (int i=0; cut_copy_buffer(i); i++)
-			free(cut_copy_buffer(i));
+		for (int i=0; cut_copy_buffer[i]; i++)
+			free(cut_copy_buffer[i]);
 		free(cut_copy_buffer);
 		if (!operation_is_copy) {
 			for (int i=0; i<num; i++)
@@ -320,14 +320,14 @@ void do_cut_copy_fbrowser(bool m_copy) {
 		}
 	}
 	cut_copy_buffer[buf] = 0;
-	operation_is_copy = copy;
+	operation_is_copy = m_copy;
 
 	// Deselect all
 	fbrowser->deselect();
 }
 
 // Execute cut or copy operation when Icon View is active
-void do_cut_copy_sgroup(bool copy) {
+void do_cut_copy_sgroup(bool m_copy) {
 	// Group doesn't support type(MULTI) so only one item can be selected
 	// Will be changed
 
@@ -335,8 +335,8 @@ void do_cut_copy_sgroup(bool copy) {
 
 	// Clear cut/copy buffer and optionally ungray the previously cutted icon
 	if (cut_copy_buffer) {
-		for (int i=0; cut_copy_buffer(i); i++)
-			free(cut_copy_buffer(i));
+		for (int i=0; cut_copy_buffer[i]; i++)
+			free(cut_copy_buffer[i]);
 		free(cut_copy_buffer);
 		if (!operation_is_copy) {
 			for (int i=0; i<num; i++)
@@ -352,7 +352,7 @@ void do_cut_copy_sgroup(bool copy) {
 	asprintf(&cut_copy_buffer[0], "%s%s", current_dir, sgroup->child(sgroup->focus_index())->label());
 	if (!m_copy) sgroup->child(sgroup->focus_index())->textcolor(GRAY50);
 	cut_copy_buffer[1]=0;
-	operation_is_copy=copy;
+	operation_is_copy=m_copy;
 }
 
 void cut_cb(Widget*, void*) {
