@@ -1,0 +1,147 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: etimedate 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:00+0100\n"
+"PO-Revision-Date: 2002-04-21 14:50+0200\n"
+"Last-Translator: Martin Pekar <cortex@nextra.sk>\n"
+"Language-Team: Slovak <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: etimedate.cpp:227
+msgid "Time and date"
+msgstr "Čas a dátum"
+
+#: etimedate.cpp:230
+msgid "&OK"
+msgstr "&OK"
+
+#: etimedate.cpp:233
+msgid "&Apply"
+msgstr "&Použiť"
+
+#: etimedate.cpp:235
+msgid "Set system time. ->Just root user!<-"
+msgstr "Nastaviť systémový čas. ->Iba root užívateľ!<-"
+
+#: etimedate.cpp:237
+msgid "&Cancel"
+msgstr "&Zrušiť"
+
+#: etimedate.cpp:243
+msgid "Time/date"
+msgstr "Čas/dátum"
+
+#: etimedate.cpp:261
+msgid "Timezones"
+msgstr "Časové zóny"
+
+#: fl_time.cpp:189
+msgid "Error setting time. You are probably not superuser!"
+msgstr ""
+"Nastala chyba pri nastavovaní času. Pravdepodobne nie ste superužívateľ!"
+
+#: fl_time.cpp:397 fl_time.cpp:405 fl_time.cpp:442
+msgid "Zone information not found."
+msgstr ""
+
+#: fl_time.cpp:414
+msgid "Cannot setup timezone!"
+msgstr "Nemôžem nastaviť časovú zónu!"
+
+#~ msgid "H-"
+#~ msgstr "H-"
+
+#~ msgid "H+"
+#~ msgstr "H+"
+
+#~ msgid "M-"
+#~ msgstr "M-"
+
+#~ msgid "M+"
+#~ msgstr "M+"
+
+#~ msgid "Su"
+#~ msgstr "Ne"
+
+#~ msgid "Mo"
+#~ msgstr "Po"
+
+#~ msgid "Tu"
+#~ msgstr "Ut"
+
+#~ msgid "We"
+#~ msgstr "St"
+
+#~ msgid "Th"
+#~ msgstr "Št"
+
+#~ msgid "Fr"
+#~ msgstr "Pi"
+
+#~ msgid "St"
+#~ msgstr "So"
+
+#~ msgid "Y-"
+#~ msgstr "R-"
+
+#~ msgid "Previous year."
+#~ msgstr "Predchádzajúci rok."
+
+# msgid "M-"
+# msgstr "M-"
+#~ msgid "Previous month."
+#~ msgstr "Predchádzajúci mesiac."
+
+# msgid "M+"
+# msgstr "M+"
+#~ msgid "Next month."
+#~ msgstr "Nasledujúci mesiac."
+
+#~ msgid "Y+"
+#~ msgstr "R+"
+
+#~ msgid "Next year."
+#~ msgstr "Nasledujúci rok."
+
+#~ msgid "January"
+#~ msgstr "Január"
+
+#~ msgid "Febuary"
+#~ msgstr "Február"
+
+#~ msgid "March"
+#~ msgstr "Marec"
+
+#~ msgid "April"
+#~ msgstr "Apríl"
+
+#~ msgid "May"
+#~ msgstr "Máj"
+
+#~ msgid "June"
+#~ msgstr "Jún"
+
+#~ msgid "July"
+#~ msgstr "Júl"
+
+#~ msgid "August"
+#~ msgstr "August"
+
+#~ msgid "September"
+#~ msgstr "September"
+
+#~ msgid "October"
+#~ msgstr "Október"
+
+#~ msgid "November"
+#~ msgstr "November"
+
+#~ msgid "December"
+#~ msgstr "December"

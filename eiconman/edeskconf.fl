@@ -1,0 +1,163 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.0100 
+images_dir ./ 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {/*
+ * $Id$
+ *
+ * Desktop icons manager
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */} {selected
+} 
+
+decl {/*
+ * $Id$
+ *
+ * Desktop icons manager
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */} {public
+} 
+
+decl {//\#include <efltk/Fl.h>} {} 
+
+decl {//\#include <efltk/fl_ask.h>} {} 
+
+decl {//\#include <efltk/Fl_Color_Chooser.h>} {} 
+
+decl {//\#include <efltk/Fl_Config.h>} {} 
+
+decl {//\#include <efltk/Fl_Image.h>} {} 
+
+decl {//\#include <efltk/Fl_File_Dialog.h>} {} 
+
+decl {\#include "eiconman.h"} {} 
+
+Function {make_desktop_properties()} {open return_type void
+} {
+  {fltk::Window} bg_prop_window {
+    label {Background settings}
+    callback bg_prop_cb open
+    xywh {402 211 560 270} resizable hotspot visible
+  } {
+    {fltk::Group} {} {
+      label Background open
+      xywh {10 20 265 209} align 5 box BORDER_FRAME color 0xe6e7e600 textcolor 0xaaadaa00
+    } {
+      {fltk::InvisibleBox} {} {
+        xywh {1 1 263 207} box BORDER_FRAME color 0xe6e7e600 textcolor 0xdcdedc00
+      }
+      {fltk::Group} {} {open
+        xywh {35 16 230 159}
+      } {
+        {fltk::InvisibleBox} {} {
+          xywh {65 129 60 7} box BORDER_BOX
+        }
+        {fltk::InvisibleBox} {} {
+          xywh {5 0 180 131} box THIN_UP_BOX
+        }
+        {fltk::InvisibleBox} {} {
+          xywh {47 134 94 12} box THIN_UP_BOX
+        }
+        {fltk::InvisibleBox} {} {
+          xywh {159 121 15 6} box THIN_UP_BOX
+        }
+        {fltk::InvisibleBox} {} {
+          xywh {152 121 2 5} box FLAT_BOX color 2
+        }
+        {fltk::InvisibleBox} {} {
+          xywh {15 9 160 110} box THIN_DOWN_BOX
+        }
+        {fltk::InvisibleBox} mini_image_box {
+          xywh {16 10 158 108} align 16 box FLAT_BOX buttonbox FLAT_BOX color 32 highlight_color 32
+        }
+      }
+      {fltk::LightButton} color_button {
+        label {C&olor...}
+        callback bg_image_color
+        xywh {169 175 85 25} type Normal box THIN_UP_BOX value 1
+      }
+    }
+    {fltk::CheckButton} use_button {
+      label {Use wallpaper}
+      callback bg_image_use
+      xywh {285 20 265 20} value 1
+    }
+    {fltk::Divider} {} {
+      label label
+      }
+    {fltk::Group} bg_image_group {open
+      xywh {285 50 265 175} align 5
+    } {
+      {fltk::Input} image_input {
+        label {Image:}
+        callback bg_image_input
+        xywh {20 15 240 23} align 5 when ENTER_KEY
+      }
+      {fltk::Button} browse_button {
+        label {&Browse...}
+        callback bg_image_browse
+        private xywh {180 48 80 23}
+      }
+      {fltk::ValueSlider} opacity_slider {
+        label {Opacity:}
+        callback bg_image_opacity
+        xywh {65 83 195 18} align 4 when RELEASE maximum 255 step 1.01 slider_size 10
+        extra_code {o->step(1);}
+      }
+      {fltk::Choice} mode_choice {
+        label {Mode:}
+        callback bg_image_mode open
+        xywh {65 112 195 23}
+      } {
+        {fltk::Item} {} {
+          label Center
+          user_data 0
+          }
+        {fltk::Item} {} {
+          label Stretch
+          user_data 1
+          }
+        {fltk::Item} {} {
+          label {Stretch (aspect)}
+          user_data 2
+          }
+        {fltk::Item} {} {
+          label Tiled
+          deactivate
+        }
+      }
+    }
+    {fltk::Divider} {} {
+      label label
+      }
+    {fltk::Button} {} {
+      label {&OK}
+      callback bg_ok
+      private xywh {290 240 80 25}
+    }
+    {fltk::Button} {} {
+      label {&Apply}
+      callback bg_apply
+      private xywh {380 240 80 25}
+    }
+    {fltk::Button} {} {
+      label {&Cancel}
+      callback {bg_prop_window->do_callback();}
+      private xywh {470 240 80 25}
+    }
+  }
+} 

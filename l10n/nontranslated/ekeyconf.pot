@@ -1,0 +1,55 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-04-03 13:14+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ekeyconf.cpp:47
+msgid "Keyboard settings"
+msgstr ""
+
+#: ekeyconf.cpp:50
+msgid "&OK"
+msgstr ""
+
+#: ekeyconf.cpp:53
+msgid "&Cancel"
+msgstr ""
+
+#: ekeyconf.cpp:56
+msgid "&Apply"
+msgstr ""
+
+#: ekeyconf.cpp:61
+msgid "Shortcuts"
+msgstr ""
+
+#: ekeyconf.cpp:63
+msgid "Keyboard shortcut:"
+msgstr ""
+
+#: ekeyconf.cpp:68
+msgid ""
+"To set a shortcut:\n"
+"   Click here, then type the key combination you want.\n"
+"To delete the shortcut:\n"
+"   Click here, then type backspace.\n"
+"To get out of shortcut-setting mode:\n"
+"   Click the mouse on this again, or on some other field."
+msgstr ""
+
+#: ekeyconf.cpp:72
+msgid "Action:"
+msgstr ""

@@ -1,0 +1,88 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-07-22 10:29+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: edewm/Desktop.cpp:138 edewm/Desktop.cpp:180
+#, c-format
+msgid "Workspace %d"
+msgstr ""
+
+#: edewm/Frame.cpp:106
+msgid "Untitled"
+msgstr ""
+
+#: edewm/Frame.cpp:932
+#, c-format
+msgid "EDEWM: Internal bug, when restacking (%d != %d)! Exiting... "
+msgstr ""
+
+#: edewm/Titlebar.cpp:215
+msgid "Sticky"
+msgstr ""
+
+#: edewm/Titlebar.cpp:275 edewm/Titlebar.cpp:320
+msgid "Set size"
+msgstr ""
+
+#: edewm/Titlebar.cpp:276
+msgid "Set size to window:"
+msgstr ""
+
+#: edewm/Titlebar.cpp:285
+msgid "width:"
+msgstr ""
+
+#: edewm/Titlebar.cpp:287
+msgid "height:"
+msgstr ""
+
+#: edewm/Titlebar.cpp:291
+msgid "&OK"
+msgstr ""
+
+#: edewm/Titlebar.cpp:294
+msgid "&Cancel"
+msgstr ""
+
+#: edewm/Titlebar.cpp:318 edewm/Titlebar.cpp:331
+msgid "Maximize"
+msgstr ""
+
+#: edewm/Titlebar.cpp:319
+msgid "Minimize"
+msgstr ""
+
+#: edewm/Titlebar.cpp:321
+msgid "To Desktop"
+msgstr ""
+
+#: edewm/Titlebar.cpp:322
+msgid "Kill"
+msgstr ""
+
+#: edewm/Titlebar.cpp:323
+msgid "Close"
+msgstr ""
+
+#: edewm/Titlebar.cpp:330
+msgid "Restore"
+msgstr ""
+
+#: edewm/Windowmanager.cpp:90
+#, c-format
+msgid "Another window manager is running.  You must exit it before running %s."
+msgstr ""

@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=X Multimedia System
+  Exec=xmms
+  Icon=xmms_classic.png
+  Name[sk]=X Multimedia System
+

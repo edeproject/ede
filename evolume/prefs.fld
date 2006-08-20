@@ -1,0 +1,132 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Volume control for EDE is (C) Copyright 2000-2002 by Martin Pekar, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include <malloc.h>} {} 
+
+decl {\#include <efltk/Fl_Item.h>} {selected
+} 
+
+decl {\#include <efltk/filename.h>} {} 
+
+decl {\#include <efltk/Fl_Locale.h>} {} 
+
+decl {\#include <efltk/Fl_Config.h>} {} 
+
+decl {extern char device[1024];} {} 
+
+decl {extern int mixer_device;} {} 
+
+Function {choice_items(char *path)} {return_type void
+} {
+  code {Fl_Item         *new_Item;
+    dirent          **files;
+    int             num_Files = 0;
+
+    num_Files = fl_filename_list(path, &files);
+
+    if (num_Files > 0) {
+
+        for (int i = 0; i < num_Files; i ++) {
+            if (strcmp(files[i]->d_name, ".") != 0 &&
+                strcmp(files[i]->d_name, "..") != 0) {
+
+                char filename[FL_PATH_MAX];
+                snprintf(filename, sizeof(filename)-1, "%s/%s", path, files[i]->d_name);
+
+                if (!fl_is_dir(filename) && fl_file_match(files[i]->d_name, "mixer*")) {
+                    new_Item = new Fl_Item();
+					new_Item->copy_label(filename);
+                }
+            }
+            free(files[i]);
+        }
+        free(files);
+    }} {}
+} 
+
+Function {PreferencesDialog(Fl_Widget *, void *)} {return_type void
+} {
+  Fl_Window preferenciesWindow {
+    label Preferencies open
+    xywh {249 86 265 289} hide
+  } {
+    Fl_Tabs {} {open
+      xywh {5 5 255 245}
+    } {
+      Fl_Group {} {
+        label {Sound device} open
+        private xywh {0 23 255 221} align 5
+      } {
+        Fl_Input_Browser deviceNameInput {
+          label {Device name:} open
+          xywh {90 27 155 23} align 132
+          extra_code {\#include <efltk/Fl_Input_Browser.h>
+ 
+o->value(device);
+choice_items("/dev");
+choice_items("/dev/sound");}
+          class Fl_Input_Browser
+        } {}
+      }
+    }
+    Fl_Button {} {
+      label {&OK}
+      callback {Fl_Config globalConfig("EDE Team", "evolume");
+globalConfig.set("Sound mixer", "Device", deviceNameInput->value());
+snprintf(device, sizeof(device)-1, "%s", (char*)deviceNameInput->value());
+
+mixer_device = open(device, O_RDWR);  
+update_info();
+
+preferenciesWindow->hide();}
+      private xywh {95 260 80 25}
+      extra_code {\#include <fcntl.h>
+ 
+extern void update_info();}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      callback {preferenciesWindow->hide();}
+      private xywh {180 260 80 25}
+    }
+  }
+  code {preferenciesWindow->end();
+preferenciesWindow->show();} {}
+} 
+
+Function {AboutDialog(Fl_Widget *, void *)} {return_type void
+} {
+  Fl_Window aboutWindow {
+    label {About Volume control} open
+    xywh {270 82 285 301} hide
+  } {
+    Fl_Button {} {
+      label {&Close}
+      callback {aboutWindow->hide();}
+      private xywh {110 270 80 25}
+    }
+    Fl_Box {} {
+      label {Volume control for Equinox Desktop Environment v. 1.0}
+      private xywh {5 5 275 45} align 145 label_size 18
+    }
+    Fl_Box {} {
+      label {This program is based in part on the work of FLTK project (www.fltk.org). This program is free software, you can redistribute it and/or modify it under the terms of GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public Licence along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA}
+      xywh {5 75 275 185} align 145 label_size 10
+      extra_code {;}
+    }
+    Fl_Box {} {
+      label {(C) Copyright 2000-2002 by Martin Pekar}
+      xywh {5 50 275 25}
+    }
+  }
+  code {aboutWindow->end();
+aboutWindow->show();} {}
+} 

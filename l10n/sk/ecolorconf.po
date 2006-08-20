@@ -1,0 +1,212 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ecolorconf 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:37+0100\n"
+"PO-Revision-Date: 2002-04-21 14:50+0200\n"
+"Last-Translator: Martin Pekar <cortex@nextra.sk>\n"
+"Language-Team: Slovak <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ecolorconf.cpp:131
+msgid "Colors and fonts settings"
+msgstr "Nastavenie farieb a písiem"
+
+#: ecolorconf.cpp:136
+msgid "Default colors"
+msgstr "Základné farby"
+
+#: ecolorconf.cpp:138
+msgid "Color"
+msgstr "Farba"
+
+#: ecolorconf.cpp:143
+msgid "Label color"
+msgstr "Farba menovky"
+
+#: ecolorconf.cpp:148
+msgid "Selection color"
+msgstr "Farby výberu"
+
+#: ecolorconf.cpp:153
+msgid "Selection text color"
+msgstr "Farba textu vo výbere"
+
+#: ecolorconf.cpp:158
+msgid "Off color"
+msgstr "Farba vypnutia"
+
+#: ecolorconf.cpp:163
+msgid "Highlight color"
+msgstr "Farba zvýraznenia"
+
+#: ecolorconf.cpp:168
+msgid "Highlight label color"
+msgstr "Farba textu vo zvýraznení"
+
+#: ecolorconf.cpp:173
+msgid "Text color"
+msgstr "Farba textu"
+
+#: ecolorconf.cpp:178
+msgid "Background"
+msgstr "Pozadie"
+
+#: ecolorconf.cpp:183
+msgid "Text background"
+msgstr "Farba pozadia textu"
+
+#: ecolorconf.cpp:190
+msgid "Tooltips"
+msgstr "Bublinky"
+
+#: ecolorconf.cpp:193
+msgid "Tooltip color"
+msgstr "Farba bublinky"
+
+#: ecolorconf.cpp:198
+msgid "Tooltip text color"
+msgstr "Farba textu v bublinke"
+
+#: ecolorconf.cpp:203 ecolorconf.cpp:252
+msgid "Enable effects"
+msgstr "Povoliť efekty"
+
+#: ecolorconf.cpp:204
+msgid "Enabled"
+msgstr "Povolené"
+
+#: ecolorconf.cpp:205 ecolorconf.cpp:254
+msgid "Effect type:"
+msgstr "Typ efektu:"
+
+#: ecolorconf.cpp:207 ecolorconf.cpp:256
+msgid "None"
+msgstr "Žiadny"
+
+#: ecolorconf.cpp:208 ecolorconf.cpp:257
+msgid "Animation"
+msgstr "Animácia"
+
+#: ecolorconf.cpp:209 ecolorconf.cpp:258
+msgid "Fading"
+msgstr "Blednutie"
+
+#: ecolorconf.cpp:212 ecolorconf.cpp:262
+msgid "Delay:"
+msgstr "Oneskorenie:"
+
+#: ecolorconf.cpp:215
+msgid "Fonts"
+msgstr "Písma"
+
+#: ecolorconf.cpp:218
+msgid "Label font:"
+msgstr "Písmo menovky:"
+
+#: ecolorconf.cpp:226
+msgid "Text font:"
+msgstr "Písmo textu:"
+
+#: ecolorconf.cpp:233
+msgid "Label size:"
+msgstr "Veľkosť menovky:"
+
+#: ecolorconf.cpp:236
+msgid "Text size:"
+msgstr "Veľkosť textu"
+
+#: ecolorconf.cpp:239
+msgid "Encoding:"
+msgstr "Kódovanie:"
+
+#: ecolorconf.cpp:241 ecolorconf.cpp:244
+msgid "..."
+msgstr ""
+
+#: ecolorconf.cpp:250
+msgid "Menus"
+msgstr "Ponuky"
+
+#: ecolorconf.cpp:253
+msgid "Enable subwindow effects"
+msgstr "Použiť efekty na podokná"
+
+#: ecolorconf.cpp:261
+msgid "Speed:"
+msgstr "Rýchlosť:"
+
+#: ecolorconf.cpp:265
+msgid "Others"
+msgstr "Ostatné"
+
+#: ecolorconf.cpp:267
+msgid "Enable MDI animation"
+msgstr "Povoliť MDI animáciu"
+
+#: ecolorconf.cpp:268
+msgid "MDI opaque animation"
+msgstr "Obrysová animácia MDI"
+
+#: ecolorconf.cpp:269
+msgid "Enable images state effect"
+msgstr "Použiť stavový efekt obrázkov"
+
+#: ecolorconf.cpp:276
+msgid "&Save as..."
+msgstr "&Uložiť ako..."
+
+#: ecolorconf.cpp:279
+msgid "Ap&ply colors to all programs"
+msgstr "Pou&žiť farby pre všetky programy"
+
+#: ecolorconf.cpp:283
+msgid "Schemes:"
+msgstr "Schémy:"
+
+#: ecolorconf.cpp:293 efontdialog.cpp:226
+msgid "&OK"
+msgstr "&OK"
+
+#: ecolorconf.cpp:296
+msgid "&Apply"
+msgstr "&Použiť"
+
+#: ecolorconf.cpp:299 efontdialog.cpp:229
+msgid "&Cancel"
+msgstr "&Zrušiť"
+
+#: ecolorconf.cpp:314
+msgid "Choose color"
+msgstr "Zvoľte farbu"
+
+#: ecolorutils.cpp:306
+msgid "Color and label color are the same. Edit colors first."
+msgstr ""
+
+#: ecolorutils.cpp:344
+msgid "Save scheme as:"
+msgstr "Uložiť schému ako:"
+
+#: ecolorutils.cpp:344
+msgid "New scheme"
+msgstr "Nová schéma"
+
+#: efontdialog.cpp:200
+msgid "Select font..."
+msgstr ""
+
+#~ msgid "Saves active scheme under new name."
+#~ msgstr "Uloží aktívnu schému pod novým menom."
+
+#~ msgid "Colors will be applied for all programs."
+#~ msgstr "Farby budú aplikované na všetky programy."
+
+#~ msgid "These schemes are available."
+#~ msgstr "Tieto schémy sú dostupné."

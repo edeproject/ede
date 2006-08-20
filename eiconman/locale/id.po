@@ -1,0 +1,258 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version:  eiconman 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:27+0100\n"
+"PO-Revision-Date: 202-11-29 14:43+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: edeskconf.cpp:38
+msgid "Background settings"
+msgstr "Seting latar belakang"
+
+#: edeskconf.cpp:42
+msgid "Background"
+msgstr "Latar belakang"
+
+#: edeskconf.cpp:79
+msgid "C&olor..."
+msgstr "&Warna..."
+
+#: edeskconf.cpp:87
+msgid "Use wallpaper"
+msgstr "Gunakan wallpaper"
+
+#: edeskconf.cpp:91 edeskconf.cpp:130
+msgid "label"
+msgstr ""
+
+#: edeskconf.cpp:94
+msgid "Image:"
+msgstr "Citra:"
+
+#: edeskconf.cpp:99
+msgid "&Browse..."
+msgstr "&Browse..."
+
+#: edeskconf.cpp:102
+msgid "Opacity:"
+msgstr "Opasitas:"
+
+#: edeskconf.cpp:112
+msgid "Mode:"
+msgstr "Mode:"
+
+#: edeskconf.cpp:114
+msgid "Center"
+msgstr "Tengah"
+
+#: edeskconf.cpp:117
+msgid "Stretch"
+msgstr "Stretch"
+
+#: edeskconf.cpp:120
+msgid "Stretch (aspect)"
+msgstr "Stretch (aspek)"
+
+#: edeskconf.cpp:123
+msgid "Tiled"
+msgstr "Tiled"
+
+#: edeskconf.cpp:131
+msgid "&OK"
+msgstr "&OK"
+
+#: edeskconf.cpp:134 propdialog.cpp:113
+msgid "&Apply"
+msgstr "&Terapkan"
+
+#: edeskconf.cpp:137
+msgid "&Cancel"
+msgstr "&Batal"
+
+#: edeskicon.cpp:86
+msgid "&Open"
+msgstr "&Buka"
+
+#: edeskicon.cpp:90
+msgid "&Delete"
+msgstr "&Hapus"
+
+#: edeskicon.cpp:96
+msgid "&Properties"
+msgstr "&Properti"
+
+#: edeskicon.cpp:442
+msgid "Name of the icon must be filled."
+msgstr "Nama ikon harus diisi."
+
+#: edeskicon.cpp:467
+msgid "Delete this icon?"
+msgstr "Hapus ikon ini?"
+
+#: edeskicon.cpp:473
+#, c-format
+msgid ""
+"Remove of the icon %s failed. You probably do not have write access to this "
+"file."
+msgstr ""
+"Penghapusan ikon %s gagal. Anda mungkin tidak mempunyai hak tulis terhadap "
+"file ini"
+
+#: edeskicon.cpp:482
+msgid "Enter the name of the new icon:"
+msgstr "Masukkan nama ikon baru:"
+
+#: edeskicon.cpp:505 eiconman.cpp:241
+msgid "The icon with the same name already exists."
+msgstr "Ikon dengan nama sama telah ada."
+
+#: edeskicon.cpp:562
+#, fuzzy, c-format
+msgid "%d bytes, %s"
+msgstr "%d byte"
+
+#: eiconman.cpp:112
+msgid "&New desktop item"
+msgstr "&Item desktop baru"
+
+#: eiconman.cpp:116
+msgid "&Refresh"
+msgstr "&Refresh"
+
+#: eiconman.cpp:122
+#, fuzzy
+msgid "&Icons Settings "
+msgstr "Seting"
+
+#: eiconman.cpp:126
+#, fuzzy
+msgid "&Background Settings"
+msgstr "Seting latar belakang"
+
+#: eiconman.cpp:718
+#, fuzzy
+msgid ""
+"All Files, *,Png Images, *.png,Xpm Images, *.xpm,Jpeg Images, *.{jpg|jpeg},"
+"Gif Images, *.gif,Bmp Images, *.bmp"
+msgstr ""
+"Citra Png, *.png,Citra Xpm, *.xpm,Citra Jpeg, *.{jpg|jpeg},Citra Gif, *.gif,"
+"Citra Bmp, *.bmp,Pilih wallpaper:"
+
+#: eiconman.cpp:724
+#, fuzzy
+msgid "Choose wallpaper:"
+msgstr "Gunakan wallpaper"
+
+#: eiconman.cpp:761
+msgid "Choose color"
+msgstr "Pilih warna"
+
+#: propdialog.cpp:31
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Dapat dieksekusi (*.*), *, Semua file (*.*), *"
+
+#: propdialog.cpp:32
+msgid "Open location..."
+msgstr "Buka lokasi..."
+
+#: propdialog.cpp:39
+msgid ""
+"Png images (*.png), *.png, Jpeg Images (*.jpeg), *.{jpeg|jpg}, Bmp Files (*."
+"bmp), *.bmp, Gif Files (*.gif), *.gif, Xpm Files (*.xpm), *.xpm, All files "
+"(*.*), *"
+msgstr ""
+
+#: propdialog.cpp:40
+msgid "Icon file selection"
+msgstr "Pemilihan file ikon"
+
+#: propdialog.cpp:62
+msgid "Icon properties"
+msgstr "Properti ikon"
+
+#: propdialog.cpp:65
+msgid "Icon"
+msgstr "Ikon"
+
+#: propdialog.cpp:69
+msgid "Name:"
+msgstr "Nama:"
+
+#: propdialog.cpp:72
+msgid "Size:"
+msgstr "Ukuran:"
+
+#: propdialog.cpp:75
+msgid "Command:"
+msgstr "Perintah:"
+
+#: propdialog.cpp:90
+msgid "Settings"
+msgstr "Seting"
+
+#: propdialog.cpp:92
+msgid "Link file:"
+msgstr "Link file:"
+
+#: propdialog.cpp:96
+msgid "Icon name:"
+msgstr "Nama ikon:"
+
+#: propdialog.cpp:99
+msgid "Location to open:"
+msgstr "Lokasi untuk dibuka:"
+
+#: propdialog.cpp:102 propdialog.cpp:109
+msgid "..."
+msgstr ""
+
+#: propdialog.cpp:106
+msgid "Icon filename:"
+msgstr "Nama file ikon:"
+
+#: propdialog.cpp:120
+msgid "&Close"
+msgstr "&Tutup"
+
+#~ msgid "&Edit"
+#~ msgstr "&Edit"
+
+#~ msgid "Enter the program name or the location to open:"
+#~ msgstr "Masukkan nama program atau lokasi untuk dibuka:"
+
+#~ msgid "Background color selection..."
+#~ msgstr "Pemilihan warna latar belakang..."
+
+#~ msgid "Image selection..."
+#~ msgstr "Pemilihan citra"
+
+#~ msgid "Wallpaper"
+#~ msgstr "Wallpaper"
+
+#~ msgid ""
+#~ "Images (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, All files (*."
+#~ "*), *"
+#~ msgstr ""
+#~ "Citra (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, Semua file (*."
+#~ "*), *"
+
+#~ msgid "Icons (*.png), *.png, All files (*.*), *"
+#~ msgstr "Ikon (*.png), *.png, Semua file (*.*), *"
+
+#~ msgid "None"
+#~ msgstr "Tidak ada"
+
+#~ msgid "&Bg Properties"
+#~ msgstr "Properti &Bg"
+
+#~ msgid "All Files, *"
+#~ msgstr "Semua file, *"

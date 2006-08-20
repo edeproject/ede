@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Tips
+  Exec=etip
+  Icon=tux.png
+  Name[sk]=Tipy pri štarte
+

@@ -1,0 +1,8 @@
+- use PtyProcess directly
+  * look for (#) signs for progress bar
+- new checkbox - "Show options"
+  * analyze output from ./configure --help and show options
+  * for packages, show "Suggests:" and "Recommends:"
+- separate rpm/dpkg/installpkg code into neat classes, so it's easy to add support 
+for others
+- add support for dependency resolvers (apt-get, urpmi, emerge)

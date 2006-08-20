@@ -1,0 +1,149 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 11:51+0100\n"
+"PO-Revision-Date: 2002-11-28 HO:MI+ZONE\n"
+"Last-Translator: aabbvv <null@list.ru>\n"
+"Language-Team: RUSSIAN <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ewmconf.cpp:89
+msgid "Themes (*.theme), *.theme, All files (*.*), *"
+msgstr ""
+
+#: ewmconf.cpp:92
+msgid "Themes..."
+msgstr ""
+
+#: ewmconf.cpp:139
+msgid "Window manager settings"
+msgstr "Настройка оконного менеджера"
+
+#: ewmconf.cpp:143
+#, fuzzy
+msgid "&Titlebar"
+msgstr "Заголовок"
+
+#: ewmconf.cpp:145
+msgid "Text align:"
+msgstr ""
+
+#: ewmconf.cpp:147
+msgid "Left"
+msgstr ""
+
+#: ewmconf.cpp:148
+msgid "Right"
+msgstr ""
+
+#: ewmconf.cpp:149
+msgid "Center"
+msgstr ""
+
+#: ewmconf.cpp:153
+msgid "Height:"
+msgstr ""
+
+#: ewmconf.cpp:161
+msgid "Titlebar label color: "
+msgstr "Цвет текста заголовка:"
+
+#: ewmconf.cpp:167
+msgid "Titlebar color: "
+msgstr "Цвет заголовка:"
+
+#: ewmconf.cpp:174
+msgid "Titlebar active label color: "
+msgstr "Цвет текста активного заголовка:"
+
+#: ewmconf.cpp:180
+msgid "Titlebar active color: "
+msgstr "Цвет активного заголовка:"
+
+#: ewmconf.cpp:188
+msgid "Box type:"
+msgstr ""
+
+#: ewmconf.cpp:191
+msgid "Flat"
+msgstr ""
+
+#: ewmconf.cpp:192
+msgid "Horizontal shade"
+msgstr ""
+
+#: ewmconf.cpp:193
+msgid "Thin down"
+msgstr ""
+
+#: ewmconf.cpp:194
+msgid "Up box"
+msgstr ""
+
+#: ewmconf.cpp:195
+msgid "Down box"
+msgstr ""
+
+#: ewmconf.cpp:196
+msgid "Plastic"
+msgstr ""
+
+#: ewmconf.cpp:200
+msgid "&Use theme"
+msgstr ""
+
+#: ewmconf.cpp:204
+msgid "Path:"
+msgstr ""
+
+#: ewmconf.cpp:209
+msgid "..."
+msgstr ""
+
+#: ewmconf.cpp:213 ewmconf.cpp:216 ewmconf.cpp:243
+msgid "label"
+msgstr ""
+
+#: ewmconf.cpp:221
+#, fuzzy
+msgid "&Resizing"
+msgstr "Размер и перемещение"
+
+#: ewmconf.cpp:224
+msgid "Animate size changes"
+msgstr "Анимация при изменении размера"
+
+#: ewmconf.cpp:229
+msgid "Speed:"
+msgstr "Скорость:"
+
+#: ewmconf.cpp:244
+msgid "Show window content while resizing"
+msgstr "Показывать содержимое при перетаскивании"
+
+#: ewmconf.cpp:252
+msgid "&OK"
+msgstr "&OK"
+
+#: ewmconf.cpp:256
+msgid "&Apply"
+msgstr "&Применить"
+
+#: ewmconf.cpp:259
+msgid "&Cancel"
+msgstr "Отме&на"
+
+#: ewmconf.cpp:274
+msgid "Choose color"
+msgstr "Выбор цвета"
+
+#~ msgid "Draw gradient titlebar"
+#~ msgstr "Плавный переход цвета"

@@ -1,0 +1,11 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Rxvt
+  Comment=Rxvt
+  TryExec=rxvt
+  Exec=rxvt
+  Icon=konsole.png
+  Terminal=0
+  Type=Application
+

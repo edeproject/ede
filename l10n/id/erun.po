@@ -1,0 +1,51 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: erun\n"
+"POT-Creation-Date: 2002-04-21 14:09+0200\n"
+"PO-Revision-Date: 2002-11-29 15:39+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: erun.cpp:861
+msgid "File selection..."
+msgstr "Pemilihan file..."
+
+#: erun.cpp:871
+msgid "Open..."
+msgstr "Buka..."
+
+#: erun.cpp:874
+msgid "Open:"
+msgstr "Buka:"
+
+#: erun.cpp:883
+msgid ""
+"Type the location you want to open or the name of the program you want to run. "
+"(Possible prefixes are: http:, ftp:, gg:, av:, leo:)"
+msgstr ""
+"Ketikkan lokasi yang ingin anda buka atau nama dari program yang ingin anda jalankan. "
+"(Prefiks yang diijinkan adalah: http:, ftp:, gg:, av:, leo:)"
+
+#: erun.cpp:893
+msgid "&Browse..."
+msgstr "&Browse..."
+
+#: erun.cpp:887
+msgid "&OK"
+msgstr "&OK"
+
+#: erun.cpp:891
+msgid "&Cancel"
+msgstr "&Batal"
+
+#: erun.cpp:853
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Dapat dieksekusi (*.*), *, Semua file (*.*), *"
+

@@ -1,0 +1,28 @@
+EDE 1.0 team:
+Martin Pekar     (original author)
+Mikko Lahtenaaki (efltk author)
+Dejan Lekic      (fixes and improvements)
+Alexey Parshin   (improvements to efltk)
+
+Current developers:
+Sanel Zukan     <karijes@users.sf.net>
+Vedran Ljubovic <vljubovic@users.sf.net>
+
+Translations:
+Otto Nemeth
+Bambang Purnomosidi D. P. 
+Mihail Zaripov
+
+Patches in 1.x series by:
+Michael Sheldon
+Anthony Wesley
+and others! Thank you guys! :)
+
+We would like to thank everyone that contributed to this excellent project and to 
+appologize if we left anyone out.
+
+
+EDE is based on the Fast Light Toolkit (FLTK) by
+Bill Spitzak and others.
+
+For questions, bugs, etc. please mail ONLY current developers.

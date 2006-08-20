@@ -1,0 +1,258 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eiconman 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:27+0100\n"
+"PO-Revision-Date: 2002-04-21 14:50+0200\n"
+"Last-Translator: Martin Pekar <cortex@nextra.sk>\n"
+"Language-Team: Slovak <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: edeskconf.cpp:38
+msgid "Background settings"
+msgstr "Nastavenie pozadia"
+
+#: edeskconf.cpp:42
+msgid "Background"
+msgstr "Pozadie"
+
+#: edeskconf.cpp:79
+msgid "C&olor..."
+msgstr "F&arba..."
+
+#: edeskconf.cpp:87
+msgid "Use wallpaper"
+msgstr "Použiť tapetu"
+
+#: edeskconf.cpp:91 edeskconf.cpp:130
+msgid "label"
+msgstr ""
+
+#: edeskconf.cpp:94
+msgid "Image:"
+msgstr "Obrázok:"
+
+#: edeskconf.cpp:99
+msgid "&Browse..."
+msgstr "&Zvoliť..."
+
+#: edeskconf.cpp:102
+msgid "Opacity:"
+msgstr "Kontrast:"
+
+#: edeskconf.cpp:112
+msgid "Mode:"
+msgstr "Mód:"
+
+#: edeskconf.cpp:114
+msgid "Center"
+msgstr "Centrovať"
+
+#: edeskconf.cpp:117
+msgid "Stretch"
+msgstr "Roztiahnuť"
+
+#: edeskconf.cpp:120
+msgid "Stretch (aspect)"
+msgstr "Roztiahnuť (aspekt)"
+
+#: edeskconf.cpp:123
+msgid "Tiled"
+msgstr "Dláždiť"
+
+#: edeskconf.cpp:131
+msgid "&OK"
+msgstr "&OK"
+
+#: edeskconf.cpp:134 propdialog.cpp:113
+msgid "&Apply"
+msgstr "&Použiť"
+
+#: edeskconf.cpp:137
+msgid "&Cancel"
+msgstr "&Zrušiť"
+
+#: edeskicon.cpp:86
+msgid "&Open"
+msgstr "&Otvoriť"
+
+#: edeskicon.cpp:90
+msgid "&Delete"
+msgstr "&Zmazať"
+
+#: edeskicon.cpp:96
+msgid "&Properties"
+msgstr "&Vlastnosti"
+
+#: edeskicon.cpp:442
+msgid "Name of the icon must be filled."
+msgstr "Názov ikony musí byť vyplnení."
+
+#: edeskicon.cpp:467
+msgid "Delete this icon?"
+msgstr "Zmazať túto ikonu?"
+
+#: edeskicon.cpp:473
+#, c-format
+msgid ""
+"Remove of the icon %s failed. You probably do not have write access to this "
+"file."
+msgstr ""
+"Zmazanie ikony %s zlyhalo. Pravdepodobne namáte prístup na zapisovanie k "
+"tomutosúboru."
+
+#: edeskicon.cpp:482
+msgid "Enter the name of the new icon:"
+msgstr "Zadajte názov novej ikony:"
+
+#: edeskicon.cpp:505 eiconman.cpp:241
+msgid "The icon with the same name already exists."
+msgstr "Ikona s tým istým menom už existuje."
+
+#: edeskicon.cpp:562
+#, fuzzy, c-format
+msgid "%d bytes, %s"
+msgstr "%d bajtov"
+
+#: eiconman.cpp:112
+msgid "&New desktop item"
+msgstr "&Nová položka plochy"
+
+#: eiconman.cpp:116
+msgid "&Refresh"
+msgstr "&Obnoviť"
+
+#: eiconman.cpp:122
+#, fuzzy
+msgid "&Icons Settings "
+msgstr "Nastavenia"
+
+#: eiconman.cpp:126
+#, fuzzy
+msgid "&Background Settings"
+msgstr "Nastavenie pozadia"
+
+#: eiconman.cpp:718
+#, fuzzy
+msgid ""
+"All Files, *,Png Images, *.png,Xpm Images, *.xpm,Jpeg Images, *.{jpg|jpeg},"
+"Gif Images, *.gif,Bmp Images, *.bmp"
+msgstr ""
+"Png obrázky, *.png,Xpm obrázky, *.xpm,Jpeg obrázky, *.{jpg|jpeg},Gif "
+"obrázky, *.gif,Bmp obrázky, *.bmp,Zvoliť tapetu:"
+
+#: eiconman.cpp:724
+#, fuzzy
+msgid "Choose wallpaper:"
+msgstr "Použiť tapetu"
+
+#: eiconman.cpp:761
+msgid "Choose color"
+msgstr "Zvoliť farbu"
+
+#: propdialog.cpp:31
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Spustiteľné (*.*), *, Všetky súbory (*.*), *"
+
+#: propdialog.cpp:32
+msgid "Open location..."
+msgstr "Otvoriť umiestnenie..."
+
+#: propdialog.cpp:39
+msgid ""
+"Png images (*.png), *.png, Jpeg Images (*.jpeg), *.{jpeg|jpg}, Bmp Files (*."
+"bmp), *.bmp, Gif Files (*.gif), *.gif, Xpm Files (*.xpm), *.xpm, All files "
+"(*.*), *"
+msgstr ""
+
+#: propdialog.cpp:40
+msgid "Icon file selection"
+msgstr "Výber súboru s ikonou"
+
+#: propdialog.cpp:62
+msgid "Icon properties"
+msgstr "Vlastnosti ikony"
+
+#: propdialog.cpp:65
+msgid "Icon"
+msgstr "Ikona"
+
+#: propdialog.cpp:69
+msgid "Name:"
+msgstr "Názov:"
+
+#: propdialog.cpp:72
+msgid "Size:"
+msgstr "Rozmer:"
+
+#: propdialog.cpp:75
+msgid "Command:"
+msgstr "Príkaz:"
+
+#: propdialog.cpp:90
+msgid "Settings"
+msgstr "Nastavenia"
+
+#: propdialog.cpp:92
+msgid "Link file:"
+msgstr "Súbor linky:"
+
+#: propdialog.cpp:96
+msgid "Icon name:"
+msgstr "Názov ikony:"
+
+#: propdialog.cpp:99
+msgid "Location to open:"
+msgstr "Otvoriť umiestnenie:"
+
+#: propdialog.cpp:102 propdialog.cpp:109
+msgid "..."
+msgstr ""
+
+#: propdialog.cpp:106
+msgid "Icon filename:"
+msgstr "Súbor ikony:"
+
+#: propdialog.cpp:120
+msgid "&Close"
+msgstr "&Zavrieť"
+
+#~ msgid "&Edit"
+#~ msgstr "&Editovať"
+
+#~ msgid "Enter the program name or the location to open:"
+#~ msgstr "Zadajte názov programu alebo umiestnenie, ktoré chcete otvoriť:"
+
+#~ msgid "Background color selection..."
+#~ msgstr "Výber farby pozadia..."
+
+#~ msgid "Image selection..."
+#~ msgstr "Výber obrázka..."
+
+#~ msgid "Wallpaper"
+#~ msgstr "Tapeta"
+
+#~ msgid ""
+#~ "Images (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, All files (*."
+#~ "*), *"
+#~ msgstr ""
+#~ "Obrázky (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, Všetky súbory "
+#~ "(*.*), *"
+
+#~ msgid "Icons (*.png), *.png, All files (*.*), *"
+#~ msgstr "Ikony (*.png), *.png, Všetky súbory (*.*), *"
+
+#~ msgid "None"
+#~ msgstr "Žiadny"
+
+#~ msgid "&Bg Properties"
+#~ msgstr "&Nastavenie pozadia"
+
+#~ msgid "All Files, *"
+#~ msgstr "Všetky súbory, *"

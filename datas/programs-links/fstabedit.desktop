@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Mount point editor
+  Exec=efstabedit
+  Icon=folder_red.png
+  Name[sk]=Editor diskových pripojení
+

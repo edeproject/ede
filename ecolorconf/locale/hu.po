@@ -1,0 +1,208 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2005-02-09 11:21+0100\n"
+"Last-Translator: Nemeth Otto <otto_nemeth@freemail.hu>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ecolorconf.cpp:131
+msgid "Colors and fonts settings"
+msgstr "Szín és font beállítások"
+
+#: ecolorconf.cpp:136
+msgid "Default colors"
+msgstr "Színek"
+
+#: ecolorconf.cpp:138
+msgid "Color"
+msgstr "Háttér szín"
+
+#: ecolorconf.cpp:143
+msgid "Label color"
+msgstr "Felirat szín"
+
+#: ecolorconf.cpp:148
+msgid "Selection color"
+msgstr "Kiválasztás háttere"
+
+#: ecolorconf.cpp:153
+msgid "Selection text color"
+msgstr "Kiválasztott szöveg"
+
+#: ecolorconf.cpp:158
+msgid "Off color"
+msgstr "Off szín"
+
+#: ecolorconf.cpp:163
+msgid "Highlight color"
+msgstr "Kiemelés háttere"
+
+#: ecolorconf.cpp:168
+msgid "Highlight label color"
+msgstr "Kiemelt szöveg"
+
+#: ecolorconf.cpp:173
+msgid "Text color"
+msgstr "Szöveg szín"
+
+#: ecolorconf.cpp:178
+msgid "Background"
+msgstr "Háttér"
+
+#: ecolorconf.cpp:183
+msgid "Text background"
+msgstr "Szöveg háttér"
+
+#: ecolorconf.cpp:190
+msgid "Tooltips"
+msgstr "Buborékok"
+
+#: ecolorconf.cpp:193
+msgid "Tooltip color"
+msgstr "Buborékok színe"
+
+#: ecolorconf.cpp:198
+msgid "Tooltip text color"
+msgstr "Buborék szövegszín"
+
+#: ecolorconf.cpp:203
+#: ecolorconf.cpp:252
+msgid "Enable effects"
+msgstr "Effektek"
+
+#: ecolorconf.cpp:204
+msgid "Enabled"
+msgstr "Engedélyez"
+
+#: ecolorconf.cpp:205
+#: ecolorconf.cpp:254
+msgid "Effect type:"
+msgstr "Effekt típus:"
+
+#: ecolorconf.cpp:207
+#: ecolorconf.cpp:256
+msgid "None"
+msgstr "Egyik sem"
+
+#: ecolorconf.cpp:208
+#: ecolorconf.cpp:257
+msgid "Animation"
+msgstr "Animáció"
+
+#: ecolorconf.cpp:209
+#: ecolorconf.cpp:258
+msgid "Fading"
+msgstr "Fokozatos"
+
+#: ecolorconf.cpp:212
+#: ecolorconf.cpp:262
+msgid "Delay:"
+msgstr "Késleltetés:"
+
+#: ecolorconf.cpp:215
+msgid "Fonts"
+msgstr "Betűtípusok"
+
+#: ecolorconf.cpp:218
+msgid "Label font:"
+msgstr "Felirat font:"
+
+#: ecolorconf.cpp:226
+msgid "Text font:"
+msgstr "Szöveg font:"
+
+#: ecolorconf.cpp:233
+msgid "Label size:"
+msgstr "Felirat méret:"
+
+#: ecolorconf.cpp:236
+msgid "Text size:"
+msgstr "Szöveg méret:"
+
+#: ecolorconf.cpp:239
+msgid "Encoding:"
+msgstr "Kódolás:"
+
+#: ecolorconf.cpp:241
+#: ecolorconf.cpp:244
+msgid "..."
+msgstr "..."
+
+#: ecolorconf.cpp:250
+msgid "Menus"
+msgstr "Menük"
+
+#: ecolorconf.cpp:253
+msgid "Enable subwindow effects"
+msgstr "Almenü effektek"
+
+#: ecolorconf.cpp:261
+msgid "Speed:"
+msgstr "Sebesség:"
+
+#: ecolorconf.cpp:265
+msgid "Others"
+msgstr "Egyéb"
+
+#: ecolorconf.cpp:267
+msgid "Enable MDI animation"
+msgstr "MDI animáció engedélyezése"
+
+#: ecolorconf.cpp:268
+msgid "MDI opaque animation"
+msgstr "MDI opaque animation"
+
+#: ecolorconf.cpp:269
+msgid "Enable images state effect"
+msgstr "Képállapot váltás"
+
+#: ecolorconf.cpp:276
+msgid "&Save as..."
+msgstr "Menté&s..."
+
+#: ecolorconf.cpp:279
+msgid "Ap&ply colors to all programs"
+msgstr "Színbeállítások &alkalmazása az összes programra"
+
+#: ecolorconf.cpp:283
+msgid "Schemes:"
+msgstr "Témák:"
+
+#: ecolorconf.cpp:293
+#: efontdialog.cpp:226
+msgid "&OK"
+msgstr "&OK"
+
+#: ecolorconf.cpp:296
+msgid "&Apply"
+msgstr "&Alkalmaz"
+
+#: ecolorconf.cpp:299
+#: efontdialog.cpp:229
+msgid "&Cancel"
+msgstr "Mégs&em"
+
+#: ecolorconf.cpp:314
+msgid "Choose color"
+msgstr "Szín kiválasztása"
+
+#: ecolorutils.cpp:306
+msgid "Color and label color are the same. Edit colors first."
+msgstr "A szín és felirat szín ugyanaz. Szerkeszd először a színeket."
+
+#: ecolorutils.cpp:344
+msgid "Save scheme as:"
+msgstr "Téma mentése:"
+
+#: ecolorutils.cpp:344
+msgid "New scheme"
+msgstr "Új téma"
+
+#: efontdialog.cpp:200
+msgid "Select font..."
+msgstr "Betűtípus kiválasztása..."
+

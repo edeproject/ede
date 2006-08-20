@@ -1,0 +1,89 @@
+# Finnish translation of edewm.
+# Copyright (C) 2002 THE edewm'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the edewm package.
+# Mikko L. <Laza@Flashmail.com>, 2002.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: edewm 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:33+0100\n"
+"PO-Revision-Date: 2002-09-16 11:07+0300\n"
+"Last-Translator: Mikko L. <Laza@Flashmail.com>\n"
+"Language-Team: Finnish <fi@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-15\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Desktop.cpp:138 Desktop.cpp:180
+#, c-format
+msgid "Workspace %d"
+msgstr "Työpöytä %d"
+
+#: Frame.cpp:106
+msgid "Untitled"
+msgstr "Nimetön"
+
+#: Frame.cpp:938
+#, c-format
+msgid "EDEWM: Internal bug, when restacking (%d != %d)! Exiting... "
+msgstr ""
+
+#: Titlebar.cpp:215
+msgid "Sticky"
+msgstr "Kiinteä"
+
+#: Titlebar.cpp:275 Titlebar.cpp:320
+msgid "Set size"
+msgstr ""
+
+#: Titlebar.cpp:276
+msgid "Set size to window:"
+msgstr ""
+
+#: Titlebar.cpp:285
+msgid "width:"
+msgstr ""
+
+#: Titlebar.cpp:287
+msgid "height:"
+msgstr ""
+
+#: Titlebar.cpp:291
+msgid "&OK"
+msgstr ""
+
+#: Titlebar.cpp:294
+msgid "&Cancel"
+msgstr ""
+
+#: Titlebar.cpp:318 Titlebar.cpp:331
+msgid "Maximize"
+msgstr "Suurenna"
+
+#: Titlebar.cpp:319
+msgid "Minimize"
+msgstr "Pienennä"
+
+#: Titlebar.cpp:321
+msgid "To Desktop"
+msgstr "Työpöydälle:"
+
+#: Titlebar.cpp:322
+msgid "Kill"
+msgstr "Tapa"
+
+#: Titlebar.cpp:323
+msgid "Close"
+msgstr "Sulje"
+
+#: Titlebar.cpp:330
+msgid "Restore"
+msgstr "Palauta"
+
+#: Windowmanager.cpp:90
+#, c-format
+msgid "Another window manager is running.  You must exit it before running %s."
+msgstr ""
+"Toinen ikkunointi järjestelmä käynnissä. Sinun täytyy lopettaa se ennen kuin "
+"voit ajaa: %s"

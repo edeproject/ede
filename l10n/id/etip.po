@@ -1,0 +1,93 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: emenueditor\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 11:58+0100\n"
+"PO-Revision-Date: 2002-11-29 15:50+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: etip.cpp:809
+#, fuzzy
+msgid ""
+"To start any application is simple. Press on the button with your user name, "
+"go to the Programs menu, select category and click on the wished program."
+msgstr ""
+"Untuk memulai suatu aplikasi, caranya sederhana. Tekan tombol EDE, gerakkan "
+"ke menu Programs, pilih kategori dan klik pada program yang diinginkan."
+
+#: etip.cpp:810
+#, fuzzy
+msgid ""
+"To exit the Equinox Desktop environment, press button with your user name "
+"and then logout."
+msgstr ""
+"Untuk keluar dari Equinox Desktop Environment, tekan tombol EDE dan kemudian "
+"logout."
+
+#: etip.cpp:811
+#, fuzzy
+msgid "To lock the computer, press button with your user name and then lock."
+msgstr "Untuk mengunci komputer, tekan tombol EDE dan kemudian lock."
+
+#: etip.cpp:812
+#, fuzzy
+msgid ""
+"To setup things on the computer, press button with your user name, Panel "
+"menu and then the Control panel."
+msgstr ""
+"Untuk mensetup hal-hal tertentu di komputer anda, tekan tombol EDE, menu "
+"Panel dan kemudian Control panel."
+
+#: etip.cpp:813
+#, fuzzy
+msgid ""
+"To add a program that is not in the Programs menu, click on the button with "
+"your user, Panel menu, and then Edit panels menu."
+msgstr ""
+"Untuk menambahkan suatu program yang tidak berada di menu Programs, klik "
+"pada tombol EDE, menu Panel, dan kemudian menu Edit panel/"
+
+#: etip.cpp:814
+msgid ""
+"Notice that this is still development version, so please send your bug "
+"reports or comments on EDE forum, EDE bug reporting system (on project's "
+"page), or karijes@users.sourceforge.net."
+msgstr ""
+
+#: etip.cpp:815
+msgid ""
+"You can download latest release on - http://sourceforge.net/projects/ede."
+msgstr ""
+
+#: etip.cpp:820
+msgid "Startup tips"
+msgstr "Tips startup"
+
+#: etip.cpp:825
+msgid "Do not show this dialog next time"
+msgstr "Jangan perlihatkan dialog ini lain kali"
+
+#: etip.cpp:840
+#, fuzzy
+msgid "Welcome to Equinox Desktop Environment version "
+msgstr "Selamat datang di Equinox Desktop Environment"
+
+#: etip.cpp:850
+msgid "<< &Previous"
+msgstr "<< &Sebelum"
+
+#: etip.cpp:854
+msgid "&Next >>"
+msgstr "&Berikut >>"
+
+#: etip.cpp:859
+msgid "&Close"
+msgstr "&Tutup"

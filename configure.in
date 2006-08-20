@@ -1,0 +1,184 @@
+dnl
+dnl $Id: configure.in 1719 2006-08-15 08:56:42Z karijes $
+dnl
+dnl Part of Equinox Desktop Environment (EDE).
+dnl Copyright (c) 2000-2006 EDE Authors.
+dnl 
+dnl This program is licenced under terms of the 
+dnl GNU General Public Licence version 2 or newer.
+dnl See COPYING for details.
+
+dnl If edeconf.h.in missing, parse this file with autoheader
+
+dnl Add kstat support ??? (Solaris)
+dnl Should we add AC_HELP_STRING ???
+dnl It seems that RH 7.2 have old autoconf without this macro
+
+AC_PREREQ(2.16)
+AC_INIT(EDE, 2.0.0 alpha, [karijes@users.sourceforge.net])
+AC_DEFINE(VERSION, 195, [Short version number])
+AC_CONFIG_HEADER(edeconf.h:edeconf.h.in)
+
+dnl $PACKAGE_VERSION is filled from AC_INIT
+EDE_VERSION=$PACKAGE_VERSION
+
+AC_PROG_CXX
+AC_PROG_CPP
+AC_PATH_PROG(CXX, g++)
+AC_PATH_PROG(RM, rm)
+AC_PATH_PROG(MSGFMT, msgfmt)
+AC_PATH_PROG(MAKEDEPEND, makedepend)
+
+dnl basic headers
+AC_PROG_INSTALL
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H))
+AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H))
+AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H))
+AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H))
+AC_CHECK_HEADER(linux/soundcard.h, AC_DEFINE(HAVE_ALSA))
+
+AC_CHECK_HEADER(time.h, AC_DEFINE(HAVE_TIME_H))
+AC_CHECK_FUNCS(stime, AC_DEFINE(HAVE_STIME))
+
+if test "$prefix" = NONE; then
+	INSTALL_DIR="/usr/local"
+else
+	INSTALL_DIR="$prefix"
+fi
+
+AC_DEFINE_UNQUOTED(PREFIX, "$INSTALL_DIR", [Default installation place. Overwrite if you like.])
+
+dnl check X11
+AC_PATH_X
+AC_PATH_XTRA
+
+dnl from old configure.in
+AC_CHECK_LIB(X11, Xutf8TextPropertyToTextList, 
+			 AC_DEFINE(HAVE_X11_UTF_TEXT_PROP, 1, [Define 1 if XWindows has Xutf extension.]), )
+
+
+dnl all warnings on
+CXXFLAGS="-Wall "
+
+dnl compile silent ?
+SILENT=".SILENT:"
+
+dnl home directorty (for config.h)
+HOME_DIR="`pwd`"
+CURR_DIR=" -I. "
+CXXFLAGS="$CXXFLAGS -I$HOME_DIR $CURR_DIR"
+
+AC_ARG_ENABLE(optimize, [  --enable-optimize       compile with optimizations],
+			[if eval "test x$enable_optimize = xyes"; then
+			   CXXFLAGS="$CXXFLAGS -O2"
+			 fi])
+
+AC_ARG_ENABLE(debug, [  --enable-debug          compile with debug information],
+			[if eval "test x$enable_debug = xyes"; then
+			   CXXFLAGS="$CXXFLAGS -g3 -D_DEBUG"
+		   	fi])
+
+AC_ARG_ENABLE(sounds, [  --enable-sounds         enable sounds in window manager],
+			[if eval "test x$enable_sounds = xyes"; then
+			   
+			   AC_CHECK_HEADER(ao/ao.h, [have_ao_h=yes], [have_ao_h=no])
+			   AC_CHECK_LIB(ao, ao_is_big_endian, [have_ao_lib=yes], [have_ao_lib=no])
+			   
+			   AC_CHECK_HEADER(vorbis/codec.h, [have_codec_h=yes], [have_codec_h=no])
+			   AC_CHECK_LIB(vorbis, vorbis_info_init, [have_vorbis_lib=yes], [have_vorbis_lib=no])
+
+			   AC_CHECK_HEADER(vorbis/vorbisfile.h, [have_vorbisfile_h=yes], [have_vorbisfile_h=no])
+			   AC_CHECK_LIB(vorbisfile, ov_clear, [have_vorbisfile_lib=yes], [have_vorbisfile_lib=no])
+
+			   AC_MSG_CHECKING(sound support)
+			   if eval "test x$have_ao_h = xyes" && \
+				  eval "test x$have_codec_h = xyes" && \
+				  eval "test x$have_vorbisfile_h = xyes"; then
+				  	AC_MSG_RESULT(ok)
+			   	 	CXXFLAGS="$CXXFLAGS -DSOUND"
+			   	 	LIBS="-lao -lvorbis -lvorbisfile"
+				else
+					AC_MSG_RESULT(disabled)
+				fi
+		   	fi])
+
+
+AC_ARG_ENABLE(silent, [  --disable-silent        show compiler output],
+			[
+			 if eval "test x$enable_silent = xno"; then
+				 SILENT=""
+			 fi
+			])
+
+
+dnl NLS enabled by default
+
+AC_ARG_ENABLE(nls, [  --disable-nls           do not use Native Language Support],,
+			  enable_nls=yes)
+				
+if eval "test x$enable_nls = xyes"; then
+	AC_DEFINE(ENABLE_NLS, [], [Define 1 if you want native language support.])
+fi
+			
+			
+
+dnl Check for 'fltk2-config'
+
+AC_PATH_PROG(FLTK2_CONFIG, fltk2-config)
+if test -n "$FLTK2_CONFIG"; then
+	CXXFLAGS="$CXXFLAGS `fltk2-config --cxxflags`"
+	LIBS="$LIBS `fltk2-config --use-images --ldflags`"
+else
+	AC_MSG_ERROR([You don't have fltk2 installed. To compile Ede, you will need it.])
+fi
+
+
+dnl Check efltk's version.
+dnl Less than 2.0.4 is not supported
+dnl [45] will match 2.0.4 and 2.0.5 version
+
+dnl AC_MSG_CHECKING(efltk version >= 2.0.4)
+
+dnl EFLTK_VERSION="`efltk-config --version`"
+dnl case "$EFLTK_VERSION" in ["2.0."[45]])
+dnl 	dnl Display 'yes' for efltk version check
+dnl 	AC_MSG_RESULT(yes)
+dnl 	;;
+dnl 	*)
+dnl 	AC_MSG_ERROR([It seems that you have older efltk version. Required is >= 2.0.4])
+dnl esac
+
+if test $ac_cv_header_linux_soundcard_h = yes; then
+	EVOLUME=evolume/
+else
+	echo
+	echo "***************************************"
+	echo "*         ALSA WAS NOT FOUND          *"
+	echo "*                                     *"
+	echo "* Sadly, evolume is ALSA-only at this *"
+	echo "* moment. It will be disabled.        *"
+	echo "***************************************"
+	EVOLUME=
+fi
+
+
+AC_SUBST(CXXFLAGS)
+AC_SUBST(LIBS)
+AC_SUBST(SILENT)
+AC_SUBST(HOME_DIR)
+AC_SUBST(EVOLUME)
+AC_SUBST(EDE_VERSION)
+
+AC_OUTPUT([
+ makeinclude
+ datas/startede
+ README
+ docs/ede/index.html
+ docs/ede/authors.html
+ docs/ede/changelog.html
+ docs/ede/copying.html
+ docs/ede/help.html
+ ede.spec
+ ])

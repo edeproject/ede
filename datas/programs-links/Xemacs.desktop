@@ -1,0 +1,40 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=XEmacs
+  Name[sl]=XEmacs
+  Name[da]=XEmacs
+  Name[de]=XEmacs
+  Name[el]=XEmacs
+  Name[fi]=XEmacs
+  Name[fr]=XEmacs
+  Name[it]=XEmacs
+  Name[lt]=XEmacs
+  Name[no]=XEmacs
+  Name[pt_BR]=XEmacs
+  Name[ro]=XEmacs
+  Name[sk]=XEmacs
+  Name[sv]=XEmacs
+  Name[wa]=XEmacs
+  Comment=xemacs text editor
+  Comment[sl]=Urejevalnik besedil xemacs
+  Comment[da]=XEmacs tekstbehandler
+  Comment[de]=XEmacs Texteditor
+  Comment[el]=ĹđĺîĺńăáóôŢň ęĺéěÝíďő XEmacs
+  Comment[fi]=XEmacs-editori
+  Comment[fr]=Éditeur de texte XEmacs
+  Comment[it]=Editor XEmacs
+  Comment[lt]=xemacs tekstř editorius
+  Comment[no]=Xemacs teksteditor
+  Comment[pt_BR]=Editor de texto XEmacs
+  Comment[ro]=Editorul de texte Xemacs
+  Comment[sk]=Textový editor xemacs
+  Comment[sv]=xemacs textedito
+  Comment[wa]=L' aspougneu di tecsse xemacs
+  TryExec=xemacs
+  Exec=xemacs
+  Icon=moc_src.png
+  Terminal=false
+  MultipleArgs=false
+  Type=Application
+

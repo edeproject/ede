@@ -1,0 +1,123 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2005-02-09 11:22+0100\n"
+"Last-Translator: Nemeth Otto <otto_nemeth@freemail.hu>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: emenueditor.cpp:40
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Futtatható fájlok (*.*), *, Minden fájl (*.*), *"
+
+#: emenueditor.cpp:41
+msgid "File selection ..."
+msgstr "Fájl kiválasztása..."
+
+#: emenueditor.cpp:52
+msgid "Menu editor"
+msgstr "Menü szerkesztő"
+
+#: emenueditor.cpp:56
+msgid "&File"
+msgstr "&Fájl"
+
+#: emenueditor.cpp:57
+msgid "&Quit"
+msgstr "&Kilépés"
+
+#: emenueditor.cpp:65
+msgid "Programs:"
+msgstr "Programok:"
+
+#: emenueditor.cpp:67
+msgid "Click on the submenu or on the item you want"
+msgstr "Válaszd ki a módosítandó menüt"
+
+#: emenueditor.cpp:72
+msgid "New submenu"
+msgstr "Új könyvtár"
+
+#: emenueditor.cpp:75
+msgid "Delete submenu"
+msgstr "Könyvtár törlése"
+
+#: emenueditor.cpp:78
+msgid "New item"
+msgstr "Új menüfájl"
+
+#: emenueditor.cpp:81
+msgid "Delete item"
+msgstr "Menüfájl törlés"
+
+#: emenueditor.cpp:84
+msgid "Edit Item"
+msgstr "Menüfájl szerkesztés"
+
+#: emenueditor.cpp:153
+msgid "Please, enter the name of the menu item."
+msgstr "Add meg a menü nevét."
+
+#: emenueditor.cpp:183
+msgid "Icons (*.png), *.png, All files (*.*), *"
+msgstr "Ikonok (*.png), *.png, Minden fájl (*.*), *"
+
+#: emenueditor.cpp:184
+msgid "Choose icon file..."
+msgstr "Ikonfájl kiválasztása..."
+
+#: emenueditor.cpp:196
+msgid "Edit item"
+msgstr "Szerkesztés"
+
+#: emenueditor.cpp:198
+msgid "Filename:"
+msgstr "Fájlnév:"
+
+#: emenueditor.cpp:201
+msgid "Name in the menu:"
+msgstr "A menü neve:"
+
+#: emenueditor.cpp:204
+msgid "Command to execute:"
+msgstr "Futtatandó parancs:"
+
+#: emenueditor.cpp:208
+msgid "Bro&wse..."
+msgstr "&Tallóz..."
+
+#: emenueditor.cpp:212
+msgid "Icon filename:"
+msgstr "Ikonfájl:"
+
+#: emenueditor.cpp:216
+msgid "&Save"
+msgstr "Menté&s"
+
+#: emenueditor.cpp:220
+msgid "&Cancel"
+msgstr "Mégs&em"
+
+#: emenueditor.cpp:224
+msgid "&Browse..."
+msgstr "T&allóz..."
+
+#: emenueditor.cpp:231
+msgid "New folder"
+msgstr "Új menüfájl"
+
+#: emenueditor.cpp:277
+msgid "Please enter name of the new submenu:"
+msgstr "Mi legyen az új könyvtár neve?"
+
+#: emenueditor.cpp:284
+msgid "Cannot create submenu!"
+msgstr "Az almenü létrehozása sikertelen!"
+
+#: emenueditor.cpp:350
+msgid "You should delete all the items from the submenu, before you can delete it!"
+msgstr "Mielőtt törlöd ezt a könyvtárat távolítsd el a tartalmát!"
+

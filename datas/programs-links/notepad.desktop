@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Notepad
+  Name[sk]=Poznámkový blok
+  Exec=enotepad
+  Icon=txt.png
+

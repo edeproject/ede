@@ -1,0 +1,470 @@
+# data file for the eFLTK User Interface Designer (eFLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Finder for EDE is (C) Copyright 2001-2002 by Martin Pekar, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include "eglob.h"} {} 
+
+Function {createPermWindow()} {return_type void
+} {
+  Fl_Window permWindow {
+    label Permissions open
+    xywh {282 274 355 175} hide resizable
+  } {
+    Fl_Group {} {
+      label Owner open
+      xywh {10 30 110 90} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+    } {
+      Fl_Check_Button {} {
+        label Read
+        callback {toggle_permission(S_IRUSR);}
+        xywh {5 5 85 25}
+      }
+      Fl_Check_Button {} {
+        label Write
+        callback {toggle_permission(S_IWUSR);}
+        xywh {5 25 85 25}
+      }
+      Fl_Check_Button {} {
+        label Execute
+        callback {toggle_permission(S_IXUSR);}
+        xywh {5 45 85 25}
+      }
+      Fl_Check_Button {} {
+        label {Set UID}
+        callback {toggle_permission(S_ISUID);}
+        xywh {5 65 85 25}
+      }
+    }
+    Fl_Group {} {
+      label Group open
+      xywh {125 30 105 90} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+    } {
+      Fl_Check_Button {} {
+        label Read
+        callback {toggle_permission(S_IRGRP);}
+        xywh {5 5 85 25}
+      }
+      Fl_Check_Button {} {
+        label Write
+        callback {toggle_permission(S_IWGRP);}
+        xywh {5 25 85 25}
+      }
+      Fl_Check_Button {} {
+        label Execute
+        callback {toggle_permission(S_IXGRP);}
+        xywh {5 45 85 25}
+      }
+      Fl_Check_Button {} {
+        label {Set GID}
+        callback {toggle_permission(S_ISGID);}
+        xywh {5 65 85 25}
+      }
+    }
+    Fl_Group {} {
+      label Other open
+      xywh {235 30 110 90} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+    } {
+      Fl_Check_Button {} {
+        label Read
+        callback {toggle_permission(S_IROTH);}
+        xywh {5 5 85 25}
+      }
+      Fl_Check_Button {} {
+        label Write
+        callback {toggle_permission(S_IWOTH);}
+        xywh {5 25 85 25}
+      }
+      Fl_Check_Button {} {
+        label Execute
+        callback {toggle_permission(S_IXOTH);}
+        xywh {5 45 85 25}
+      }
+      Fl_Check_Button {} {
+        label Sticky
+        callback {toggle_permission(S_ISVTX);}
+        xywh {5 65 95 25}
+      }
+    }
+    Fl_Button {} {
+      label {&Close}
+      callback {permWindow->hide();}
+      xywh {140 140 85 25}
+    }
+  }
+  code {permWindow->end();
+permWindow->show();} {}
+} 
+
+Function {createFindWindow()} {open return_type void
+} {
+  Fl_Window findWindow {
+    label Find open
+    xywh {283 179 480 385} resizable
+    extra_code {o->size_range(o->w(), o->h());} visible
+  } {
+    Fl_Tabs {} {open
+      xywh {3 5 473 235} color 0xfffffffe
+    } {
+      Fl_Group {} {
+        label Find open
+        xywh {1 23 471 211} hide
+        extra_code {o->parent()->resizable(o);}
+      } {
+        Fl_Group {} {
+          label Find open
+          xywh {7 20 460 100} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+        } {
+          Fl_Group {} {open
+            xywh {5 5 450 30}
+          } {
+            Fl_Input pathInput {
+              label {Path:}
+              xywh {70 5 285 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+              extra_code {o->parent()->resizable(o);
+char *tmp = fl_get_homedir();
+o->value(tmp);
+delete []tmp;}
+            }
+            Fl_Button {} {
+              label {&Browse...}
+              callback {const char *f = fl_select_dir(0,  _("Select directory"));
+    if (f) {
+	pathInput->value(f);
+    }}
+              tooltip {Find path.}
+              xywh {360 5 80 23}
+              extra_code {\#include <efltk/Fl_File_Dialog.h>}
+            }
+          }
+          Fl_Input filterInput {
+            label {File filter:}
+            xywh {75 40 370 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+            extra_code {o->value("*");
+o->parent()->resizable(o);}
+          }
+          Fl_Group {} {open
+            xywh {25 65 430 32}
+          } {
+            Fl_Check_Button recursiveCheck {
+              label {Search subdirectories}
+              xywh {50 0 155 30} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP|FL_ALIGN_WRAP value 1
+            }
+            Fl_Group {} {open
+              xywh {200 0 220 32}
+            } {
+              Fl_Value_Input fileLimitValue {
+                label {Limit results to first n files:}
+                xywh {175 5 45 20} align FL_ALIGN_LEFT|FL_ALIGN_CLIP|FL_ALIGN_WRAP step 1 value 64
+              }
+            }
+          }
+        }
+        Fl_Group {} {
+          label Content open
+          xywh {7 140 459 65} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+        } {
+          Fl_Input containsInput {
+            label {Containing:}
+            xywh {75 10 370 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+            extra_code {o->parent()->resizable(o);}
+          }
+          Fl_Group {} {open
+            xywh {75 35 370 25}
+          } {
+            Fl_Check_Button caseSensitiveCheck {
+              label {Case sensitive}
+              xywh {0 0 140 25} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+            }
+            Fl_Check_Button useRegexpCheck {
+              label {Extended regexp}
+              xywh {140 0 230 25} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+            }
+          }
+        }
+        Fl_Box {} {
+          xywh {7 206 455 2}
+          extra_code {o->parent()->resizable(o);}
+        }
+      }
+      Fl_Group {} {
+        label {Filter options} open
+        xywh {1 23 471 211} hide
+      } {
+        Fl_Group {} {
+          label Considerations open
+          xywh {7 20 459 32} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+        } {
+          Fl_Choice fileTypeBrowser {
+            label {File type:}
+            xywh {70 5 145 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+            extra_code {\#include <efltk/Fl_Input_Browser.h>
+o->parent()->resizable(o);
+
+o->value("Any kind");}
+            class Fl_Input_Browser
+          } {
+            Fl_Item {} {
+              label {Any kind}
+              }
+            Fl_Item {} {
+              label Regular
+              }
+            Fl_Item {} {
+              label Directory
+              }
+            Fl_Item {} {
+              label Symlink
+              }
+            Fl_Item {} {
+              label Socket
+              }
+            Fl_Item {} {
+              label {Block device}
+              }
+            Fl_Item {} {
+              label {Character device}
+              }
+            Fl_Item {} {
+              label FIFO
+              }
+          }
+          Fl_Check_Button stayOnSingleCheck {
+            label {Stay on single filesystem}
+            xywh {225 4 230 23} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP|FL_ALIGN_WRAP
+          }
+        }
+        Fl_Group {} {open
+          xywh {7 50 459 155} box ENGRAVED_BOX
+          extra_code {o->parent()->resizable(o);}
+        } {
+          Fl_Check_Button considerPermValue {
+            label Permissions
+            callback {if (considerPermValue->value())
+	createPermWindow();}
+            xywh {5 5 115 25}
+          }
+          Fl_Check_Button considerUserValue {
+            label {User/group:}
+            callback {if (considerUserValue->value()) {
+	userGroup->activate();
+}
+else {
+	userGroup->deactivate();
+}}
+            xywh {5 30 115 25}
+          }
+          Fl_Group userGroup {open
+            xywh {120 30 325 25} deactivate
+          } {
+            Fl_Choice userIdChoice {
+              label {User id:} open
+              xywh {70 2 72 20} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+              extra_code {o->value("Anyone");
+jam("/etc/passwd", userIdChoice);}
+              class Fl_Input_Browser
+            } {}
+            Fl_Choice groupIdChoice {
+              label {Group id:}
+              xywh {240 2 72 20} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+              extra_code {o->value("Anyone");
+jam("/etc/group", groupIdChoice);}
+              class Fl_Input_Browser
+            } {}
+          }
+          Fl_Check_Button considerSizeValue {
+            label {Size:}
+            callback {if (considerSizeValue->value()) {
+	sizeGroup->activate();
+}
+else {
+	sizeGroup->deactivate();
+}}
+            xywh {5 55 80 23} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+          }
+          Fl_Group sizeGroup {open
+            xywh {85 55 360 25} deactivate box FLAT_BOX
+          } {
+            Fl_Value_Input sizeGValue {
+              label {greater than:}
+              xywh {90 2 70 20} step 1
+            }
+            Fl_Value_Input sizeMValue {
+              label {and less than(KB):}
+              xywh {275 2 70 20} step 1
+            }
+          }
+          Fl_Check_Button considerTimeValue {
+            label {Time:}
+            callback {if (considerTimeValue->value()) {
+	timeGroup1->activate();
+	timeValue->activate();
+	timeGroup2->activate();
+}
+else {
+	timeGroup1->deactivate();
+	timeValue->deactivate();
+	timeGroup2->deactivate();
+}}
+            xywh {5 80 135 25}
+          }
+          Fl_Group timeGroup1 {
+            xywh {140 85 110 60} deactivate box FLAT_BOX
+          } {
+            Fl_Round_Button modifiedRadio {
+              label Modified
+              xywh {0 0 105 20} type RADIO
+            }
+            Fl_Round_Button changedRadio {
+              label Changed
+              xywh {0 20 105 20} type RADIO
+            }
+            Fl_Round_Button accessedRadio {
+              label Accessed
+              xywh {0 40 105 20} type RADIO
+            }
+          }
+          Fl_Group {} {open
+            xywh {255 90 80 60}
+          } {
+            Fl_Value_Input timeValue {
+              label {in previous:}
+              xywh {5 33 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_CLIP|FL_ALIGN_WRAP deactivate maximum 100 step 1
+            }
+          }
+          Fl_Group timeGroup2 {open
+            xywh {335 85 110 60} deactivate box FLAT_BOX
+          } {
+            Fl_Group {} {open
+              xywh {0 0 105 60}
+            } {
+              Fl_Round_Button minutesRadio {
+                label Minutes
+                xywh {0 0 105 15} type RADIO
+              }
+              Fl_Round_Button hoursRadio {
+                label Hours
+                xywh {0 15 105 15} type RADIO
+              }
+              Fl_Round_Button daysRadio {
+                label Days
+                xywh {0 30 105 15} type RADIO
+              }
+              Fl_Round_Button mounthsRadio {
+                label Mounths
+                xywh {0 45 105 15} type RADIO
+              }
+            }
+          }
+          Fl_Box {} {
+            xywh {440 5 10 145}
+            extra_code {o->parent()->resizable(o);}
+          }
+        }
+      }
+      Fl_Group {} {
+        label {Content options}
+        xywh {1 23 471 211} hide
+      } {
+        Fl_Group {} {
+          label {General considerations} open
+          xywh {7 20 459 185} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+          extra_code {o->parent()->resizable(o);}
+        } {
+          Fl_Check_Button doNotLookIntoBinaryCheck {
+            label {Do not look into binary files}
+            xywh {15 10 270 23} value 1
+          }
+          Fl_Check_Button outputCountCheck {
+            label {Output count of matching lines}
+            xywh {15 37 270 23} value 1
+          }
+          Fl_Round_Button matchAnywhereRadio {
+            label {Match anywhere}
+            xywh {15 72 255 20} type RADIO value 1
+          }
+          Fl_Round_Button matchWordsRadio {
+            label {Match whole words only}
+            xywh {15 95 255 20} type RADIO
+          }
+          Fl_Round_Button matchLinesRadio {
+            label {Match whole lines only}
+            xywh {15 118 255 20} type RADIO
+          }
+          Fl_Round_Button invertMatchRadio {
+            label {Output files where no match is found}
+            xywh {15 141 255 20} type RADIO
+          }
+          Fl_Box {} {
+            xywh {285 10 160 165}
+            extra_code {o->parent()->resizable(o);}
+          }
+        }
+      }
+      Fl_Group {} {
+        label About open
+        xywh {1 23 471 211}
+      } {
+        Fl_Box {} {
+          label {(C) Copyright 2000-2005. EDE Authors.
+
+ Efinder is using the code from xfglob which is
+ (C) Copyright 2000-2001 by Edscott Wilson Garcia.} selected
+          xywh {21 32 424 135} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+        }
+      }
+    }
+    Fl_Browser searchList {open
+      xywh {3 245 473 85} align FL_ALIGN_TOP|FL_ALIGN_LEFT resizable
+      extra_code {\#include <efltk/Fl_ListView.h>
+\#include <efltk/Fl_ListView_Item.h>
+\#include <efltk/Fl_Util.h>
+searchList->type(searchList->type() | Fl_ListView::MULTI_SELECTION);
+searchList->add_column(_("Filename"), 200);
+searchList->add_column(_("Size"), 79);
+searchList->add_column(_("Last modified"), 125);
+searchList->add_column(_("Rights"), 65);
+searchList->column_flags(0, FL_ALIGN_LEFT);
+searchList->column_flags(1, FL_ALIGN_CENTER);
+searchList->column_flags(2, FL_ALIGN_CENTER);
+searchList->column_flags(3, FL_ALIGN_RIGHT);}
+      class Fl_ListView
+    } {}
+    Fl_Box statusLine {
+      xywh {3 362 473 20} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE when CHANGED box THIN_DOWN_BOX
+    }
+    Fl_Group {} {open
+      xywh {3 330 473 30}
+    } {
+      Fl_Button searchButton {
+        label {&Find}
+        callback {findCB();}
+        tooltip {Start the searching.}
+        xywh {222 3 80 25} shortcut 0xff0d
+      }
+      Fl_Button {} {
+        label {&Cancel}
+        callback {exit(0);}
+        xywh {392 3 80 25}
+      }
+      Fl_Button stopButton {
+        label {&Stop}
+        callback {stopSearch();}
+        tooltip {Stop the searching.}
+        xywh {307 3 80 25}
+      }
+      Fl_Box {} {
+        xywh {7 5 210 20}
+        extra_code {o->parent()->resizable(o);}
+      }
+    }
+  }
+  code {findWindow->end();
+findWindow->show();} {}
+} 

@@ -1,0 +1,131 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.0100 
+images_dir ./icons 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {/*
+ * $Id$
+ *
+ * Icon properties (for eiconman - the EDE desktop)
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */} {} 
+
+decl {\#include <fltk/ColorChooser.h>} {} 
+
+decl {\#include "../edelib2/NLS.h"} {} 
+
+decl {\#include "../edeconf.h"} {} 
+
+decl {\#include "eicon.h"} {} 
+
+Function {} {open
+} {
+  code {//fl_init_locale_support("eiconsconf", PREFIX"/share/locale");
+readIconsConfiguration();} {}
+  {fltk::Window} iconsConfWindow {
+    label {Icons settings} open
+    xywh {386 204 265 310} resizable visible
+  } {
+    {fltk::Button} {} {
+      label {&OK}
+      callback {writeIconsConfiguration();
+sendUpdateInfo();
+exit(0);}
+      xywh {25 277 75 25}
+    }
+    {fltk::Button} {} {
+      label {&Cancel}
+      callback {exit(0);}
+      xywh {185 277 75 25}
+    }
+    {fltk::Button} {} {
+      label {&Apply}
+      callback {writeIconsConfiguration();
+sendUpdateInfo();}
+      xywh {105 277 75 25}
+    }
+    {fltk::TabGroup} {} {open
+      xywh {1 5 259 262} color 0xfffffffe
+    } {
+      {fltk::Group} {} {
+        label {Look&&feel} open
+        xywh {0 20 255 239}
+      } {
+        {fltk::Button} colorButton {
+          label {Background color: }
+          callback {changeBoxColor(colorButton);
+label_background = (int) colorButton->color();}
+          xywh {164 20 60 18} align 4
+          extra_code {o->color((fltk::Color)label_background);
+if(label_trans) o->deactivate();}
+        }
+        {fltk::Button} colorButton1 {
+          label {Label color: }
+          callback {changeBoxColor(colorButton1);
+label_foreground = (int) colorButton1->color();}
+          xywh {164 45 60 18} align 4
+          extra_code {o->color((fltk::Color) label_foreground);}
+        }
+        {fltk::ValueSlider} maxWidthSlider {
+          label {Maximum width: }
+          callback {label_maxwidth = (int) maxWidthSlider->value();}
+          xywh {114 78 125 20} align 4 minimum 48 maximum 200 step 1 value 50 slider_size 10
+          extra_code {o->value(label_maxwidth);}
+        }
+        {fltk::ValueSlider} fontsizeSlider {
+          label {Font height: }
+          callback {label_fontsize = (int)  fontsizeSlider->value();}
+          xywh {114 108 125 20} type TICK_ABOVE align 4 minimum 8 maximum 48 step 1 value 10 slider_size 10
+          extra_code {o->value(label_fontsize);}
+        }
+        {fltk::ValueSlider} gridspaceSlider {
+          label {Grid spacing: }
+          callback {label_gridspacing = (int) gridspaceSlider->value();}
+          xywh {114 138 125 20} type TICK_ABOVE align 4 minimum 1 maximum 50 step 1 value 10 slider_size 10
+          extra_code {o->value(label_gridspacing);}
+        }
+        {fltk::CheckButton} autoArrButton {
+          label {Auto arrange icons}
+          callback {auto_arr = (o->value()>0);}
+          xywh {24 198 222 20}
+          extra_code {o->value(auto_arr);}
+        }
+        {fltk::CheckButton} engageButton {
+          label {Engage with just one click}
+          callback {label_engage_1click = (int) engageButton->value();}
+          xywh {24 173 222 20}
+          extra_code {o->value(label_engage_1click);}
+        }
+        {fltk::CheckButton} bg_color_check {
+          callback {if(o->value()) colorButton->activate();
+else colorButton->deactivate();
+label_trans = (o->value()==0);}
+          tooltip {Clear this, to get transparent background.}
+          xywh {226 20 20 18}
+          extra_code {if(!label_trans) o->set();}
+        }
+      }
+    }
+  }
+} 
+
+Function {changeBoxColor(fltk::Button *box)} {open return_type void
+} {
+  code {//Fl_Button *colorBox = box;
+fltk::Color oldColor = box->color();
+fltk::Color defColor = oldColor;
+fltk::color_chooser(_("Choose color"), defColor);
+if ( defColor != oldColor ) {
+	box->color(defColor);
+	box->redraw();
+}} {selected
+  }
+} 

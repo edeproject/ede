@@ -1,0 +1,10 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Icon=kppp.png
+  X=20
+  Y=210
+  Name=Connect to Internet
+  Exec=epppdialer
+  Name[sk]=Pripojenie do Internetu
+

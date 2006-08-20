@@ -1,0 +1,193 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: econtrol 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:35+0100\n"
+"PO-Revision-Date: 202-11-29 13:52+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: econtrol.cpp:27
+msgid "This config utility sets icons on the desktop."
+msgstr "Utilitas konfigurasi ini menetapkan ikon di desktop."
+
+#: econtrol.cpp:478
+msgid "This config utility sets global colors."
+msgstr "Utilitas konfigurasi ini menetapkan warna global."
+
+#: econtrol.cpp:838
+msgid "This config utility sets screensaver."
+msgstr "Utilitas konfigurasi ini menetapkan screensaver."
+
+#: econtrol.cpp:1401
+msgid "This config utility sets window managers colors and behaviour."
+msgstr "Utilitas konfigurasi ini menetapkan warna dan perilaku window manager."
+
+#: econtrol.cpp:1958
+msgid "This config utility sets window system parametres."
+msgstr "Utilitas konfigurasi ini menetapkan parameter untuk sistem window."
+
+#: econtrol.cpp:2534
+msgid "This config utility helps you to install new software."
+msgstr ""
+"Utilitas konfigurasi ini menolong anda menginstallkan perangkat lunak baru."
+
+#: econtrol.cpp:3019
+msgid "This config utility shows and set computer time and date."
+msgstr ""
+"Utilitas konfigurasi ini menunjukkan dan menetapkan waktu dan tanggal "
+"komputer."
+
+#: econtrol.cpp:3507
+msgid "This config utility sets panel behaviour."
+msgstr "Utilitas konfigurasi ini menetapkan perilaku panel."
+
+#: econtrol.cpp:3870 econtrol.cpp:3894
+msgid "Control panel"
+msgstr "Panel kontrol"
+
+#: econtrol.cpp:3875
+msgid "&File"
+msgstr "&File"
+
+#: econtrol.cpp:3876
+msgid "&Quit"
+msgstr "&Keluar"
+
+#: econtrol.cpp:3883
+msgid "&Help"
+msgstr "&Pertolongan"
+
+#: econtrol.cpp:3884
+msgid "&About"
+msgstr "&Tentang"
+
+#: econtrol.cpp:3906
+msgid ""
+"Welcome to the control panel. Here you can setup most things on your "
+"computer."
+msgstr ""
+"Selamat datang di panel kontrol. Disini anda dapat men-setup hal-hal "
+"tertentu di komputer anda."
+
+#: econtrol.cpp:3918
+msgid "Icons"
+msgstr "Ikon"
+
+#: econtrol.cpp:3928
+msgid "Icons settings."
+msgstr "Seting ikon."
+
+#: econtrol.cpp:3930
+msgid "Colors"
+msgstr "Warna"
+
+#: econtrol.cpp:3939
+msgid "Colors settings."
+msgstr "Seting warna"
+
+#: econtrol.cpp:3941
+msgid "Screen saver"
+msgstr "Screen saver"
+
+#: econtrol.cpp:3950
+msgid "Screensaver configuration."
+msgstr "Konfigurasi screensaver."
+
+#: econtrol.cpp:3952
+msgid "Window manager"
+msgstr "Window manager"
+
+#: econtrol.cpp:3961
+msgid "Window manager settings."
+msgstr "Seting window manager."
+
+#: econtrol.cpp:3963
+msgid "Display"
+msgstr "Tampilan"
+
+#: econtrol.cpp:3972
+msgid "Display settings. "
+msgstr "Seting tampilan."
+
+#: econtrol.cpp:3974
+msgid "Install new software"
+msgstr "Install perangkat lunak baru"
+
+#: econtrol.cpp:3983
+msgid "Software installation."
+msgstr "Instalasi perangkat lunak."
+
+#: econtrol.cpp:3985
+msgid "Time and date"
+msgstr "Jam dan tanggal"
+
+#: econtrol.cpp:3994
+msgid "Time and date settings."
+msgstr "Seting jam dan tanggal."
+
+#: econtrol.cpp:3996
+msgid "Panel"
+msgstr "Panel"
+
+#: econtrol.cpp:4005
+msgid "Panel configuration."
+msgstr "Konfigurasi panel."
+
+#: econtrol.cpp:4017
+msgid "Ready"
+msgstr "Siap"
+
+#~ msgid "About Control panel"
+#~ msgstr "Tentang Panel kontrol"
+
+#~ msgid "&Close"
+#~ msgstr "&Tutup"
+
+#~ msgid ""
+#~ "This program is based in part on the work of FLTK project (www.fltk.org). "
+#~ "This program is free software, you can redistribute it and/or modify it "
+#~ "under the terms of GNU General Public License as published by the Free "
+#~ "Software Foundation, either version 2 of the License, or (at your option) "
+#~ "any later version. This program is distributed in the hope that it will "
+#~ "be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+#~ "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General "
+#~ "Public License for more details. You should have received a copy of the "
+#~ "GNU General Public Licence along with this program; if not, write to the "
+#~ "Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA"
+#~ msgstr ""
+#~ "Program ini berbasis pada hasil pekerjaan proyek FLTK (www.fltk.org). "
+#~ "Program ini adalah free software, anda bisa mendistribusikan kembali dan/"
+#~ "atau memodifikasinya dengan syarat-syarat yang diatur pada GNU General "
+#~ "Public License, versi 2 atau versi yang lebih baru. Program ini "
+#~ "didistribusikan dengan harapan akan berguna, tetapi TANPA JAMINAN; bahkan "
+#~ "tanpa jaminan daya jual dan tujuan-tujuan tertentu. Lihat GNU General "
+#~ "Public License untuk lebih jelasnya. Anda seharusnya telah menerima "
+#~ "salinan GNU General Public License bersama dengan program ini; jikat "
+#~ "tidak, silahkan minta ke Free Software Foundation, Inc., 675 Mass Ave, "
+#~ "Cambridge, MA 02139, USA."
+
+#~ msgid "This config utility shows system information."
+#~ msgstr "Utilitas konfigurasi ini menunjukkan informasi sistem."
+
+#~ msgid "This config utility sets printer."
+#~ msgstr "Utilitas konfigurasi ini menetapkan printer."
+
+#~ msgid "Printers"
+#~ msgstr "Printer"
+
+#~ msgid "Printers management."
+#~ msgstr "Pengelolaan printer."
+
+#~ msgid "Hardware center"
+#~ msgstr "Pusat perangkat keras"
+
+#~ msgid "Hardware center."
+#~ msgstr "Pusat perangkat keras."

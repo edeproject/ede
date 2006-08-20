@@ -1,0 +1,136 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2005-02-09 11:21+0100\n"
+"Last-Translator: Nemeth Otto <otto_nemeth@freemail.hu>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: econtrol.cpp:27
+msgid "This config utility sets icons on the desktop."
+msgstr "Ez az alkalmazás az asztal-ikonok beállításait módosítja"
+
+#: econtrol.cpp:478
+msgid "This config utility sets global colors."
+msgstr "Ez az alkalmazás a színösszeállítást módosítja"
+
+#: econtrol.cpp:838
+msgid "This config utility sets screensaver."
+msgstr "Ez az alkalmazás a képernyőkímélő beállításait módosítja"
+
+#: econtrol.cpp:1401
+msgid "This config utility sets window managers colors and behaviour."
+msgstr "Ez az alkalmazás az ablakkezelő színeit és viselkedését módosítja"
+
+#: econtrol.cpp:1958
+msgid "This config utility sets window system parametres."
+msgstr "Ez az alkalmazás az egér és billentyűzet beállításait módosítja"
+
+#: econtrol.cpp:2534
+msgid "This config utility helps you to install new software."
+msgstr "Ez az alkalmazás segít egy új program telepítésében"
+
+#: econtrol.cpp:3019
+msgid "This config utility shows and set computer time and date."
+msgstr "Ez az alkalmazás a rendszer időt módosítja"
+
+#: econtrol.cpp:3507
+msgid "This config utility sets panel behaviour."
+msgstr "Ez az alkalmazás a panel beállításait módosítja"
+
+#: econtrol.cpp:3870
+#: econtrol.cpp:3894
+msgid "Control panel"
+msgstr "Vezérlőpult"
+
+#: econtrol.cpp:3875
+msgid "&File"
+msgstr "&Fájl"
+
+#: econtrol.cpp:3876
+msgid "&Quit"
+msgstr "&Kilépés"
+
+#: econtrol.cpp:3883
+msgid "&Help"
+msgstr "Segítsé&g"
+
+#: econtrol.cpp:3884
+msgid "&About"
+msgstr "M&agamról"
+
+#: econtrol.cpp:3906
+msgid "Welcome to the control panel. Here you can setup most things on your computer."
+msgstr "Üdvözöllek a vezérlőpultban. Itt módosíthatod felhasználói felületed beállításait."
+
+#: econtrol.cpp:3918
+msgid "Icons"
+msgstr "Ikonok"
+
+#: econtrol.cpp:3928
+msgid "Icons settings."
+msgstr "Ikon beállítások"
+
+#: econtrol.cpp:3930
+msgid "Colors"
+msgstr "Színek"
+
+#: econtrol.cpp:3939
+msgid "Colors settings."
+msgstr "Szín beállítások"
+
+#: econtrol.cpp:3941
+msgid "Screen saver"
+msgstr "Képernyő- kímélő"
+
+#: econtrol.cpp:3950
+msgid "Screensaver configuration."
+msgstr "Képernyőkímélő beállításai"
+
+#: econtrol.cpp:3952
+msgid "Window manager"
+msgstr "Ablakkezelő"
+
+#: econtrol.cpp:3961
+msgid "Window manager settings."
+msgstr "Ablakkezelő beállításai"
+
+#: econtrol.cpp:3963
+msgid "Display"
+msgstr "Felhasználói felület"
+
+#: econtrol.cpp:3972
+msgid "Display settings. "
+msgstr "Felhasználói felület beállításai"
+
+#: econtrol.cpp:3974
+msgid "Install new software"
+msgstr "Új program telepítése"
+
+#: econtrol.cpp:3983
+msgid "Software installation."
+msgstr "Program telepítése"
+
+#: econtrol.cpp:3985
+msgid "Time and date"
+msgstr "Dátum és idő"
+
+#: econtrol.cpp:3994
+msgid "Time and date settings."
+msgstr "Dátum és idő beállítások"
+
+#: econtrol.cpp:3996
+msgid "Panel"
+msgstr "Panel"
+
+#: econtrol.cpp:4005
+msgid "Panel configuration."
+msgstr "Panel beállítások"
+
+#: econtrol.cpp:4017
+msgid "Ready"
+msgstr "Kész"
+

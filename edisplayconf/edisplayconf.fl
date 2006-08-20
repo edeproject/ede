@@ -1,0 +1,188 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.0100 
+images_dir ./ 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {/*
+ * $Id$
+ *
+ * X server properties
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */} {} 
+
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include "conf.h"} {} 
+
+decl {\#include "../edelib2/NLS.h"} {} 
+
+decl {//\#include <efltk/Fl_Util.h>} {} 
+
+decl {\#include <fltk/run.h>} {} 
+
+class edisplayconf {open
+} {
+  decl {bool _finish;} {public
+  }
+  Function {edisplayconf()} {open
+  } {
+    {fltk::Window} win {
+      label {Display configuration}
+      callback {_finish = true;} open
+      private xywh {386 200 265 335} resizable visible
+    } {
+      {fltk::TabGroup} {} {open
+        xywh {5 5 260 285}
+      } {
+        {fltk::Group} group_mouse {
+          label Mouse open selected
+          private xywh {0 24 255 260} align 4
+        } {
+          {fltk::ValueSlider} slider_accel {
+            label Acceleration
+            xywh {20 30 220 18} align 1 maximum 10 step 1 value 2
+          }
+          {fltk::ValueSlider} slider_thresh {
+            label {Threshold (pixels)}
+            xywh {20 75 220 18} align 1 maximum 20 step 1 value 4
+          }
+        }
+        {fltk::Group} group_bell {
+          label Bell open
+          private xywh {0 25 255 259} hide
+        } {
+          {fltk::ValueSlider} slider_volume {
+            label {Volume in %}
+            xywh {20 30 220 18} align 1 maximum 100 step 1 value 50
+          }
+          {fltk::ValueSlider} slider_pitch {
+            label {Pitch in Hz}
+            xywh {20 75 220 18} align 1 minimum 100 maximum 1000 step 1 value 440
+          }
+          {fltk::ValueSlider} slider_duration {
+            label {Duration in ms}
+            xywh {20 120 220 18} align 1 maximum 1000 step 1 value 200
+          }
+          {fltk::Button} {} {
+            label Test
+            callback {testbellCB();}
+            xywh {175 170 60 25}
+          }
+        }
+        {fltk::Group} group_keyboard {
+          label Keyboard open
+          private xywh {0 25 255 259} align 5 hide
+        } {
+          {fltk::CheckButton} check_autorepeat {
+            label {  Repeat key activated}
+            xywh {24 20 221 20} selection_color 2 value 1
+          }
+          {fltk::ValueSlider} slider_click {
+            label {Click volume %}
+            xywh {25 67 220 18} align 1 maximum 100 step 1 value 50
+          }
+        }
+        {fltk::Group} group_screen {
+          label Screen open
+          xywh {0 25 255 259} hide
+        } {
+          {fltk::Button} but_activate {
+            label {&Test}
+            callback {TestBlankCB();}
+            xywh {167 190 80 25}
+          }
+          {fltk::InvisibleBox} {} {
+            xywh {10 0 234 55}
+          }
+          {fltk::ValueSlider} slider_delay {
+            label {Activation delay (min)}
+            xywh {27 71 210 18} align 1 minimum 5 maximum 120 step 1 value 15
+          }
+          {fltk::CheckButton} check_blanking {
+            label { Screen blanker activated}
+            xywh {15 20 222 20} selection_color 2 value 1
+          }
+          {fltk::InvisibleBox} {} {
+            xywh {10 99 234 37}
+          }
+          {fltk::ValueSlider} slider_pattern {
+            label {Pattern change delay (min)}
+            xywh {27 155 210 18} align 1 deactivate minimum 1 maximum 5 step 0 value 2
+          }
+          {fltk::Group} {} {open
+            xywh {35 108 210 27}
+          } {
+            {fltk::RadioButton} radio_blank {
+              label Blank
+              callback {radioCB();}
+              xywh {0 0 105 20} selection_color 1 value 1
+            }
+            {fltk::RadioButton} radio_pattern {
+              label Pattern
+              callback {radioCB();}
+              xywh {107 5 95 20} selection_color 1
+            }
+          }
+        }
+      }
+      {fltk::Button} {} {
+        label {&Cancel}
+        callback {cancelCB();}
+        xywh {190 300 70 25} align 16
+      }
+      {fltk::Button} but_kbd_apply {
+        label {&Apply}
+        callback {applyCB();}
+        xywh {115 300 70 25}
+      }
+      {fltk::ReturnButton} {} {
+        label OK
+        callback {okCB();}
+        xywh {40 300 70 25} shortcut 0xd
+      }
+    }
+  }
+  Function {~edisplayconf()} {open
+  } {}
+  Function {Run()} {open
+  } {
+    code {_finish = false;
+	win->show();
+	while (!_finish) fltk::wait();
+	win->hide();} {}
+  }
+  Function {make_window()} {} {}
+  Function {radioCB()} {open
+  } {
+    code {int l_blank;
+
+  l_blank = (int)radio_blank->value();
+  if (l_blank)
+    slider_pattern->deactivate();
+  else
+    slider_pattern->activate();} {}
+  }
+} 
+
+Function {main(int ac,char **av)} {open return_type int
+} {
+  code {//fl_init_locale_support("edisplayconf", PREFIX"/share/locale");
+app = new edisplayconf();
+read_disp_configuration();
+app->Run();
+delete app;
+return 0;} {}
+} 
+
+decl {edisplayconf *app;} {public
+} 

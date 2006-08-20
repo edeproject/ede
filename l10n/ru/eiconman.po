@@ -1,0 +1,259 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:27+0100\n"
+"PO-Revision-Date: 2002-11-28 HO:MI+ZONE\n"
+"Last-Translator: aabbvv <null@list.ru>\n"
+"Language-Team: RUSSIAN <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: edeskconf.cpp:38
+msgid "Background settings"
+msgstr "Настройка фона"
+
+#: edeskconf.cpp:42
+msgid "Background"
+msgstr "Фон"
+
+#: edeskconf.cpp:79
+msgid "C&olor..."
+msgstr "Цвет..."
+
+#: edeskconf.cpp:87
+msgid "Use wallpaper"
+msgstr "Использовать обои"
+
+#: edeskconf.cpp:91 edeskconf.cpp:130
+msgid "label"
+msgstr ""
+
+#: edeskconf.cpp:94
+msgid "Image:"
+msgstr "Изображение:"
+
+#: edeskconf.cpp:99
+msgid "&Browse..."
+msgstr "Просмотр..."
+
+#: edeskconf.cpp:102
+msgid "Opacity:"
+msgstr "Непрозрачность:"
+
+#: edeskconf.cpp:112
+msgid "Mode:"
+msgstr "Режим:"
+
+#: edeskconf.cpp:114
+msgid "Center"
+msgstr "Центрировать"
+
+#: edeskconf.cpp:117
+msgid "Stretch"
+msgstr "Растянуть"
+
+#: edeskconf.cpp:120
+msgid "Stretch (aspect)"
+msgstr "Растянуть (пропорционально)"
+
+#: edeskconf.cpp:123
+msgid "Tiled"
+msgstr "Черепицей"
+
+#: edeskconf.cpp:131
+msgid "&OK"
+msgstr "&OK"
+
+#: edeskconf.cpp:134 propdialog.cpp:113
+msgid "&Apply"
+msgstr "Применить"
+
+#: edeskconf.cpp:137
+msgid "&Cancel"
+msgstr "Отмена"
+
+#: edeskicon.cpp:86
+msgid "&Open"
+msgstr "Открыть"
+
+#: edeskicon.cpp:90
+msgid "&Delete"
+msgstr "Удалить"
+
+#: edeskicon.cpp:96
+msgid "&Properties"
+msgstr "Свойства"
+
+#: edeskicon.cpp:442
+msgid "Name of the icon must be filled."
+msgstr "У пиктограммы должно быть имя."
+
+#: edeskicon.cpp:467
+msgid "Delete this icon?"
+msgstr "Удалить эту пиктограмму?"
+
+#: edeskicon.cpp:473
+#, c-format
+msgid ""
+"Remove of the icon %s failed. You probably do not have write access to this "
+"file."
+msgstr ""
+"Не удалось удалить пиктограмму %s. Возможно Вы не имеете необходимых прав "
+"доступа к этому файлу."
+
+#: edeskicon.cpp:482
+msgid "Enter the name of the new icon:"
+msgstr "Введите название новой пиктограммы:"
+
+#: edeskicon.cpp:505 eiconman.cpp:241
+msgid "The icon with the same name already exists."
+msgstr "Пиктограмма с таким именем уже есть."
+
+#: edeskicon.cpp:562
+#, fuzzy, c-format
+msgid "%d bytes, %s"
+msgstr "%d байт"
+
+#: eiconman.cpp:112
+msgid "&New desktop item"
+msgstr "Новая пиктограмма"
+
+#: eiconman.cpp:116
+msgid "&Refresh"
+msgstr "Обновить"
+
+#: eiconman.cpp:122
+#, fuzzy
+msgid "&Icons Settings "
+msgstr "Настройки"
+
+#: eiconman.cpp:126
+#, fuzzy
+msgid "&Background Settings"
+msgstr "Настройка фона"
+
+#: eiconman.cpp:718
+#, fuzzy
+msgid ""
+"All Files, *,Png Images, *.png,Xpm Images, *.xpm,Jpeg Images, *.{jpg|jpeg},"
+"Gif Images, *.gif,Bmp Images, *.bmp"
+msgstr ""
+"изображения Png, *.png,изображения Xpm, *.xpm,изображения Jpeg, *.{jpg|jpeg},"
+"изображения Gif, *.gif,изображения Bmp, *.bmp,выберите обои:"
+
+#: eiconman.cpp:724
+#, fuzzy
+msgid "Choose wallpaper:"
+msgstr "Использовать обои"
+
+#: eiconman.cpp:761
+msgid "Choose color"
+msgstr "Выберите цвет"
+
+#: propdialog.cpp:31
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Исполняемые (*.*), *, Все файлы (*.*), *"
+
+#: propdialog.cpp:32
+msgid "Open location..."
+msgstr "Открыть ..."
+
+#: propdialog.cpp:39
+msgid ""
+"Png images (*.png), *.png, Jpeg Images (*.jpeg), *.{jpeg|jpg}, Bmp Files (*."
+"bmp), *.bmp, Gif Files (*.gif), *.gif, Xpm Files (*.xpm), *.xpm, All files "
+"(*.*), *"
+msgstr ""
+
+#: propdialog.cpp:40
+msgid "Icon file selection"
+msgstr "Выбор значка"
+
+#: propdialog.cpp:62
+msgid "Icon properties"
+msgstr "Свойства пиктограммы"
+
+#: propdialog.cpp:65
+msgid "Icon"
+msgstr "Пиктограмма"
+
+#: propdialog.cpp:69
+msgid "Name:"
+msgstr "Имя:"
+
+#: propdialog.cpp:72
+msgid "Size:"
+msgstr "Размер:"
+
+#: propdialog.cpp:75
+msgid "Command:"
+msgstr "Команда:"
+
+#: propdialog.cpp:90
+msgid "Settings"
+msgstr "Настройки"
+
+#: propdialog.cpp:92
+msgid "Link file:"
+msgstr "Ярлык:"
+
+#: propdialog.cpp:96
+msgid "Icon name:"
+msgstr "Имя пиктограммы:"
+
+#: propdialog.cpp:99
+msgid "Location to open:"
+msgstr "Запускаемая программа:"
+
+#: propdialog.cpp:102 propdialog.cpp:109
+msgid "..."
+msgstr ""
+
+#: propdialog.cpp:106
+msgid "Icon filename:"
+msgstr "Значок:"
+
+#: propdialog.cpp:120
+msgid "&Close"
+msgstr "Закрыть"
+
+#~ msgid "&Edit"
+#~ msgstr "Редактировать"
+
+#~ msgid "Enter the program name or the location to open:"
+#~ msgstr "Введите название запускаемой программы:"
+
+#~ msgid "Background color selection..."
+#~ msgstr "Выбор фона..."
+
+#~ msgid "Image selection..."
+#~ msgstr "Выбор изображения..."
+
+#~ msgid "Wallpaper"
+#~ msgstr "Обои"
+
+#~ msgid ""
+#~ "Images (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, All files (*."
+#~ "*), *"
+#~ msgstr ""
+#~ "Изображения (*.png; *.jpg; *.gif; *.bmp), *.{png|jpg|gif|bmp}, Все файлы "
+#~ "(*.*), *"
+
+#~ msgid "Icons (*.png), *.png, All files (*.*), *"
+#~ msgstr "Значки (*.png), *.png, Все файлы (*.*), *"
+
+#~ msgid "None"
+#~ msgstr "Ничего"
+
+#~ msgid "&Bg Properties"
+#~ msgstr "Настройка фона"
+
+#~ msgid "All Files, *"
+#~ msgstr "Все файлы, *"

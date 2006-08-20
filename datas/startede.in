@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# startede.in
+# 
+#######################################################
+# $Id: startede.in,v 1.1.1.1 2005/03/04 15:44:41 karijes Exp $
+#
+
+PREFIX=@prefix@
+XSSAVER=`which xscreensaver 2> /dev/null`
+XSETROOT=`which xsetroot 2> /dev/null`
+
+userresources=$HOME/.Xdefaults
+sysresources=/usr/X11R6/lib/X11/xinit/.Xresources
+
+if [ -f $sysresources ]; then
+    xrdb -merge $sysresources
+fi
+
+if [ -f $userresources ]; then
+    xrdb -merge $userresources
+fi
+
+PATH=$PATH:$PREFIX:$PREFIX/bin
+export PATH
+
+if [ -x $HOME/.ede ]; then
+    echo "EDE home dir exists, ok."
+else 
+    echo "Default EDE home dir for user $HOME does not exist. Creating one..."    
+    cp -R $PREFIX/share/ede/.ede $HOME
+fi
+
+# If we have xsetroot than script shoult run it
+if [ "$XSETROOT" ]; then
+	$XSETROOT -solid black
+fi
+
+# Test if XScreenSaver is somewhere in PATH, if not - don't start it
+if [ "$XSSAVER" ]; then
+	xscreensaver -nosplash &
+fi
+
+    exec edewm &
+    exec eiconman &    
+    etip &    
+    exec eworkpanel

@@ -1,0 +1,141 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2005-02-09 11:23+0100\n"
+"Last-Translator: Nemeth Otto <otto_nemeth@freemail.hu>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ewmconf.cpp:89
+msgid "Themes (*.theme), *.theme, All files (*.*), *"
+msgstr "Témák (*.theme), *.theme, Minden fájl (*.*), *"
+
+#: ewmconf.cpp:92
+msgid "Themes..."
+msgstr "Témák..."
+
+#: ewmconf.cpp:139
+msgid "Window manager settings"
+msgstr "Ablakkezelő beállítások"
+
+#: ewmconf.cpp:143
+msgid "&Titlebar"
+msgstr "&Fejléc"
+
+#: ewmconf.cpp:145
+msgid "Text align:"
+msgstr "Igazítás:"
+
+#: ewmconf.cpp:147
+msgid "Left"
+msgstr "Balra"
+
+#: ewmconf.cpp:148
+msgid "Right"
+msgstr "Jobbra"
+
+#: ewmconf.cpp:149
+msgid "Center"
+msgstr "Középen"
+
+#: ewmconf.cpp:153
+msgid "Height:"
+msgstr "Mag.:"
+
+#: ewmconf.cpp:161
+msgid "Titlebar label color: "
+msgstr "Inaktív szöveg szín:"
+
+#: ewmconf.cpp:167
+msgid "Titlebar color: "
+msgstr "Inaktív fejléc szín:"
+
+#: ewmconf.cpp:174
+msgid "Titlebar active label color: "
+msgstr "Aktív szöveg szín:"
+
+#: ewmconf.cpp:180
+msgid "Titlebar active color: "
+msgstr "Aktív fejléc szín:"
+
+#: ewmconf.cpp:188
+msgid "Box type:"
+msgstr "Stílus:"
+
+#: ewmconf.cpp:191
+msgid "Flat"
+msgstr "Egyszínű"
+
+#: ewmconf.cpp:192
+msgid "Horizontal shade"
+msgstr "Vízszintes színátmenet"
+
+#: ewmconf.cpp:193
+msgid "Thin down"
+msgstr "Karcsú"
+
+#: ewmconf.cpp:194
+msgid "Up box"
+msgstr "Megemelt"
+
+#: ewmconf.cpp:195
+msgid "Down box"
+msgstr "Süllyesztett"
+
+#: ewmconf.cpp:196
+msgid "Plastic"
+msgstr "Plasztik"
+
+#: ewmconf.cpp:200
+msgid "&Use theme"
+msgstr "&Téma használata"
+
+#: ewmconf.cpp:204
+msgid "Path:"
+msgstr "Útvonal:"
+
+#: ewmconf.cpp:209
+msgid "..."
+msgstr "..."
+
+#: ewmconf.cpp:213
+#: ewmconf.cpp:216
+#: ewmconf.cpp:243
+msgid "label"
+msgstr "címke"
+
+#: ewmconf.cpp:221
+msgid "&Resizing"
+msgstr "Á&tméretezés"
+
+#: ewmconf.cpp:224
+msgid "Animate size changes"
+msgstr "Animált maximalizálás"
+
+#: ewmconf.cpp:229
+msgid "Speed:"
+msgstr "Sebesség:"
+
+#: ewmconf.cpp:244
+msgid "Show window content while resizing"
+msgstr "Ablaktartalom megjelenítése átméretezésnél"
+
+#: ewmconf.cpp:252
+msgid "&OK"
+msgstr "&OK"
+
+#: ewmconf.cpp:256
+msgid "&Apply"
+msgstr "&Alkalmaz"
+
+#: ewmconf.cpp:259
+msgid "&Cancel"
+msgstr "Mégs&em"
+
+#: ewmconf.cpp:274
+msgid "Choose color"
+msgstr "Szín kiválasztása"
+

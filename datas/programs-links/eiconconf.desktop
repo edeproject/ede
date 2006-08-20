@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Icons settings
+  Exec=eiconsconf
+  Icon=image.png
+  Name[sk]=Nastavenie ikon
+

@@ -1,0 +1,203 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ecolorconf 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:37+0100\n"
+"PO-Revision-Date: 202-11-29 13:31+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ecolorconf.cpp:131
+msgid "Colors and fonts settings"
+msgstr "Seting warna dan font"
+
+#: ecolorconf.cpp:136
+msgid "Default colors"
+msgstr "Warna default"
+
+#: ecolorconf.cpp:138
+msgid "Color"
+msgstr "Warna"
+
+#: ecolorconf.cpp:143
+msgid "Label color"
+msgstr "Warna label"
+
+#: ecolorconf.cpp:148
+msgid "Selection color"
+msgstr "Warna pilihan"
+
+#: ecolorconf.cpp:153
+msgid "Selection text color"
+msgstr "Warna teks pilihan"
+
+#: ecolorconf.cpp:158
+msgid "Off color"
+msgstr "Warna off"
+
+#: ecolorconf.cpp:163
+msgid "Highlight color"
+msgstr "Warna sorot"
+
+#: ecolorconf.cpp:168
+msgid "Highlight label color"
+msgstr "Warna label sorot"
+
+#: ecolorconf.cpp:173
+msgid "Text color"
+msgstr "Warna teks"
+
+#: ecolorconf.cpp:178
+msgid "Background"
+msgstr "Latar belakang"
+
+#: ecolorconf.cpp:183
+msgid "Text background"
+msgstr "Teks latar belakang"
+
+#: ecolorconf.cpp:190
+msgid "Tooltips"
+msgstr "Tooltip"
+
+#: ecolorconf.cpp:193
+msgid "Tooltip color"
+msgstr "Warna tooltip"
+
+#: ecolorconf.cpp:198
+msgid "Tooltip text color"
+msgstr "Warna teks tooltip"
+
+#: ecolorconf.cpp:203 ecolorconf.cpp:252
+msgid "Enable effects"
+msgstr "Aktifkan efek"
+
+#: ecolorconf.cpp:204
+msgid "Enabled"
+msgstr "Aktifkan"
+
+#: ecolorconf.cpp:205 ecolorconf.cpp:254
+msgid "Effect type:"
+msgstr "Tipe efek:"
+
+#: ecolorconf.cpp:207 ecolorconf.cpp:256
+msgid "None"
+msgstr "Tidak ada"
+
+#: ecolorconf.cpp:208 ecolorconf.cpp:257
+msgid "Animation"
+msgstr "Animasi"
+
+#: ecolorconf.cpp:209 ecolorconf.cpp:258
+msgid "Fading"
+msgstr "Fading"
+
+#: ecolorconf.cpp:212 ecolorconf.cpp:262
+msgid "Delay:"
+msgstr "Tunda:"
+
+#: ecolorconf.cpp:215
+msgid "Fonts"
+msgstr "Font"
+
+#: ecolorconf.cpp:218
+msgid "Label font:"
+msgstr "Font label:"
+
+#: ecolorconf.cpp:226
+msgid "Text font:"
+msgstr "Font teks:"
+
+#: ecolorconf.cpp:233
+msgid "Label size:"
+msgstr "Ukuran label:"
+
+#: ecolorconf.cpp:236
+msgid "Text size:"
+msgstr "Ukuran teks:"
+
+#: ecolorconf.cpp:239
+msgid "Encoding:"
+msgstr "Pengkodean:"
+
+#: ecolorconf.cpp:241 ecolorconf.cpp:244
+msgid "..."
+msgstr ""
+
+#: ecolorconf.cpp:250
+msgid "Menus"
+msgstr "Menu"
+
+#: ecolorconf.cpp:253
+msgid "Enable subwindow effects"
+msgstr "Aktifkan efek subwindow"
+
+#: ecolorconf.cpp:261
+msgid "Speed:"
+msgstr "Kecepatan:"
+
+#: ecolorconf.cpp:265
+msgid "Others"
+msgstr "Lainnya"
+
+#: ecolorconf.cpp:267
+msgid "Enable MDI animation"
+msgstr "Aktifkan animasi MDI"
+
+#: ecolorconf.cpp:268
+msgid "MDI opaque animation"
+msgstr "Animasi opaque MDI"
+
+#: ecolorconf.cpp:269
+msgid "Enable images state effect"
+msgstr "Aktifkan efek keadaan citra"
+
+#: ecolorconf.cpp:276
+msgid "&Save as..."
+msgstr "&Simpan sebagai..."
+
+#: ecolorconf.cpp:279
+msgid "Ap&ply colors to all programs"
+msgstr "Berlakukan warna ke semua &program"
+
+#: ecolorconf.cpp:283
+msgid "Schemes:"
+msgstr "Skema:"
+
+#: ecolorconf.cpp:293 efontdialog.cpp:226
+msgid "&OK"
+msgstr "&OK"
+
+#: ecolorconf.cpp:296
+msgid "&Apply"
+msgstr "Berl&akukan"
+
+#: ecolorconf.cpp:299 efontdialog.cpp:229
+msgid "&Cancel"
+msgstr "&Batal"
+
+#: ecolorconf.cpp:314
+msgid "Choose color"
+msgstr "Pilih warna"
+
+#: ecolorutils.cpp:306
+msgid "Color and label color are the same. Edit colors first."
+msgstr "Warna dan warna label sama. Edit warna lebih dulu."
+
+#: ecolorutils.cpp:344
+msgid "Save scheme as:"
+msgstr "Simpan skema sebagai:"
+
+#: ecolorutils.cpp:344
+msgid "New scheme"
+msgstr "Skema baru"
+
+#: efontdialog.cpp:200
+msgid "Select font..."
+msgstr ""

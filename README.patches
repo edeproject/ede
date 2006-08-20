@@ -1,0 +1,34 @@
+Quick and dirty document for patchers
+-------------------------------------
+
+Before sending any type of code patches, make sure to
+check a few things:
+
+Tabs
+----
+Althought we currently does not require specific coding style (aren't we liberate :)
+we are very sensitive on tabs. So _use_ them. This will enable not only to us, but
+to others, easier switching between screen resolutions etc. (many modern editors allow
+setting tab sizes). Also it is much easier to convert tabs to spaces, than otherwise
+(if we change opinion to tabs and switch to spaces only). Boring know, but keep it in mind.
+
+eFLTK/FLTK knowledge
+--------------------
+This is one of the most important things. Make sure you have at least basic understainding of
+eFLTK/FLTK, especially for draw() and handle(int) functions. They are very sensitive which
+means every move/resize/etc. will call these functions (aka. do not use heavy calculations
+inside, reading/writing files etc.)
+
+Memory
+------
+What you allocate, make sure to deallocate too. Some things should not be deallocated 
+explicitly like some eFLTK/FLTK widgets, but for this, check above.
+
+
+After you read above, applied on code, and decided to send us, please test your code before
+sending. Test on everything. Test on power loss, bad food, cold coffee... And, of course
+test on speed. If it looks nice, but slow as hell, big as big's mamas house, recosider to
+remove these glitches, or if that is not possible, note us like "I want that feature,
+have a patch, but it is slooooowww". We will came up with something.
+
+End, for now...

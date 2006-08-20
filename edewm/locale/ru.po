@@ -1,0 +1,90 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:33+0100\n"
+"PO-Revision-Date: 2002-11-28 HO:MI+ZONE\n"
+"Last-Translator: aabbvv <null@list.ru>\n"
+"Language-Team: RUSSIAN <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Desktop.cpp:138 Desktop.cpp:180
+#, c-format
+msgid "Workspace %d"
+msgstr "Рабочий стол %d"
+
+#: Frame.cpp:106
+msgid "Untitled"
+msgstr "Непоименованный"
+
+#: Frame.cpp:938
+#, c-format
+msgid "EDEWM: Internal bug, when restacking (%d != %d)! Exiting... "
+msgstr ""
+
+#: Titlebar.cpp:215
+msgid "Sticky"
+msgstr "Все сразу"
+
+#: Titlebar.cpp:275 Titlebar.cpp:320
+msgid "Set size"
+msgstr ""
+
+#: Titlebar.cpp:276
+msgid "Set size to window:"
+msgstr ""
+
+#: Titlebar.cpp:285
+msgid "width:"
+msgstr ""
+
+#: Titlebar.cpp:287
+msgid "height:"
+msgstr ""
+
+#: Titlebar.cpp:291
+msgid "&OK"
+msgstr ""
+
+#: Titlebar.cpp:294
+msgid "&Cancel"
+msgstr ""
+
+#: Titlebar.cpp:318 Titlebar.cpp:331
+msgid "Maximize"
+msgstr "Развернуть"
+
+#: Titlebar.cpp:319
+msgid "Minimize"
+msgstr "Свернуть"
+
+#: Titlebar.cpp:321
+msgid "To Desktop"
+msgstr "На рабочий стол"
+
+#: Titlebar.cpp:322
+msgid "Kill"
+msgstr ""
+
+#: Titlebar.cpp:323
+msgid "Close"
+msgstr "Закрыть"
+
+#: Titlebar.cpp:330
+msgid "Restore"
+msgstr "Восстановить"
+
+#: Windowmanager.cpp:90
+#, c-format
+msgid "Another window manager is running.  You must exit it before running %s."
+msgstr ""
+"Запущен другой оконный менеджер. Необходимо выйти их него пере тем как "
+"запустить %s."

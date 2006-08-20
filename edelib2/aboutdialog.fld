@@ -1,0 +1,71 @@
+# data file for the eFLTK User Interface Designer (eFLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// The EDE control center.} {} 
+
+decl {// Copyright (c) 2000. - 2005. EDE Authors} {} 
+
+decl {// This program is licenced under terms of the} {} 
+
+decl {// GNU General Public Licence version 2 or newer.} {} 
+
+decl {// See COPYING for details} {} 
+
+decl {//} {} 
+
+decl {\#include <efltk/Fl_Util.h>} {} 
+
+decl {\#include <edeconf.h>} {} 
+
+decl {Fl_Window *aboutWindow;} {} 
+
+class AboutDialog {open
+} {
+  Function {AboutDialog(const char *progname, const char *progversion, const char *addcomment = 0)} {open return_type void
+  } {
+    Fl_Window aboutWindow {open
+      xywh {652 341 275 190} resizable
+      extra_code {aboutWindow->label(Fl_String(_("About"))+Fl_String(" ")+Fl_String(progname));} modal visible
+    } {
+      Fl_Box {} {
+        xywh {5 5 265 44} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP label_size 18
+        extra_code {o->label(Fl_String(progname)+Fl_String(" ")+Fl_String(progversion));}
+      }
+      Fl_Box {} {
+        label {Part of Equinox Desktop Environment}
+        xywh {5 49 265 20} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+        extra_code {o->label(o->label() + Fl_String(" "PACKAGE_VERSION));}
+      }
+      Fl_Box {} {
+        label {(C) Copyright 2000-2005 EDE Authors}
+        xywh {5 74 265 20} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+      }
+      Fl_Box {} {
+        label {This program is licenced under terms of the GNU General Public License version 2 or newer.}
+        xywh {5 98 265 30} align FL_ALIGN_TOP|FL_ALIGN_INSIDE|FL_ALIGN_WRAP label_size 10
+      }
+      Fl_Button {} {
+        label {Click here for details.}
+        callback {showCopyingInfo();}
+        xywh {65 124 145 20} hotspot box NO_BOX button_box NO_BOX label_color 4 highlight_label_color 1 label_size 10
+      }
+      Fl_Button {} {
+        label {&Close}
+        callback {aboutWindow->hide();} selected
+        xywh {95 152 80 25}
+      }
+    }
+    code {aboutWindow->end();
+aboutWindow->show();} {}
+  }
+  Function {showCopyingInfo()} {open private
+  } {
+    code {fl_start_child_process("elauncher file:/usr/share/ede/doc/copying.html",false);} {}
+  }
+} 

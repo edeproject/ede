@@ -1,0 +1,25 @@
+[widgets]
+
+  [widgets/default]
+    color=7
+    label color=32
+    selection color=-1977078528
+    selection text color=7
+    highlight color=17
+    off color=-623654656
+    text color=32
+    highlight label color=302170112
+    text background=7
+    label font=lucida
+    text font=lucida
+    label size=12
+    text size=12
+    font encoding=iso8859-2
+
+  [widgets/tooltip]
+    color=-941621504
+    label color=32
+
+[global colors]
+  background=17
+

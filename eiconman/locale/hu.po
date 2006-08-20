@@ -1,0 +1,209 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2005-02-10 14:35+0100\n"
+"Last-Translator: Nemeth Otto <otto_nemeth@freemail.hu>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: edeskconf.cpp:38
+msgid "Background settings"
+msgstr "Háttér beállítások"
+
+#: edeskconf.cpp:42
+msgid "Background"
+msgstr "Háttér"
+
+#: edeskconf.cpp:79
+msgid "C&olor..."
+msgstr "S&zín..."
+
+#: edeskconf.cpp:87
+msgid "Use wallpaper"
+msgstr "Háttérkép használata"
+
+#: edeskconf.cpp:91
+#: edeskconf.cpp:130
+msgid "label"
+msgstr "címke"
+
+#: edeskconf.cpp:94
+msgid "Image:"
+msgstr "Kép:"
+
+#: edeskconf.cpp:99
+msgid "&Browse..."
+msgstr "&Tallóz"
+
+#: edeskconf.cpp:102
+msgid "Opacity:"
+msgstr "Áttetsző:"
+
+#: edeskconf.cpp:112
+msgid "Mode:"
+msgstr "Mód:"
+
+#: edeskconf.cpp:114
+msgid "Center"
+msgstr "Középen"
+
+#: edeskconf.cpp:117
+msgid "Stretch"
+msgstr "Nyújtás"
+
+#: edeskconf.cpp:120
+msgid "Stretch (aspect)"
+msgstr "Nyújtás (aránymegtartás)"
+
+#: edeskconf.cpp:123
+msgid "Tiled"
+msgstr "Mozaik"
+
+#: edeskconf.cpp:131
+msgid "&OK"
+msgstr "&OK"
+
+#: edeskconf.cpp:134
+#: propdialog.cpp:113
+msgid "&Apply"
+msgstr "&Alkalmaz"
+
+#: edeskconf.cpp:137
+msgid "&Cancel"
+msgstr "Mégs&em"
+
+#: edeskicon.cpp:86
+msgid "&Open"
+msgstr "Me&gnyitás"
+
+#: edeskicon.cpp:90
+msgid "&Delete"
+msgstr "Tö&rlés"
+
+#: edeskicon.cpp:96
+msgid "&Properties"
+msgstr "&Tulajdonságok"
+
+#: edeskicon.cpp:442
+msgid "Name of the icon must be filled."
+msgstr "Az ikon nevét meg kell adni."
+
+#: edeskicon.cpp:467
+msgid "Delete this icon?"
+msgstr "Letöröljem ezt az ikont?"
+
+#: edeskicon.cpp:473
+#, c-format
+msgid "Remove of the icon %s failed. You probably do not have write access to this file."
+msgstr "Az ikon törlése sikertelen: %s . Feltehetően nincs hozzá írási jogosultságod."
+
+#: edeskicon.cpp:482
+msgid "Enter the name of the new icon:"
+msgstr "Mi legyen az ikon neve ?"
+
+#: edeskicon.cpp:505
+#: eiconman.cpp:241
+msgid "The icon with the same name already exists."
+msgstr "Létezik már ikon ilyen néven."
+
+#: edeskicon.cpp:562
+#, c-format
+msgid "%d bytes, %s"
+msgstr "%d bájt, %s"
+
+#: eiconman.cpp:112
+msgid "&New desktop item"
+msgstr "Új iko&n"
+
+#: eiconman.cpp:116
+msgid "&Refresh"
+msgstr "F&rissítés"
+
+#: eiconman.cpp:122
+msgid "&Icons Settings "
+msgstr "I&kon beállítások"
+
+#: eiconman.cpp:126
+msgid "&Background Settings"
+msgstr "Há&ttér beállítások"
+
+#: eiconman.cpp:718
+msgid "All Files, *,Png Images, *.png,Xpm Images, *.xpm,Jpeg Images, *.{jpg|jpeg},Gif Images, *.gif,Bmp Images, *.bmp"
+msgstr "Minden fájl, *,Png kép, *.png,Xpm kép, *.xpm,Jpeg kép, *.{jpg|jpeg},Gif kép, *.gif,Bmp kép, *.bmp"
+
+#: eiconman.cpp:724
+msgid "Choose wallpaper:"
+msgstr "Háttérkép kiválasztása..."
+
+#: eiconman.cpp:761
+msgid "Choose color"
+msgstr "Szín kiválasztása"
+
+#: propdialog.cpp:31
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Futtatható fájlok (*.*), *, Minden fájl (*.*), *"
+
+#: propdialog.cpp:32
+msgid "Open location..."
+msgstr "Fájl kiválasztása..."
+
+#: propdialog.cpp:39
+msgid "Png images (*.png), *.png, Jpeg Images (*.jpeg), *.{jpeg|jpg}, Bmp Files (*.bmp), *.bmp, Gif Files (*.gif), *.gif, Xpm Files (*.xpm), *.xpm, All files (*.*), *"
+msgstr "Png kép (*.png), *.png, Jpeg kép (*.jpeg), *.{jpeg|jpg}, Bmp kép (*.bmp), *.bmp, Gif kép (*.gif), *.gif, Xpm kép (*.xpm), *.xpm, Minden fájl (*.*), *"
+
+#: propdialog.cpp:40
+msgid "Icon file selection"
+msgstr "Ikonfájl kiválasztása..."
+
+#: propdialog.cpp:62
+msgid "Icon properties"
+msgstr "Ikon tulajdonságok"
+
+#: propdialog.cpp:65
+msgid "Icon"
+msgstr "Ikon"
+
+#: propdialog.cpp:69
+msgid "Name:"
+msgstr "Név:"
+
+#: propdialog.cpp:72
+msgid "Size:"
+msgstr "Méret:"
+
+#: propdialog.cpp:75
+msgid "Command:"
+msgstr "Parancs:"
+
+#: propdialog.cpp:90
+msgid "Settings"
+msgstr "Beállítások"
+
+#: propdialog.cpp:92
+msgid "Link file:"
+msgstr "Link fájl:"
+
+#: propdialog.cpp:96
+msgid "Icon name:"
+msgstr "Ikon név:"
+
+#: propdialog.cpp:99
+msgid "Location to open:"
+msgstr "Futtatandó alkalmazás:"
+
+#: propdialog.cpp:102
+#: propdialog.cpp:109
+msgid "..."
+msgstr "..."
+
+#: propdialog.cpp:106
+msgid "Icon filename:"
+msgstr "Ikonfájl:"
+
+#: propdialog.cpp:120
+msgid "&Close"
+msgstr "&Bezár"
+

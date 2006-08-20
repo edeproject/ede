@@ -1,0 +1,86 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Time and date for EDE is (C) Copyright 2001-2002 by Martin Pekar, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include <efltk/Fl_Locale.h>} {} 
+
+Function {} {open
+} {
+  code {fl_init_locale_support("etimedate", PREFIX"/share/locale");} {}
+  Fl_Window timedateWindow {
+    label {Time and date} open
+    private xywh {21 381 413 279} visible
+  } {
+    Fl_Group {} {open
+      xywh {0 245 413 33}
+    } {
+      Fl_Button {} {
+        label {&OK}
+        callback {saveTimeZone(); 
+timeBox->settime(); 
+exit(0);}
+        private xywh {154 4 80 25}
+      }
+      Fl_Button {} {
+        label {&Apply}
+        callback {saveTimeZone(); 
+timeBox->settime();}
+        tooltip {Set system time. ->Just root user!<-}
+        xywh {241 4 80 25}
+      }
+      Fl_Button {} {
+        label {&Cancel}
+        callback {exit(0);}
+        private xywh {328 4 80 25}
+      }
+    }
+    Fl_Tabs {} {open
+      xywh {3 5 405 240}
+    } {
+      Fl_Group {} {
+        label {Time/date} open
+        xywh {0 20 405 220}
+      } {
+        Fl_Group {} {open
+          xywh {5 5 220 200} box DOWN_BOX color 7
+        } {
+          Fl_Calendar {} {selected
+            xywh {10 5 200 190} text_font 9 color 0xffffff00 text_color 18 label_size 10 text_size 14
+          }
+        }
+        Fl_Clock {} {
+          private xywh {235 5 165 165}
+        }
+        Fl_Input timeBox {
+          xywh {235 180 165 25}
+          extra_code {\#include "fl_time.h"}
+          class Fl_Time
+        }
+      }
+      Fl_Group {} {
+        label Timezones open
+        xywh {0 20 405 220} hide
+      } {
+        Fl_Group {} {open
+          xywh {10 5 385 170} box DOWN_BOX color 0x7b00
+        } {
+          Fl_Box {} {
+            xywh {10 5 350 160} box FLAT_BOX image {icons/world.xpm} color 0x8000
+          }
+        }
+        Fl_Input_Browser timeZonesList {open
+          xywh {12 185 383 25}
+          extra_code {o->type(1); fillTimeZones();
+getCurrentTimeZone();}
+        } {}
+      }
+    }
+  }
+} 

@@ -1,0 +1,44 @@
+# data file for the eFLTK User Interface Designer (eFLUID)
+version 2.0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Work Panel for EDE is (C) Copyright 2000-2002 by Martin Pekar and others, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include <efltk/Fl_Locale.h>} {} 
+
+Function {AboutDialog(Fl_Widget*, void*)} {open return_type void
+} {
+  Fl_Window mAboutDialogWindow {
+    label {About Equinox Desktop Environment} open
+    private xywh {386 286 355 305} resizable modal visible
+  } {
+    Fl_Box {} {
+      label {Equinox Desktop Environment v1.0.1.1} selected
+      private xywh {5 10 345 35} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP box BORDER_FRAME label_font 1 color 56 label_color 32 label_size 16
+    }
+    Fl_Box {} {
+      label { This program is based in part on the work of FLTK project (www.fltk.org). This program is free software, you can redistribute it and/or modify it under the terms of GNU General Public License as published by the Free Software Foundation, either version 2 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public Licence along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA}
+      private xywh {5 105 345 135} align FL_ALIGN_TOP|FL_ALIGN_INSIDE|FL_ALIGN_WRAP label_size 10
+    }
+    Fl_Button {} {
+      label {&OK}
+      callback {mAboutDialogWindow->hide();}
+      private xywh {270 275 80 25} align FL_ALIGN_WRAP
+    }
+    Fl_Divider {} {
+      label label
+      xywh {5 260 345 15}
+    }
+    Fl_Box {} {
+      label {(C)Copyright 2000-2004 EDE Authors}
+      private xywh {5 70 345 15} align FL_ALIGN_TOP|FL_ALIGN_INSIDE|FL_ALIGN_WRAP label_size 10
+    }
+  }
+  code {mAboutDialogWindow->end();
+mAboutDialogWindow->show();} {}
+} 
