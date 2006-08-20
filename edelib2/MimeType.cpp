@@ -24,7 +24,8 @@
 #include <ctype.h>
 #include <errno.h>
 
-#define GFILE "/usr/bin/file"
+#include <magic.h>
+
 // I made this icon because on KDE there are stupidly two icons with same name
 #define DEFAULT_ICON "misc-vedran"
 #define FOLDER_ICON "folder"
@@ -213,22 +214,28 @@ MimeType::MimeType(const char* filename, bool usefind) {
 
 		// Stuff we need to declare before goto for visibility reasons
 		MimeData *m = mime_first;
-		char buffer[256];
+		//char buffer[256];
+		const char* buffer;
 		int found=0, foundext = 0;
 		MimeData *file_matches[20], *ext_matches[20] = {0}; // this is for if(!ext_matches[0])
 
 		if (!usefind) goto nofind; // using goto here makes less indentation ;)
 
 		// execute file command
-		const int ourpid = getpid();
+		// TODO: save cookie in a static variable
+		magic_t cookie = magic_open(MAGIC_NONE);
+		magic_load(cookie, NULL);
+		buffer = magic_file(cookie, filename);
+		magic_close(cookie);
+/*		const int ourpid = getpid();
 		run_program(tsprintf("%s -bLnNp '%s' >/tmp/ede-%d", GFILE, filename, ourpid));
 
 		// read cmd output from temp file
 		FILE *f = fopen (tsprintf("/tmp/ede-%d",ourpid),"r");
 		fgets(buffer,255,f);
-		fclose(f); // won't be more than 255 chars
+		fclose(f); // won't be more than 255 chars*/
 
-fprintf (stderr,"File said: %s\n",buffer);
+fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(cookie));
 
 		// find matches for 'file' command output
 		// TODO: add wildcard matching
