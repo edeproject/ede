@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <fltk/filename.h>
 
 
@@ -221,6 +222,19 @@ const char* edelib::nice_size(double size) {
 	}
 	return (const char*) buffer;
 }
+
+
+const char* edelib::nice_time(long int epoch) {
+	static char buffer[256];
+
+	const time_t k = (const time_t)epoch;
+	const struct tm *timeptr = localtime(&k);
+	// Date/time format should be moved to configuration
+	snprintf(buffer,255,"%.2d.%.2d.%.4d. %.2d:%.2d", timeptr->tm_mday, timeptr->tm_mon, 1900+timeptr->tm_year, timeptr->tm_hour, timeptr->tm_min);
+	
+	return buffer;
+}
+
 
 
 // Find in haystack any of needles (divided with separator)
