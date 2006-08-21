@@ -39,7 +39,8 @@
 // Include necessary header files...
 //
 
-#include <fltk/FileBrowser.h>
+#include "EDE_FileBrowser.h"
+
 #include <fltk/Browser.h>
 #include <fltk/Item.h>
 #include <fltk/draw.h>
@@ -77,11 +78,23 @@
 #  include <sys/mount.h>
 #endif // __APPLE__ && !__MWERKS__
 
+#include "../edelib2/Icon.h"
+#include "../edelib2/Util.h"
+#include "../edelib2/MimeType.h"
+
+#define DEFAULT_ICON "misc-vedran"
+#define FOLDER_ICON "folder"
+#include <fltk/run.h>
+
+
 using namespace fltk;
 
 //
 // 'FileBrowser::FileBrowser()' - Create a FileBrowser widget.
 //
+
+  const char *labels[] = {"Name","Type","Size","Date",0};
+  int widths[]   = {200, 150, 100, 150, 0};
 
 FileBrowser::FileBrowser(int        X,  // I - Upper-lefthand X coordinate
                         	 int        Y,  // I - Upper-lefthand Y coordinate
@@ -92,10 +105,16 @@ FileBrowser::FileBrowser(int        X,  // I - Upper-lefthand X coordinate
   // Initialize the filter pattern, current directory, and icon size...
   pattern_   = "*";
   directory_ = "";
-  icon_size_  = -1.0f;
-  filetype_  = FILES;
+  //icon_size_  = 12.0f;
+  //filetype_  = FILES;
   show_hidden_ = false;
+  column_labels(labels);
+  column_widths(widths);
+
+  //Symbol* fileSmall = edelib::Icon::get(DEFAULT_ICON,edelib::Icon::SMALL);
+  //set_symbol(Browser::LEAF, fileSmall, fileSmall);
 }
+
 
 //
 // 'FileBrowser::load()' - Load a directory into the browser.
@@ -127,132 +146,9 @@ FileBrowser::load(const char     *directory,// I - Directory to load
     // list all valid drive letters...
     //
 
-    num_files = 0;
-    if ((icon = FileIcon::find("any", FileIcon::DEVICE)) == NULL)
-      icon = FileIcon::find("any", FileIcon::DIRECTORY);
+    // TODO!
+   fprintf (stderr, "Drive list not implemented yet");
 
-#ifdef WIN32
-#  ifdef __CYGWIN__
-    //
-    // Cygwin provides an implementation of setmntent() to get the list
-    // of available drives...
-    //
-    FILE          *m = setmntent("/-not-used-", "r");
-    struct mntent *p;
-
-    while ((p = getmntent (m)) != NULL) {
-      add(p->mnt_dir, icon);
-      num_files ++;
-    }
-
-    endmntent(m);
-#  else
-    //
-    // Normal WIN32 code uses drive bits...
-    //
-    DWORD	drives;		// Drive available bits
-
-    drives = GetLogicalDrives();
-    for (i = 'A'; i <= 'Z'; i ++, drives >>= 1)
-      if (drives & 1)
-      {
-        sprintf(filename, "%c:/", i);
-
-	if (i < 'C')
-	  add(filename, icon);
-	else
-	  add(filename, icon);
-
-	num_files ++;
-      }
-#  endif // __CYGWIN__
-#elif defined(__EMX__)
-    //
-    // OS/2 code uses drive bits...
-    //
-    ULONG	curdrive;	// Current drive
-    ULONG	drives;		// Drive available bits
-    int		start = 3;      // 'C' (MRS - dunno if this is correct!)
-
-
-    DosQueryCurrentDisk(&curdrive, &drives);
-    drives >>= start - 1;
-    for (i = 'A'; i <= 'Z'; i ++, drives >>= 1)
-      if (drives & 1)
-      {
-        sprintf(filename, "%c:/", i);
-        add(filename, icon);
-
-	num_files ++;
-      }
-#elif defined(__APPLE__) && !defined(__MWERKS__)
-    // MacOS X and Darwin use getfsstat() system call...
-    int			numfs;	// Number of file systems
-    struct statfs	*fs;	// Buffer for file system info
-
-
-    // We always have the root filesystem.
-    add("/", icon);
-
-    // Get the mounted filesystems...
-    numfs = getfsstat(NULL, 0, MNT_NOWAIT);
-    if (numfs > 0) {
-      // We have file systems, get them...
-      fs = new struct statfs[numfs];
-      getfsstat(fs, sizeof(struct statfs) * numfs, MNT_NOWAIT);
-
-      // Add filesystems to the list...
-      for (i = 0; i < numfs; i ++) {
-	// Ignore "/", "/dev", and "/.vol"...
-        if (fs[i].f_mntonname[1] && strcmp(fs[i].f_mntonname, "/dev") &&
-	    strcmp(fs[i].f_mntonname, "/.vol")) {
-          snprintf(filename, sizeof(filename), "%s/", fs[i].f_mntonname);
-          add(filename, icon);
-        }
-        num_files ++;
-      }
-
-      // Free the memory used for the file system info array...
-      delete[] fs;
-    }
-#else
-    //
-    // UNIX code uses /etc/fstab or similar...
-    //
-    FILE	*mtab;		// /etc/mtab or /etc/mnttab file
-    char	line[1024];	// Input line
-
-    //
-    // Open the file that contains a list of mounted filesystems...
-    //
-
-    mtab = fopen("/etc/mnttab", "r");	// Fairly standard
-    if (mtab == NULL)
-      mtab = fopen("/etc/mtab", "r");	// More standard
-    if (mtab == NULL)
-      mtab = fopen("/etc/fstab", "r");	// Otherwise fallback to full list
-    if (mtab == NULL)
-      mtab = fopen("/etc/vfstab", "r");	// Alternate full list file
-
-    if (mtab != NULL)
-    {
-      while (fgets(line, sizeof(line), mtab) != NULL)
-      {
-        if (line[0] == '#' || line[0] == '\n')
-	  continue;
-        if (sscanf(line, "%*s%4095s", filename) != 1)
-	  continue;
-
-        strlcat(filename, "/", sizeof(filename));
-
-//        printf("FileBrowser::load() - adding \"%s\" to list...\n", filename);
-        add(filename, icon);
-	num_files ++;
-      }
-
-      fclose(mtab);
-    }
-#endif // WIN32 || __EMX__
   }
   else
   {
@@ -263,50 +159,78 @@ FileBrowser::load(const char     *directory,// I - Directory to load
     // Build the file list...
     //
 
-#if (defined(WIN32) && !defined(__CYGWIN__)) || defined(__EMX__)
-    strlcpy(filename, directory_, sizeof(filename));
-    i = strlen(filename) - 1;
-
-    if (i == 2 && filename[1] == ':' &&
-        (filename[2] == '/' || filename[2] == '\\'))
-      filename[2] = '/';
-    else if (filename[i] != '/' && filename[i] != '\\')
-      strlcat(filename, "/", sizeof(filename));
-
-    num_files = fltk::filename_list(filename, &files, sort);
-#else
     num_files = fltk::filename_list(directory_, &files, sort);
-#endif /* WIN32 || __EMX__ */
 
     if (num_files <= 0)
       return (0);
 
+    Item** icon_array = (Item**) malloc (sizeof(Item*) * num_files + 1);
+// fill array with zeros, for easier detection if item exists
+	for (i=0; i<num_files; i++) icon_array[i]=0;
+
     for (i = 0, num_dirs = 0; i < num_files; i ++) {
       if (strcmp(files[i]->d_name, "./") ) {
-	snprintf(filename, sizeof(filename), "%s/%s", directory_,
+	snprintf(filename, sizeof(filename), "%s%s", directory_,
 	         files[i]->d_name);
 
         //bool ft = true;	if (ft) {FileIcon::load_system_icons(); ft=false;}
 
-        icon = FileIcon::find(filename);
+        //icon = FileIcon::find(filename);
 	//printf("%s\n",files[i]->d_name);
 	if (!strcmp(files[i]->d_name, ".") || !strcmp(files[i]->d_name, "./") || 
 	    !show_hidden_ &&  files[i]->d_name[0]=='.' &&  strncmp(files[i]->d_name,"../",2)) 
 	  continue;
-	if ((icon && icon->type() == FileIcon::DIRECTORY) ||
-	     fltk::filename_isdir(filename)) {
+
+	if (fltk::filename_isdir(filename)) {
           num_dirs ++;
-          this->insert(num_dirs-1, files[i]->d_name, icon);
+		Item* o = new Item(edelib::Icon::get(FOLDER_ICON,edelib::Icon::TINY), strdup(files[i]->d_name));
+		Menu::insert(*o, num_dirs-1);
+		o->user_data(strdup(filename)); // we keep full path for callback
+		icon_array[i]=o;
 	} else if (filetype_ == FILES &&
 	           fltk::filename_match(files[i]->d_name, pattern_)) {
-          add(files[i]->d_name, icon);
+		this->begin();
+		Item* o = new Item(edelib::Icon::get(DEFAULT_ICON,edelib::Icon::TINY), strdup(files[i]->d_name));
+		this->end();
+		o->user_data(strdup(filename)); // we keep full path for callback
+		icon_array[i]=o;
 	}
       }
 
-      free(files[i]);
     }
 
-    free(files);
+
+	this->redraw();
+
+	// Detect icon mimetypes etc.
+	for (i=0; i<num_files; i++) {
+		// ignored files
+		if (!icon_array[i]) continue;
+		fltk::check(); // update interface
+
+		// get mime data
+		snprintf (filename,4095,"%s%s",directory_,files[i]->d_name);
+		edelib::MimeType *m = new edelib::MimeType(filename);
+
+		// change label
+		char *label;
+		if (strncmp(m->id(),"directory",9)==0) 
+			asprintf(&label, "%s\t%s\t\t%s", files[i]->d_name, m->type_string(), edelib::nice_time(filename_mtime(filename)));
+		else 
+			asprintf(&label, "%s\t%s\t%s\t%s", files[i]->d_name, m->type_string(), edelib::nice_size(filename_size(filename)), edelib::nice_time(filename_mtime(filename)));
+		icon_array[i]->label(label);
+
+		// icon
+		icon_array[i]->image(m->icon(edelib::Icon::TINY));
+
+		icon_array[i]->redraw();
+		delete m;
+		free(files[i]);
+	}
+
+	free(files);
+
+
   }
 
   return (num_files);
@@ -336,7 +260,7 @@ private:
 
 FileItem::FileItem(const char * label, FileIcon * icon) : Item(label) {
     fileIcon_=icon;
-    textsize(14);
+//    textsize(14);
     if(icon) icon->value(this,true);
 }
 void FileItem::draw()  {
@@ -345,7 +269,7 @@ void FileItem::draw()  {
 }
 ////////////////////////////////////////////////////////////////
 
-void FileBrowser::add(const char *line, FileIcon *icon) {
+/*void FileBrowser::add(const char *line, FileIcon *icon) {
     this->begin();
     FileItem * i = new FileItem(strdup(line),icon);
     i->w((int) icon_size());  i->h(i->w());
@@ -357,7 +281,7 @@ void FileBrowser::insert(int n, const char *label, FileIcon*icon) {
     FileItem * i = new FileItem(strdup(label),icon);
     i->w((int) icon_size());  i->h(i->w());
     Menu::insert(*i,n);
-}
+}*/
 
 //
 // End of "$Id: FileBrowser.cxx 5071 2006-05-02 21:57:08Z fabien $".

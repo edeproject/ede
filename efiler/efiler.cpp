@@ -22,7 +22,7 @@
 #include <fltk/Item.h>
 #include <fltk/Divider.h>
 #include <fltk/file_chooser.h>
-#include <fltk/FileBrowser.h>
+//#include <fltk/FileBrowser.h>
 
 #include "../edelib2/about_dialog.h"
 #include "../edelib2/Icon.h"
@@ -30,6 +30,8 @@
 #include "../edelib2/NLS.h"
 #include "../edelib2/Run.h"
 #include "../edelib2/Util.h"
+
+#include "EDE_FileBrowser.h"
 
 
 #define DEFAULT_ICON "misc-vedran"
@@ -97,7 +99,7 @@ void loaddir(const char *path) {
 	// Set current_dir
 	if (filename_isdir(path)) {
 		if (path[0] == '~') // Expand tilde
-			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),path);
+			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),path+1);
 		else 
 			strcpy(current_dir,path);
 	} else
@@ -247,24 +249,25 @@ void fbrowser_cb(Widget* w, void*) {
 	if (!event_clicks() && event_key() != ReturnKey) return;
 
 	// Construct filename
-	const char *c = fbrowser->child(fbrowser->value())->label();
+	const char *c = fbrowser->system_path(fbrowser->value());
 	char filename[PATH_MAX];
-	if (strcmp(c,"../")==0) {
+	if (strncmp(c+strlen(c)-3,"../",3)==0) {
 		strcpy(filename,current_dir); // both are [PATH_MAX]
 		filename[strlen(filename)-1] = '\0'; // remove trailing slash in a directory
 		char *c2 = strrchr(filename,'/'); // find previous slash
 		if (c2) *(c2+1) = '\0'; // cut everything after this slash
 		else strcpy(filename,"/"); // if nothing is found, filename becomes "/"
-	} else
-		snprintf(filename,PATH_MAX,"%s%s",current_dir,c);
+	} else {
+		strncpy(filename,c,PATH_MAX);
+	}
 
 	// Change directory
 	if (filename_isdir(filename))
 		loaddir(filename);
 
 	// Let elauncher handle this file...
-	else
-		run_program(filename,false,false,true);
+	else 
+		run_program(tsprintf("file:%s",filename),false,false,true);
 }
 
 
@@ -314,7 +317,7 @@ void do_cut_copy_fbrowser(bool m_copy) {
 	int buf=0;
 	for (int i=0; i<=num; i++) {
 		if (fbrowser->selected(i)) {
-			asprintf(&cut_copy_buffer[buf], "%s%s", current_dir, fbrowser->child(i)->label());
+			cut_copy_buffer[buf] = strdup(fbrowser->system_path(i));
 			if (!m_copy) fbrowser->child(i)->textcolor(GRAY50);
 			buf++;
 		}
@@ -386,6 +389,13 @@ void iconsview_cb(Widget*,void*) {
 	}
 }
 void listview_cb(Widget*,void*) { sgroup->hide(); fbrowser->show(); }
+void refresh_cb(Widget*,void*) {
+	if(sgroup->visible()) loaddir(current_dir);
+	else fbrowser->load(current_dir);
+}
+void case_cb(Widget*,void*) {
+	fprintf(stderr,"Not implemented yet...\n");
+}
 void showhidden_cb(Widget* w, void*) {
 	Item *i = (Item*)w;
 	if (showhidden) {
@@ -486,6 +496,21 @@ int main (int argc, char **argv) {
 			{Item *o = new Item(_("Directory &Tree"));
 				o->type(Item::TOGGLE);
 				o->shortcut(F9Key);
+			}
+			new Divider();
+			{Item *o = new Item(_("&Refresh"));
+				//o->type();
+				o->callback(refresh_cb);
+				o->shortcut(F5Key);
+			}
+			{ItemGroup *o = new ItemGroup(_("S&ort"));
+				o->begin();
+				{Item *o = new Item(_("&Case sensitive"));
+					//o->type();
+					o->callback(case_cb);
+					o->shortcut(F5Key);
+				}
+				o->end();
 			}
 			o->end();
 		}

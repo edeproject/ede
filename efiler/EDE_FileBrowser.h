@@ -29,53 +29,57 @@
 // Include necessary header files...
 //
 
-#ifndef fltk_FileBrowser_h
-#define fltk_FileBrowser_h
+#ifndef edelib_FileBrowser_h
+#define edelib_FileBrowser_h
 
 #include <fltk/Browser.h>
 #include <fltk/FileIcon.h>
 #include <fltk/filename.h>
 
-namespace fltk {
+//namespace fltk {
 
 
 //
 // FileBrowser class...
 //
 
-class FL_API FileBrowser : public Browser
+class FileBrowser : public fltk::Browser
 {
   int		filetype_;
   const char	*directory_;
-  float		icon_size_;
+  //float		icon_size_;
   const char	*pattern_;
+
 
 public:
   enum { FILES, DIRECTORIES };
 
   FileBrowser(int, int, int, int, const char * = 0);
 
-  float		icon_size() const { 
+  /*float		icon_size() const { 
     return (icon_size_ <0?  (2.0f* textsize()) : icon_size_); 
   }
-  void 		icon_size(float f) { icon_size_ = f; redraw(); };
+  void 		icon_size(float f) { icon_size_ = f; redraw(); };*/
 
   void	filter(const char *pattern);
   const char	*filter() const { return (pattern_); };
 
-  int		load(const char *directory, File_Sort_F *sort = (File_Sort_F*) fltk::numericsort);
+  int		load(const char *directory, fltk::File_Sort_F *sort = (fltk::File_Sort_F*) fltk::casenumericsort);
 
-  float		textsize() const { return (Browser::textsize()); };
-  void		textsize(float s) { Browser::textsize(s); icon_size_ = (uchar)(3 * s / 2); };
+/*  float		textsize() const { return (fltk::Browser::textsize()); };
+  void		textsize(float s) { fltk::Browser::textsize(s); icon_size_ = (uchar)(3 * s / 2); };*/
 
   int		filetype() const { return (filetype_); };
   void		filetype(int t) { filetype_ = t; };
   const char *  directory() const {return directory_;}
 
   // adding or inserting a line into the fileBrowser
-  void insert(int n, const char* label, FileIcon* icon);
-  void insert(int n, const char* label, void* data){Menu::insert(n, label,data);}
-  void add(const char * line, FileIcon* icon);
+  //void insert(int n, const char* label, fltk::FileIcon* icon);
+  //void insert(int n, const char* label, void* data){fltk::Menu::insert(n, label,data);}
+  //void add(const char * line, fltk::FileIcon* icon);
+
+  // Return full system path to given item
+  const char* 	system_path(int i) const { return (const char*)child(i)->user_data(); }
 
   // Showing or not showing the hidden files, that's the question:
 public:
@@ -86,7 +90,7 @@ private:
     bool		show_hidden_;
 };
 
-}
+//}
 
 #endif // !_Fl_File_Browser_H_
 
