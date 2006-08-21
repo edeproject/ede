@@ -215,7 +215,7 @@ MimeType::MimeType(const char* filename, bool usefind) {
 		// Stuff we need to declare before goto for visibility reasons
 		MimeData *m = mime_first;
 		//char buffer[256];
-		const char* buffer;
+		char* buffer;
 		int found=0, foundext = 0;
 		MimeData *file_matches[20], *ext_matches[20] = {0}; // this is for if(!ext_matches[0])
 
@@ -225,7 +225,7 @@ MimeType::MimeType(const char* filename, bool usefind) {
 		// TODO: save cookie in a static variable
 		magic_t cookie = magic_open(MAGIC_NONE);
 		magic_load(cookie, NULL);
-		buffer = magic_file(cookie, filename);
+		buffer = strdup(magic_file(cookie, filename));
 		magic_close(cookie);
 /*		const int ourpid = getpid();
 		run_program(tsprintf("%s -bLnNp '%s' >/tmp/ede-%d", GFILE, filename, ourpid));
@@ -246,6 +246,7 @@ fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(c
 
 		if (found == 1) { // one result found
 			this->set_found(file_matches[0]->id); 
+			free(buffer);
 			return; 
 		}
 
@@ -268,7 +269,11 @@ fprintf(stderr, "Max: %d\n",max);
 					file_matches[j++] = file_matches[i];
 				}
 			// Now **file_matches should contain only maximums
-			if (j==1) { this->set_found(file_matches[0]->id); return; }
+			if (j==1) { 
+				this->set_found(file_matches[0]->id); 
+				free(buffer);
+				return; 
+			}
 
 			// Compare maximums on extension
 			for (int i=0; i<j; i++)
@@ -278,12 +283,14 @@ fprintf(stderr, "Max: %d\n",max);
 			// No extension matches - accept first result (FIXME)
 			if (foundext == 0) {
 				this->set_found(file_matches[0]->id);
+				free(buffer);
 				return;
 			}
 			// From here we jump to comment " // continue extension matching"
 		}
 
 	nofind:
+		free(buffer);
 		if (!ext_matches[0]) {
 			// Try extension matching on all mimetypes
 			// This code will be executed if:
