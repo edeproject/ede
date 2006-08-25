@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR" content="enotepad">
+  <title>Equinox Desktop Environment @EDE_VERSION@ Help</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<center>
+<table bgcolor="#002e78" width="100%" height="120" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="150"><center><img src="logoinvert100.png" height="99" width="100"></center></td>
+    <td><font face="sans-serif" size="7" color="#FFFFFF">Equinox Desktop Environment</font><br>
+		<font face="sans-serif" size="4" color="#FFFFFF">version @EDE_VERSION@</font>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="200" bgcolor="#6699CC" align="left" valign="top">
+      <table width="100%" border="0" cellpadding="10"><tr><td class="leftbar">
+        <b>Contents:</b><br>
+	<li><a href="index.html" class="leftbar">Welcome to EDE</a></li>
+	<li>What's new</li>
+	<li><a href="authors.html" class="leftbar">Credits</a></li>
+	<li><a href="copying.html" class="leftbar">Copyright</a></li>
+	<li><a href="help.html" class="leftbar">Help wanted!</a></li>
+      </td></tr></table>
+    </td>
+    <td width="5">&nbsp;</td>
+    <td bgcolor="#FFFFFF" align="left" valign="top">
+      <p>&nbsp;</p>
+      <font face="sans-serif">
+      <center><h1>Changes between EDE versions</h1></center>
+      (Note: There weren't much more changes in 1.0.2 when compared to 
+      earlier versions, it's just that more stuff is being reported.)<br><br><br>
+
+<code>     
+<b>1.0.2</b><br>
+* new build system<br>
+* netscape and opera replaced with mozilla everywhere<br>
+* startede:<br>
+- fix: xscreensaver wasn't started<br>
+* edewm:<br>
+- fixed artefacts on window's borders when window is resized<br>
+- dialog windows should now act as dialog windows (no resizing or 
+		animation of resizing)<br>
+- dialogs have same titlebar height as other windows<br>
+- don't show minimize button in titlebar for dialogs<br>
+- better checks is window resizable<br>
+- several fixes into Set Size widget<br>
+- fix bug with titlebar buttons difficult to click<br>
+- configurable keyboard shortcuts<br>
+* eworkpanel:<br>
+- make applets and menu title configurable<br>
+- new panel applet - Show Desktop<br>
+- tooltips are showed without clicking on panel itself<br>
+- fixed crash with network monitor<br>
+- fix bug: panel doesn't autohide when a menu is open<br>
+- much improvements to logout applet<br>
+- allow workspace names to be localized<br>
+- fix wrong icon filenames in main menu<br>
+- a better icon for submenus in the main menu<br>
+* taskbar applet:<br>
+- fix a bug where window will minimize instead of coming to front<br>
+- draw active taskbar button in lighter color<br>
+* eiconman:<br>
+- fix locale related problems in icon properties<br>
+* elauncher: <br>
+- new program and url launching framework<br>
+* evolume: <br>
+- add volume control applet to standard distribution<br>
+- replaced evolume icon in panel<br>
+* emenueditor:<br>
+- fix: invisible entries created with some locales<br>
+* keyboard chooser applet:<br>
+- get list of keymaps from X, instead of hardcoded<br>
+- display descriptive names<br>
+- don't show everything at once<br>
+- keep a list of recently used keyboards<br>
+* ewmconf: <br>
+- fix titlebar resizing to zero when changing theme<br>
+* ehelpbook:<br>
+- scrollbars are now visible<br>
+- removed (too much broken)<br>
+* etip:<br>
+- make etip modal<br>
+- don't always show the same tip<br>
+<br>
+<br>
+<b>1.0.1.1</b><br>
+* fixed desktop crashing when choosing wallpaper (sometimes will chrash due
+		bug in efltk library)<br>
+* fixed logout icon showing<br>
+* fixed einstaller icon showing<br>
+* complitelly fixed and revised control panel<br>
+* etip strings revised<br>
+* fixed desktop links in makefile<br>
+<br>
+<br>
+<b>1.0.1</b><br>
+* many unstabile programs from EDE package are removed,
+	so now only ede-core (old name) is provide as standard distribution<br>
+* small fixes with workpanel and run-dialog on it<br>
+* compiling and installation scripts improved<br>
+* added in configure script debug options<br>
+* fixed EDE's X exit, but on some distributions not work well (SuSE 8.1)<br>
+* fixed icons showing on Control Panel, ehelpbook, etc.<br>
+* fixed screensaver showing in preview window<br>
+* small menu decorations :) <br>
+* added in main distribution EFinder, and that will become standard part<br>
+* now you can with double click start programs from run-dialog on workpanel<br>
+* and many, many stability fixes <br>
+<br>
+<br>
+<b>1.0beta</b><br>
+* nice EDE library complement what is in FLTK missing<br>
+* a lot of changes in ede-core (new icons and support for them thanks Edelib)<br>
+* fixed a lot of bugs<br>
+* new applications like epdfreader<br>
+* heavy changes in filemanager (basics works fine, archive viewing and extracting
+				works fine, archive creating ok, ftp works but still 
+				a lot to do)<br>
+* locale support, still have to create some .po-s<br>
+* eprintconf, eprint utilities to manage printers (CUPS needed)<br>
+* huge amount of work<br>
+<br>
+<br>
+<b>0.6</b><br>
+* erun separated - &lt;Ctrl+F12&gt; keybinding, cause alt+f12 use window manager<br>
+* efinder - works, basis implemented &lt;Ctrl+F3&gt; keybinding<br>
+* bugs fixes<br>
+* ede-exec script that support prefixes, see erun<br>
+* efstabedit works<br>
+* ecdplayer - cddb support(basic)<br>
+* window manager is based on icewm code<br>
+* new config utilities<br>
+* eiconmanager changes<br>
+* ehelpbook changes - it is useable with simple html, for help enought.<br>
+* configure scripts<br>
+<br>
+<br>
+<b>0.5</b><br>
+* separated icon staff as eiconmanager<br>
+* new apps(still devel) - efilemanager, ehelpbook, efstabedit(init staff)<br>
+* design changes, icons - hopefully until 1.0 it will be stabilized ...<br>
+* font choosing...<br>
+* color changing somewhat buggy(not core dump of course) (It is bug in EDE or in latest fltk, something changed ... that is a question)<br>
+<br>
+<br>
+<b>0.4</b><br>
+****************<br>
+* Cd player rewrite<br>
+* I add better icons because my draw skills are not very well, still need something but what<br>
+* window manager - design changes<br>
+* eworkpanel - design changes<br>
+* all apps new use dynamic linking, so you can use also theme plugins<br>
+		   ~~~~~~~    <br>
+* you can use default X keyboard<br>
+* you can jpeg images on desktop (for now using xsetbg(xloadimage package))<br>
+* dialogs changes<br>
+* programs name change<br>
+<br>
+<br>
+<b>0.3</b><br>
+****************<br>
+* panel shows tasks<br>
+* icons on desktop<br>
+* design changes<br>
+* begin from code reorganization<br>
+* color setting dialog - still todo<br>
+* icon on panel that run eqmixer, ...<br>
+<br>
+<br>
+<b>0.2</b><br>
+***************<br>
+* better color settings, still not perfect, some small things<br>
+<br>
+<br>
+<b>0.1</b><br>
+***************<br>
+* initial release<br>
+</code>
+
+      
+</p>
+<br>
+<p align="center">
+$Revision: 1656 $<br>
+Copyright (c) 2000-2006. <a href="authors.html">EDE Authors</a></p>
+    </font>
+    </td>
+    <td width="5">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>
+
