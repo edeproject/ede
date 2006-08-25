@@ -9,6 +9,7 @@ install:
 	$(INSTALL_DATA) wmanager.conf $(DIR)
 	$(INSTALL_DATA) mime.conf $(DIR)
 	$(INSTALL_DATA) efltk.conf $(DIR)
+	$(INSTALL_DATA) mimetypes.conf $(DIR)
 	$(MKINSTALLDIRS) $(bindir)
 	$(INSTALL_PROGRAM) startede $(bindir)
 
