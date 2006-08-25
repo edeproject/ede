@@ -14,8 +14,12 @@
 #include "ewm.h"
 
 #include <fltk/file_chooser.h>
+#include <fltk/ColorChooser.h>
 #include <fltk/run.h>
 #include <fltk/ask.h>
+
+#include <string.h>
+#include <stdlib.h>
 
 #include "../edelib2/NLS.h"
 
