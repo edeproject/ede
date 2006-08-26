@@ -129,6 +129,7 @@ void get_mimedata() {
 		if (p1 && (p2 = strchr(++p1,'|'))) m->file_output = wstrim(strndup(p1,p2-p1)); else m->file_output=0;
 		if (p2 && (p1 = strchr(++p2,'|'))) m->classic_mime = wstrim(strndup(p2,p1-p2)); else m->classic_mime=0;
 	}
+	m->next = 0;
 	fclose(f);
 }
 
@@ -217,7 +218,7 @@ MimeType::MimeType(const char* filename, bool usefind) {
 		//char buffer[256];
 		char* buffer;
 		int found=0, foundext = 0;
-		MimeData *file_matches[20], *ext_matches[20] = {0}; // this is for if(!ext_matches[0])
+		MimeData *file_matches[50], *ext_matches[50] = {0}; // this is for if(!ext_matches[0])
 
 		if (!usefind) goto nofind; // using goto here makes less indentation ;)
 
@@ -226,7 +227,6 @@ MimeType::MimeType(const char* filename, bool usefind) {
 		magic_t cookie = magic_open(MAGIC_NONE);
 		magic_load(cookie, NULL);
 		buffer = strdup(magic_file(cookie, filename));
-		magic_close(cookie);
 /*		const int ourpid = getpid();
 		run_program(tsprintf("%s -bLnNp '%s' >/tmp/ede-%d", GFILE, filename, ourpid));
 
@@ -236,13 +236,15 @@ MimeType::MimeType(const char* filename, bool usefind) {
 		fclose(f); // won't be more than 255 chars*/
 
 fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(cookie));
+		magic_close(cookie);
 
 		// find matches for 'file' command output
 		// TODO: add wildcard matching
-		do {
+		while (m != 0) {
 			if (m->file_output && (strstr(buffer,m->file_output)))
 				file_matches[found++]=m;
-		} while ((m=m->next));
+			m=m->next;
+		}
 
 		if (found == 1) { // one result found
 			this->set_found(file_matches[0]->id); 
@@ -256,7 +258,6 @@ fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(c
 			for (int i=0; i<found; i++)
 				if (strlen(file_matches[i]->file_output)>max) 
 					max = strlen(file_matches[i]->file_output);
-
 fprintf(stderr, "Max: %d\n",max);
 			// If all matches are empty, this is probably bogus
 			if (max == 0) goto nofind;
