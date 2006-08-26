@@ -813,7 +813,10 @@ void Config_Section::add_entry(const char* key, const char* value)
 	if(!value) return;
 
 	char *kvpair;
-	asprintf(&kvpair,"%s=%s",twstrim(key),twstrim(value));
+	char *m_key = wstrim(strdup(key));
+	char *m_value = wstrim(strdup(value));
+	asprintf(&kvpair,"%s=%s",m_key,m_value);
+	free (m_key); free (m_value);
 
 	// if key already exists, delete
 	bool found = false;
