@@ -81,38 +81,126 @@
 #include "../edelib2/Icon.h"
 #include "../edelib2/Util.h"
 #include "../edelib2/MimeType.h"
+#include "../edelib2/NLS.h"
 
 #define DEFAULT_ICON "misc-vedran"
 #define FOLDER_ICON "folder"
+#define UPDIR_ICON "undo"
+
 #include <fltk/run.h>
 
+#include <fltk/Input.h>
+#include <fltk/events.h>
+#include <fltk/ask.h>
+
+#include <errno.h>
 
 using namespace fltk;
+
+
+
+
+// Event handler for EditBox
+int EditBox::handle(int event) {
+	if (!this->visible()) return parent()->handle(event);
+	bool above=false;
+	//fprintf(stderr,"Editbox event: %d (%s)\n",event,event_name(event));
+
+	// Change filename
+	if (event==KEY && (event_key()==ReturnKey || event_key()==KeypadEnter)) {
+		// split old filename to path and file
+		char path[PATH_MAX], file[PATH_MAX];
+		strcpy(path, (char*)editing_->user_data());
+		if (path[strlen(path)-1] == '/') path[strlen(path)-1]='\0';
+		char *p = strrchr(path,'/');
+		if (p==0 || *p=='\0') {
+			strcpy(file,path);
+			path[0]='\0';
+		} else { // usual case
+			p++;
+			strcpy(file,p);
+			*p='\0';
+		}
+
+		if (strlen(file)!=strlen(text()) || strcmp(file,text())!=0) {
+			// Create new filename
+			strncat(path, text(), PATH_MAX-strlen(path));
+			char oldname[PATH_MAX];
+			strcpy(oldname, (char*)editing_->user_data());
+			if (rename(oldname, path) == -1) {
+				alert(edelib::tsprintf(_("Could not rename file! Error was:\n\t%s"), strerror(errno)));
+			} else {
+				// Update browser
+				free(editing_->user_data());
+				editing_->user_data(strdup(path));
+				const char* l = editing_->label();
+				editing_->label(edelib::tasprintf("%s%s",text(),strchr(l, '\t')));
+			}
+		}
+		
+		above=true;
+	}
+
+	// Hide editbox 
+
+	// FIXME: Why is event_x() sometimes negative when we click inside box and sometimes not. Sometimes appears to be relative to window, sometimes to browser
+
+	if (above || ( event==KEY && event_key()==EscapeKey ) ||
+		// Click outside editbox:
+		( event==PUSH && event_x()>0 &&  !event_inside(Rectangle(x()-parent()->x(),y()-parent()->y(),w(),h())) ) ) {
+//fprintf (stderr, "Event: %d,%d Box: %d,%d,%d,%d\n",event_x(),event_y(),x(),y(),w(),h());
+		this->hide();
+		// Remove box so it doesn't get in the way
+		this->x(0);
+		this->y(0);
+		this->w(0);
+		this->h(0);
+		// Return the browser item into "visible" state
+		editing_->textcolor(textcolor());
+		editing_->redraw();
+		parent()->take_focus();
+		// If user clicked outside box, this should select something else:
+		if (event==PUSH) return parent()->handle(event);
+		return 1;
+	}
+	Input::handle(event);
+}
+
+
+
+// Column widths and titles
+// TODO: make more configurable
+
+const char *labels[] = {_("Name"),_("Type"),_("Size"),_("Date"),0};
+int widths[]   = {200, 150, 100, 150, 0};
+
 
 //
 // 'FileBrowser::FileBrowser()' - Create a FileBrowser widget.
 //
 
-  const char *labels[] = {"Name","Type","Size","Date",0};
-  int widths[]   = {200, 150, 100, 150, 0};
 
 FileBrowser::FileBrowser(int        X,  // I - Upper-lefthand X coordinate
-                        	 int        Y,  // I - Upper-lefthand Y coordinate
-				 int        W,  // I - Width in pixels
-				 int        H,  // I - Height in pixels
-				 const char *l)	// I - Label text
+			int        Y,  // I - Upper-lefthand Y coordinate
+			int        W,  // I - Width in pixels
+			int        H,  // I - Height in pixels
+			const char *l)	// I - Label text
  : Browser(X, Y, W, H, l) {
-  // Initialize the filter pattern, current directory, and icon size...
-  pattern_   = "*";
-  directory_ = "";
-  //icon_size_  = 12.0f;
-  //filetype_  = FILES;
-  show_hidden_ = false;
-  column_labels(labels);
-  column_widths(widths);
+	// Initialize the filter pattern, current directory, and icon size...
+	pattern_   = "*";
+	directory_ = "";
+	//icon_size_  = 12.0f;
+	filetype_  = BOTH;
+	show_hidden_ = false;
+	show_dotdot_ = true;
+	column_labels(labels);
+	column_widths(widths);
 
-  //Symbol* fileSmall = edelib::Icon::get(DEFAULT_ICON,edelib::Icon::SMALL);
-  //set_symbol(Browser::LEAF, fileSmall, fileSmall);
+	// Editbox
+	editbox_ = new EditBox (0, 0, 0, 0);
+	editbox_->box(BORDER_FRAME);
+	editbox_->parent(this);
+	editbox_->hide();
 }
 
 
@@ -124,85 +212,94 @@ int						// O - Number of files loaded
 FileBrowser::load(const char     *directory,// I - Directory to load
                       File_Sort_F *sort)	// I - Sort function to use
 {
-  int		i;				// Looping var
-  int		num_files;			// Number of files in directory
-  int		num_dirs;			// Number of directories in list
-  char		filename[4096];			// Current file
-  FileIcon	*icon;				// Icon to use
+	int		i;				// Looping var
+	int		num_files;			// Number of files in directory
+	int		num_dirs;			// Number of directories in list
+	char		filename[PATH_MAX];		// Current file
+	//FileIcon	*icon;				// Icon to use
 
 
 //  printf("FileBrowser::load(\"%s\")\n", directory);
 
-  if (!directory)
-    return (0);
+	if (!directory)
+		return (0);
 
-  clear();
-  directory_ = directory;
+	clear();
+	directory_ = directory;
 
-  if (directory_[0] == '\0')
-  {
-    //
-    // No directory specified; for UNIX list all mount points.  For DOS
-    // list all valid drive letters...
-    //
+	if (directory_[0] == '\0')
+	{
+		//
+		// No directory specified; for UNIX list all mount points.  For DOS
+		// list all valid drive letters...
+		//
+		
+		// TODO!
+		fprintf (stderr, "Drive list not implemented yet");
+		return 0;
+	}
 
-    // TODO!
-   fprintf (stderr, "Drive list not implemented yet");
+	// Scan directory and store list in **files
+	dirent	**files;
+	num_files = fltk::filename_list(directory_, &files, sort);
+	if (num_files <= 0) return (0);
 
-  }
-  else
-  {
-    dirent	**files;	// Files in in directory
-
-
-    //
-    // Build the file list...
-    //
-
-    num_files = fltk::filename_list(directory_, &files, sort);
-
-    if (num_files <= 0)
-      return (0);
-
-    Item** icon_array = (Item**) malloc (sizeof(Item*) * num_files + 1);
-// fill array with zeros, for easier detection if item exists
+	// Allocate array for icons
+	Item** icon_array = (Item**) malloc (sizeof(Item*) * num_files + 1);
+	// fill array with zeros, for easier detection if item exists
 	for (i=0; i<num_files; i++) icon_array[i]=0;
 
-    for (i = 0, num_dirs = 0; i < num_files; i ++) {
-      if (strcmp(files[i]->d_name, "./") ) {
-	snprintf(filename, sizeof(filename), "%s%s", directory_,
-	         files[i]->d_name);
-
-        //bool ft = true;	if (ft) {FileIcon::load_system_icons(); ft=false;}
-
-        //icon = FileIcon::find(filename);
-	//printf("%s\n",files[i]->d_name);
-	if (!strcmp(files[i]->d_name, ".") || !strcmp(files[i]->d_name, "./") || 
-	    !show_hidden_ &&  files[i]->d_name[0]=='.' &&  strncmp(files[i]->d_name,"../",2)) 
-	  continue;
-
-	if (fltk::filename_isdir(filename)) {
-          num_dirs ++;
-		Item* o = new Item(edelib::Icon::get(FOLDER_ICON,edelib::Icon::TINY), strdup(files[i]->d_name));
-		Menu::insert(*o, num_dirs-1);
-		o->user_data(strdup(filename)); // we keep full path for callback
-		icon_array[i]=o;
-	} else if (filetype_ == FILES &&
-	           fltk::filename_match(files[i]->d_name, pattern_)) {
-		this->begin();
-		Item* o = new Item(edelib::Icon::get(DEFAULT_ICON,edelib::Icon::TINY), strdup(files[i]->d_name));
-		this->end();
-		o->user_data(strdup(filename)); // we keep full path for callback
-		icon_array[i]=o;
+	// Show the up directory - "../"
+	num_dirs = 0;
+	if (show_dotdot_ && strcmp(directory_,"/") != 0) {
+		num_dirs++;
+		Item* o = new Item ( edelib::Icon::get ( UPDIR_ICON, edelib::Icon::TINY ), "..\tGo up" );
+		Menu::add(*o);
+		snprintf(filename, PATH_MAX, "%s../", directory_);
+		o->user_data(strdup(filename));
 	}
-      }
 
-    }
+	// Main loop for populating browser
+	for (i = 0; i < num_files; i ++) {
+		if (strcmp(files[i]->d_name, "./")==0)
+			continue;
 
+		char *n = files[i]->d_name; // shorter
+
+		snprintf(filename, PATH_MAX, "%s%s", directory_, n);
+
+		if (strcmp(n, ".")==0 || strcmp(n, "./")==0 || (!show_hidden_ &&  (n[0]=='.' || n[strlen(n)-1]=='~') ) ) 
+			continue;
+
+		// Add directory
+		if (filetype_ != FILES && fltk::filename_isdir(filename)) {
+			num_dirs ++;
+
+			// strip slash from filename
+			char *fn = strdup(n);
+			if (fn[strlen(fn)-1] == '/')
+				fn[strlen(fn)-1] = '\0';
+
+			Item* o = new Item ( edelib::Icon::get ( FOLDER_ICON,edelib::Icon::TINY ), fn);
+			Menu::insert(*o, num_dirs-1);
+			o->user_data(strdup(filename)); // we keep full path for callback
+			icon_array[i]=o;
+
+		// Add file
+		} else if (filetype_ != DIRECTORIES && fltk::filename_match(n, pattern_)) {
+			Item* o = new Item(edelib::Icon::get(DEFAULT_ICON,edelib::Icon::TINY), strdup(n));
+			Menu::add(*o);
+			o->user_data(strdup(filename)); // we keep full path for callback
+			icon_array[i]=o;
+		}
+	} // end for
 
 	this->redraw();
 
+	//
 	// Detect icon mimetypes etc.
+	//
+
 	for (i=0; i<num_files; i++) {
 		// ignored files
 		if (!icon_array[i]) continue;
@@ -212,11 +309,15 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 		snprintf (filename,4095,"%s%s",directory_,files[i]->d_name);
 		edelib::MimeType *m = new edelib::MimeType(filename);
 
-		// change label
+		// change label to complete data in various tabs
 		char *label;
-		if (strncmp(m->id(),"directory",9)==0) 
-			asprintf(&label, "%s\t%s\t\t%s", files[i]->d_name, m->type_string(), edelib::nice_time(filename_mtime(filename)));
-		else 
+		if (strncmp(m->id(),"directory",9)==0) {
+			// Strip slash from filename
+			char *n = strdup(files[i]->d_name);
+			n[strlen(n)-1] = '\0';
+			asprintf(&label, "%s\t%s\t\t%s", n, m->type_string(), edelib::nice_time(filename_mtime(filename)));
+			free(n);
+		} else 
 			asprintf(&label, "%s\t%s\t%s\t%s", files[i]->d_name, m->type_string(), edelib::nice_size(filename_size(filename)), edelib::nice_time(filename_mtime(filename)));
 		icon_array[i]->label(label);
 
@@ -227,13 +328,9 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 		delete m;
 		free(files[i]);
 	}
-
 	free(files);
 
-
-  }
-
-  return (num_files);
+	return (num_files);
 }
 
 
@@ -242,46 +339,70 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 //
 // I - Pattern string
 void FileBrowser::filter(const char *pattern)	{
-  // If pattern is NULL set the pattern to "*"...
-  if (pattern) pattern_ = pattern;
-  else pattern_ = "*";
+	// If pattern is NULL set the pattern to "*"...
+	if (pattern) pattern_ = pattern;
+	else pattern_ = "*";
 }
 
-////////////////////////////////////////////////////////////////
-//#include <pixmaps/file_small.xpm>
-//#include <fltk/xpmImage.h>
-class FileItem : public Item {
-public:
-    FileItem(const char * label, FileIcon * icon);
-    void draw();
-private:
-    FileIcon* fileIcon_;
-};
 
-FileItem::FileItem(const char * label, FileIcon * icon) : Item(label) {
-    fileIcon_=icon;
-//    textsize(14);
-    if(icon) icon->value(this,true);
-}
-void FileItem::draw()  {
-  if (fileIcon_) fileIcon_->value(this,true);
-    Item::draw();
-}
-////////////////////////////////////////////////////////////////
 
-/*void FileBrowser::add(const char *line, FileIcon *icon) {
-    this->begin();
-    FileItem * i = new FileItem(strdup(line),icon);
-    i->w((int) icon_size());  i->h(i->w());
-    this->end();
+// We override the fltk standard event handling to detect when 
+// user is clicking on already selected item and show filename editbox
+
+int FileBrowser::handle(int event) {
+	const int iconspace=20;
+
+	// Handle all events in editbox
+	if (editbox_->visible())
+		return editbox_->handle(event);
+
+	if (event==PUSH && !event_clicks() && 
+	// Don't accept clicks outside first column:
+	event_x()<widths[0])
+		for(int i=0; i<children()-1; i++)
+			if (event_y()>child(i)->y() && 
+			// Handle last child
+			(i==children()-1 || event_y()<child(i+1)->y()) && 
+			child(i)->flags()&SELECTED && 
+			// Make sure only one item is selected:
+			child(i)==item() &&
+			// Can't rename "up directory"
+			strcmp(child(i)->label(),"../") != 0) {
+				// "hide" item
+				editbox_->textcolor(child(i)->textcolor());
+				child(i)->textcolor(child(i)->color());
+				child(i)->throw_focus();
+
+				// deselect all
+				set_item_selected(false);
+				//deselect();
+
+				// Show editbox at item coordinates
+				editbox_->x(this->x()+child(i)->x()+iconspace);
+				editbox_->y(child(i)->y());
+				editbox_->w(150);
+				editbox_->h(20);
+				editbox_->show();
+
+				// Copy last part of path to editbox
+				char*p = strdup((char*)child(i)->user_data());
+				if (p[strlen(p)-1] == '/') p[strlen(p)-1]='\0';
+				char*q = strrchr(p,'/');
+				if (q!=0)
+					editbox_->text(q+1);
+				else
+					editbox_->text(p);
+				free(p);
+				/*char*p = strdup((char*)this->user_data());
+				editbox_->text(filename_name(p));*/
+
+				editbox_->take_focus();
+				editbox_->editing(child(i));
+				return 0;
+			}
+	return Browser::handle(event);
 }
 
-void FileBrowser::insert(int n, const char *label, FileIcon*icon) {
-    current(0);
-    FileItem * i = new FileItem(strdup(label),icon);
-    i->w((int) icon_size());  i->h(i->w());
-    Menu::insert(*i,n);
-}*/
 
 //
 // End of "$Id: FileBrowser.cxx 5071 2006-05-02 21:57:08Z fabien $".
