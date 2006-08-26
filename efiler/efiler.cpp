@@ -23,6 +23,7 @@
 #include <fltk/Divider.h>
 #include <fltk/file_chooser.h>
 //#include <fltk/FileBrowser.h>
+#include <fltk/TiledGroup.h>
 
 #include "../edelib2/about_dialog.h"
 #include "../edelib2/Icon.h"
@@ -32,6 +33,7 @@
 #include "../edelib2/Util.h"
 
 #include "EDE_FileBrowser.h"
+#include "EDE_DirTree.h"
 
 
 #define DEFAULT_ICON "misc-vedran"
@@ -43,11 +45,14 @@ using namespace edelib;
 
 
 Window *win;
+TiledGroup* tile;
 ScrollGroup* sgroup;
 FileBrowser* fbrowser;
+DirTree* dirtree;
 char current_dir[PATH_MAX];
 static bool semaphore=false;
 bool showhidden = false;
+bool showtree = false;
 
 char **cut_copy_buffer = 0;
 bool operation_is_copy = false;
@@ -108,11 +113,14 @@ void loaddir(const char *path) {
 	if (current_dir[strlen(current_dir)-1] != '/') strcat(current_dir,"/");
 fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 
+	// Update directory tree
+	dirtree->set_current(current_dir);
+
 	// set window label
 	win->label(tasprintf(_("%s - File manager"), current_dir));
 
 	// Update file browser...
-	fbrowser->load(current_dir);
+	if (fbrowser->visible()) { fbrowser->load(current_dir); semaphore=false; return; }
 
 	// some constants - TODO: move to configuration
 	int startx=0, starty=0;
@@ -240,6 +248,13 @@ fprintf(stderr,"Adding: %s (%s), cmd: '%s'\n", fullpath, m->id(), m->command());
 }
 
 
+// Directory tree callback
+void dirtree_cb(Widget* w, void*) {
+	if (!event_clicks() && event_key() != ReturnKey) return;
+	char *d = (char*) dirtree->item()->user_data();
+	if (d && strlen(d)>0) loaddir(d);
+}
+
 
 // List view
 // Currently using fltk::FileBrowser which is quite ugly (so only callback is here)
@@ -262,7 +277,7 @@ void fbrowser_cb(Widget* w, void*) {
 	}
 
 	// Change directory
-	if (filename_isdir(filename))
+	if (filename_isdir(filename)) 
 		loaddir(filename);
 
 	// Let elauncher handle this file...
@@ -387,15 +402,10 @@ void iconsview_cb(Widget*,void*) {
 		fbrowser->hide(); 
 		sgroup->take_focus();
 	}
+	// We update the inactive view only when it's shown i.e. now
+	loaddir(current_dir);
 }
 void listview_cb(Widget*,void*) { sgroup->hide(); fbrowser->show(); }
-void refresh_cb(Widget*,void*) {
-	if(sgroup->visible()) loaddir(current_dir);
-	else fbrowser->load(current_dir);
-}
-void case_cb(Widget*,void*) {
-	fprintf(stderr,"Not implemented yet...\n");
-}
 void showhidden_cb(Widget* w, void*) {
 	Item *i = (Item*)w;
 	if (showhidden) {
@@ -408,6 +418,21 @@ void showhidden_cb(Widget* w, void*) {
 	fbrowser->show_hidden(showhidden);
 	//fbrowser->redraw();
 	loaddir(current_dir);
+}
+void showtree_cb(Widget*,void*) {
+	if (!showtree) {
+		tile->position(1,0,150,0);
+		showtree=true;
+	} else {
+		tile->position(150,0,0,0);
+		showtree=false;
+	}
+}
+void refresh_cb(Widget*,void*) {
+	loaddir(current_dir);
+}
+void case_cb(Widget*,void*) {
+	fprintf(stderr,"Not implemented yet...\n");
 }
 
 // Help menu
@@ -496,6 +521,7 @@ int main (int argc, char **argv) {
 			{Item *o = new Item(_("Directory &Tree"));
 				o->type(Item::TOGGLE);
 				o->shortcut(F9Key);
+				o->callback(showtree_cb);
 			}
 			new Divider();
 			{Item *o = new Item(_("&Refresh"));
@@ -508,7 +534,6 @@ int main (int argc, char **argv) {
 				{Item *o = new Item(_("&Case sensitive"));
 					//o->type();
 					o->callback(case_cb);
-					o->shortcut(F5Key);
 				}
 				o->end();
 			}
@@ -525,31 +550,50 @@ int main (int argc, char **argv) {
 		m->end();
 	}
 
-	// Icon view
-	{sgroup = new ScrollGroup(0, 25, 600, 375);
-		sgroup->box(DOWN_BOX);
-		sgroup->color(WHITE);
-//		sgroup->highlight_color(WHITE);
-//		sgroup->selection_color(WHITE);
-		sgroup->align(ALIGN_LEFT|ALIGN_TOP);
-//		g->label("There are no files in current directory");
+	// Main tiled group
+	{tile = new TiledGroup(0, 25, 600, 375);
+		tile->color(WHITE);
+		tile->begin();
+
+		// Directory tree
+		{dirtree = new DirTree(0, 0, 150, 375);
+			dirtree->box(DOWN_BOX);
+			dirtree->color(WHITE);
+			dirtree->load();
+			dirtree->callback(dirtree_cb);
+			dirtree->when(WHEN_CHANGED|WHEN_ENTER_KEY);
+		}
+
+		// Icon view
+		{sgroup = new ScrollGroup(150, 0, 450, 375);
+			sgroup->box(DOWN_BOX);
+			sgroup->color(WHITE);
+	//		sgroup->highlight_color(WHITE);
+	//		sgroup->selection_color(WHITE);
+			sgroup->align(ALIGN_LEFT|ALIGN_TOP);
+	//		g->label("There are no files in current directory");
+		}
+	
+		// List view
+		{fbrowser = new FileBrowser(150, 0, 450, 375);
+			fbrowser->box(DOWN_BOX);
+			fbrowser->color(WHITE);
+			fbrowser->callback(fbrowser_cb);
+	//		sgroup->align(ALIGN_LEFT|ALIGN_TOP);
+	//		g->label("There are no files in current directory");
+			fbrowser->when(WHEN_ENTER_KEY);
+			//fbrowser->labelsize(12);
+			fbrowser->type(Browser::MULTI);
+			fbrowser->hide();
+		}
+		tile->end();
 	}
 
-	// List view
-	{fbrowser = new FileBrowser(0, 25, 600, 375);
-		fbrowser->box(DOWN_BOX);
-		fbrowser->color(WHITE);
-		fbrowser->callback(fbrowser_cb);
-//		sgroup->align(ALIGN_LEFT|ALIGN_TOP);
-//		g->label("There are no files in current directory");
-		fbrowser->when(WHEN_ENTER_KEY);
-		//fbrowser->labelsize(12);
-		fbrowser->type(Browser::MULTI);
-		fbrowser->hide();
-	}
+	// We hide dirtree and browser expands to fill space
+	tile->position(150,0,1,0);
 
 	win->end();
-	win->resizable(sgroup);
+	win->resizable(tile);
 	win->icon(Icon::get("folder",Icon::TINY));
 	win->show();
 

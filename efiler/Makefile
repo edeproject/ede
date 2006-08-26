@@ -1,5 +1,5 @@
 
-CPPFILES = efiler.cpp ../edelib2/MimeType.cpp ../edelib2/Run.cpp ../edelib2/process.cpp ../edelib2/pty.cpp ../edelib2/Config.cpp ../edelib2/Icon.cpp ../edelib2/Util.cpp ../edelib2/about_dialog.cpp
+CPPFILES = efiler.cpp EDE_FileBrowser.cpp EDE_DirTree.cpp ../edelib2/MimeType.cpp ../edelib2/Run.cpp ../edelib2/process.cpp ../edelib2/pty.cpp ../edelib2/Config.cpp ../edelib2/Icon.cpp ../edelib2/Util.cpp ../edelib2/about_dialog.cpp
 TARGET   = efiler
 
 include ../makeinclude
