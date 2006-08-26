@@ -369,14 +369,14 @@ bool Config::read_file(bool create)
 			else if ((c == '=') || (c == ':')) 
 				iskey = false;
 			else {
-				if (issection)
-					if (maxlen>strlen(sectionname)+strlen((const char*) &c))
+				if (issection) {
+					if (maxlen>strlen(sectionname)+1)
 						strcat(sectionname, (const char*) &c);
-				else if (iskey)
-					if (maxlen>strlen(key)+strlen((const char*) &c))
+				} else if (iskey) {
+					if (maxlen>strlen(key)+1)
 						strcat(key, (const char*) &c);
-				else
-					if (maxlen>strlen(value)+strlen((const char*) &c))
+				} else
+					if (maxlen>strlen(value)+1)
 						strcat(value, (const char*) &c);
 			}
 		}
@@ -855,7 +855,10 @@ char* Config_Section::find_entry(const char *key) const
 	char *ret;
 
 	char *search;
-	asprintf(&search,"%s=",twstrim(key));
+//	asprintf(&search,"%s=",twstrim(key));
+	char *m_key = wstrim(strdup(key));
+	asprintf(&search,"%s=",m_key);	
+	free(m_key);
 	
 	for (uint i=0; i<lines().size(); i++) {
 		if (!found && strncmp(lines().at(i), search, strlen(search)) == 0) {
