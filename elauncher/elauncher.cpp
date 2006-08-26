@@ -188,10 +188,11 @@ bool get_me_gdb_output(int crashpid)
 	{
 		// child
 		char *argv[4];
+		char tmp[1000];
 		argv[0] = "sh";
 		argv[1] = "-c";
-		argv[2] = (char*)malloc(1000); // Who should free(argv[2]) ?
-		snprintf (argv[2], sizeof(argv[2])-1, "echo bt>/tmp/gdbbatch; echo q>>/tmp/gdbbatch; "GDBPATH" %s --core core.%d  --command /tmp/gdbbatch --quiet > /tmp/gdboutput", cmd_, crashpid);
+		argv[2] = tmp;
+		snprintf (argv[2], 999, "echo bt>/tmp/gdbbatch; echo q>>/tmp/gdbbatch; "GDBPATH" %s --core core.%d  --command /tmp/gdbbatch --quiet > /tmp/gdboutput", cmd_, crashpid);
 		argv[3] = NULL;
 		
 		if (execve ("/bin/sh", argv, environ) == -1)
