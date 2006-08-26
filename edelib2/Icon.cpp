@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <sys/stat.h> 
 #include <fltk/Group.h>
+#include <fltk/filename.h>
  
 #include "Icon.h"
 #include "Config.h"
@@ -64,63 +65,38 @@ void Icon::set_theme(const char *t)
 // never lived. So we simply flatten the KDE directory
 // structure.
 
-// TODO: add support for xpm, use functions from fltk/filename.h
+// Alternatively, if there are different icons in subdirs with
+// same name, you can provide e.g. subdir/filename and it will 
+// work.
 
-char *find_icon(const char *name, const char *directory) 
+const char *find_icon(const char *name, const char *directory) 
 {
-	DIR *my_dir; 
-	struct dirent *my_dirent;
-	char filename[PATH_MAX];
-	
-	// Buffer for stat()
-	struct stat *buf = (struct stat*)malloc(sizeof(struct stat));
+	dirent	**files;
+	static char filename[PATH_MAX];
 
-	if (!(my_dir = opendir(directory))) 
-	{
-		// Directory doesn't exist!
-		fprintf (stderr, "Edelib: ERROR: Theme %s is no more on disk :(\n", directory);
-		free(buf);
-		return 0;
-	}
-	while ((my_dirent = readdir(my_dir)) != NULL) 
-	{
-		// filename is a fully qualified path
-		snprintf (filename, sizeof(filename), "%s/%s", directory, my_dirent->d_name);
+	snprintf (filename, PATH_MAX, "%s/%s", directory, name);
+	if (filename_exist(filename)) return filename;
+	snprintf (filename, PATH_MAX, "%s/%s.png", directory, name);
+	if (filename_exist(filename)) return filename;
+	snprintf (filename, PATH_MAX, "%s/%s.xpm", directory, name);
+	if (filename_exist(filename)) return filename;
 
-		// strip .png part
-		char *work = strdup(my_dirent->d_name);
-		char *d = strrchr(work,'.');
-		if (d && (strcmp(d, ".png") == 0))
-		{
-			*d = '\0';
-			if (strcmp(work, name)==0) 
-			{
-				//free(work); // this cause stack corruption sometimes!!
-				closedir(my_dir);
-				free(buf);
-				return strdup(filename); // found!
-			}
-		}
-		//free(work); // this cause stack corruption sometimes!!
-		// FIXME
-
-		// Let's try subdirectories
-		stat (filename, buf);
-		if (strcmp(my_dirent->d_name,".")!=0 && strcmp(my_dirent->d_name,"..")!=0 && S_ISDIR(buf->st_mode)) 
-		{
-			// filename is a directory, look inside:
-			char *tmp = find_icon(name, filename);
-			if (tmp) { // found
-				closedir(my_dir);
-				free(buf);
-				return tmp;
-			}
+	// Look in subdirectories
+	const int num_files = filename_list(directory, &files);
+	char dirname[PATH_MAX];
+	for (int i=0; i<num_files; i++) {
+		if ((strcmp(files[i]->d_name,"./") == 0) || strcmp(files[i]->d_name,"../") == 0) continue;
+		snprintf (dirname, PATH_MAX, "%s/%s", directory, files[i]->d_name);
+		if (filename_isdir(dirname)) {
+			// Cut last slash
+			if (dirname[strlen(dirname)-1] == '/')
+				dirname[strlen(dirname)-1] = '\0';
+			const char *tmp = find_icon(name, dirname);
+			if (tmp) return tmp;
 		}
 	}
-	closedir(my_dir);
-	free(buf);
 
-	// not found
+	// Not found
 	return 0;
 }
 
@@ -136,9 +112,9 @@ Icon* Icon::get(const char *name, int size)
 		size=MEDIUM;
 	}
 
-	snprintf (directory, sizeof(directory), "%s/%s/%dx%d", iconspath, get_theme(), size, size);
+	snprintf (directory, PATH_MAX, "%s/%s/%dx%d", iconspath, get_theme(), size, size);
 
-	char *icon = find_icon(name, directory);
+	const char *icon = find_icon(name, directory);
 
 	if (!icon) // Fallback to icon from default theme, if not found
 	{
@@ -157,7 +133,7 @@ Icon* Icon::get(const char *name, int size)
 	{
 		//fprintf(stderr,"Ikona: %s\n",icon);
 		Icon* i = (Icon*)pngImage::get(icon);
-		free(icon);
+		// free(icon); // no need to free icon
 		//i->transp_index(255);
 		//fprintf (stderr, "Name: %s Transp_index: %d Pixel type: %d\n", name, i->transp_index(), i->pixel_type());
 		return i;

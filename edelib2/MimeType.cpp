@@ -27,7 +27,7 @@
 #include <magic.h>
 
 // I made this icon because on KDE there are stupidly two icons with same name
-#define DEFAULT_ICON "misc-vedran"
+#define DEFAULT_ICON "mimetypes/misc"
 #define FOLDER_ICON "folder"
 #define RECYCLED_ICON "recycled"
 #define LOCKED_ICON "lockoverlay"
