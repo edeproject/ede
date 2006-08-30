@@ -44,14 +44,14 @@
 // FIXME: Why can this box be resized????
 // TODO: When editbox appears, select filename part and leave extension not-selected 
 // (as in Konqueror)
-// FIXME: Clicking on letter in editbox doesn't move cursor to that letter
 
 class EditBox : public fltk::Input {
 	fltk::Widget* editing_;
 public:
-	EditBox(int x, int y, int w, int h, const char* label = 0) : fltk::Input(x,y,w,h,label) {}
+	EditBox(int x, int y, int w, int h, const char* label = 0) : fltk::Input(x,y,w,h,label) , editing_(0) {}
 	void editing(fltk::Widget*w) { editing_=w; }
 	int handle (int event);
+	void hide();
 };
 
 

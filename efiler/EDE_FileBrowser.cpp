@@ -142,28 +142,28 @@ int EditBox::handle(int event) {
 	}
 
 	// Hide editbox 
-
-	// FIXME: Why is event_x() sometimes negative when we click inside box and sometimes not. Sometimes appears to be relative to window, sometimes to browser
-
-	if (above || ( event==KEY && event_key()==EscapeKey ) ||
-		// Click outside editbox:
-		( event==PUSH && event_x()>0 &&  !event_inside(Rectangle(x()-parent()->x(),y()-parent()->y(),w(),h())) ) ) {
-//fprintf (stderr, "Event: %d,%d Box: %d,%d,%d,%d\n",event_x(),event_y(),x(),y(),w(),h());
+	if (above || ( event==KEY && event_key()==EscapeKey ) ) {
 		this->hide();
-		// Remove box so it doesn't get in the way
-		this->x(0);
-		this->y(0);
-		this->w(0);
-		this->h(0);
-		// Return the browser item into "visible" state
-		editing_->textcolor(textcolor());
-		editing_->redraw();
-		parent()->take_focus();
-		// If user clicked outside box, this should select something else:
-		if (event==PUSH) return parent()->handle(event);
 		return 1;
 	}
 	Input::handle(event);
+}
+
+
+// We override hide method to ensure certain things done
+void EditBox::hide() {
+	Input::hide();
+	// Remove box so it doesn't get in the way
+	this->x(0);
+	this->y(0);
+	this->w(0);
+	this->h(0);
+	// Return the browser item into "visible" state
+	if (editing_) {
+		editing_->textcolor(textcolor());
+		editing_->redraw();
+		parent()->take_focus();
+	}
 }
 
 
@@ -353,8 +353,12 @@ int FileBrowser::handle(int event) {
 	const int iconspace=20;
 
 	// Handle all events in editbox
-	if (editbox_->visible())
-		return editbox_->handle(event);
+	if (editbox_->visible()) {
+		if (event == PUSH && !event_inside(Rectangle(editbox_->x(), editbox_->y(), editbox_->w(), editbox_->h())))
+			editbox_->hide();
+		else
+			return editbox_->handle(event);
+	}
 
 	if (event==PUSH && !event_clicks() && 
 	// Don't accept clicks outside first column:
