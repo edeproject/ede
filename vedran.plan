@@ -1,0 +1,77 @@
+Here is my personal plan for things to do in EDE2, starting 30.08.2006. I can't guarantee about the
+order but roughly it will be as in this file.
+
+* fltk2
+  [ ] report all found bugs to fltk2.org
+  [ ] prepare repositories, scipts etc. for fltk-copy
+* efiler
+  [ ] d&d support in FileBrowser
+  [ ] popup (right-click) menu
+  [ ] add .desktop file handling
+  [ ] move icon view into class IconBrowser with similar API to FileBrowser
+  [ ] add file properties dialog
+  [ ] add preferences dialog for efiler, save preferences into conf file
+      [ ] create edelib2 class for parsing command line
+  [ ] lots of testing
+  [ ] move FileBrowser and DirTree to edelib2
+  [ ] replace econtrol with efiler window (with possibly own conf)
+* elauncher
+  [ ] port to use our new MimeType system
+* edelib2/about_dialog
+  [ ] redesign (similar to about dialog in eworkpanel)
+  [ ] make into a class that inherits fltk::Window
+* efinder
+  [ ] port to new FileBrowser class
+* edelib2/theme
+  [ ] theme handler (for now, compatible with old efltk.conf file)
+* eiconman
+  [ ] rewrite using efiler/IconBrowser as template
+  [ ] add freedesktop.org compliant handler for removable devices (using HAL)
+* edelib2
+  [ ] make a class for setting window manager icons for windows
+  [ ] create icons for all EDE programs
+=== release EDE2 alpha (unless Sanel objects ;) ) ===
+* edelib2
+  [ ] new ask.h class with planned improvements
+  [ ] new filechooser and dirchooser using our new classes from efiler
+* edialog
+  [ ] port to new classes (above) and complete missing features
+* edelib2/Sound class
+  [ ] from Sanels edewm branch
+* edelib2/Icon
+  [ ] add icon resizing from smaller/larger sizes
+  [ ] add support for non-themed icons (e.g. X-Chat icon)
+  [ ] create a generic wrapper around icon themes
+  [ ] create "The EDE Icon Theme" (using old icons) and use it as default
+  [ ] further test with Gnome icon themes
+  [ ] make Tango-project icons work with EDE :)
+* edelib2/IconGroup etc.
+  [ ] create PackedGroup (auto-resizing-wordwrapping) and use it for IconBrowser
+  [ ] create IconBrowser and use it in eiconman
+* evolume
+  [ ] port to libao (since we will depend on it anyway)
+* edewm
+  - give Sanel time to do whatever he wants
+* eworkpanel
+  [ ] move applets into separate compilable subdirs and port core to fltk
+  [ ] fix taskbar once and for all
+  [ ] make a real desktop browser (like Gnome)
+  [ ] create something like taskbar but shows miniature pictures of windows
+  [ ] make panel resizable, movable
+  [ ] add support for XDG menus
+* epanelconf
+  [ ] rewrite, make more interactive
+* edelib2/Config
+  [ ] probably a complete rewrite (not sure right now)
+  [ ] create new directory structure
+  [ ] write a small utility for migrating old config to new
+* etheme & ebehavior - two new apps to replace e*conf
+* enotepad - use fltk2/test/editor and add selected features
+* ehardcenter - for now just system info
+* edelib2/MimeTypes and the rest
+  [ ] separate programs from mimetypes
+  [ ] create eprograms - tool to choose favourite apps
+  [ ] add proper "Open with..." dialog to efiler and elauncher
+=== release EDE2 beta1 ===
+=== poll users for new features and apps ===
+
