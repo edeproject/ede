@@ -24,6 +24,7 @@
 #include <fltk/file_chooser.h>
 //#include <fltk/FileBrowser.h>
 #include <fltk/TiledGroup.h>
+#include <fltk/ProgressBar.h>
 
 #include "../edelib2/about_dialog.h"
 #include "../edelib2/Icon.h"
@@ -59,16 +60,21 @@ bool operation_is_copy = false;
 
 
 
-// This is for the icon view, which should be redesigned to be like FileBrowser
 
+/*-----------------------------------------------------------------
+	Icon View implementation
+
+NOTE: This will eventually be moved into a separate class. We know
+there are ugly/unfinished stuff here, but please be patient.
+-------------------------------------------------------------------*/
+
+
+// Prototype (loaddir is called from button_press and vice versa
 void loaddir(const char* path);
 
+// Callback for icons in icon view
 void button_press(Widget* w, void*) {
 	if (event_clicks() || event_key() == ReturnKey) {
-//		run_program((char*)w->user_data(),true,false,true); // use elauncher
-//		char tmp[256];
-//		snprintf(tmp,255,"konsole --noclose -e %s",(char*)w->user_data());
-//		run_program(tmp,true,false,false); 
 		if (!w->user_data() || (strlen((char*)w->user_data())==0)) 
 			alert(_("Unknown file type"));
 		else if (strncmp((char*)w->user_data(),"efiler ",7)==0) {
@@ -93,6 +99,11 @@ void button_press(Widget* w, void*) {
 	fprintf (stderr, "Event: %s (%d)\n",event_name(event()), event());
 }
 
+
+// This function populates the icon view
+// For convinience, it is now also called from other parts of code
+// and also calls FileBrowser->load(path) which does the same 
+// thing for listview if neccessary
 
 void loaddir(const char *path) {
 	// If user clicks too fast, it can cause problems
@@ -132,11 +143,11 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 	int icon_num=0;
 	dirent **files;
 
-
+	// Clean up window
 	sgroup->remove_all();
-
 	sgroup->begin();
-	// list files
+
+	// List all files in directory
 	icon_num = fltk::filename_list(current_dir, &files, alphasort); // no sort needed because icons have coordinates
 	icon_array = (Button**) malloc (sizeof(Button*) * icon_num + 1);
 	// fill array with zeros, for easier detection if button exists
@@ -248,7 +259,12 @@ fprintf(stderr,"Adding: %s (%s), cmd: '%s'\n", fullpath, m->id(), m->command());
 }
 
 
-// Directory tree callback
+/*-----------------------------------------------------------------
+	Directory tree
+
+	(only callback, since most of the real work is done in class)
+-------------------------------------------------------------------*/
+
 void dirtree_cb(Widget* w, void*) {
 	if (!event_clicks() && event_key() != ReturnKey) return;
 	char *d = (char*) dirtree->item()->user_data();
@@ -256,8 +272,11 @@ void dirtree_cb(Widget* w, void*) {
 }
 
 
-// List view
-// Currently using fltk::FileBrowser which is quite ugly (so only callback is here)
+/*-----------------------------------------------------------------
+	List view
+
+	(only callback, since most of the real work is done in class)
+-------------------------------------------------------------------*/
 
 void fbrowser_cb(Widget* w, void*) {
 	// Take only proper callbacks
@@ -267,6 +286,7 @@ void fbrowser_cb(Widget* w, void*) {
 	const char *c = fbrowser->system_path(fbrowser->value());
 	char filename[PATH_MAX];
 	if (strncmp(c+strlen(c)-3,"../",3)==0) {
+		// User clicked on "..", we go up
 		strcpy(filename,current_dir); // both are [PATH_MAX]
 		filename[strlen(filename)-1] = '\0'; // remove trailing slash in a directory
 		char *c2 = strrchr(filename,'/'); // find previous slash
@@ -286,25 +306,14 @@ void fbrowser_cb(Widget* w, void*) {
 }
 
 
-// Menu callbacks
 
-// File menu
-void open_cb(Widget*, void*) {
-	Widget* w;
-	if (sgroup->visible())
-		w = sgroup->child(sgroup->focus_index());
-	else
-		w = fbrowser;
-	event_clicks(2);
-	w->do_callback();
-}
-void location_cb(Widget*, void*) {
-	const char *dir = dir_chooser(_("Choose location"),current_dir);
-	if (dir) loaddir(dir);
-}
-void quit_cb(Widget*, void*) {exit(0);}
+/*-----------------------------------------------------------------
+	File moving and copying operations
+-------------------------------------------------------------------*/
 
-// Edit menu
+ProgressBar* cut_copy_progress;
+bool stop_now;
+bool overwrite_all, skip_all;
 
 // Execute cut or copy operation when List View is active
 void do_cut_copy_fbrowser(bool m_copy) {
@@ -345,9 +354,13 @@ void do_cut_copy_fbrowser(bool m_copy) {
 }
 
 // Execute cut or copy operation when Icon View is active
+
+// (this one will become obsolete when IconBrowser class gets the same API
+// as FileBrowser)
+
 void do_cut_copy_sgroup(bool m_copy) {
+
 	// Group doesn't support type(MULTI) so only one item can be selected
-	// Will be changed
 
 	int num = fbrowser->children();
 
@@ -373,6 +386,318 @@ void do_cut_copy_sgroup(bool m_copy) {
 	operation_is_copy=m_copy;
 }
 
+
+// Helper functions for paste:
+
+// Tests if two files are on the same filesystem
+bool is_on_same_fs(const char* file1, const char* file2) {
+	FILE	*mtab;		// /etc/mtab or /etc/mnttab file
+	static char filesystems[50][PATH_MAX];
+	static int fs_number=0;
+
+	// On first access read filesystems
+	if (fs_number == 0) {
+		mtab = fopen("/etc/mnttab", "r");	// Fairly standard
+		if (mtab == NULL)
+			mtab = fopen("/etc/mtab", "r");	// More standard
+		if (mtab == NULL)
+			mtab = fopen("/etc/fstab", "r");	// Otherwise fallback to full list
+		if (mtab == NULL)
+			mtab = fopen("/etc/vfstab", "r");	// Alternate full list file
+
+		char	line[PATH_MAX];	// Input line
+		char	device[PATH_MAX], mountpoint[PATH_MAX], fs[PATH_MAX];
+		while (mtab!= NULL && fgets(line, sizeof(line), mtab) != NULL) {
+			if (line[0] == '#' || line[0] == '\n')
+				continue;
+			if (sscanf(line, "%s%s%s", device, mountpoint, fs) != 3)
+				continue;
+			strcpy(filesystems[fs_number],mountpoint);
+			fs_number++;
+		}	
+		fclose (mtab);
+
+		if (fs_number == 0) return false; // some kind of error
+	}
+
+	// Find filesystem for file1 (largest mount point match)
+	char *max;
+	int maxlen = 0;
+	for (int i=0; i<fs_number; i++) {
+		int mylen = strlen(filesystems[i]);
+		if ((strncmp(file1,filesystems[i],mylen)==0) && (mylen>maxlen)) {
+			maxlen=mylen;
+			max = filesystems[i];
+		}
+	}
+	if (maxlen == 0) return false; // some kind of error
+
+	// See if file2 matches the same filesystem
+	return (strncmp(file2,max,maxlen)==0);
+}
+
+
+// Copy single file. Returns true if operation should continue
+bool my_copy(const char* src, const char* dest) {
+	FILE *fold, *fnew;
+	int c;
+
+	if (strcmp(src,dest)==0)
+		// this shouldn't happen
+		return true;
+
+	if (filename_exist(dest)) {
+		// if both src and dest are directories, do nothing
+		if (filename_isdir(src) && filename_isdir(dest))
+			return true;
+
+		int c = -1;
+		if (!overwrite_all && !skip_all) {
+			c = choice_alert(tsprintf(_("File already exists: %s. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("*&Skip"), _("Skip &all"), 0); // asterisk (*) means default
+		}
+		if (c==1) overwrite_all=true;
+		if (c==3) skip_all=true;
+		if (c==2 || skip_all) {
+			return true;
+		}
+		// At this point either c==0 (overwrite) or overwrite_all == true
+
+		// copy directory over file
+		if (filename_isdir(src))
+			unlink(dest);
+
+		// copy file over directory
+		// TODO: we will just skip this case, but ideally there should be
+		// another warning
+		if (filename_isdir(dest))
+			return true;
+	}
+
+	if (filename_isdir(src)) {
+		if (mkdir (dest, umask(0))==0)
+			return true; // success
+		int q = choice_alert(tsprintf(_("Cannot create directory %s"),dest), _("*&Continue"), _("&Stop"), 0);
+		if (q == 0) return true; else return false;
+	}
+
+	if ( ( fold = fopen( src, "rb" ) ) == NULL ) {
+		int q = choice_alert(tsprintf(_("Cannot read file %s"),src), _("*&Continue"), _("&Stop"), 0);
+		if (q == 0) return true; else return false;
+	}
+
+	if ( ( fnew = fopen( dest, "wb" ) ) == NULL  )
+	{
+		fclose ( fold );
+		int q = choice_alert(tsprintf(_("Cannot create file %s"),dest), _("*&Continue"), _("&Stop"), 0);
+		if (q == 0) return true; else return false;
+	}
+	
+	while (!feof(fold)) {
+		c = fgetc(fold);
+		fputc(c, fnew);
+	}
+	// TODO: Add more error handling using ferror()
+	fclose(fold);
+	fclose(fnew);
+	return true;
+}
+
+
+// Recursive function that creates a list of all files to be 
+// copied, expanding directories etc. The total number of elements
+// will be stored in listsize. Returns false if user decided to
+// interrupt copying.
+bool create_list(const char* src, char** &list, int &list_size, int &list_capacity) {
+	// Grow list if neccessary
+	if (list_size >= list_capacity-1) {
+		list_capacity += 1000;
+		list = (char**)realloc(list, sizeof(char**)*list_capacity);
+	}
+
+	// We add both files and diretories to list
+	list[list_size++] = strdup(src);
+
+	if (filename_isdir(src)) {
+		char new_src[PATH_MAX];
+		dirent	**files;
+		// FIXME: use same sort as currently used
+		// FIXME: detect errors on accessing folder
+		int num_files = fltk::filename_list(src, &files, casenumericsort);
+		for (int i=0; i<num_files; i++) {
+			if (strcmp(files[i]->d_name,"./")==0 || strcmp(files[i]->d_name,"../")==0) continue;
+			snprintf(new_src, PATH_MAX, "%s%s", src, files[i]->d_name);
+			fltk::check(); // update gui
+			if (stop_now || !create_list(new_src, list, list_size, list_capacity))
+				return false;
+		}
+	}
+	return true;
+}
+
+
+// Callback for Stop button on progress window
+void stop_copying_cb(Widget*,void* v) {
+	stop_now=true;
+	// Let's inform user that we're stopping...
+	InvisibleBox* caption = (InvisibleBox*)v;
+	caption->label(_("Stopping..."));
+	caption->redraw();
+	caption->parent()->redraw();
+}
+
+// Execute paste operation - this will copy or move files based on last 
+// operation
+void do_paste() {
+
+	if (!cut_copy_buffer || !cut_copy_buffer[0]) return;
+
+	overwrite_all=false; skip_all=false;
+
+	// Moving files on same filesystem is trivial
+	// We don't even need a progress bar
+	if (!operation_is_copy && is_on_same_fs(current_dir, cut_copy_buffer[0])) {
+		for (int i=0; cut_copy_buffer[i]; i++) {
+			char *newname;
+			asprintf(&newname, "%s%s", current_dir, filename_name(cut_copy_buffer[i]));
+			if (filename_exist(newname)) {
+				int c = -1;
+				if (!overwrite_all && !skip_all) {
+					c = choice_alert(tsprintf(_("File already exists: %s. What to do?"), newname), _("&Overwrite"), _("Over&write all"), _("*&Skip"), _("Skip &all")); // * means default
+				}
+				if (c==1) overwrite_all=true;
+				if (c==3) skip_all=true;
+				if (c==2 || skip_all) {
+					free(cut_copy_buffer[i]);
+					continue; // go to next entry
+				}
+				// At this point c==0 (Overwrite) or overwrite_all == true
+				unlink(newname);
+			} 
+			rename(cut_copy_buffer[i],newname);
+			free(cut_copy_buffer[i]);
+		}
+		free(cut_copy_buffer);
+		cut_copy_buffer=0;
+		loaddir(current_dir); // Update display
+		return;
+
+	//
+	// Real file moving / copying using recursive algorithm
+	//
+
+	} else {
+		stop_now = false;
+
+		// Create srcdir string
+		char *srcdir = strdup(cut_copy_buffer[0]);
+		char *p = strrchr(srcdir,'/');
+		if (*(p+1) == '\0') { // slash is last - find one before
+			*p = '\0';
+			p = strrchr(srcdir,'/');
+		}
+		*(p+1) = '\0';
+
+		if (strcmp(srcdir,current_dir)==0) {
+			alert(_("You cannot copy a file onto itself!"));
+			return;
+		}
+
+		// Draw progress dialog
+		Window* progress_window = new Window(350,150);
+		if (operation_is_copy)
+			progress_window->label(_("Copying files"));
+		else
+			progress_window->label(_("Moving files"));
+		progress_window->set_modal();
+		progress_window->begin();
+		InvisibleBox* caption = new InvisibleBox(20,20,310,25, _("Counting files in directories"));
+		caption->align(ALIGN_LEFT|ALIGN_INSIDE);
+		cut_copy_progress = new ProgressBar(20,60,310,20);
+		Button* stop_button = new Button(145,100,60,40, _("&Stop"));
+		stop_button->callback(stop_copying_cb,caption);
+		progress_window->end();
+		progress_window->show();
+
+		// How many items do we copy?
+		int copy_items=0;
+		for (; cut_copy_buffer[copy_items]; copy_items++);
+		// Set ProgressBar range accordingly
+		cut_copy_progress->range(0,copy_items,1);
+		cut_copy_progress->position(0);
+
+		// Count files in directories
+		int list_size = 0, list_capacity = 1000;
+		char** files_list = (char**)malloc(sizeof(char**)*list_capacity);
+		for (int i=0; i<copy_items; i++) {
+			// We must ensure that cut_copy_buffer is deallocated
+			// even if user clicked on Stop
+			if (!stop_now) create_list(cut_copy_buffer[i], files_list, list_size, list_capacity);
+			free(cut_copy_buffer[i]);
+			cut_copy_progress->position(i+1);
+			fltk::check(); // check to see if user pressed Stop
+		}
+		free (cut_copy_buffer);
+		cut_copy_buffer=0;
+
+		// Now copying those files
+		if (!stop_now) {
+			char label[150];
+			char dest[PATH_MAX];
+			cut_copy_progress->range(0, list_size, 1);
+			cut_copy_progress->position(0);
+
+			for (int i=0; i<list_size; i++) {
+				// Prepare dest filename
+				char *srcfile = files_list[i] + strlen(srcdir);
+				snprintf (dest, PATH_MAX, "%s%s", current_dir, srcfile);
+
+				snprintf(label, 150, _("Copying %d of %d files to %s"), i, list_size, current_dir);
+				caption->label(label);
+				caption->redraw();
+				if (stop_now || !my_copy(files_list[i], dest))
+					break;
+				cut_copy_progress->position(cut_copy_progress->position()+1);
+				fltk::check(); // check to see if user pressed Stop
+			}
+		}
+		progress_window->hide();
+
+		// Deallocate files_list[][]
+		for (int i=0; i<list_size; i++) 
+			free(files_list[i]);
+		free(files_list);
+
+		// Reload current dir
+		loaddir(current_dir);
+	}
+}
+
+
+
+/*-----------------------------------------------------------------
+	Main menu callbacks
+-------------------------------------------------------------------*/
+
+// File menu callbacks
+
+void open_cb(Widget*, void*) {
+	Widget* w;
+	if (sgroup->visible())
+		w = sgroup->child(sgroup->focus_index());
+	else
+		w = fbrowser;
+	event_clicks(2);
+	w->do_callback();
+}
+void location_cb(Widget*, void*) {
+	const char *dir = dir_chooser(_("Choose location"),current_dir);
+	if (dir) loaddir(dir);
+}
+void quit_cb(Widget*, void*) {exit(0);}
+
+
+// Edit menu callbacks
+
 void cut_cb(Widget*, void*) {
 	if (sgroup->visible()) 
 		do_cut_copy_sgroup(false);
@@ -388,12 +713,14 @@ void copy_cb(Widget*, void*) {
 }
 
 void paste_cb(Widget*, void*) {
-	
+	do_paste();
 }
 
+
 // View menu
-void iconsview_cb(Widget*,void*) {
-	if (sgroup->visible() && event_key() == F8Key) {
+
+void switchview() {
+	if (sgroup->visible()) {
 		sgroup->hide(); 
 		fbrowser->show(); 
 		fbrowser->take_focus();
@@ -405,8 +732,18 @@ void iconsview_cb(Widget*,void*) {
 	// We update the inactive view only when it's shown i.e. now
 	loaddir(current_dir);
 }
-void listview_cb(Widget*,void*) { sgroup->hide(); fbrowser->show(); }
+
+void iconsview_cb(Widget*,void*) {
+	// When user presses F8 we switch view regardles of which is visible
+	// However, when menu option is chosen we only switch *to* iconview
+	if (fbrowser->visible() || event_key() == F8Key) switchview();
+}
+void listview_cb(Widget*,void*) { if (sgroup->visible()) switchview(); }
+
 void showhidden_cb(Widget* w, void*) {
+	// Presently, fbrowser has show_hidden() method while icon view
+	// respects value of showhidden global variable
+
 	Item *i = (Item*)w;
 	if (showhidden) {
 		showhidden=false;
@@ -415,10 +752,11 @@ void showhidden_cb(Widget* w, void*) {
 		showhidden=true;
 		i->set();
 	}
-	fbrowser->show_hidden(showhidden);
-	//fbrowser->redraw();
+	if (fbrowser->visible()) fbrowser->show_hidden(showhidden);
+	// Reload current view
 	loaddir(current_dir);
 }
+
 void showtree_cb(Widget*,void*) {
 	if (!showtree) {
 		tile->position(1,0,150,0);
@@ -430,18 +768,23 @@ void showtree_cb(Widget*,void*) {
 }
 void refresh_cb(Widget*,void*) {
 	loaddir(current_dir);
+	// TODO: reload directory tree as well-
 }
 void case_cb(Widget*,void*) {
 	fprintf(stderr,"Not implemented yet...\n");
 }
 
+
 // Help menu
+
 void about_cb(Widget*, void*) { about_dialog("EFiler", "0.1", _("EDE File Manager"));}
 
 
 
+/*-----------------------------------------------------------------
+	GUI design
+-------------------------------------------------------------------*/
 
-// GUI design
 
 int main (int argc, char **argv) {
 	win = new fltk::Window(600, 400);
@@ -480,11 +823,11 @@ int main (int argc, char **argv) {
 				o->shortcut(CTRL+'x');
 			}
 			{Item *o = new Item(_("C&opy"));
-				//o->callback(open_cb);
+				o->callback(copy_cb);
 				o->shortcut(CTRL+'c');
 			}
 			{Item *o = new Item(_("&Paste"));
-				//o->callback(open_cb);
+				o->callback(paste_cb);
 				o->shortcut(CTRL+'v');
 			}
 			{Item *o = new Item(_("&Rename"));
