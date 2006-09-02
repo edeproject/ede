@@ -14,6 +14,7 @@
 #include "elauncher.h"
 #include "../edeconf.h"
 #include "../edelib2/process.h"
+#include "../edelib2/MimeType.h"
 
 using namespace fltk;
 using namespace edelib;
@@ -539,14 +540,10 @@ void run_resource(const char *cmd) {
 		if (strcasecmp(protocol,"file") == 0)
 		// use mimetypes
 		{
-			char *m_program;
-
-			Config m_mimetypes(Config::find_file("mime.conf", 0));
-			const char *m_ext = filename_ext(location);
-			m_mimetypes.get(m_ext, "Exec", m_program);
-
-			if (m_program)
-				snprintf(pRun, sizeof(pRun)-1, "%s %s", m_program, location);
+			MimeType m(location);
+			
+			if (m.command())
+				strncpy(pRun, m.command(), sizeof(pRun)-1);
 			else 
 			{	// unknown extension
 				char m_printout[256];
@@ -556,6 +553,7 @@ void run_resource(const char *cmd) {
 			}
 		}
 		
+		// TODO: split protocols into own file
 		else if (strcasecmp(protocol, "http")==0 || strcasecmp(protocol, "ftp")==0)
 		{
 			snprintf(pRun, sizeof(pRun)-1, "%s %s", browser, cmd);
