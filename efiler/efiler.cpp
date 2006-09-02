@@ -189,6 +189,9 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 
 	sgroup->redraw();
 
+	// Init mimetypes
+	MimeType *m = new MimeType;
+
 	// Detect icon mimetypes etc.
 	for (int i=0; i<icon_num; i++) {
 		// ignored files
@@ -198,7 +201,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 		// get mime data
 		char fullpath[PATH_MAX];
 		snprintf (fullpath,PATH_MAX-1,"%s%s",current_dir,files[i]->d_name);
-		MimeType *m = new MimeType(fullpath);
+		m->set(fullpath);
 
 fprintf(stderr,"Adding: %s (%s), cmd: '%s'\n", fullpath, m->id(), m->command());
 
@@ -251,8 +254,9 @@ fprintf(stderr,"Adding: %s (%s), cmd: '%s'\n", fullpath, m->id(), m->command());
 			pos--;
 		}
 		icon_array[i]->redraw();
-		delete m;
 	}
+	// MimeType destructor
+	delete m;
 
 	sgroup->redraw();
 	semaphore=false;

@@ -96,7 +96,7 @@
 #include <errno.h>
 
 using namespace fltk;
-
+using namespace edelib;
 
 
 
@@ -128,13 +128,13 @@ int EditBox::handle(int event) {
 			char oldname[PATH_MAX];
 			strcpy(oldname, (char*)editing_->user_data());
 			if (rename(oldname, path) == -1) {
-				alert(edelib::tsprintf(_("Could not rename file! Error was:\n\t%s"), strerror(errno)));
+				alert(tsprintf(_("Could not rename file! Error was:\n\t%s"), strerror(errno)));
 			} else {
 				// Update browser
 				free(editing_->user_data());
 				editing_->user_data(strdup(path));
 				const char* l = editing_->label();
-				editing_->label(edelib::tasprintf("%s%s",text(),strchr(l, '\t')));
+				editing_->label(tasprintf("%s%s",text(),strchr(l, '\t')));
 			}
 		}
 		
@@ -253,7 +253,7 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 	num_dirs = 0;
 	if (show_dotdot_ && strcmp(directory_,"/") != 0) {
 		num_dirs++;
-		Item* o = new Item ( edelib::Icon::get ( UPDIR_ICON, edelib::Icon::TINY ), "..\tGo up" );
+		Item* o = new Item ( Icon::get ( UPDIR_ICON, Icon::TINY ), "..\tGo up" );
 		Menu::add(*o);
 		snprintf(filename, PATH_MAX, "%s../", directory_);
 		o->user_data(strdup(filename));
@@ -270,6 +270,7 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 
 		if (strcmp(n, ".")==0 || strcmp(n, "./")==0 || (!show_hidden_ &&  (n[0]=='.' || n[strlen(n)-1]=='~') ) ) 
 			continue;
+		fltk::check(); //update interface
 
 		// Add directory
 		if (filetype_ != FILES && fltk::filename_isdir(filename)) {
@@ -280,14 +281,14 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 			if (fn[strlen(fn)-1] == '/')
 				fn[strlen(fn)-1] = '\0';
 
-			Item* o = new Item ( edelib::Icon::get ( FOLDER_ICON,edelib::Icon::TINY ), fn);
+			Item* o = new Item ( Icon::get ( FOLDER_ICON,Icon::TINY ), fn);
 			Menu::insert(*o, num_dirs-1);
 			o->user_data(strdup(filename)); // we keep full path for callback
 			icon_array[i]=o;
 
 		// Add file
 		} else if (filetype_ != DIRECTORIES && fltk::filename_match(n, pattern_)) {
-			Item* o = new Item(edelib::Icon::get(DEFAULT_ICON,edelib::Icon::TINY), strdup(n));
+			Item* o = new Item(Icon::get(DEFAULT_ICON,Icon::TINY), strdup(n));
 			Menu::add(*o);
 			o->user_data(strdup(filename)); // we keep full path for callback
 			icon_array[i]=o;
@@ -300,6 +301,8 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 	// Detect icon mimetypes etc.
 	//
 
+	MimeType *m = new MimeType();
+
 	for (i=0; i<num_files; i++) {
 		// ignored files
 		if (!icon_array[i]) continue;
@@ -307,7 +310,7 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 
 		// get mime data
 		snprintf (filename,4095,"%s%s",directory_,files[i]->d_name);
-		edelib::MimeType *m = new edelib::MimeType(filename);
+		m->set(filename);
 
 		// change label to complete data in various tabs
 		char *label;
@@ -315,19 +318,19 @@ FileBrowser::load(const char     *directory,// I - Directory to load
 			// Strip slash from filename
 			char *n = strdup(files[i]->d_name);
 			n[strlen(n)-1] = '\0';
-			asprintf(&label, "%s\t%s\t\t%s", n, m->type_string(), edelib::nice_time(filename_mtime(filename)));
+			asprintf(&label, "%s\t%s\t\t%s", n, m->type_string(), nice_time(filename_mtime(filename)));
 			free(n);
 		} else 
-			asprintf(&label, "%s\t%s\t%s\t%s", files[i]->d_name, m->type_string(), edelib::nice_size(filename_size(filename)), edelib::nice_time(filename_mtime(filename)));
+			asprintf(&label, "%s\t%s\t%s\t%s", files[i]->d_name, m->type_string(), nice_size(filename_size(filename)), nice_time(filename_mtime(filename)));
 		icon_array[i]->label(label);
 
 		// icon
-		icon_array[i]->image(m->icon(edelib::Icon::TINY));
+		icon_array[i]->image(m->icon(Icon::TINY));
 
 		icon_array[i]->redraw();
-		delete m;
 		free(files[i]);
 	}
+	delete m;
 	free(files);
 
 	return (num_files);

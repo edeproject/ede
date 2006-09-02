@@ -17,7 +17,6 @@
 #include "Run.h"
 #include "Config.h"
 #include "Util.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -170,9 +169,15 @@ void MimeType::set_found(char *id) {
 }
 
 
-
-MimeType::MimeType(const char* filename, bool usefind) {
+void MimeType::set(const char* filename, bool usefind) {
+	// Drop any previous data from memory
+	if (cur_id) free(cur_id);
+	if (cur_typestr) free(cur_typestr);
+	if (cur_command) free(cur_command);
+	if (cur_iconname) free(cur_iconname);
+	if (cur_filename) free(cur_filename);
 	cur_id=cur_typestr=cur_command=cur_iconname=cur_filename=0;
+
 	if (filename && filename_exist(filename)) {
 		cur_filename=strdup(filename);
 
@@ -222,21 +227,10 @@ MimeType::MimeType(const char* filename, bool usefind) {
 
 		if (!usefind) goto nofind; // using goto here makes less indentation ;)
 
-		// execute file command
-		// TODO: save cookie in a static variable
-		magic_t cookie = magic_open(MAGIC_NONE);
-		magic_load(cookie, NULL);
-		buffer = strdup(magic_file(cookie, filename));
-/*		const int ourpid = getpid();
-		run_program(tsprintf("%s -bLnNp '%s' >/tmp/ede-%d", GFILE, filename, ourpid));
+		// execute file command through libmagic
+		buffer = strdup(magic_file(magic_cookie, filename));
 
-		// read cmd output from temp file
-		FILE *f = fopen (tsprintf("/tmp/ede-%d",ourpid),"r");
-		fgets(buffer,255,f);
-		fclose(f); // won't be more than 255 chars*/
-
-fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(cookie));
-		magic_close(cookie);
+fprintf (stderr,"(%s) File said: %s (Error: %s)\n",filename,buffer,magic_error(magic_cookie));
 
 		// find matches for 'file' command output
 		// TODO: add wildcard matching
@@ -349,6 +343,21 @@ fprintf(stderr, "Foundext: %d\n", foundext);
 		cur_typestr = strdup("Unknown");
 		cur_iconname = strdup(DEFAULT_ICON);
 	}
+
+}
+
+
+MimeType::MimeType(const char* filename, bool usefind) {
+	cur_id=cur_typestr=cur_command=cur_iconname=cur_filename=0;
+
+	// Load mime settings file
+	if (!mime_first) get_mimedata();
+
+	// Have libmagic read its configuration data
+	magic_cookie = magic_open(MAGIC_NONE);
+	magic_load(magic_cookie, NULL);
+
+	if (filename) set(filename,usefind);
 }
 
 
@@ -358,5 +367,11 @@ MimeType::~MimeType() {
 	if (cur_command) free(cur_command);
 	if (cur_iconname) free(cur_iconname);
 	if (cur_filename) free(cur_filename);
-	// free_mimedata() - should we? mimedata is static for a reason...
+
+	// Free memory used by mimetype configuration
+	free_mimedata(); //- should we? mimedata is static for a reason...
+
+	// Free memory used by libmagic
+	magic_close(magic_cookie);
+
 }
