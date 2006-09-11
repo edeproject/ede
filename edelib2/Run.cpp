@@ -153,9 +153,8 @@ tryagain:
 	// Run program as root using su or sudo
 	char *line;
 
-	// TODO: fix password dialog so that Cancel can be detected
-	// At the moment it's impossible to tell if the password is blank
 	const char *pwd = password(_("This program requires administrator privileges.\nPlease enter your password below:"));
+	if (pwd == 0) return EDERUN_USER_CANCELED;
 	
 	// Chat routine
 	while (1) {
