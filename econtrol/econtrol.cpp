@@ -139,7 +139,7 @@ static void cb_Color(Item* i, void*)
 int main (int argc, char **argv) {
 
 //fl_init_locale_support("econtrol", PREFIX"/share/locale");
-{Window* configPanelWindow = new Window(450, 310, _("Control panel"));
+Window* configPanelWindow = new Window(450, 310, "Control panel");
 configPanelWindow->begin();
 {main_menubar = new MenuBar(0, 0, 450, 26);
 	main_menubar->begin();
@@ -208,19 +208,19 @@ configPanelWindow->begin();
 		o->color((Color)0xd93b4300);
 		o->begin();
 		{help_window = new InvisibleBox(0, 0, 110, 195, _("Welcome to the control panel. Here you can setup most things on your computer."));
-			o->set_vertical();
-			o->box(DOWN_BOX);
-			o->color((Color)0xfff9e400);
-			o->labelcolor((Color)32);
-			o->align(ALIGN_WRAP);
-			//o->set_value();
+			help_window->set_vertical();
+			help_window->box(DOWN_BOX);
+			help_window->color((Color)0xfff9e400);
+			help_window->labelcolor((Color)32);
+			help_window->align(ALIGN_WRAP);
+			//help_window->set_value();
 		}
 		{scroll = new ScrollGroup(110, 0, 340, 195);
-			o->box(DOWN_BOX);
-			o->color(WHITE);
-			o->align(ALIGN_CENTER);
-			o->begin();
-			{Button* o = new Button(10, 15, 60, 75, _("Icons"));
+			scroll->box(DOWN_BOX);
+			scroll->color(WHITE);
+			scroll->align(ALIGN_CENTER);
+			scroll->begin();
+			{Button* o = new Button(0, 15, 60, 75, _("Icons"));
 				o->set_vertical();
 			//            o->image(SharedImage::get("icons/behaviour.xpm"));
 			//            o->image(EDE_Icon::get("desktop-mdk",EDE_Icon::SMALL));
@@ -361,7 +361,7 @@ configPanelWindow->begin();
 
 configPanelWindow->end();
 configPanelWindow->size_range(configPanelWindow->w(), configPanelWindow->h());
-}
+
 
 	//  configPanelWindow->menu(main_menubar);
 	//  configPanelWindow->view(main_view);
