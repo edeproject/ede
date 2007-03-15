@@ -1,0 +1,9 @@
+SubDir TOP ;
+
+# We must first build edelib
+SubInclude TOP edelib2 ;
+
+# Then the rest
+#SubInclude TOP efiler ;
+SubInclude TOP edialog ;
+SubInclude TOP eimage ;

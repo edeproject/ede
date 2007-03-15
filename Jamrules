@@ -1,0 +1,30 @@
+
+FLAGS  ?= -Wall -g3 -D_DEBUG ;
+STDLIB ?= -lstdc++ ;
+
+FLTKLIB    ?= -L/usr/local/lib -lfltk2 ;
+FLTKIMAGES ?= -L/usr/local/lib -lfltk2_images ;
+X11LIBS    ?= -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lXft -lpthread -lm -lXext ;
+IMGLIBS    ?= -lpng -ljpeg -lz ;
+
+EDELIB = edelib ;
+EDELIB_NAME = lib$(edelib) ;
+EDELIBDIR = edelib2 ;
+
+# this is used by jam
+CCFLAGS = $(FLAGS) $(LOCALFLAGS) ;
+C++FLAGS = $(FLAGS) $(LOCALFLAGS) ;
+OPTIM = ;
+
+rule MakeLibrary
+{
+	Library $(<) : $(>) ;
+}
+
+rule MakeProgram
+{
+	local eldir ;
+	eldir = [ FDirName $(TOP) $(EDELIBDIR) ] ;
+	LINKLIBS on $(<) = -L$(eldir) -l$(EDELIB) $(FLTKIMAGES) $(IMGLIBS) $(FLTKLIB) $(X11LIBS) $(STDLIB) ;
+	Main $(<) : $(>) ;
+}

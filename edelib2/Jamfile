@@ -1,0 +1,10 @@
+SubDir TOP edelib2 ;
+
+MakeLibrary libedelib : about_dialog.cpp 
+					Config.cpp 
+					Icon.cpp 
+					MimeType.cpp 
+					process.cpp 
+					pty.cpp 
+					Run.cpp 
+					Util.cpp ;

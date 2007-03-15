@@ -1,0 +1,5 @@
+SubDir TOP eimage ;
+
+LOCALFLAGS += -Wall ;
+
+MakeProgram eimage : eimage.cpp ;
