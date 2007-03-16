@@ -1,3 +1,15 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
+XGETTEXT ?= xgettext ;
+MSGFMT   ?= msgfmt ;
 
 FLAGS  ?= -Wall -g3 -D_DEBUG ;
 STDLIB ?= -lstdc++ ;
@@ -7,24 +19,85 @@ FLTKIMAGES ?= -L/usr/local/lib -lfltk2_images ;
 X11LIBS    ?= -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lXft -lpthread -lm -lXext ;
 IMGLIBS    ?= -lpng -ljpeg -lz ;
 
-EDELIB = edelib ;
-EDELIB_NAME = lib$(edelib) ;
+EDELIB_NAME = libedelib ;
+EDELIB = -ledelib ;
 EDELIBDIR = edelib2 ;
 
 # this is used by jam
-CCFLAGS = $(FLAGS) $(LOCALFLAGS) ;
-C++FLAGS = $(FLAGS) $(LOCALFLAGS) ;
+CCFLAGS = $(FLAGS) ;
+C++FLAGS = $(FLAGS) ;
 OPTIM = ;
+
+# at least we differ for FDirName
+rule FFileName
+{
+	return [ FDirName $(<) ] ;
+}
 
 rule MakeLibrary
 {
 	Library $(<) : $(>) ;
 }
 
+# MakeProgram <target> : <sources> : <optional-flags> ;
 rule MakeProgram
 {
 	local eldir ;
+	local target ;
+
 	eldir = [ FDirName $(TOP) $(EDELIBDIR) ] ;
-	LINKLIBS on $(<) = -L$(eldir) -l$(EDELIB) $(FLTKIMAGES) $(IMGLIBS) $(FLTKLIB) $(X11LIBS) $(STDLIB) ;
-	Main $(<) : $(>) ;
+
+	# this will make happy original jam and ftjam
+	# since constructing it's grist from source file
+	# it will make it unique and prevent colision same directory name
+	target = $(1:G=$(SOURCE_GRIST)) ;
+
+	# check if we got additional flags
+	if $(3)
+	{
+		SUBDIRC++FLAGS += $(3) ;
+		SUBDIRCCFLAGS  += $(3) ;
+	}
+
+	LINKLIBS on $(target) = -L$(eldir) $(EDELIB) $(FLTKIMAGES) $(IMGLIBS) $(FLTKLIB) $(X11LIBS) $(STDLIB) ;
+	Main $(target) : $(2) ;
+}
+
+# ExtractStrings <dir-where> : <source> ;
+rule ExtractStrings
+{
+	local strfile = "messages.pot" ;
+	local path = $(SEARCH_SOURCE) ;
+	local locale_dir = [ FDirName $(path) $(<) ] ;
+	local target = [ FFileName $(locale_dir) $(strfile) ] ;
+	local source = $(>:R=$(path)) ;
+
+	if $(XGETTEXT)
+	{
+		MkDir $(locale_dir) ;
+		for i in $(source)
+		{
+			Depends $(target) : $(i) ;
+		}	
+
+		XGettext $(target) : $(source) ;
+		Depends $(target) : $(locale_dir) ;
+		Depends all : $(target) ;
+		Clean clean : $(target) ;
+	}
+}
+
+actions XGettext
+{
+	$(XGETTEXT) -k'_' $(2) -o $(1) ;
+}
+
+# MakeTranslation <where-are-po-files> : file1.po file2.po... ;
+# TODO:
+rule MakeTranslation
+{
+}
+
+actions MakeTranslation1
+{
 }
