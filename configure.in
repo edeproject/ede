@@ -174,11 +174,4 @@ AC_SUBST(EDE_VERSION)
 AC_OUTPUT([
  makeinclude
  datas/startede
- README
- docs/ede/index.html
- docs/ede/authors.html
- docs/ede/changelog.html
- docs/ede/copying.html
- docs/ede/help.html
- ede.spec
  ])
