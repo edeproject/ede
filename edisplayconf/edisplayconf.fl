@@ -1,5 +1,5 @@
 # data file for the FLTK User Interface Designer (FLUID)
-version 2.0100 
+version 2.1000 
 images_dir ./ 
 header_name {.h} 
 code_name {.cpp} 
@@ -39,7 +39,7 @@ class edisplayconf {open
     {fltk::Window} win {
       label {Display configuration}
       callback {_finish = true;} open
-      private xywh {386 200 265 335} resizable visible
+      private xywh {386 222 265 335} resizable visible
     } {
       {fltk::TabGroup} {} {open
         xywh {5 5 260 285}
@@ -50,11 +50,11 @@ class edisplayconf {open
         } {
           {fltk::ValueSlider} slider_accel {
             label Acceleration
-            xywh {20 30 220 18} align 1 maximum 10 step 1 value 2
+            xywh {20 30 220 18} align 1 maximum 10 step 1 linesize 0 value 2
           }
           {fltk::ValueSlider} slider_thresh {
             label {Threshold (pixels)}
-            xywh {20 75 220 18} align 1 maximum 20 step 1 value 4
+            xywh {20 75 220 18} align 1 maximum 20 step 1 linesize 0 value 4
           }
         }
         {fltk::Group} group_bell {
@@ -63,15 +63,15 @@ class edisplayconf {open
         } {
           {fltk::ValueSlider} slider_volume {
             label {Volume in %}
-            xywh {20 30 220 18} align 1 maximum 100 step 1 value 50
+            xywh {20 30 220 18} align 1 maximum 100 step 1 linesize 0 value 50
           }
           {fltk::ValueSlider} slider_pitch {
             label {Pitch in Hz}
-            xywh {20 75 220 18} align 1 minimum 100 maximum 1000 step 1 value 440
+            xywh {20 75 220 18} align 1 minimum 100 maximum 1000 step 1 linesize 0 value 440
           }
           {fltk::ValueSlider} slider_duration {
             label {Duration in ms}
-            xywh {20 120 220 18} align 1 maximum 1000 step 1 value 200
+            xywh {20 120 220 18} align 1 maximum 1000 step 1 linesize 0 value 200
           }
           {fltk::Button} {} {
             label Test
@@ -89,7 +89,7 @@ class edisplayconf {open
           }
           {fltk::ValueSlider} slider_click {
             label {Click volume %}
-            xywh {25 67 220 18} align 1 maximum 100 step 1 value 50
+            xywh {25 67 220 18} align 1 maximum 100 step 1 linesize 0 value 50
           }
         }
         {fltk::Group} group_screen {
@@ -106,7 +106,7 @@ class edisplayconf {open
           }
           {fltk::ValueSlider} slider_delay {
             label {Activation delay (min)}
-            xywh {27 71 210 18} align 1 minimum 5 maximum 120 step 1 value 15
+            xywh {27 71 210 18} align 1 minimum 5 maximum 120 step 1 linesize 0 value 15
           }
           {fltk::CheckButton} check_blanking {
             label { Screen blanker activated}
@@ -117,7 +117,7 @@ class edisplayconf {open
           }
           {fltk::ValueSlider} slider_pattern {
             label {Pattern change delay (min)}
-            xywh {27 155 210 18} align 1 deactivate minimum 1 maximum 5 step 0 value 2
+            xywh {27 155 210 18} align 1 deactivate minimum 1 maximum 5 step 0 linesize 1202590843 value 2
           }
           {fltk::Group} {} {open
             xywh {35 108 210 27}

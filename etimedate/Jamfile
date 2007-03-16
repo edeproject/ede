@@ -8,7 +8,9 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP etimedate ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+SOURCE = etimedate.cpp TimeBox.cpp EDE_Calendar.cpp Fl_Date_Time.cpp ;
+
+MakeProgram etimedate : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;

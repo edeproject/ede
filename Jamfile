@@ -1,9 +1,37 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
 SubDir TOP ;
 
 # We must first build edelib
-SubInclude TOP edelib2 ;
+SubInclude TOP $(EDELIBDIR) ;
 
 # Then the rest
-#SubInclude TOP efiler ;
 SubInclude TOP edialog ;
 SubInclude TOP eimage ;
+SubInclude TOP ecolorconf ;
+SubInclude TOP econtrol ;
+SubInclude TOP edisplayconf ;
+SubInclude TOP efinder ;
+SubInclude TOP eiconsconf ;
+SubInclude TOP einstaller ;
+SubInclude TOP ekeyconf ;
+SubInclude TOP elauncher ;
+SubInclude TOP emenueditor ;
+SubInclude TOP epanelconf ;
+SubInclude TOP etimedate ;
+SubInclude TOP etip ;
+SubInclude TOP evolume ;
+SubInclude TOP ewmconf ;
+
+# These can't be compiled for now
+
+#SubInclude TOP efiler ;
+#SubInclude TOP eiconman ;

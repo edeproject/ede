@@ -11,11 +11,16 @@
 XGETTEXT ?= xgettext ;
 MSGFMT   ?= msgfmt ;
 
-FLAGS  ?= -Wall -g3 -D_DEBUG ;
+FLAGS  ?= -Wall -g3 -D_DEBUG -I$(TOP) ;
 STDLIB ?= -lstdc++ ;
 
 FLTKLIB    ?= -L/usr/local/lib -lfltk2 ;
 FLTKIMAGES ?= -L/usr/local/lib -lfltk2_images ;
+
+# backward
+EFLTKLIB    ?= -L/usr/local/lib -lefltk ;
+EFLTKIMAGES ?= -L/usr/local/lib -lefltk_images ;
+
 X11LIBS    ?= -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lXft -lpthread -lm -lXext ;
 IMGLIBS    ?= -lpng -ljpeg -lz ;
 
@@ -39,8 +44,8 @@ rule MakeLibrary
 	Library $(<) : $(>) ;
 }
 
-# MakeProgram <target> : <sources> : <optional-flags> ;
-rule MakeProgram
+# internal used by MakeProgram and MakeEfltkProgram
+rule InternalMakeProgram
 {
 	local eldir ;
 	local target ;
@@ -59,8 +64,25 @@ rule MakeProgram
 		SUBDIRCCFLAGS  += $(3) ;
 	}
 
-	LINKLIBS on $(target) = -L$(eldir) $(EDELIB) $(FLTKIMAGES) $(IMGLIBS) $(FLTKLIB) $(X11LIBS) $(STDLIB) ;
+	LINKLIBS on $(target) = -L$(eldir) $(EDELIB) $(4) $(IMGLIBS) $(5) $(X11LIBS) $(6) $(STDLIB) ;
 	Main $(target) : $(2) ;
+}
+
+# This should be used to build ede2 apps.
+# MakeProgram <target> : <sources> : <optional-flags> : <optional-libs> ;
+rule MakeProgram
+{
+	InternalMakeProgram $(1) : $(2) : $(3) : $(FLTKIMAGES) : $(FLTKLIB) : $(4) ;
+}
+
+# This is for efltk (aka. previous code) compilation
+# so it can be tested with whole package.
+# It should be used only until efltk programs are translited
+# to fltk.
+# MakeEfltkProgram <target> : <sources> : <optional-flags> ;
+rule MakeEfltkProgram
+{
+	InternalMakeProgram $(1) : $(2) : $(3) : $(EFLTKIMAGES) : $(EFLTKLIB) ;
 }
 
 # ExtractStrings <dir-where> : <source> ;

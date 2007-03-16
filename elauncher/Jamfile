@@ -8,7 +8,12 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP elauncher ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+LIBMAGIC = -lmagic ;
+
+MakeProgram elauncher : elauncher.cpp 
+	: 
+	: $(LIBMAGIC) ;
+
+ExtractStrings locale : elauncher.cpp ;

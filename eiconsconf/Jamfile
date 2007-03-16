@@ -8,7 +8,9 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP eiconsconf ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+SOURCE = eiconsconf.cpp eicon.cpp ;
+
+MakeProgram eiconsconf : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;

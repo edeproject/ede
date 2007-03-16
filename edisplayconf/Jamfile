@@ -8,7 +8,10 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+SubDir TOP edisplayconf ;
+
+SOURCE = edisplayconf.cpp conf.cpp ;
+
+MakeProgram edisplayconf : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;

@@ -138,7 +138,7 @@ edisplayconf::edisplayconf() {
         o->begin();
          {fltk::CheckButton* o = check_autorepeat = new fltk::CheckButton(24, 20, 221, 20, "  Repeat key activated");
           o->selection_color((fltk::Color)2);
-          o->set_flag(fltk::VALUE);
+          //o->set_flag(fltk::VALUE);
         }
          {fltk::ValueSlider* o = slider_click = new fltk::ValueSlider(25, 67, 220, 18, "Click volume %");
           o->maximum(100);
@@ -165,7 +165,7 @@ edisplayconf::edisplayconf() {
         }
          {fltk::CheckButton* o = check_blanking = new fltk::CheckButton(15, 20, 222, 20, " Screen blanker activated");
           o->selection_color((fltk::Color)2);
-          o->set_flag(fltk::VALUE);
+          //o->set_flag(fltk::VALUE);
         }
         new fltk::InvisibleBox(10, 99, 234, 37);
          {fltk::ValueSlider* o = slider_pattern = new fltk::ValueSlider(27, 155, 210, 18, "Pattern change delay (min)");
@@ -180,7 +180,7 @@ edisplayconf::edisplayconf() {
           o->begin();
            {fltk::RadioButton* o = radio_blank = new fltk::RadioButton(0, 0, 105, 20, "Blank");
             o->selection_color((fltk::Color)1);
-            o->set_flag(fltk::VALUE);
+            //o->set_flag(fltk::VALUE);
             o->callback((fltk::Callback*)cb_radio_blank);
           }
            {fltk::RadioButton* o = radio_pattern = new fltk::RadioButton(107, 5, 95, 20, "Pattern");

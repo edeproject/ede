@@ -8,7 +8,7 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP etip ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+MakeProgram etip : etip.cpp ;
+ExtractStrings locale : etip.cpp ;

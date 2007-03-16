@@ -45,7 +45,7 @@
 #include "../edelib2/NLS.h" //#include <efltk/Fl_Locale.h>
 
 // this struct can hold slightly more information than Fl_Font
-extern typedef struct {
+typedef struct {
 	fltk::Font* font;
 	char* encoding;
 	int size;

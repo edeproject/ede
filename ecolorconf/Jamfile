@@ -8,7 +8,12 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+SubDir TOP ecolorconf ;
+
+SOURCE = ecolorconf.cpp 
+		ecolorutils.cpp 
+		EDE_FontChooser.cpp ;
+
+MakeProgram ecolorconf : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;

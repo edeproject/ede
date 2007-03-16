@@ -10,5 +10,7 @@
 
 SubDir TOP eimage ;
 
-MakeProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+SOURCE = escreensaver.cpp escrsaverconf.cpp ;
+
+MakeProgram esvrconf : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;
