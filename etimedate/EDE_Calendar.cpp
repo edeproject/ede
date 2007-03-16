@@ -301,7 +301,7 @@ void EDE_Calendar::draw() {
     for (i = 0; i < 31; i++) {
         Button *btn = m_dayButtons[i];
         btn->box(THIN_UP_BOX);
-        btn->focusbox(DOTTED_FRAME);
+        //btn->focusbox(DOTTED_FRAME);
         btn->color(btn_color);
 //        btn->highlight_color(btn_color_hov);
         btn->labelfont(labelfont());
