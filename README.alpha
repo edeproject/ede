@@ -7,32 +7,50 @@ Please read this document before using or contributing to EDE 2.0 source code
 before or during 2.0alpha release.
 
 
-BUILD REQUIREMENTS
+Build requirements
+------------------
 
 EDE 2.0 is using fltk2 toolkit which is not officially released yet. Lately 
 fltk2 has been pretty stable, so you should be able to use any reasonably
-fresh SVN snapshot from www.fltk.org. Nevertheless, we keep our own "fork" 
+fresh SVN snapshot from www.fltk.org. Nevertheless, we will (soon) keep our own "fork" 
 called fltk-copy which is basically the last SVN snapshot that EDE is known 
 to work with. If there are any patches required for proper EDE functioning, 
-you should find them in fltk-copy tree. Further instructions are in 
+you should find them in fltk-copy tree. Further instructions will be in 
 fltk-copy/README.ede
 
+Make sure you have efltk installed, because some packages still requires it.
 
-COMPILING
+Also you will need Jam utility. Jam is make replacement and removes a lot of it's
+limitations. Current source can be built either via jam or make, but note that make
+builds will be soon removed. 
+
+Jam can be downloaded from our repository.
+
+
+Compiling
+---------
 
 At the moment, certain modules in EDE do not compile! In order to build and install
-EDE do the following
+EDE do the following:
 
+1. (old method, soon will be removed)
 	autoconf
 	./configure [OPTIONS] (we suggest using --enable-debug)
 	cd edelib2; make; cd ..
 
-Then go into directories of individual modules and compile them. Type
-
+  Then go into directories of individual modules and compile them. Type
 	cd $MODULE; make; make install; cd ..
 
+2. (new method, default)
+	autoconf
+	./configure [OPTIONS] (we suggest using --enable-debug)
+	jam
 
-STUFF THAT DOESN'T COMPILE
+  Installation is not finished yet.
+
+
+Stuff that doesn't compile
+--------------------------
 
 - edewm
 - eiconman
@@ -49,7 +67,8 @@ It will either be completely rewritten or removed, because EDE 2 will use XDG me
 (FreeDesktop.org).
 
 
-NEW MODULES IN EDE 2.0
+New modules in EDE 2.0
+----------------------
 
 - edialog
 Command line utility for displaying dialogs (useful for scripting). It is very
@@ -63,7 +82,8 @@ etc.
 Small image viewer. It should be fully usable but still some bugs present.
 
 
-CONTRIBUTORS WANTED
+Contributors wanted
+-------------------
 
 We would very appreciate help from contributors willing to take any of following 
 tasks:
