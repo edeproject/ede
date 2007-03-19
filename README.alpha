@@ -33,16 +33,16 @@ Compiling
 At the moment, certain modules in EDE do not compile! In order to build and install
 EDE do the following:
 
-1. (old method, soon will be removed)
-	autoconf
+1. run ./prepare
+
+2. (old method, soon will be removed)
 	./configure [OPTIONS] (we suggest using --enable-debug)
 	cd edelib2; make; cd ..
 
   Then go into directories of individual modules and compile them. Type
 	cd $MODULE; make; make install; cd ..
 
-2. (new method, default)
-	autoconf
+3. (new method, default)
 	./configure [OPTIONS] (we suggest using --enable-debug)
 	jam
 

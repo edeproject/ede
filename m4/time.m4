@@ -11,7 +11,6 @@ dnl See COPYING for details.
 dnl Check for time functions since they are
 dnl different between systems
 AC_DEFUN([EDE_CHECK_TIME_FUNCS], [
-
 	dnl glibc extension, not present on BSD's
 	AC_CHECK_HEADER(time.h, [
 		AC_CHECK_FUNCS(stime, AC_DEFINE(HAVE_STIME, 1, [Define to 1 if you have stime() in time.h]))
