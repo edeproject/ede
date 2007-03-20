@@ -44,15 +44,15 @@ EDE_PROG_JAM()
 
 dnl basic headers
 AC_HEADER_STDC
-AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H, 1, [Define to 1 if you have dirent.h]))
-AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H, 1, [Define to 1 if you have ndir.h]))
-AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H, 1, [Define to 1 if you have sys/dir.h]))
-AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H, 1, [Define to 1 if you have sys/ndir.h]))
-
 dnl TODO: it would be nice if we could pass parameter
 dnl for custom STL implementation (via STDLIB var), and
 dnl test be linked against it
 EDE_CHECK_STL()
+
+AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H, 1, [Define to 1 if you have dirent.h]))
+AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H, 1, [Define to 1 if you have ndir.h]))
+AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H, 1, [Define to 1 if you have sys/dir.h]))
+AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H, 1, [Define to 1 if you have sys/ndir.h]))
 
 EDE_CHECK_TIME_FUNCS()
 
@@ -93,5 +93,6 @@ AC_SUBST(XGETTEXT)
 AC_SUBST(MSGFMT)
 AC_SUBST(DOXYGEN)
 
-AC_CONFIG_FILES([Jamconfig])
-AC_OUTPUT
+AC_OUTPUT([
+ Jamconfig
+])
