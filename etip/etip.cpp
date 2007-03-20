@@ -1,145 +1,136 @@
 /*
- * $Id$
+ * $Id: etip.cpp 1664 2006-06-14 00:21:44Z karijes $
  *
- * Tip of the day
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2000-2006 EDE Authors.
  *
- * This program is licenced under terms of the
+ * This program is licenced under terms of the 
  * GNU General Public Licence version 2 or newer.
  * See COPYING for details.
  */
 
-#include "etip.h"
-#include <fltk/SharedImage.h>
+#include <fltk/Window.h>
+#include <fltk/Button.h>
+#include <fltk/CheckButton.h>
+#include <fltk/InvisibleBox.h>
 #include <fltk/xpmImage.h>
-#include <stdio.h>
+#include <fltk/run.h>
+
 #include <stdlib.h>
 #include <time.h>
 
-#include "../edelib2/Config.h"
-#include "../edelib2/NLS.h"
-
-#include "../edeconf.h"
-
-// graphics
 #include "icons/hint.xpm"
 
-#define	TOTALTIPS	7
+// TODO: should be replaced with NLS from edelib
+#define _(s) s
 
+#define TIPS_NUM 7
+#define TITLE_TIPS_NUM 9
 
-static char *tips[TOTALTIPS];
-static int activeTip = 0;
-static edelib::Config conf("EDE Team", "etip");
+using namespace fltk;
 
+unsigned int curr_tip = 0;
+const char* tiplist[TIPS_NUM] = 
+{
+_("To start any application is simple. Press on the button with your user name, go\
+ to the Programs menu, select category and click on the wished program."),
 
-fltk::CheckButton* show_check;
-fltk::InvisibleBox* tipsBox;
+_("To exit the EDE, press button with your user name and then Logout."),
 
-static void cb_Previous(fltk::Button*, void*) {
-	if (activeTip>0 && activeTip<=TOTALTIPS-1) {
-		activeTip--;
-	} else {
-		activeTip = TOTALTIPS-1;
-	}
-	tipsBox->label(tips[activeTip]);
-	tipsBox->window()->redraw();
+_("To lock the computer, press button with your user name and then choose Lock."),
+
+_("To setup things on the computer, press button with your user name, Panel menu and then the Control panel."),
+
+_("To add a program that is not in the Programs menu, click on the button with your user,\
+ Panel menu, and then Menu editor."),
+
+_("Notice that this is still development version, so please send your bug reports or\
+ comments on EDE forum, EDE bug reporting system (on project's page), or check mails of current\
+ maintainers located in AUTHORS file."),
+
+_("You can download latest release on http://sourceforge.net/projects/ede.")
+};
+
+const char* title_tips[TITLE_TIPS_NUM] =
+{
+_("Boring \"Did you know...\""),
+_("How about this..."),
+_("Smart idea..."),
+_("Really smart idea..."),
+_("Really really smart idea..."),
+_("Uf..."),
+_("Something new..."),
+_("Or maybe this..."),
+_("...")
+};
+
+const char* random_txt(const char** lst, unsigned int max)
+{
+	unsigned int val = rand() % max;
+	curr_tip = val;
+	return lst[val];
 }
 
-static void cb_Next(fltk::Button*, void*) {
-	if (activeTip>=0 && activeTip<TOTALTIPS-1) {
-		activeTip++;
-	} else {
-		activeTip = 0;
-	}
-	tipsBox->label(tips[activeTip]);
-	tipsBox->window()->redraw();
+void close_cb(Widget*, void* w)
+{
+	Window* win = (Window*)w;
+	win->hide();
 }
 
-static void cb_Close(fltk::Button*, void*) {
-	conf.set_section("Tips");
-	conf.write("Show", !show_check->value()); 
-	conf.flush(); 
-	exit(0);
+void next_cb(Widget*, void* tb)
+{
+	InvisibleBox* tipbox = (InvisibleBox*)tb;
+	curr_tip++;
+	if(curr_tip >= TIPS_NUM)
+		curr_tip = 0;
+	tipbox->label(tiplist[curr_tip]);	
+	tipbox->redraw_label();
 }
 
-#include <fltk/run.h>
+void prev_cb(Widget*, void* tb)
+{
+	InvisibleBox* tipbox = (InvisibleBox*)tb;
+	if(curr_tip == 0)
+		curr_tip = TIPS_NUM - 1;
+	else
+		curr_tip--;
+	tipbox->label(tiplist[curr_tip]);	
+	tipbox->redraw_label();
+}
 
-int main (int argc, char **argv) {
+int main(int argc, char** argv)
+{
+	srand(time(NULL));
 
-	fltk::Window* w;
-	//fl_init_locale_support("etip", PREFIX"/share/locale");
-	bool show = true;
-	conf.set_section("Tips");
-	conf.read("Show", show, true);
-	if (!show)
-		return 0;
-	tips[0]=_("To start any application is simple. Click on the EDE button, go to the Programs menu, select category and click on the name of program that you wish to start.");
-	tips[1]=_("To exit the Equinox Desktop Environment, click first on the EDE button then Logout.");
-	tips[2]=_("To lock the computer, click first on the EDE button and then Lock.");
-	tips[3]=_("To configure your computer, click on the EDE button, Panel menu and then Control panel.");
-	tips[4]=_("To add a program that is not in the Programs menu, click on the EDE button, Panel menu, and then Edit panels menu.");
-	tips[5]=_("Notice that this is still a development version, so please send your bug reports or comments on EDE forum, EDE bug reporting system (on project's page), or karijes@users.sourceforge.net.");
-	tips[6]=_("You can download the latest release on: http://sourceforge.net/projects/ede.");
-	
-	srand (time(NULL));
-	activeTip = rand()%7;
+	Window* win = new Window(460, 200, _("Tips..."));
+	win->begin();
 
-   {fltk::Window* o = new fltk::Window(400, 210, "Useful tips and tricks");
-    w = o;
-    o->begin();
-     {fltk::InvisibleBox* o = new fltk::InvisibleBox(10, 15, 60, 145);
-      o->set_vertical();
-      o->image(&fltk::xpmImage(hint_xpm));
-    }
-     {fltk::Group* o = new fltk::Group(80, 15, 310, 125);
-      o->box(fltk::BORDER_BOX);
-//      o->color((fltk::Color)0xf4da1200);
-      o->color(fltk::WHITE);
-      o->labelsize(18);
-      o->align(fltk::ALIGN_TOP|fltk::ALIGN_INSIDE|fltk::ALIGN_CLIP|fltk::ALIGN_WRAP);
-      o->begin();
-       {fltk::InvisibleBox* o = new fltk::InvisibleBox(1, 1, 308, 45, _("Welcome to Equinox Desktop Environment"));
-        o->box(fltk::FLAT_BOX);
-        o->color((fltk::Color)0xf4da1200);
-        o->labelcolor((fltk::Color)32);
-        o->labelsize(18);
-        o->align(fltk::ALIGN_INSIDE|fltk::ALIGN_WRAP);
-      }
-       {fltk::InvisibleBox* o = tipsBox = new fltk::InvisibleBox(5, 46, 300, 78);
-        o->box(fltk::FLAT_BOX);
-        o->color(fltk::WHITE);
-        o->align(fltk::ALIGN_INSIDE|fltk::ALIGN_WRAP);
-        fltk::Group::current()->resizable(o);
-        o->label(tips[activeTip]);
-        o->window()->redraw();
-      }
-      o->end();
-      fltk::Group::current()->resizable(o);
-    }
-     {fltk::CheckButton* o = show_check = new fltk::CheckButton(80, 145, 310, 25, _("Do not show this dialog next time"));
-      o->align(fltk::ALIGN_LEFT|fltk::ALIGN_INSIDE|fltk::ALIGN_WRAP);
-    }
-     {fltk::Group* o = new fltk::Group(0, 175, 400, 40);
-      o->begin();
-       {fltk::InvisibleBox* o = new fltk::InvisibleBox(0, 5, 110, 40);
-        fltk::Group::current()->resizable(o);
-      }
-       {fltk::Button* o = new fltk::Button(110, 0, 90, 25, _("@<  &Previous"));
-        o->callback((fltk::Callback*)cb_Previous);
-        o->align(fltk::ALIGN_WRAP);
-      }
-       {fltk::Button* o = new fltk::Button(205, 0, 90, 25, _("&Next  @>"));
-        o->callback((fltk::Callback*)cb_Next);
-      }
-       {fltk::Button* o = new fltk::Button(300, 0, 90, 25, _("&Close"));
-        o->callback((fltk::Callback*)cb_Close);
-      }
-      o->end();
-    }
-    o->end();
-    o->size_range(o->w(), o->h());
-  }
-  w->show(argc, argv);
-  return  fltk::run();
+	InvisibleBox* img = new InvisibleBox(10, 10, 70, 65);
+	xpmImage pix(hint_xpm);
+	img->image(pix);
+	img->box(FLAT_BOX);
+
+	InvisibleBox* title = new InvisibleBox(85, 15, 365, 25, random_txt(title_tips, TITLE_TIPS_NUM));
+	title->box(fltk::FLAT_BOX);
+	title->labelfont(fltk::HELVETICA_BOLD);
+	title->align(fltk::ALIGN_LEFT|fltk::ALIGN_INSIDE);
+
+	InvisibleBox* tiptxt = new InvisibleBox(85, 45, 365, 110, random_txt(tiplist, TIPS_NUM));
+	tiptxt->box(fltk::FLAT_BOX);
+	tiptxt->align(fltk::ALIGN_TOP|fltk::ALIGN_LEFT|fltk::ALIGN_INSIDE|fltk::ALIGN_WRAP);
+
+    new fltk::CheckButton(10, 165, 155, 25, _("Do not bother me"));
+
+    Button* prev = new Button(170, 165, 90, 25, _("@< Previous"));
+	prev->callback(prev_cb, tiptxt);
+    Button* next = new Button(265, 165, 90, 25, _("Next @>"));
+	next->callback(next_cb, tiptxt);
+
+    Button* close = new Button(360, 165, 90, 25, _("&Close"));
+	close->callback(close_cb, win);
+	win->end();
+
+	win->set_modal();
+	win->show();
+	return run();
 }
