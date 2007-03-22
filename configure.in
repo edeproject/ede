@@ -40,6 +40,10 @@ AC_PROG_CPP
 AC_PATH_PROG(MSGFMT, msgfmt)
 AC_PATH_PROG(XGETTEXT, xgettext)
 AC_PATH_PROG(DOXYGEN, doxygen)
+dnl sh/gdb is used by elauncher
+AC_PATH_PROG(GDB, gdb)
+AC_PATH_PROG(SH, sh)
+
 EDE_PROG_JAM()
 
 dnl basic headers
@@ -53,6 +57,15 @@ AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H, 1, [Define to 1 if you have d
 AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H, 1, [Define to 1 if you have ndir.h]))
 AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H, 1, [Define to 1 if you have sys/dir.h]))
 AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H, 1, [Define to 1 if you have sys/ndir.h]))
+
+dnl functions and headers used by pty.h
+AC_CHECK_FUNCS(grantpt, AC_DEFINE(HAVE_GRANTPT, 1, [Define to 1 if you have grantpt() in stdlib.h]))
+AC_CHECK_FUNCS(ptsname, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have ptsname() in stdlib.h]))
+AC_CHECK_FUNCS(unlockpt, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have unlockpt() in stdlib.h]))
+AC_CHECK_FUNCS(_getpty, AC_DEFINE(HAVE__GETPTY, 1, [Define to 1 if you have _getpty()]))
+AC_CHECK_HEADER(pty.h, AC_DEFINE(HAVE_PTY_H, 1, [Define to 1 if you have pty.h]))
+AC_CHECK_HEADER(libutil.h, AC_DEFINE(HAVE_LIBUTIL_H, 1, [Define to 1 if you have libutil.h]))
+AC_CHECK_HEADER(util.h, AC_DEFINE(HAVE_UTIL_H, 1, [Define to 1 if you have util.h]))
 
 EDE_CHECK_TIME_FUNCS()
 
