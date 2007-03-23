@@ -1,0 +1,79 @@
+#!/bin/sh
+# $Id$
+#
+# Main script responsible for starting and setting
+# needed environment parts.
+#
+# Details about XDG_XXX data and how they are set is at:
+# http://standards.freedesktop.org/basedir-spec/basedir-spec-0.6.html
+
+# Note: XDG_DATA_DIRS and XDG_CONFIG_DIRS are not currently used
+
+# EDE_DATA_HOME is directory where user specific data are stored.
+# If XDG_DATA_HOME is not present, default is "$HOME/.local/share"
+if [ "$XDG_DATA_HOME" ]; then
+	EDE_DATA_HOME=$XDG_DATA_HOME
+else
+	EDE_DATA_HOME="$HOME/.local/share"
+fi
+
+# EDE_CONFIG_HOME is directory where user configuration files are stored.
+# If XDG_CONFIG_HOME is not present, default is "$HOME/.config"
+if [ "$XDG_CONFIG_HOME" ]; then
+	EDE_CONFIG_HOME=$XDG_CONFIG_HOME
+else
+	EDE_CONFIG_HOME="$HOME/.config"
+fi
+
+# EDE_CACHE_HOME is directory where applications should keep cached data.
+# If XDG_CACHE_HOME is not present, default is "$HOME/.cache"
+if [ "$XDG_CACHE_HOME" ]; then
+	EDE_CACHE_HOME=$XDG_CACHE_HOME
+else
+	EDE_CACHE_HOME="$HOME/.cache"
+fi
+
+EDE_DATA_HOME="$EDE_DATA_HOME/ede"
+[ -d $EDE_DATA_HOME ]; || mkdir -p $EDE_DATA_HOME
+EDE_CONFIG_HOME="$EDE_CONFIG_HOME/ede"
+[ -d $EDE_CONFIG_HOME ]; || mkdir -p $EDE_CONFIG_HOME
+EDE_CACHE_HOME="$EDE_CACHE_HOME/ede"
+[ -d $EDE_CACHE_HOME ]; || mkdir -p $EDE_CACHE_HOME
+
+export $EDE_DATA_HOME
+export $EDE_CONFIG_HOME
+export $EDE_CACHE_HOME
+
+
+PREFIX=@prefix@
+XSSAVER=`which xscreensaver 2> /dev/null`
+XSETROOT=`which xsetroot 2> /dev/null`
+
+userresources=$HOME/.Xdefaults
+sysresources=/usr/X11R6/lib/X11/xinit/.Xresources
+
+if [ -f $sysresources ]; then
+    xrdb -merge $sysresources
+fi
+
+if [ -f $userresources ]; then
+    xrdb -merge $userresources
+fi
+
+PATH=$PATH:$PREFIX:$PREFIX/bin
+export PATH
+
+# Set background inside X
+if [ "$XSETROOT" ]; then
+	$XSETROOT -solid black
+fi
+
+# Run xscreensaver if exists
+if [ "$XSSAVER" ]; then
+	xscreensaver -nosplash &
+fi
+
+edewm &
+eiconman &    
+etip &    
+eworkpanel
