@@ -27,6 +27,8 @@ int overlay_y = 0;
 int overlay_w = 0;
 int overlay_h = 0;
 
+char dash_list[] = {1};
+
 bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	Atom real;
 
@@ -182,10 +184,17 @@ int net_get_workspace_names(char** names) {
 void draw_overlay_rect(void) {
 	if(overlay_w <= 0 || overlay_h <= 0)
 		return;
+
+	XSetDashes(fltk::xdisplay, fltk::gc, 0, dash_list, 1);
+	XSetLineAttributes(fltk::xdisplay, fltk::gc, 1, LineOnOffDash, CapButt, JoinMiter);
+
 	XSetFunction(fltk::xdisplay, fltk::gc, GXxor);
 	XSetForeground(fltk::xdisplay, fltk::gc, 0xffffffff);
 	XDrawRectangle(fltk::xdisplay, fltk::xwindow, fltk::gc, overlay_x, overlay_y, overlay_w-1, overlay_h-1);
 	XSetFunction(fltk::xdisplay, fltk::gc, GXcopy);
+
+	// set line to 0 again
+	XSetLineAttributes(fltk::xdisplay, fltk::gc, 0, LineOnOffDash, CapButt, JoinMiter);
 }
 
 void draw_xoverlay(int x, int y, int w, int h) {
@@ -201,7 +210,6 @@ void draw_xoverlay(int x, int y, int w, int h) {
 	} else if(!h)
 		h = 1;
 
-	//if(overlay_w <= 0 || overlay_h <= 0) {
 	if(overlay_w > 0) {
 		if(x == overlay_x && y == overlay_y && w == overlay_w && h == overlay_h)
 			return;
@@ -221,8 +229,4 @@ void clear_xoverlay(void) {
 		draw_overlay_rect();
 		overlay_w = 0;
 	}
-	/*
-	overlay_x = overlay_y = overlay_w = overlay_h = 0;
-	draw_overlay_rect();
-	*/
 }
