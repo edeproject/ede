@@ -1,0 +1,7 @@
+#LINKLIBS += -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -lfltk2_images -lpng -lfltk2_images -ljpeg -lz -lfltk2 -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lpthread -lm -lXext -lstdc++ ;
+
+LINKLIBS += -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -lfltk2_images -lpng -lfltk2_images -ljpeg -lz -lfltk2 -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lpthread -lm -lXft -lXext -lstdc++ ;
+
+C++FLAGS += -g3 -I/opt/ede/include ;
+
+Main eiconman : eiconman.cpp Utils.cpp DesktopIcon.cpp DesktopConfig.cpp ;
