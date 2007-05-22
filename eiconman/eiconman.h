@@ -1,111 +1,108 @@
 /*
  * $Id$
  *
- * Desktop icons manager
+ * Eiconman, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2006 EDE Authors.
+ * Copyright (c) 2000-2007 EDE Authors.
  *
- * This program is licenced under terms of the
- * GNU General Public Licence version 2 or newer.
+ * This program is licensed under terms of the 
+ * GNU General Public License version 2 or newer.
  * See COPYING for details.
  */
 
-#ifndef EICONMAN_H
-#define EICONMAN_H
+#ifndef __EICONMAN_H__
+#define __EICONMAN_H__
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <time.h>
-#include <stddef.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <pwd.h>
+#include <fltk/Window.h>
+#include <fltk/PopupMenu.h>
+#include <edelib/String.h>
+#include <edelib/Config.h>
+#include <edelib/Vector.h>
 
-#include <fltk/events.h> //#include <efltk/Fl.h>
-#include <fltk/DoubleBufferWindow.h> //#include <efltk/Fl_Double_Window.h>
-//#include <efltk/x.h>
-#include <fltk/PopupMenu.h> //#include <efltk/Fl_Menu_Button.h>
-/*#include <efltk/Fl_Item_Group.h>
-#include <efltk/Fl_Item.h>
-#include <efltk/Fl_Value_Output.h>
-#include <efltk/Fl_Pack.h>
-#include <efltk/Fl_Box.h>
-#include <efltk/Fl_Divider.h>*/
-#include <fltk/Image.h> //#include <efltk/Fl_Image.h>
-/*#include <efltk/Fl_Button.h>
-#include <efltk/Fl_Radio_Button.h>*/
-#include <fltk/ColorChooser.h> //#include <efltk/Fl_Color_Chooser.h>
-/*#include <efltk/Fl_Menu_Bar.h>
-#include <efltk/Fl_Button.h>
-#include <efltk/Fl_Input.h>
-#include <efltk/Fl_Output.h>
-#include <efltk/fl_ask.h>
-#include <efltk/Fl_Tabs.h>
-#include <efltk/Fl_Scroll.h>
-#include <efltk/Fl_Font.h>
-#include <efltk/Fl_Images.h>*/
-#include <fltk/filename.h> // for PATH_MAX
-#include <fltk/Cursor.h>
-//#include <fltk/gl2opengl.h>
-#include <fltk/draw.h>
-#include <fltk/damage.h>
-#include <fltk/SharedImage.h>
-#include "../edelib2/NLS.h" //#include <efltk/Fl_Locale.h>
-#include "../edelib2/EDE_Run.h" //#include <efltk/Fl_Util.h>
-
-class WPaper;
-
-class Desktop : public fltk::DoubleBufferWindow
-{
-public:
-    Desktop();
-    ~Desktop();
-
-    virtual int handle(int);
-    virtual void hide() {}
-
-    virtual void draw();
-
-    void update_bg();
-    void update_icons();
-    void update_workarea();
-
-    void auto_arrange();
-
-    WPaper *wpaper; //Generated image
-    fltk::Color bg_color;
-    bool bg_use;
-    int bg_opacity, bg_mode;
-    char* bg_filename;
-
-    fltk::PopupMenu *popup;
+// settings realted to specific desktop view
+struct DesktopSettings {
+	bool wp_use;
+	int  color;
+	edelib::String wallpaper;
 };
 
-class WPaper : public fltk::SharedImage
-{
-public:
-    WPaper(int W, int H);
-//    WPaper(int W, int H, Fl_PixelFormat *fmt);
-    ~WPaper();
-
-    void _draw(int dx, int dy, int dw, int dh,
-              int sx, int sy, int sw, int sh,
-              fltk::Flags f);
-
+struct GlobalIconSettings {
+	int  label_background;
+	int  label_foreground;
+	int  label_fontsize;
+	int  label_maxwidth;
+	int  gridspacing;
+	bool label_transparent;
+	bool label_draw;
+	bool one_click_exec;
+	bool auto_arr;
+	bool same_size;
 };
 
-extern Desktop *desktop;
+// settings related to .desktop files
+struct IconSettings {
+	int x, y;
 
-extern int label_background;
-extern int label_foreground;
-extern int label_fontsize;
-extern bool label_trans;
-extern int label_maxwidth;
-extern int label_gridspacing;
-extern bool one_click_exec;
+    bool cmd_is_url;             // interpret cmd as url, like system:/,trash:/,$HOME
+	
+	edelib::String name;
+	edelib::String cmd;
+	edelib::String icon;
+	edelib::String icon2;        // for stateable icons, like trash (empty/full)
+	edelib::String desktop_name; // name used as key when storing positions
+};
+
+
+class DesktopIcon;
+
+class Desktop : public fltk::Window {
+	private:
+		int  desktops_num;
+		int  bg_color;
+		bool wp_use;
+
+		bool moving;
+		int selection_x;
+		int selection_y;
+
+		int selection_box_x_start;
+		int selection_box_y_start;
+		int selection_box_x;
+		int selection_box_y;
+		bool selection_box_show;
+
+		//DesktopSettings*   dsett;
+
+		GlobalIconSettings gisett;
+		IconSettings       isett;
+
+		edelib::vector<DesktopIcon*> icons;
+		edelib::vector<DesktopIcon*> selectionbuff;
+
+		fltk::PopupMenu* pmenu;
+
+		void default_gisett(void);
+		void load_icons(const char* path, edelib::Config& conf);
+		bool read_desktop_file(const char* path, IconSettings& is, int& icon_type);
+
+		void add_icon(DesktopIcon* ic);
+		void unfocus_all(void);
+
+		void select(DesktopIcon* ic);
+		void select_only(DesktopIcon* ic);
+		bool in_selection(const DesktopIcon* ic);
+
+		void move_selection(int x, int y, bool apply);
+
+	public:
+		Desktop();
+		~Desktop();
+		void update_workarea(void);
+		void read_config(void);
+		void save_config(void);
+		void create(void);
+		virtual void draw(void);
+		virtual int handle(int event);
+};
 
 #endif

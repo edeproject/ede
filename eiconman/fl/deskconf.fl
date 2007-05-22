@@ -1,0 +1,87 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.1000 
+images_dir fltk::Choice 
+header_name {.h} 
+code_name {.cxx} 
+gridx 5 
+gridy 5 
+snap 1
+Function {} {open selected
+} {
+  {fltk::Window} {} {open
+    xywh {363 251 540 260} resizable visible
+  } {
+    {fltk::InvisibleBox} {} {
+      xywh {75 173 100 15} box BORDER_BOX
+    }
+    {fltk::InvisibleBox} {} {
+      xywh {20 20 210 158} box THIN_UP_BOX
+    }
+    {fltk::InvisibleBox} {} {
+      xywh {30 30 190 138} box DOWN_BOX color 56
+    }
+    {fltk::InvisibleBox} {} {
+      xywh {50 183 145 14} box THIN_UP_BOX
+    }
+    {fltk::Choice} {} {
+      label {Desktop:} open
+      xywh {310 20 220 25}
+    } {}
+    {fltk::CheckButton} {} {
+      label {Use wallpaper}
+      xywh {310 60 20 19} align 8
+    }
+    {fltk::Input} {} {
+      label {Image:}
+      xywh {310 94 190 25}
+    }
+    {fltk::Button} {} {
+      label {...}
+      xywh {505 94 25 25}
+    }
+    {fltk::Choice} {} {
+      label {Mode:} open
+      xywh {310 129 220 24}
+    } {}
+    {fltk::Button} {} {
+      label {Background color}
+      xywh {310 173 25 24} align 8 color 0x3ca700
+    }
+    {fltk::Button} {} {
+      label {&OK}
+      xywh {250 227 90 25}
+    }
+    {fltk::Button} {} {
+      label {&Apply}
+      xywh {345 227 90 25}
+    }
+    {fltk::Button} {} {
+      label {&Cancel}
+      xywh {440 227 90 25}
+    }
+    {fltk::Group} {} {open
+      xywh {20 210 210 40}
+    } {
+      {fltk::InvisibleBox} {} {
+        xywh {15 5 35 30} box THIN_DOWN_BOX color 0xffff0000
+      }
+      {fltk::Button} {} {
+        label {@<}
+        xywh {0 5 10 30} box FLAT_BOX
+      }
+      {fltk::Button} {} {
+        label {@>}
+        xywh {200 5 10 30} box FLAT_BOX
+      }
+      {fltk::InvisibleBox} {} {
+        xywh {55 5 35 30} box THIN_DOWN_BOX color 0x49a47d00
+      }
+      {fltk::InvisibleBox} {} {
+        xywh {95 5 35 30} box THIN_DOWN_BOX color 0x3a488800
+      }
+      {fltk::InvisibleBox} {} {
+        xywh {135 5 35 30} box THIN_DOWN_BOX color 0x808b3f00
+      }
+    }
+  }
+} 
