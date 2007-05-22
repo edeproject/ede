@@ -52,6 +52,11 @@ struct IconSettings {
 	edelib::String desktop_name; // name used as key when storing positions
 };
 
+// selection overlay
+struct SelectionOverlay {
+	int  x, y, w, h;
+	bool show;
+};
 
 class DesktopIcon;
 
@@ -65,11 +70,7 @@ class Desktop : public fltk::Window {
 		int selection_x;
 		int selection_y;
 
-		int selection_box_x_start;
-		int selection_box_y_start;
-		int selection_box_x;
-		int selection_box_y;
-		bool selection_box_show;
+		SelectionOverlay*  selbox;
 
 		//DesktopSettings*   dsett;
 

@@ -99,9 +99,9 @@ Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
 {
 	moving = false;
 
-	selection_box_x_start = selection_box_y_start = 0;
-	selection_box_x = selection_box_y = 0;
-	selection_box_show = false;
+	selbox = new SelectionOverlay;
+	selbox->x = selbox->y = selbox->w = selbox->h = 0;
+	selbox->show = false;
 
 	// fallback if update_workarea() fails
 	int dw, dh;
@@ -143,6 +143,9 @@ Desktop::~Desktop()
 {
 	EDEBUG(ESTRLOC ": Desktop::~Desktop()\n");
 
+	if(selbox)
+		delete selbox;
+
 	/*
 	 * icons member deleting is not needed, since add_icon will
 	 * append to icons and to fltk::Group array. Desktop at the end
@@ -159,6 +162,7 @@ void Desktop::update_workarea(void) {
 	int X,Y,W,H;
 	if(net_get_workarea(X, Y, W, H))
     	resize(X,Y,W,H);
+	EDEBUG(ESTRLOC ": area: %i %i %i %i\n", X,Y,W,H);
 }
 
 void Desktop::read_config(void) {
@@ -453,36 +457,14 @@ void Desktop::select_only(DesktopIcon* ic) {
 }
 
 void Desktop::draw(void) {
-	if(damage() & fltk::DAMAGE_ALL) {
+	if(damage() & fltk::DAMAGE_ALL)
 		fltk::Window::draw();
-		fltk::overlay_clear();
-	}
 
 	if(damage() & (fltk::DAMAGE_ALL|fltk::DAMAGE_VALUE)) {
-		if(selection_box_show) {
-			fltk::Rectangle selrect(selection_box_x_start, selection_box_y_start, selection_box_x, selection_box_y);
-			fltk::overlay_rect(selrect.x(), selrect.y(), selrect.w(), selrect.h());
+		clear_xoverlay();
 
-			/*dd
-			fltk::line_style(fltk::DOT);
-
-			fltk::push_matrix();
-			fltk::setcolor(gisett.label_foreground);
-			fltk::addvertex(selrect.x(),selrect.y());
-			fltk::addvertex(selrect.x() + selrect.w(), selrect.y());
-			//fltk::addvertex(X+lwidth,Y+lheight);
-			fltk::addvertex(selrect.x() + selrect.w(), selrect.y() + selrect.h());
-			fltk::addvertex(selrect.x(), selrect.y() + selrect.h());
-			fltk::addvertex(selection_box_x_start,selection_box_y_start);
-			fltk::addvertex(selrect.x(),selrect.y());
-			fltk::strokepath();
-
-			fltk::pop_matrix();
-
-			// revert to default line style
-			fltk::line_style(0);
-			*/
-		}
+		if(selbox->show)
+			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
 	}
 }
 
@@ -509,9 +491,10 @@ int Desktop::handle(int event) {
 
 				// track position so moving can be deduced
 				if(fltk::event_button() == 1) {
-					selection_box_x_start = fltk::event_x_root();
-					selection_box_y_start = fltk::event_y_root();
+					selbox->x = fltk::event_x();
+					selbox->y = fltk::event_y();
 				}
+				EDEBUG("overlay: %i %i %i %i\n", selbox->x, selbox->y, selbox->w, selbox->h);
 
 				return 1;
 			}
@@ -560,12 +543,13 @@ int Desktop::handle(int event) {
 			} else {
 				EDEBUG(ESTRLOC ": DRAG from desktop\n");
 
-				selection_box_x = fltk::event_x_root() - selection_box_x_start;
-				selection_box_y = fltk::event_y_root() - selection_box_y_start;
 
 				// moving is started
-				if(selection_box_x != 0 || selection_box_y != 0) {
-					selection_box_show = true;
+				if(selbox->x != 0 || selbox->y != 0) {
+					selbox->w = fltk::event_x() - selbox->x;
+					selbox->h = fltk::event_y() - selbox->y;
+
+					selbox->show = true;
 					redraw(fltk::DAMAGE_VALUE);
 				}
 			}
@@ -576,10 +560,11 @@ int Desktop::handle(int event) {
 			EDEBUG(ESTRLOC ": RELEASE from desktop\n");
 			EDEBUG(ESTRLOC ": clicks: %i\n", fltk::event_is_click());
 
-			if(selection_box_show) {
-				selection_box_show = false;
-				selection_box_x = selection_box_y = selection_box_x_start = selection_box_y_start = 0;
-				redraw(fltk::DAMAGE_ALL);
+			if(selbox->show) {
+				EDEBUG("overlay: %i %i %i %i\n", selbox->x, selbox->y, selbox->w, selbox->h);
+				selbox->w = selbox->h = 0;
+				selbox->show = false;
+				redraw(fltk::DAMAGE_VALUE);
 				return 1;
 			}
 

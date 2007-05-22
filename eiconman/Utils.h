@@ -21,4 +21,7 @@ bool net_get_workarea(int& x, int& y, int& w, int &h);
 void net_make_me_desktop(fltk::Window* w);
 int  net_get_workspace_names(char**& names);
 
+void draw_xoverlay(int x, int y, int w, int h);
+void clear_xoverlay(void);
+
 #endif

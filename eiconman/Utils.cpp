@@ -22,6 +22,11 @@ Atom NET_NUMBER_OF_DESKTOPS = 0;
 Atom NET_CURRENT_DESKTOP = 0;
 Atom NET_DESKTOP_NAMES = 0;
 
+int overlay_x = 0;
+int overlay_y = 0;
+int overlay_w = 0;
+int overlay_h = 0;
+
 bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	Atom real;
 
@@ -173,3 +178,51 @@ int net_get_workspace_names(char** names) {
 	return alloc;
 }
 #endif
+
+void draw_overlay_rect(void) {
+	if(overlay_w <= 0 || overlay_h <= 0)
+		return;
+	XSetFunction(fltk::xdisplay, fltk::gc, GXxor);
+	XSetForeground(fltk::xdisplay, fltk::gc, 0xffffffff);
+	XDrawRectangle(fltk::xdisplay, fltk::xwindow, fltk::gc, overlay_x, overlay_y, overlay_w-1, overlay_h-1);
+	XSetFunction(fltk::xdisplay, fltk::gc, GXcopy);
+}
+
+void draw_xoverlay(int x, int y, int w, int h) {
+	if(w < 0) {
+		x += w;
+		w = -w;
+	} else if(!w)
+		w = 1;
+
+	if(h < 0) {
+		y += h;
+		h = -h;
+	} else if(!h)
+		h = 1;
+
+	//if(overlay_w <= 0 || overlay_h <= 0) {
+	if(overlay_w > 0) {
+		if(x == overlay_x && y == overlay_y && w == overlay_w && h == overlay_h)
+			return;
+		draw_overlay_rect();
+	}
+
+	overlay_x = x;
+	overlay_y = y;
+	overlay_w = w;
+	overlay_h = h;
+
+	draw_overlay_rect();
+}
+
+void clear_xoverlay(void) {
+	if(overlay_w > 0) {
+		draw_overlay_rect();
+		overlay_w = 0;
+	}
+	/*
+	overlay_x = overlay_y = overlay_w = overlay_h = 0;
+	draw_overlay_rect();
+	*/
+}
