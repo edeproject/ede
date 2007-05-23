@@ -64,6 +64,7 @@ class DesktopIcon : public fltk::Widget {
 		fltk::Image* icon_image(void) { return (fltk::Image*)image(); }
 };
 
+
 class MovableIcon : public fltk::Window {
 	private:
 		DesktopIcon* icon;

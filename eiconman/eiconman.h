@@ -93,7 +93,12 @@ class Desktop : public fltk::Window {
 		void select_only(DesktopIcon* ic);
 		bool in_selection(const DesktopIcon* ic);
 
+		void select_in_area(void);
+		void select_noredraw(DesktopIcon* ic);
+
 		void move_selection(int x, int y, bool apply);
+
+		DesktopIcon* below_mouse(int x, int y);
 
 	public:
 		Desktop();

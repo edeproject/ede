@@ -17,12 +17,14 @@
 #include <edelib/IconTheme.h>
 #include <edelib/Nls.h>
 #include <edelib/Item.h>
+#include <edelib/Ask.h>
 
 #include <fltk/SharedImage.h>
 #include <fltk/Color.h>
 #include <fltk/Divider.h>
 #include <fltk/draw.h>
 #include <fltk/events.h>
+#include <fltk/damage.h>
 
 #include <fltk/x11.h> // Pixmap
 
@@ -38,14 +40,10 @@
 #define OFFSET_W 16
 #define OFFSET_H 16
 
-#if 0
-inline int calc_pitch(int bytespp, int width) {
-	if(!bytespp || !width)
-		return 0;
-	int p = bytespp * width;
-	return ((p + 3) & ~3);   // word aligning
+void icon_delete_cb(fltk::Widget*, void* di) {
+	DesktopIcon* dicon = (DesktopIcon*)di;
+	edelib::ask(_("Delete '%s' ?"), dicon->label());
 }
-#endif
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int icon_type) :
 	fltk::Widget(isett->x, isett->y, ICONSIZE, ICONSIZE), settings(NULL) 
@@ -124,6 +122,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int ic
 			it->offset_x(12, 12);
 			it = new edelib::Item(_("&Delete"));
 			it->offset_x(12, 12);
+			it->callback(icon_delete_cb, this);
 			new fltk::Divider();
 			it = new edelib::Item(_("&Properties"));
 			it->offset_x(12, 12);
@@ -141,6 +140,9 @@ DesktopIcon::~DesktopIcon()
 
 	if(micon)
 		delete micon;
+
+	if(pmenu)
+		delete pmenu;
 }
 
 void DesktopIcon::update_label_size(void) {
@@ -191,7 +193,7 @@ int DesktopIcon::drag_icon_y(void) {
 }
 
 void DesktopIcon::draw(void) {
-	if(image()) {
+	if(image() && (damage() & fltk::DAMAGE_ALL)) {
 		fltk::Image* ii = (fltk::Image*)image();
 		int ix = (w()/2) - (ii->w()/2);
 		/*
@@ -206,7 +208,7 @@ void DesktopIcon::draw(void) {
 		ii->draw(ir);
 	}
 
-	if(globals->label_draw) {
+	if(globals->label_draw && (damage() & (fltk::DAMAGE_ALL | fltk::DAMAGE_CHILD_LABEL))) {
 		int X = w()-(w()/2)-(lwidth/2);
 		int Y = h()+2;
 
@@ -243,18 +245,19 @@ void DesktopIcon::draw(void) {
 			// revert to default line style
 			fltk::line_style(0);
 		}
+
+		set_damage(damage() & ~fltk::DAMAGE_CHILD_LABEL);
 	}
 }
 
 int DesktopIcon::handle(int event) {
-	//EDEBUG("Event %i on child\n", event);
-
 	switch(event) {
-		case fltk::ENTER:
-			EDEBUG(ESTRLOC ": ENTER\n");
+		case fltk::FOCUS:
+		case fltk::UNFOCUS:
 			return 1;
+
+		case fltk::ENTER:
 		case fltk::LEAVE:
-			EDEBUG(ESTRLOC ": LEAVE\n");
 			return 1;
 		/* 
 		 * We have to handle fltk::MOVE too, if
@@ -272,8 +275,17 @@ int DesktopIcon::handle(int event) {
 				EDEBUG(ESTRLOC ": EXECUTE: %s\n", settings->cmd.c_str());
 			return 1;
 
-		case fltk::FOCUS:
-		case fltk::UNFOCUS:
+		case fltk::DND_ENTER:
+			EDEBUG("Icon DND_ENTER\n");
+			return 1;
+		case fltk::DND_DRAG:
+			EDEBUG("Icon DND_DRAG\n");
+			return 1;
+		case fltk::DND_LEAVE:
+			EDEBUG("Icon DND_LEAVE\n");
+			return 1;
+		case fltk::DND_RELEASE:
+			EDEBUG("Icon DND_RELEASE\n");
 			return 1;
 	}
 
@@ -286,15 +298,9 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : fltk::Window(ic->x(), ic->y(), ic->w
 	set_override();
 	create();
 
-
 	fltk::Image* img = icon->icon_image();
 	if(img)
 		image(img);
-
-/*
- * Disabled until icon -> icon mask conversion be finished
- */
-
 #if 0
 	if(img) {
 #ifdef SHAPE
@@ -310,4 +316,3 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : fltk::Window(ic->x(), ic->y(), ic->w
 MovableIcon::~MovableIcon()
 {
 }
-

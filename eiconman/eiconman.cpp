@@ -38,7 +38,6 @@
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
 
-
 /*
  * NOTE: DO NOT set 'using namespace fltk' here
  * since fltk::Window will collide with Window from X11
@@ -54,10 +53,24 @@
 	 (fltk::get_key_state(fltk::LeftShiftKey) ||\
 	  fltk::get_key_state(fltk::RightShiftKey)))
 
+#define MIN(x,y)  ((x) < (y) ? (x) : (y))
+#define MAX(x,y)  ((x) > (y) ? (x) : (y))
+
+/*
+ * Added since fltk DAMAGE_OVERLAY value is used in few different contexts
+ * and re-using it will do nothing. Yuck!
+ */
+#define EDAMAGE_OVERLAY  2
+
 bool running = true;
 
 inline unsigned int random_pos(int max) { 
 	return (rand() % max); 
+}
+
+inline bool intersects(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
+	return (MAX(x1, x2) <= MIN(w1, w2) && 
+			MAX(y1, y2) <= MIN(h1, h2));
 }
 
 inline void dpy_sizes(int& width, int& height) {
@@ -162,7 +175,6 @@ void Desktop::update_workarea(void) {
 	int X,Y,W,H;
 	if(net_get_workarea(X, Y, W, H))
     	resize(X,Y,W,H);
-	EDEBUG(ESTRLOC ": area: %i %i %i %i\n", X,Y,W,H);
 }
 
 void Desktop::read_config(void) {
@@ -417,8 +429,9 @@ void Desktop::unfocus_all(void) {
 }
 
 bool Desktop::in_selection(const DesktopIcon* ic) {
-	unsigned int sz = selectionbuff.size();
+	EASSERT(ic != NULL);
 
+	unsigned int sz = selectionbuff.size();
 	for(unsigned int i = 0; i < sz; i++) {
 		if(ic == selectionbuff[i])
 			return true;
@@ -438,8 +451,17 @@ void Desktop::select(DesktopIcon* ic) {
 	if(!ic->is_focused()) {
 		ic->do_focus();
 		ic->redraw();
-		redraw();
 	}
+
+	redraw();
+}
+
+void Desktop::select_noredraw(DesktopIcon* ic) {
+	EASSERT(ic != NULL);
+
+	if(in_selection(ic))
+		return;
+	selectionbuff.push_back(ic);
 }
 
 void Desktop::select_only(DesktopIcon* ic) {
@@ -456,20 +478,98 @@ void Desktop::select_only(DesktopIcon* ic) {
 	redraw();
 }
 
+void Desktop::select_in_area(void) {
+	if(!selbox->show)
+		return;
+
+	int ax = selbox->x;
+	int ay = selbox->y;
+	int aw = selbox->w;
+	int ah = selbox->h;
+
+	if(aw < 0) {
+		ax += aw;
+		aw = -aw;
+	} else if(!aw)
+		aw = 1;
+
+	if(ah < 0) {
+		ay += ah;
+		ah = -ah;
+	} else if(!ah)
+		ah = 1;
+
+	/*
+	 * XXX: This function can fail since icon coordinates are absolute (event_x_root)
+	 * but selbox use relative (event_root). It will work as expected if desktop is at x=0 y=0.
+	 * This should be checked further.
+	 */
+	unsigned int sz = icons.size();
+	DesktopIcon* ic = NULL;
+
+	for(unsigned int i = 0; i < sz; i++) {
+		ic = icons[i];
+		EASSERT(ic != NULL && "Impossible to happen");
+
+		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
+			if(!ic->is_focused()) {
+				ic->do_focus();
+				ic->redraw();
+			}
+		} else {
+			if(ic->is_focused()) {
+				ic->do_unfocus();
+				ic->redraw();
+			}
+		}
+	}
+}
+
+/*
+ * Tries to figure out icon below mouse (used for DND)
+ * If fails, return NULL
+ */
+DesktopIcon* Desktop::below_mouse(int px, int py) {
+	unsigned int sz = icons.size();
+
+	DesktopIcon* ic = NULL;
+	for(unsigned int i = 0; i < sz; i++) {
+		ic = icons[i];
+		if(ic->x() < px && ic->y() < py && px < (ic->x() + ic->h()) && py < (ic->y() + ic->h()))
+			return ic;
+	}
+
+	return NULL;
+}
+
 void Desktop::draw(void) {
 	if(damage() & fltk::DAMAGE_ALL)
 		fltk::Window::draw();
 
-	if(damage() & (fltk::DAMAGE_ALL|fltk::DAMAGE_VALUE)) {
+	if(damage() & (fltk::DAMAGE_ALL|EDAMAGE_OVERLAY)) {
 		clear_xoverlay();
 
 		if(selbox->show)
 			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
+		/*
+		 * now scan all icons and see if they needs redraw, and if do
+		 * just update their label since it is indicator of selection
+		 */
+		for(int i = 0; i < children(); i++) {
+			if(child(i)->damage() == fltk::DAMAGE_ALL) {
+				child(i)->set_damage(fltk::DAMAGE_CHILD_LABEL);
+				update_child(*child(i));
+			}
+		}
 	}
 }
 
 int Desktop::handle(int event) {
 	switch(event) {
+		case fltk::FOCUS:
+		case fltk::UNFOCUS:
+			return 1;
+
 		case fltk::PUSH: {
 			/*
 			 * First check where we clicked. If we do it on desktop
@@ -494,7 +594,6 @@ int Desktop::handle(int event) {
 					selbox->x = fltk::event_x();
 					selbox->y = fltk::event_y();
 				}
-				EDEBUG("overlay: %i %i %i %i\n", selbox->x, selbox->y, selbox->w, selbox->h);
 
 				return 1;
 			}
@@ -543,17 +642,23 @@ int Desktop::handle(int event) {
 			} else {
 				EDEBUG(ESTRLOC ": DRAG from desktop\n");
 
-
-				// moving is started
+				/*
+				 * Moving is started with pushed button.
+				 * From this point selection box is created and is rolled until release
+				 */
 				if(selbox->x != 0 || selbox->y != 0) {
 					selbox->w = fltk::event_x() - selbox->x;
 					selbox->h = fltk::event_y() - selbox->y;
 
 					selbox->show = true;
-					redraw(fltk::DAMAGE_VALUE);
+
+					// see if there some icons inside selection area
+					select_in_area();
+
+					// redraw selection box
+					redraw(EDAMAGE_OVERLAY);
 				}
 			}
-
 			return 1;
 
 		case fltk::RELEASE:
@@ -561,10 +666,25 @@ int Desktop::handle(int event) {
 			EDEBUG(ESTRLOC ": clicks: %i\n", fltk::event_is_click());
 
 			if(selbox->show) {
-				EDEBUG("overlay: %i %i %i %i\n", selbox->x, selbox->y, selbox->w, selbox->h);
 				selbox->w = selbox->h = 0;
 				selbox->show = false;
-				redraw(fltk::DAMAGE_VALUE);
+				redraw(EDAMAGE_OVERLAY);
+				/*
+				 * Now pickup those who are in is_focused() state.
+				 * Here is not used select() since it will fill selectionbuff with
+				 * redrawing whole window each time. This is not what we want.
+				 *
+				 * Possible flickers due overlay will be later removed when is
+				 * called move_selection(), which will in turn redraw icons again
+				 * after position them.
+				 */
+				if(!selectionbuff.empty())
+					selectionbuff.clear();
+
+				for(unsigned int i = 0; i < icons.size(); i++) {
+					if(icons[i]->is_focused())
+						select_noredraw(icons[i]);
+				}
 				return 1;
 			}
 
@@ -588,9 +708,27 @@ int Desktop::handle(int event) {
 			moving = false;
 			return 1;
 
-
-		case fltk::FOCUS:
-		case fltk::UNFOCUS:
+		case fltk::DND_ENTER:
+			EDEBUG("DND_ENTER\n");
+			return 1;
+		case fltk::DND_DRAG:
+			EDEBUG("DND_DRAG\n");
+			return 1;
+		case fltk::DND_LEAVE:
+			EDEBUG("DND_LEAVE\n");
+			return 1;
+		case fltk::DND_RELEASE: {
+			// fltk::belowmouse() can't be used within DND context :)
+			DesktopIcon* di = below_mouse(fltk::event_x_root(), fltk::event_y_root());
+			if(di) {
+				di->handle(event);
+			} else {
+				EDEBUG("DND on DESKTOP\n");
+			}
+			return 1;
+		}
+		case fltk::PASTE:
+			EDEBUG("PASTE on desktop with %s\n", fltk::event_text());
 			return 1;
 
 		default:

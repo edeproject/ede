@@ -22,16 +22,8 @@
 #include <fltk/draw.h>
 #include <fltk/x11.h>
 
-#include <string.h> // strdup
-#include <stdlib.h> // free
-
-#define MAX_DESKTOPS 32
-
 void close_cb(fltk::Widget*, void* w) {
 	DesktopConfig* dc = (DesktopConfig*)w;
-
-	EDEBUG("ws: %i\n", net_get_workspace_count());
-	EDEBUG("cd: %i\n", net_get_current_desktop());
 	dc->hide();
 }
 
@@ -73,12 +65,6 @@ void PreviewBox::draw(void) {
 		fltk::Image* im = (fltk::Image*)image();
 		im->draw(ir);
 	}
-	
-	/*
-	if(image()) {
-		fltk::Image* im = (fltk::Image*)image();
-		fltk::drawimage(im->buffer(), im->buffer_pixeltype(), fltk::Rectangle(im->width(), im->height()));
-	}*/
 }
 
 DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")) {
@@ -103,7 +89,6 @@ DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")
 
 		new fltk::Item(_("All desktops"));
 
-		//char* names[MAX_DESKTOPS];
 		char** names;
 		int nsz = net_get_workspace_names(names);
 		EDEBUG("nsz: %i\n", nsz);
@@ -112,7 +97,6 @@ DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")
 			for(int i = 0; i < nsz; i++) {
 				fltk::Item* item = new fltk::Item();
 				item->copy_label(names[i]);
-				//free(names[i]);
 			}
 
 			XFreeStringList(names);
