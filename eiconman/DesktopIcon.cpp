@@ -287,6 +287,9 @@ int DesktopIcon::handle(int event) {
 		case fltk::DND_RELEASE:
 			EDEBUG("Icon DND_RELEASE\n");
 			return 1;
+		case fltk::PASTE:
+			EDEBUG("Icon PASTE\n");
+			return 1;
 	}
 
 	return fltk::Widget::handle(event);

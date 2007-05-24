@@ -15,15 +15,16 @@
 
 #include <fltk/Window.h>
 #include <fltk/PopupMenu.h>
+#include <fltk/Image.h>
 #include <edelib/String.h>
 #include <edelib/Config.h>
 #include <edelib/Vector.h>
 
-// settings realted to specific desktop view
 struct DesktopSettings {
-	bool wp_use;
-	int  color;
-	edelib::String wallpaper;
+	int  color;                   // background color
+	bool wp_use;                  // use wallpaper or not
+	fltk::Image*   wp_image;      // wallpaper image (can be NULL)
+	edelib::String wp_path;       // wallpaper path
 };
 
 struct GlobalIconSettings {
@@ -60,9 +61,14 @@ struct SelectionOverlay {
 
 class DesktopIcon;
 
+typedef edelib::vector<DesktopIcon*>     DesktopIconList;
+
 class Desktop : public fltk::Window {
 	private:
+		static Desktop* pinstance;
+
 		int  desktops_num;
+		int  curr_desktop;
 		int  bg_color;
 		bool wp_use;
 
@@ -72,17 +78,18 @@ class Desktop : public fltk::Window {
 
 		SelectionOverlay*  selbox;
 
-		//DesktopSettings*   dsett;
-
 		GlobalIconSettings gisett;
 		IconSettings       isett;
 
-		edelib::vector<DesktopIcon*> icons;
-		edelib::vector<DesktopIcon*> selectionbuff;
+		DesktopSettings*   dsett;
+
+		DesktopIconList icons;
+		DesktopIconList selectionbuff;
 
 		fltk::PopupMenu* pmenu;
 
-		void default_gisett(void);
+		void init_desktops(void);
+
 		void load_icons(const char* path, edelib::Config& conf);
 		bool read_desktop_file(const char* path, IconSettings& is, int& icon_type);
 
@@ -99,13 +106,23 @@ class Desktop : public fltk::Window {
 		void move_selection(int x, int y, bool apply);
 
 		DesktopIcon* below_mouse(int x, int y);
+		void drop_source(const char* src, int x, int y);
 
 	public:
+		static void init(void);
+		static void shutdown(void);
+		static Desktop* instance(void);
+
 		Desktop();
 		~Desktop();
 		void update_workarea(void);
 		void read_config(void);
 		void save_config(void);
+
+		void set_wallpaper(const char* path, bool do_redraw = true);
+		void set_wallpaper(fltk::Image* im, bool do_redraw = true);
+		void set_bg_color(unsigned int c, bool do_redraw = true);
+
 		void create(void);
 		virtual void draw(void);
 		virtual int handle(int event);

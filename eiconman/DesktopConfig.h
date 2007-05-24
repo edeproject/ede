@@ -19,6 +19,7 @@
 #include <fltk/InvisibleBox.h>
 #include <fltk/Choice.h>
 #include <fltk/CheckButton.h>
+#include <fltk/Image.h>
 #include <edelib/String.h>
 
 class PreviewBox : public fltk::InvisibleBox {
@@ -30,6 +31,9 @@ class PreviewBox : public fltk::InvisibleBox {
 
 class DesktopConfig : public fltk::Window {
 	private:
+		bool                img_enable;
+		fltk::Image*        wp_img;
+
 		fltk::Input*        img_path;
 		fltk::Button*       img_browse;
 		fltk::Choice*       img_choice;
@@ -44,11 +48,13 @@ class DesktopConfig : public fltk::Window {
 		~DesktopConfig();
 
 		void run(void);
-		void disable_wp(void);
+		void wp_disable(void);
+		bool wp_enabled(void) { return img_enable; }
+
 		void set_preview_color(unsigned int c);
 		void set_preview_image(const char* path);
 		void set_color(unsigned int c);
-		unsigned int bkg_color(void) { return color_box->color(); }
+		unsigned int bg_color(void) { return color_box->color(); }
 };
 
 #endif

@@ -12,6 +12,8 @@
 
 #include "DesktopConfig.h"
 #include "Utils.h"
+#include "eiconman.h"
+
 #include <edelib/Nls.h>
 #include <edelib/Debug.h>
 #include <fltk/Item.h>
@@ -27,15 +29,23 @@ void close_cb(fltk::Widget*, void* w) {
 	dc->hide();
 }
 
+void ok_cb(fltk::Widget*, void* w) { }
+
+void apply_cb(fltk::Widget*, void* w) { 
+	DesktopConfig* dc = (DesktopConfig*)w;
+
+	//Desktop::instance()->set_bg_color(dc->bg_color());
+}
+
 void wp_use_cb(fltk::Widget*, void* w) {
 	DesktopConfig* dc = (DesktopConfig*)w;
-	dc->disable_wp();
+	dc->wp_disable();
 }
 
 void color_box_cb(fltk::Widget*, void* w) {
 	DesktopConfig* dc = (DesktopConfig*)w;
 
-	fltk::Color col = dc->bkg_color();
+	fltk::Color col = dc->bg_color();
 	if(fltk::color_chooser(_("Background color"), col))
 		dc->set_color(col);
 }
@@ -67,8 +77,7 @@ void PreviewBox::draw(void) {
 	}
 }
 
-DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")) {
-
+DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")), img_enable(false), wp_img(NULL) {
 	begin();
 		// monitor
 		fltk::InvisibleBox* m1 = new fltk::InvisibleBox(75, 175, 100, 15);
@@ -89,18 +98,6 @@ DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")
 
 		new fltk::Item(_("All desktops"));
 
-		char** names;
-		int nsz = net_get_workspace_names(names);
-		EDEBUG("nsz: %i\n", nsz);
-
-		if(nsz > 0) {
-			for(int i = 0; i < nsz; i++) {
-				fltk::Item* item = new fltk::Item();
-				item->copy_label(names[i]);
-			}
-
-			XFreeStringList(names);
-		} 
 		ws_names->end();
 
 		// rest
@@ -127,8 +124,12 @@ DesktopConfig::DesktopConfig() : fltk::Window(540, 265, _("Background settings")
 		color_box->align(fltk::ALIGN_RIGHT);
 		color_box->callback(color_box_cb, this);
 
-		new fltk::Button(250, 230, 90, 25, _("&OK"));
-		new fltk::Button(345, 230, 90, 25, _("&Apply"));
+		fltk::Button* ok = new fltk::Button(250, 230, 90, 25, _("&OK"));
+		ok->callback(ok_cb, this);
+
+		fltk::Button* apply = new fltk::Button(345, 230, 90, 25, _("&Apply"));
+		apply->callback(apply_cb, this);
+
 		fltk::Button* close = new fltk::Button(440, 230, 90, 25, _("&Cancel"));
 		close->callback(close_cb, this);
 	end();
@@ -146,7 +147,7 @@ void DesktopConfig::run(void) {
 		fltk::wait();
 }
 
-void DesktopConfig::disable_wp(void) {
+void DesktopConfig::wp_disable(void) {
 	if(!use_wp->value()) {
 		img_path->deactivate();
 		img_browse->deactivate();
@@ -156,16 +157,25 @@ void DesktopConfig::disable_wp(void) {
 		img_browse->activate();
 		img_choice->activate();
 	}
+
+	img_enable = false;
+	preview->image(NULL);
+	set_color(color_box->color());
 }
 
 void DesktopConfig::set_preview_color(unsigned int c) {
+	if(c == preview->color())
+		return;
+
 	preview->color(c);
 	preview->redraw();
 }
 
 void DesktopConfig::set_color(unsigned int c) {
-	color_box->color(c);
-	color_box->redraw();
+	if(c != color_box->color()) {
+		color_box->color(c);
+		color_box->redraw();
+	}
 
 	set_preview_color(c);
 }
@@ -173,9 +183,12 @@ void DesktopConfig::set_color(unsigned int c) {
 void DesktopConfig::set_preview_image(const char* path) {
 	EASSERT(path != NULL);
 
+	if(wp_path == path)
+		return;
 	wp_path = path;
+	wp_img  = fltk::SharedImage::get(wp_path.c_str());
 
-	preview->image(fltk::SharedImage::get(wp_path.c_str()));
+	preview->image(wp_img);
 	preview->redraw();
 	img_path->value(wp_path.c_str());
 }

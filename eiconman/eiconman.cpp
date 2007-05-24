@@ -23,6 +23,7 @@
 #include <edelib/File.h>
 #include <edelib/IconTheme.h>
 #include <edelib/Item.h>
+#include <edelib/MimeType.h>
 
 #include <fltk/Divider.h>
 #include <fltk/damage.h>
@@ -37,6 +38,7 @@
 
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
+#include <stdio.h>  // snprintf
 
 /*
  * NOTE: DO NOT set 'using namespace fltk' here
@@ -62,6 +64,7 @@
  */
 #define EDAMAGE_OVERLAY  2
 
+Desktop* Desktop::pinstance = NULL;
 bool running = true;
 
 inline unsigned int random_pos(int max) { 
@@ -112,9 +115,17 @@ Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
 {
 	moving = false;
 
+	desktops_num = 0;
+	curr_desktop = 0;
+
 	selbox = new SelectionOverlay;
 	selbox->x = selbox->y = selbox->w = selbox->h = 0;
 	selbox->show = false;
+
+	dsett = new DesktopSettings;
+	dsett->color = 0;
+	dsett->wp_use = false;
+	dsett->wp_image = NULL;
 
 	// fallback if update_workarea() fails
 	int dw, dh;
@@ -122,9 +133,8 @@ Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
 	resize(dw, dh);
 
 	update_workarea();
-	read_config();
 
-	color(bg_color);
+	read_config();
 
 	begin();
 
@@ -150,10 +160,14 @@ Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
 	pmenu->type(fltk::PopupMenu::POPUP3);
 
 	end();
+
+	if(dsett->wp_use)
+		set_wallpaper(dsett->wp_path.c_str(), false);
+	else
+		set_bg_color(dsett->color, false);
 }
 
-Desktop::~Desktop()
-{
+Desktop::~Desktop() {
 	EDEBUG(ESTRLOC ": Desktop::~Desktop()\n");
 
 	if(selbox)
@@ -165,16 +179,75 @@ Desktop::~Desktop()
 	 * will cleanup fltk::Group array.
 	 */
 	icons.clear();
+
+	if(dsett)
+		delete dsett;
 }
 
-void Desktop::default_gisett(void) { 
-	// TODO
+void Desktop::init(void) {
+	if(Desktop::pinstance != NULL)
+		return;
+	Desktop::pinstance = new Desktop();
+}
+
+void Desktop::shutdown(void) {
+	if(Desktop::pinstance == NULL)
+		return;
+
+	delete Desktop::pinstance;
+	Desktop::pinstance = NULL;
+}
+
+Desktop* Desktop::instance(void) {
+	EASSERT(Desktop::pinstance != NULL && "Desktop::init() should be run first");
+	return Desktop::pinstance;
 }
 
 void Desktop::update_workarea(void) {
 	int X,Y,W,H;
 	if(net_get_workarea(X, Y, W, H))
     	resize(X,Y,W,H);
+}
+
+void Desktop::set_bg_color(unsigned int c, bool do_redraw) {
+	EASSERT(dsett != NULL);
+
+	dsett->color = c;
+	color(c);
+
+	if(do_redraw)
+		redraw();
+}
+
+void Desktop::set_wallpaper(const char* path, bool do_redraw) {
+	EASSERT(path != NULL);
+	EASSERT(dsett != NULL);
+	/*
+	 * Prevent cases 'set_wallpaper(dsett->wp_path.c_str())' since assignement
+	 * will nullify pointers. Very hard to find bug! (believe me, after few hours)
+	 */
+	if(dsett->wp_path.c_str() != path)
+		dsett->wp_path = path;
+
+	dsett->wp_image = fltk::SharedImage::get(path);
+	/*
+	 * SharedImage::get() will return NULL if is unable to read the image
+	 * and that is exactly what is wanted here since draw() function will
+	 * skip drawing image in nulled case. Blame user for this :)
+	 */
+	image(dsett->wp_image);
+
+	if(do_redraw)
+		redraw();
+}
+
+void Desktop::set_wallpaper(fltk::Image* im, bool do_redraw) {
+	if(dsett->wp_image == im)
+		return;
+
+	image(dsett->wp_image);
+	if(do_redraw)
+		redraw();
 }
 
 void Desktop::read_config(void) {
@@ -191,12 +264,20 @@ void Desktop::read_config(void) {
 	 */
 
 	// read Desktop section
-	conf.get("Desktop", "Color", bg_color, fltk::BLUE);
-	conf.get("Desktop", "WallpaperUse", wp_use, false);
-	if(wp_use) {
-		char wp_path[1024];
-		conf.get("Desktop", "Wallpaper", wp_path, sizeof(wp_path));
-		EDEBUG(ESTRLOC ": Wallpaper %s\n", wp_path);
+	int  default_bg_color = fltk::BLUE;
+	int  default_wp_use   = false;
+	char wpath[256];
+
+	conf.get("Desktop", "Color", dsett->color, default_bg_color);
+
+	if(conf.error() != edelib::CONF_ERR_SECTION) {
+		conf.get("Desktop", "WallpaperUse", dsett->wp_use, default_wp_use);
+		conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
+
+		dsett->wp_path = wpath;
+	} else {
+		// color is already filled
+		dsett->wp_use = default_wp_use;
 	}
 
 	// read Icons section
@@ -319,7 +400,8 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_ty
 	if(dconf.get("Desktop Entry", "EmptyIcon", buff, buffsz)) {
 		icon_type = ICON_TRASH;
 		is.icon = buff;
-	}
+	} else
+		icon_type = ICON_NORMAL;
 
 	if(dconf.error() == edelib::CONF_ERR_SECTION) {
 		EDEBUG(ESTRLOC ": %s is not valid .desktop file\n");
@@ -535,6 +617,8 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 	DesktopIcon* ic = NULL;
 	for(unsigned int i = 0; i < sz; i++) {
 		ic = icons[i];
+		EASSERT(ic != NULL && "Impossible to happen");
+
 		if(ic->x() < px && ic->y() < py && px < (ic->x() + ic->h()) && py < (ic->y() + ic->h()))
 			return ic;
 	}
@@ -542,9 +626,69 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 	return NULL;
 }
 
+
+// used to drop dnd context on desktop figuring out what it can be
+void Desktop::drop_source(const char* src, int x, int y) {
+	if(!src)
+		return;
+	IconSettings is;
+	is.x = x;
+	is.y = y;
+
+	// absolute path we (for now) see as non-url
+	if(src[0] == '/')
+		is.cmd_is_url = false;
+	else
+		is.cmd_is_url = true;
+
+	is.name = "XXX";
+	is.cmd  = "(none)";
+	
+	edelib::MimeType mt;
+	if(!mt.set(src)) {
+		EDEBUG("MimeType for %s failed, not dropping icon\n", src);
+		return;
+	}
+
+	is.icon = mt.icon_name();
+
+	EDEBUG("---------> %s\n", is.icon.c_str());
+
+	DesktopIcon* dic = new DesktopIcon(&gisett, &is, ICON_NORMAL);
+	add_icon(dic);
+}
+
 void Desktop::draw(void) {
-	if(damage() & fltk::DAMAGE_ALL)
+#if 0
+	if(damage() & fltk::DAMAGE_ALL) {
 		fltk::Window::draw();
+	}
+#endif
+
+	if(damage() & fltk::DAMAGE_ALL) {
+		clear_flag(fltk::HIGHLIGHT);
+
+		int nchild = children();
+		if(damage() & ~fltk::DAMAGE_CHILD) {
+			draw_box();
+			draw_label();
+
+			for(int i = 0; i < nchild; i++) {
+				fltk::Widget& ch = *child(i);
+				draw_child(ch);
+				draw_outside_label(ch);
+			}
+		} else {
+			for(int i = 0; i < nchild; i++) {
+				fltk::Widget& ch = *child(i);
+				if(ch.damage() & fltk::DAMAGE_CHILD_LABEL) {
+					draw_outside_label(ch);
+					ch.set_damage(ch.damage() & ~fltk::DAMAGE_CHILD_LABEL);
+				}
+				update_child(ch);
+			}
+		}
+	}
 
 	if(damage() & (fltk::DAMAGE_ALL|EDAMAGE_OVERLAY)) {
 		clear_xoverlay();
@@ -597,6 +741,7 @@ int Desktop::handle(int event) {
 
 				return 1;
 			}
+
 			// from here, all events are managed for icons
 			DesktopIcon* tmp_icon = (DesktopIcon*)clicked;
 
@@ -666,7 +811,7 @@ int Desktop::handle(int event) {
 			EDEBUG(ESTRLOC ": clicks: %i\n", fltk::event_is_click());
 
 			if(selbox->show) {
-				selbox->w = selbox->h = 0;
+				selbox->x = selbox->y = selbox->w = selbox->h = 0;
 				selbox->show = false;
 				redraw(EDAMAGE_OVERLAY);
 				/*
@@ -688,19 +833,14 @@ int Desktop::handle(int event) {
 				return 1;
 			}
 
-			if(!selectionbuff.empty() && moving) {
-				EDEBUG(ESTRLOC ": CLEARING BUFFER\n");
+			if(!selectionbuff.empty() && moving)
 				move_selection(fltk::event_x_root(), fltk::event_y_root(), true);
-			}
 
 			/* 
 			 * Do not send fltk::RELEASE during move
 			 *
 			 * TODO: should be alowed fltk::RELEASE to multiple icons? (aka. run 
 			 * command for all selected icons ?
-			 *
-			 * TODO: or to make something like selectionbuff[0]->execute()
-			 * so icon execute whatever it have ?
 			 */
 			if(selectionbuff.size() == 1 && !moving)
 				selectionbuff[0]->handle(fltk::RELEASE);
@@ -709,14 +849,10 @@ int Desktop::handle(int event) {
 			return 1;
 
 		case fltk::DND_ENTER:
-			EDEBUG("DND_ENTER\n");
-			return 1;
 		case fltk::DND_DRAG:
-			EDEBUG("DND_DRAG\n");
-			return 1;
 		case fltk::DND_LEAVE:
-			EDEBUG("DND_LEAVE\n");
 			return 1;
+
 		case fltk::DND_RELEASE: {
 			// fltk::belowmouse() can't be used within DND context :)
 			DesktopIcon* di = below_mouse(fltk::event_x_root(), fltk::event_y_root());
@@ -727,8 +863,15 @@ int Desktop::handle(int event) {
 			}
 			return 1;
 		}
-		case fltk::PASTE:
-			EDEBUG("PASTE on desktop with %s\n", fltk::event_text());
+		case fltk::PASTE: {
+			DesktopIcon* di = below_mouse(fltk::event_x_root(), fltk::event_y_root());
+			if(di) {
+				di->handle(event);
+			} else {
+				EDEBUG("PASTE on desktop with %s\n", fltk::event_text());
+				drop_source(fltk::event_text(), fltk::event_x_root(), fltk::event_y_root());
+			}
+	  	}
 			return 1;
 
 		default:
@@ -765,8 +908,8 @@ int main() {
 
 	fltk::register_images();
 
-	Desktop *desktop = new Desktop();
-	desktop->show();
+	Desktop::init();
+	Desktop::instance()->show();
 
 	/*
 	 * XSelectInput will redirect PropertyNotify messages, which
@@ -778,6 +921,8 @@ int main() {
 	while(running) 
 		fltk::wait();
 
-	delete desktop;
+	Desktop::shutdown();
+	edelib::IconTheme::shutdown();
+
 	return 0;
 }
