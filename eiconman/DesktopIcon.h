@@ -18,9 +18,6 @@
 #include <fltk/Image.h>
 #include <fltk/PopupMenu.h>
 
-#define ICON_NORMAL 1
-#define ICON_TRASH  2
-
 class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
@@ -30,7 +27,6 @@ class DesktopIcon : public fltk::Widget {
 		IconSettings* settings;
 		const GlobalIconSettings* globals;
 
-		int  type;
 		int  lwidth;
 		int  lheight;
 		bool focus;
@@ -45,7 +41,7 @@ class DesktopIcon : public fltk::Widget {
 		void update_label_size(void);
 
 	public:
-		DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int icon_type = NORMAL);
+		DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett);
 		~DesktopIcon();
 		virtual void draw(void);
 		virtual int  handle(int event);
@@ -62,6 +58,8 @@ class DesktopIcon : public fltk::Widget {
 		bool is_focused(void) { return focus;  }
 
 		fltk::Image* icon_image(void) { return (fltk::Image*)image(); }
+
+		const IconSettings* get_settings(void) const { return settings; }
 };
 
 

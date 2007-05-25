@@ -40,17 +40,28 @@ struct GlobalIconSettings {
 	bool same_size;
 };
 
-// settings related to .desktop files
+#define ICON_NORMAL  1     // .desktop file
+#define ICON_TRASH   2     // trash.desktop (specific since have two icons for empty/full)
+#define ICON_FILE    3     // real file
+#define ICON_SYMLINK 4     // symbolic link
+
+/*
+ * Settings representing related to icon on desktop. To complicate our lives
+ * (and to, at least, simplify code) it can be: 
+ *  - .desktop file content (normal or trash like)
+ *  - real file copied/moved inside ~/Desktop directory
+ *  - symlink in ~/Desktop directory pointing to the real file
+ */
 struct IconSettings {
 	int x, y;
-
-    bool cmd_is_url;             // interpret cmd as url, like system:/,trash:/,$HOME
+    int  type;
+    bool cmd_is_url;          // interpret cmd as url, like system:/,trash:/,$HOME
 	
 	edelib::String name;
 	edelib::String cmd;
 	edelib::String icon;
-	edelib::String icon2;        // for stateable icons, like trash (empty/full)
-	edelib::String desktop_name; // name used as key when storing positions
+	edelib::String icon2;     // for stateable icons, like trash (empty/full)
+	edelib::String key_name;  // name used as key when storing positions
 };
 
 // selection overlay
@@ -91,7 +102,7 @@ class Desktop : public fltk::Window {
 		void init_desktops(void);
 
 		void load_icons(const char* path, edelib::Config& conf);
-		bool read_desktop_file(const char* path, IconSettings& is, int& icon_type);
+		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);
 		void unfocus_all(void);

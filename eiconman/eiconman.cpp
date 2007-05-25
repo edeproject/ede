@@ -170,6 +170,8 @@ Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
 Desktop::~Desktop() {
 	EDEBUG(ESTRLOC ": Desktop::~Desktop()\n");
 
+	save_config();
+
 	if(selbox)
 		delete selbox;
 
@@ -275,6 +277,12 @@ void Desktop::read_config(void) {
 		conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
 
 		dsett->wp_path = wpath;
+
+		// keep path but disable wallpaper if file does not exists
+		if(!edelib::file_exists(wpath)) {
+			EDEBUG(ESTRLOC ": %s as wallpaper does not exists\n", wpath);
+			dsett->wp_use = false;
+		}
 	} else {
 		// color is already filled
 		dsett->wp_use = default_wp_use;
@@ -341,41 +349,67 @@ void Desktop::load_icons(const char* path, edelib::Config& conf) {
 	edelib::String full_path;
 	full_path.reserve(256);
 
-	for(unsigned int i = 0; i < lst.size(); i++) {
+	bool can_add = false;
+
+	edelib::MimeType mt;
+	
+	unsigned int sz = lst.size();
+	for(unsigned int i = 0; i < sz; i++) {
 		name = lst[i].c_str();
 
+		full_path = path;
+		full_path += '/';
+		full_path += name;
+
+		can_add = false;
+
+		IconSettings is;
+
+		// see is possible .desktop file, icon, name fields are filled from read_desktop_file()
 		if(edelib::str_ends(name, ".desktop")) {
+			if(read_desktop_file(full_path.c_str(), is))
+				can_add = true;
+		} else {
+			// then try to figure out it's mime; if fails, ignore it
+			if(mt.set(full_path.c_str())) {
+				/*
+				 * FIXME: MimeType fails for directories
+				 * Temp solution untill that is fixed in edelib
+				 */
+				if(edelib::dir_exists(full_path.c_str()))
+					is.icon = "folder";
+				else
+					is.icon = mt.icon_name();
 
-			full_path = path;
-			full_path += '/';
-			full_path += name;
+				// icon label is name of file
+				is.name = name;
+				is.type = ICON_FILE;
 
-			IconSettings is;
-			int icon_type;
+				can_add = true;
+			} else {
+				EDEBUG(ESTRLOC ": Failed mime-type for %s, ignoring...\n", name);
+				can_add = false;
+			}
+		}
 
-			if(read_desktop_file(full_path.c_str(), is, icon_type)) {
+		if(can_add) {
+			is.key_name = name;
+			// random_pos() is used if X/Y keys are not found
+			conf.get(name, "X", icon_x, random_pos(w() - 10));
+			conf.get(name, "Y", icon_y, random_pos(h() - 10));
 
-				// store dekstop name for key in saving positions
-				is.desktop_name = name;
+			EDEBUG(ESTRLOC ": %s found with: %i %i\n", name, icon_x, icon_y);
+			is.x = icon_x;
+			is.y = icon_y;
 
-				// random_pos() is used if X/Y keys are not found
-				conf.get(name, "X", icon_x, random_pos(w() - 10));
-				conf.get(name, "Y", icon_y, random_pos(h() - 10));
-
-				EDEBUG(ESTRLOC ": %s found with: %i %i\n", name, icon_x, icon_y);
-				is.x = icon_x;
-				is.y = icon_y;
-
-				DesktopIcon* dic = new DesktopIcon(&gisett, &is, icon_type);
-				add_icon(dic);
-			} else 
-				EDEBUG(ESTRLOC ": Skipped %s section\n", name);
+			DesktopIcon* dic = new DesktopIcon(&gisett, &is);
+			add_icon(dic);
 		}
 	}
 }
 
 // reads .desktop file content
-bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_type) {
+bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	EASSERT(path != NULL);
 
 	if(!edelib::file_exists(path)) {
@@ -398,10 +432,10 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_ty
 	 * FIXME: any other way to check for trash icons ???
 	 */
 	if(dconf.get("Desktop Entry", "EmptyIcon", buff, buffsz)) {
-		icon_type = ICON_TRASH;
+		is.type = ICON_TRASH;
 		is.icon = buff;
 	} else
-		icon_type = ICON_NORMAL;
+		is.type = ICON_NORMAL;
 
 	if(dconf.error() == edelib::CONF_ERR_SECTION) {
 		EDEBUG(ESTRLOC ": %s is not valid .desktop file\n");
@@ -410,11 +444,11 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_ty
 
 	dconf.get("Desktop Entry", "Icon", buff, buffsz);
 
-	if(icon_type == ICON_TRASH)
+	if(is.type == ICON_TRASH)
 		is.icon2 = buff;
 	else {
 		is.icon = buff;
-		icon_type = ICON_NORMAL;
+		is.type = ICON_NORMAL;
 	}
 
 	EDEBUG(ESTRLOC ": Icon is: %s\n", is.icon.c_str());
@@ -430,6 +464,10 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_ty
 	 * Specs (desktop entry file) said that Type=Link means there must
 	 * be somewhere URL key. My thoughts is that in this case Exec key
 	 * should be ignored, even if exists. Then I will follow my thoughts.
+	 *
+	 * FIXME: 'Type' should be seen as test for .desktop file; if key
+	 * is not present, then file should not be considered as .desktop. This
+	 * should be checked before all others.
 	 */
 	if(!dconf.get("Desktop Entry", "Type", buff, buffsz)) {
 		EDEBUG(ESTRLOC ": Missing mandatory Type key\n");
@@ -462,7 +500,33 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is, int& icon_ty
 }
 
 void Desktop::save_config(void) {
-	// TODO
+	edelib::Config conf;
+
+	conf.set("Desktop", "Color", dsett->color);
+	conf.set("Desktop", "WallpaperUse", dsett->wp_use);
+	conf.set("Desktop", "Wallpaper", dsett->wp_path.c_str());
+
+	conf.set("Icons", "Label Background", gisett.label_background);
+	conf.set("Icons", "Label Foreground", gisett.label_foreground);
+	conf.set("Icons", "Label Fontsize",   gisett.label_fontsize);
+	conf.set("Icons", "Label Maxwidth",   gisett.label_maxwidth);
+	conf.set("Icons", "Label Transparent",gisett.label_transparent);
+	conf.set("Icons", "Label Visible",    gisett.label_draw);
+	conf.set("Icons", "Gridspacing",      gisett.gridspacing);
+	conf.set("Icons", "OneClickExec",     gisett.one_click_exec);
+	conf.set("Icons", "AutoArrange",      gisett.auto_arr);
+
+	unsigned int sz = icons.size();
+	const IconSettings* is = NULL;
+
+	for(unsigned int i = 0; i < sz; i++) {
+		is = icons[i]->get_settings();
+		conf.set(is->key_name.c_str(), "X", icons[i]->x());
+		conf.set(is->key_name.c_str(), "Y", icons[i]->y());
+	}
+
+	if(!conf.save(CONFIG_NAME))
+		EDEBUG(ESTRLOC ": Unable to save to %s\n", CONFIG_NAME);
 }
 
 void Desktop::add_icon(DesktopIcon* ic) {
@@ -643,6 +707,7 @@ void Desktop::drop_source(const char* src, int x, int y) {
 
 	is.name = "XXX";
 	is.cmd  = "(none)";
+	is.type = ICON_NORMAL;
 	
 	edelib::MimeType mt;
 	if(!mt.set(src)) {
@@ -654,7 +719,7 @@ void Desktop::drop_source(const char* src, int x, int y) {
 
 	EDEBUG("---------> %s\n", is.icon.c_str());
 
-	DesktopIcon* dic = new DesktopIcon(&gisett, &is, ICON_NORMAL);
+	DesktopIcon* dic = new DesktopIcon(&gisett, &is);
 	add_icon(dic);
 }
 

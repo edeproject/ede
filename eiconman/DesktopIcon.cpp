@@ -45,12 +45,10 @@ void icon_delete_cb(fltk::Widget*, void* di) {
 	edelib::ask(_("Delete '%s' ?"), dicon->label());
 }
 
-DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int icon_type) :
+DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett) :
 	fltk::Widget(isett->x, isett->y, ICONSIZE, ICONSIZE), settings(NULL) 
 {		
 	EASSERT(gisett != NULL); EASSERT(isett != NULL);
-
-	type = icon_type;
 
 	lwidth = lheight = 0;
 	focus = false;
@@ -69,6 +67,8 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int ic
 	settings->name = isett->name;
 	settings->cmd  = isett->cmd;
 	settings->icon = isett->icon;
+	settings->type = isett->type;
+	settings->key_name= isett->key_name;
 
 	// x,y are not needed since x(), y() are filled with it
 	
@@ -107,7 +107,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int ic
 
 	pmenu = new fltk::PopupMenu(0, 0, 100, 100);
 	pmenu->begin();
-		if(type == ICON_TRASH) {
+		if(settings->type == ICON_TRASH) {
 			edelib::Item* it = new edelib::Item(_("&Open"));
 			it->offset_x(12, 12);
 			it = new edelib::Item(_("&Properties"));
