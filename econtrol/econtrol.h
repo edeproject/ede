@@ -1,10 +1,10 @@
 #ifndef __ECONTROL_H__
 #define __ECONTROL_H__
 
-#include <fltk/Window.h>
-#include <fltk/Group.h>
-#include <fltk/InvisibleBox.h>
-#include <fltk/Button.h>
+#include <FL/Fl_Window.h>
+#include <FL/Fl_Group.h>
+#include <FL/Fl_Box.h>
+#include <FL/Fl_Button.h>
 
 #include <edelib/IconTheme.h>
 #include <edelib/ExpandableGroup.h>
@@ -18,26 +18,25 @@ struct ControlIcon {
 	int  pos;
 };
 
-class ControlButton : public fltk::Button {
+class ControlButton : public Fl_Button {
 	private:
-		fltk::InvisibleBox* tip;
+		Fl_Box* tip;
 		edelib::String tipval;
 	public:
-		ControlButton(fltk::InvisibleBox* t, edelib::String tv, int x, int y, int w, int h, const char* l = 0);
+		ControlButton(Fl_Box* t, edelib::String tv, int x, int y, int w, int h, const char* l = 0);
 		~ControlButton();
-		void draw(void);
 		int handle(int event);
 };
 
-class ControlWin : public fltk::Window {
+class ControlWin : public Fl_Window {
 	private:
-		fltk::Group* titlegrp;
-		fltk::InvisibleBox* title;
-		fltk::Button* close;
-		fltk::Button* options;
+		Fl_Group* titlegrp;
+		Fl_Box* title;
+		Fl_Button* close;
+		//Fl_Button* options;
 		edelib::ExpandableGroup* icons;
-		fltk::InvisibleBox* rbox;
-		fltk::InvisibleBox* tipbox;
+		Fl_Box* rbox;
+		Fl_Box* tipbox;
 
 		edelib::vector<ControlIcon> iconlist;
 

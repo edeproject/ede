@@ -6,86 +6,52 @@
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
 
-#include <fltk/run.h>
-#include <fltk/SharedImage.h>
-#include <fltk/Rectangle.h>
-#include <fltk/events.h>
-#include <fltk/layout.h>
-#include <fltk/damage.h>
-#include <fltk/draw.h> // measure
+#include <FL/Fl.h>
+#include <FL/Fl_Shared_Image.h>
+#include <FL/fl_draw.h>
 
 using namespace edelib;
-using namespace fltk;
 
-ControlButton::ControlButton(InvisibleBox* t, String tv, int x, int y, int w, int h, const char* l) : 
-Button(x, y, w, h, l) {
+ControlButton::ControlButton(Fl_Box* t, String tv, int x, int y, int w, int h, const char* l) : 
+Fl_Button(x, y, w, h, l) {
 	tip = t;
 	tipval = tv;
-	//box(UP_BOX);
-	box(FLAT_BOX);
-	align(ALIGN_WRAP|ALIGN_CLIP|ALIGN_TOP);
-	//align(ALIGN_WRAP);
-	color(WHITE);
+	box(FL_FLAT_BOX);
+	align(FL_ALIGN_WRAP);
+	color(FL_WHITE);
 }
 
 ControlButton::~ControlButton() {
 }
 
-void ControlButton::draw(void) {
-	draw_box();
-
-	int iw = 0;
-	int ih = 0;
-
-	if(image()) {
-		((fltk::Image*)image())->measure(iw, ih);
-		int ix = (w()/2)-(iw/2);
-		int iy = 5;
-		((fltk::Image*)image())->draw(ix, iy);
-
-		Rectangle r(0, ih+10, w(),h()); 
-		box()->inset(r);
-		drawtext(label(), r, flags());
-	} else
-		draw_label();
-}
-
 int ControlButton::handle(int event) {
 	switch(event) {
-		case ENTER:
+		case FL_ENTER:
 			tip->label(tipval.c_str());
-			tip->redraw_label();
 			return 1;
-		case LEAVE:
+		case FL_LEAVE:
 			tip->label("");
-			tip->redraw_label();
 			return 1;
-		case PUSH:
-			/*color(fltk::GRAY85);
-			box(fltk::DOWN_BOX);
-			redraw();*/
+		case FL_PUSH:
 			return 1;
-		case RELEASE:
-			/*color(fltk::WHITE);
-			box(fltk::FLAT_BOX);
-			redraw();*/
+		case FL_RELEASE:
 			return 1;
 		default:
-			return Button::handle(event);
+			return Fl_Button::handle(event);
 	}
-	return Button::handle(event);
+	return Fl_Button::handle(event);
 }
 
-void close_cb(Widget*, void* w) {
+void close_cb(Fl_Widget*, void* w) {
 	ControlWin* cw = (ControlWin*)w;
 	cw->do_close();
 }
 
-ControlWin::ControlWin(const char* title, int w, int h) : Window(w, h, title) {
+ControlWin::ControlWin(const char* title, int w, int h) : Fl_Window(w, h, title) {
 
 	IconTheme::init("edeneu");
 
-	register_images();
+	fl_register_images();
 	load_icons();
 	init();
 }
@@ -142,47 +108,45 @@ void ControlWin::load_icons(void) {
 
 void ControlWin::init(void) {
 	begin();
-		titlegrp = new Group(0, 0, 455, 50);
-		titlegrp->box(FLAT_BOX);
-		titlegrp->color((Color)0x5271a200);
+		titlegrp = new Fl_Group(0, 0, 455, 50);
+		titlegrp->box(FL_FLAT_BOX);
+		titlegrp->color(138);
 		titlegrp->begin();
-			title = new InvisibleBox(10, 10, 435, 30, label());
-			title->color((Color)0x5271a200);
-			title->align(ALIGN_LEFT|ALIGN_INSIDE);
-			title->labelcolor((Color)0xffffff00);
-			title->labelfont(HELVETICA_BOLD);
+			title = new Fl_Box(10, 10, 435, 30, label());
+			title->color(138);
+			title->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+			title->labelcolor(23);
+			title->labelfont(FL_HELVETICA_BOLD);
 			title->labelsize(16);
 		titlegrp->end();
 		titlegrp->resizable(title);
 
 		icons = new ExpandableGroup(10, 60, 435, 225);
-		icons->box(DOWN_BOX);
-		icons->color((Color)0xffffff00);
+		icons->box(FL_DOWN_BOX);
+		icons->color(FL_BACKGROUND2_COLOR);
+		icons->end();
 
-		tipbox = new InvisibleBox(10, 295, 240, 25, _("Double click on desired item"));
-		tipbox->box(FLAT_BOX);
-		tipbox->align(ALIGN_LEFT|ALIGN_INSIDE|ALIGN_CLIP);
+		tipbox = new Fl_Box(10, 295, 240, 25, _("Double click on desired item"));
+		tipbox->box(FL_FLAT_BOX);
+		tipbox->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
 
 		for(unsigned int i = 0; i < iconlist.size(); i++) {
 			ControlButton* b = new ControlButton(tipbox, iconlist[i].tip, 0, 0, 80, 100);
 			//String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_MEDIUM);
 			String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_LARGE);
-
-			//EDEBUG("%s\n", iconpath.c_str());
-
 			b->label(iconlist[i].name.c_str());
 
 			if(!iconpath.empty())
-				b->image(SharedImage::get(iconpath.c_str()));
+				b->image(Fl_Shared_Image::get(iconpath.c_str()));
 			icons->add(b);
 		}
 
-		options = new Button(260, 295, 90, 25, _("&Options"));
-		close = new Button(355, 295, 90, 25, _("&Close"));
+		//options = new Fl_Button(260, 295, 90, 25, _("&Options"));
+		close = new Fl_Button(355, 295, 90, 25, _("&Close"));
 		close->callback(close_cb, this);
 
 		// resizable invisible box
-		rbox = new InvisibleBox(10, 220, 120, 65);
+		rbox = new Fl_Box(10, 220, 120, 65);
 		resizable(rbox);
 	end();
 }
@@ -194,5 +158,5 @@ void ControlWin::do_close(void) {
 int main() {
 	ControlWin cw(_("EDE Control Panel"));
 	cw.show();
-	return run();
+	return Fl::run();
 }
