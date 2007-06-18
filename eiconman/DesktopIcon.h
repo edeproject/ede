@@ -13,16 +13,17 @@
 #ifndef __DESKTOPICON_H__
 #define __DESKTOPICON_H__
 
-#include <fltk/Widget.h>
-#include <fltk/Window.h>
-#include <fltk/Image.h>
-#include <fltk/PopupMenu.h>
+#include <FL/Fl_Widget.h>
+#include <FL/Fl_Window.h>
+#include <FL/Fl_Box.h>
+#include <FL/Fl_Button.h>
+#include <FL/Fl_Image.h>
 
 class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
 
-class DesktopIcon : public fltk::Widget {
+class DesktopIcon : public Fl_Button {
 	private:
 		IconSettings* settings;
 		const GlobalIconSettings* globals;
@@ -31,23 +32,32 @@ class DesktopIcon : public fltk::Widget {
 		int  lheight;
 		bool focus;
 
-		// pseudosizes (nor real icon sizes)
-		int  image_w;
-		int  image_h;
-
-		fltk::PopupMenu* pmenu;
 		MovableIcon* micon;
 
 		void update_label_size(void);
 
 	public:
-		DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett);
+		DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int bg);
 		~DesktopIcon();
+
 		virtual void draw(void);
 		virtual int  handle(int event);
+
 		void drag(int x, int y, bool apply);
 		int  drag_icon_x(void);
 		int  drag_icon_y(void);
+
+		/*
+		 * This is 'enhanced' (in some sense) redraw(). Redrawing
+		 * icon will not fully redraw label nor focus box, which laid outside 
+		 * icon box. It will use damage() on given region, but called from
+		 * parent, so parent can redraw that region on itself (since label does
+		 * not laid on any box)
+		 *
+		 * Alternative way would be to redraw whole parent, but it is pretty unneeded
+		 * and slow.
+		 */
+		void fast_redraw(void);
 
 		/*
 		 * Here is implemented localy focus schema avoiding
@@ -57,19 +67,20 @@ class DesktopIcon : public fltk::Widget {
 		void do_unfocus(void) { focus = false; }
 		bool is_focused(void) { return focus;  }
 
-		fltk::Image* icon_image(void) { return (fltk::Image*)image(); }
+		Fl_Image* icon_image(void) { return image(); }
 
 		const IconSettings* get_settings(void) const { return settings; }
 };
 
-
-class MovableIcon : public fltk::Window {
+class MovableIcon : public Fl_Window {
 	private:
 		DesktopIcon* icon;
+		Fl_Box* icon_box;
 
 	public:
 		MovableIcon(DesktopIcon* i);
 		~MovableIcon();
+		virtual void show(void);
 };
 
 #endif

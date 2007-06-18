@@ -12,60 +12,38 @@
 
 #include "eiconman.h"
 #include "DesktopIcon.h"
-#include "DesktopConfig.h"
 #include "Utils.h"
+#include "Wallpaper.h"
 
-#include <edelib/Nls.h>
 #include <edelib/Debug.h>
-#include <edelib/Config.h>
-#include <edelib/Directory.h>
-#include <edelib/StrUtil.h>
 #include <edelib/File.h>
-#include <edelib/IconTheme.h>
-#include <edelib/Item.h>
+#include <edelib/Directory.h>
 #include <edelib/MimeType.h>
+#include <edelib/StrUtil.h>
+#include <edelib/IconTheme.h>
 
-#include <fltk/Divider.h>
-#include <fltk/damage.h>
-#include <fltk/Color.h>
-#include <fltk/events.h>
-#include <fltk/run.h>
-#include <fltk/x11.h>
-#include <fltk/SharedImage.h>
+#include <FL/Fl.h>
+#include <FL/Fl_Shared_Image.h>
+#include <FL/x.h>
+#include <FL/Fl_Box.h>
 
 #include <signal.h>
-#include <X11/Xproto.h> // CARD32
-
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
-#include <stdio.h>  // snprintf
 
-/*
- * NOTE: DO NOT set 'using namespace fltk' here
- * since fltk::Window will collide with Window from X11
- * resulting compilation errors.
- *
- * This is why I hate this namespace shit !
- */
+#define CONFIG_NAME  "eiconman.conf"
 
-#define CONFIG_NAME          "eiconman.conf"
-
-#define SELECTION_SINGLE (fltk::event_button() == 1)
-#define SELECTION_MULTI (fltk::event_button() == 1 && \
-	 (fltk::get_key_state(fltk::LeftShiftKey) ||\
-	  fltk::get_key_state(fltk::RightShiftKey)))
+#define SELECTION_SINGLE (Fl::event_button() == 1)
+#define SELECTION_MULTI (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
 
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
-/*
- * Added since fltk DAMAGE_OVERLAY value is used in few different contexts
- * and re-using it will do nothing. Yuck!
- */
-#define EDAMAGE_OVERLAY  2
+// which widgets Fl::belowmouse() to skip
+#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper))
 
 Desktop* Desktop::pinstance = NULL;
-bool running = true;
+bool running = false;
 
 inline unsigned int random_pos(int max) { 
 	return (rand() % max); 
@@ -76,10 +54,10 @@ inline bool intersects(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
 			MAX(y1, y2) <= MIN(h1, h2));
 }
 
+// assume fl_open_display() is called before
 inline void dpy_sizes(int& width, int& height) {
-	fltk::open_display();
-	width = DisplayWidth(fltk::xdisplay, fltk::xscreen);
-	height = DisplayHeight(fltk::xdisplay, fltk::xscreen);
+	width = DisplayWidth(fl_display, fl_screen);
+	height = DisplayHeight(fl_display, fl_screen);
 }
 
 void exit_signal(int signum) {
@@ -87,103 +65,43 @@ void exit_signal(int signum) {
     running = false;
 }
 
-/*
- * It is used to notify desktop when _NET_CURRENT_DESKTOP is triggered.
- * FIXME: _NET_WORKAREA is nice thing that could set here too :)
- *
- * FIXME: XInternAtom should be placed somewhere else
- */
-int desktop_xmessage_handler(int e, fltk::Window*) {
-	Atom nd = XInternAtom(fltk::xdisplay, "_NET_CURRENT_DESKTOP", False);
-
-	if(fltk::xevent.type == PropertyNotify) {
-		if(fltk::xevent.xproperty.atom == nd) {
-			EDEBUG(ESTRLOC ": Desktop changed !!!\n");
-			return 1;
-		}
-	}
-
-	return 0;
+void restart_signal(int signum) {
+	EDEBUG(ESTRLOC ": Restarting (got signal %d)\n", signum);
 }
 
-void background_cb(fltk::Widget*, void*) {
-	DesktopConfig dc;
-	dc.run();
-}
+int desktop_xmessage_handler(int event) { return 0; }
 
-Desktop::Desktop() : fltk::Window(0, 0, 100, 100, "")
-{
+Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
+
+	selection_x = selection_y = 0;
 	moving = false;
 
-	desktops_num = 0;
-	curr_desktop = 0;
-
-	selbox = new SelectionOverlay;
-	selbox->x = selbox->y = selbox->w = selbox->h = 0;
-	selbox->show = false;
-
 	dsett = new DesktopSettings;
-	dsett->color = 0;
+	dsett->color = FL_GRAY;
 	dsett->wp_use = false;
-	dsett->wp_image = NULL;
-
-	// fallback if update_workarea() fails
-	int dw, dh;
-	dpy_sizes(dw, dh);
-	resize(dw, dh);
 
 	update_workarea();
 
-	read_config();
-
+	/*
+	 * NOTE: order how childs are added is important. First
+	 * non iconable ones should be added (wallpaper, menu, ...)
+	 * then icons, so they can be drawn at top of them.
+	 */
 	begin();
-
-	pmenu = new fltk::PopupMenu(0, 0, 450, 50);
-	pmenu->begin();
-		edelib::Item* it = new edelib::Item(_("&New desktop item"));
-		it->offset_x(12, 12);
-		new fltk::Divider();
-		it = new edelib::Item(_("&Line up vertical"));
-		it->offset_x(12, 12);
-		it = new edelib::Item(_("&Line up horizontal"));
-		it->offset_x(12, 12);
-		it = new edelib::Item(_("&Arrange by name"));
-		it->offset_x(12, 12);
-		new fltk::Divider();
-		it = new edelib::Item(_("&Icon settings"));
-		it->offset_x(12, 12);
-
-		edelib::Item* itbg = new edelib::Item(_("&Background settings"));
-		itbg->offset_x(12, 12);
-		itbg->callback(background_cb);
-	pmenu->end();
-	pmenu->type(fltk::PopupMenu::POPUP3);
-
+		wallpaper = new Wallpaper(0, 0, w(), h());
+		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
 	end();
 
-	if(dsett->wp_use)
-		set_wallpaper(dsett->wp_path.c_str(), false);
-	else
-		set_bg_color(dsett->color, false);
+	read_config();
+
+	set_bg_color(dsett->color, false);
+	running = true;
 }
 
-Desktop::~Desktop() {
-	EDEBUG(ESTRLOC ": Desktop::~Desktop()\n");
+Desktop::~Desktop() { 
+	EDEBUG("Desktop::~Desktop()\n");
 
-	save_config();
-
-	if(selbox)
-		delete selbox;
-
-	/*
-	 * icons member deleting is not needed, since add_icon will
-	 * append to icons and to fltk::Group array. Desktop at the end
-	 * will cleanup fltk::Group array.
-	 */
-	icons.clear();
-
-	if(dsett)
-		delete dsett;
+	delete dsett;
 }
 
 void Desktop::init(void) {
@@ -205,49 +123,43 @@ Desktop* Desktop::instance(void) {
 	return Desktop::pinstance;
 }
 
-void Desktop::update_workarea(void) {
-	int X,Y,W,H;
-	if(net_get_workarea(X, Y, W, H))
-    	resize(X,Y,W,H);
+/*
+ * This function must be overriden so window can inform
+ * wm to see it as desktop. It will send data when window
+ * is created, but before is shown.
+ */
+void Desktop::show(void) {
+	if(!shown()) {
+		Fl_X::make_xid(this);
+		net_make_me_desktop(this);
+	}
 }
 
-void Desktop::set_bg_color(unsigned int c, bool do_redraw) {
-	EASSERT(dsett != NULL);
+/*
+ * If someone intentionaly hide desktop
+ * then quit from it.
+ */
+void Desktop::hide(void) {
+	running = false;
+}
+
+void Desktop::update_workarea(void) {
+	int X, Y, W, H;
+	if(!net_get_workarea(X, Y, W, H)) {
+		EWARNING(ESTRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
+		X = Y = 0;
+		dpy_sizes(W, H);
+	}
+
+	resize(X, Y, W, H);
+}
+
+void Desktop::set_bg_color(int c, bool do_redraw) {
+	if(color() == c)
+		return;
 
 	dsett->color = c;
 	color(c);
-
-	if(do_redraw)
-		redraw();
-}
-
-void Desktop::set_wallpaper(const char* path, bool do_redraw) {
-	EASSERT(path != NULL);
-	EASSERT(dsett != NULL);
-	/*
-	 * Prevent cases 'set_wallpaper(dsett->wp_path.c_str())' since assignement
-	 * will nullify pointers. Very hard to find bug! (believe me, after few hours)
-	 */
-	if(dsett->wp_path.c_str() != path)
-		dsett->wp_path = path;
-
-	dsett->wp_image = fltk::SharedImage::get(path);
-	/*
-	 * SharedImage::get() will return NULL if is unable to read the image
-	 * and that is exactly what is wanted here since draw() function will
-	 * skip drawing image in nulled case. Blame user for this :)
-	 */
-	image(dsett->wp_image);
-
-	if(do_redraw)
-		redraw();
-}
-
-void Desktop::set_wallpaper(fltk::Image* im, bool do_redraw) {
-	if(dsett->wp_image == im)
-		return;
-
-	image(dsett->wp_image);
 	if(do_redraw)
 		redraw();
 }
@@ -255,7 +167,7 @@ void Desktop::set_wallpaper(fltk::Image* im, bool do_redraw) {
 void Desktop::read_config(void) {
 	edelib::Config conf;
 	if(!conf.load(CONFIG_NAME)) {
-		EDEBUG(ESTRLOC ": Can't load %s, using default...\n", CONFIG_NAME);
+		EWARNING(ESTRLOC ": Can't load %s, using default...\n", CONFIG_NAME);
 		return;
 	}
 
@@ -264,19 +176,16 @@ void Desktop::read_config(void) {
 	 * Add IconArea[X,Y,W,H] so icons can live
 	 * inside that area only (aka margins).
 	 */
-
-	// read Desktop section
-	int  default_bg_color = fltk::BLUE;
+	int  default_bg_color = FL_BLUE;
 	int  default_wp_use   = false;
 	char wpath[256];
 
+	// read Desktop section
 	conf.get("Desktop", "Color", dsett->color, default_bg_color);
 
 	if(conf.error() != edelib::CONF_ERR_SECTION) {
 		conf.get("Desktop", "WallpaperUse", dsett->wp_use, default_wp_use);
 		conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
-
-		dsett->wp_path = wpath;
 
 		// keep path but disable wallpaper if file does not exists
 		if(!edelib::file_exists(wpath)) {
@@ -289,15 +198,14 @@ void Desktop::read_config(void) {
 	}
 
 	// read Icons section
-	conf.get("Icons", "Label Background", gisett.label_background, 46848);
-	conf.get("Icons", "Label Foreground", gisett.label_foreground, fltk::WHITE);
+	conf.get("Icons", "Label Background", gisett.label_background, FL_BLUE);
+	conf.get("Icons", "Label Foreground", gisett.label_foreground, FL_WHITE);
 	conf.get("Icons", "Label Fontsize",   gisett.label_fontsize, 12);
 	conf.get("Icons", "Label Maxwidth",   gisett.label_maxwidth, 75);
 	conf.get("Icons", "Label Transparent",gisett.label_transparent, false);
 	conf.get("Icons", "Label Visible",    gisett.label_draw, true);
-	conf.get("Icons", "Gridspacing",      gisett.gridspacing, 16);
 	conf.get("Icons", "OneClickExec",     gisett.one_click_exec, false);
-	conf.get("Icons", "AutoArrange",      gisett.auto_arr, true);
+	conf.get("Icons", "AutoArrange",      gisett.auto_arrange, true);
 
 	/*
 	 * Now try to load icons, first looking inside ~/Desktop directory
@@ -306,25 +214,17 @@ void Desktop::read_config(void) {
 	 *
 	 * FIXME: dir_exists() can't handle '~/Desktop' ???
 	 */
-	//load_icons("/home/sanel/Desktop", conf);
 	edelib::String dd = edelib::dir_home();
+	if(dd.empty()) {
+		EWARNING(ESTRLOC ": Can't read home directory; icons will not be loaded\n");
+		return;
+	}
 	dd += "/Desktop";
 	load_icons(dd.c_str(), conf);
+}
 
-#if 0
-	EDEBUG("----------------------------------------------------------\n");
-	EDEBUG("d Color       : %i\n", bg_color);
-	EDEBUG("d WallpaperUse: %i\n", wp_use);
-	EDEBUG("i label bkg   : %i\n", gisett.label_background);
-	EDEBUG("i label fg    : %i\n", gisett.label_foreground);
-	EDEBUG("i label fsize : %i\n", gisett.label_fontsize);
-	EDEBUG("i label maxw  : %i\n", gisett.label_maxwidth);
-	EDEBUG("i label trans : %i\n", gisett.label_transparent);
-	EDEBUG("i label vis   : %i\n", gisett.label_draw);
-	EDEBUG("i gridspace   : %i\n", gisett.gridspacing);
-	EDEBUG("i oneclick    : %i\n", gisett.one_click_exec);
-	EDEBUG("i auto_arr    : %i\n", gisett.auto_arr);
-#endif
+void Desktop::save_config(void) {
+	// TODO
 }
 
 void Desktop::load_icons(const char* path, edelib::Config& conf) {
@@ -372,15 +272,7 @@ void Desktop::load_icons(const char* path, edelib::Config& conf) {
 		} else {
 			// then try to figure out it's mime; if fails, ignore it
 			if(mt.set(full_path.c_str())) {
-				/*
-				 * FIXME: MimeType fails for directories
-				 * Temp solution untill that is fixed in edelib
-				 */
-				if(edelib::dir_exists(full_path.c_str()))
-					is.icon = "folder";
-				else
-					is.icon = mt.icon_name();
-
+				is.icon = mt.icon_name();
 				// icon label is name of file
 				is.name = name;
 				is.type = ICON_FILE;
@@ -402,13 +294,13 @@ void Desktop::load_icons(const char* path, edelib::Config& conf) {
 			is.x = icon_x;
 			is.y = icon_y;
 
-			DesktopIcon* dic = new DesktopIcon(&gisett, &is);
+			DesktopIcon* dic = new DesktopIcon(&gisett, &is, dsett->color);
 			add_icon(dic);
 		}
 	}
 }
 
-// reads .desktop file content
+// read .desktop files
 bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	EASSERT(path != NULL);
 
@@ -499,82 +391,53 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	return true;
 }
 
-void Desktop::save_config(void) {
-	edelib::Config conf;
-
-	conf.set("Desktop", "Color", dsett->color);
-	conf.set("Desktop", "WallpaperUse", dsett->wp_use);
-	conf.set("Desktop", "Wallpaper", dsett->wp_path.c_str());
-
-	conf.set("Icons", "Label Background", gisett.label_background);
-	conf.set("Icons", "Label Foreground", gisett.label_foreground);
-	conf.set("Icons", "Label Fontsize",   gisett.label_fontsize);
-	conf.set("Icons", "Label Maxwidth",   gisett.label_maxwidth);
-	conf.set("Icons", "Label Transparent",gisett.label_transparent);
-	conf.set("Icons", "Label Visible",    gisett.label_draw);
-	conf.set("Icons", "Gridspacing",      gisett.gridspacing);
-	conf.set("Icons", "OneClickExec",     gisett.one_click_exec);
-	conf.set("Icons", "AutoArrange",      gisett.auto_arr);
-
-	unsigned int sz = icons.size();
-	const IconSettings* is = NULL;
-
-	for(unsigned int i = 0; i < sz; i++) {
-		is = icons[i]->get_settings();
-		conf.set(is->key_name.c_str(), "X", icons[i]->x());
-		conf.set(is->key_name.c_str(), "Y", icons[i]->y());
-	}
-
-	if(!conf.save(CONFIG_NAME))
-		EDEBUG(ESTRLOC ": Unable to save to %s\n", CONFIG_NAME);
-}
-
 void Desktop::add_icon(DesktopIcon* ic) {
 	EASSERT(ic != NULL);
 
 	icons.push_back(ic);
-	add(ic);
+	// FIXME: validate this
+	add((Fl_Widget*)ic);
 }
 
-void Desktop::move_selection(int x, int y, bool apply) {
-	unsigned int sz = selectionbuff.size();	
-	if(sz == 0)
-		return;
-
-	int prev_x, prev_y, tmp_x, tmp_y;
-
-	for(unsigned int i = 0; i < sz; i++) {
-		prev_x = selectionbuff[i]->drag_icon_x();
-		prev_y = selectionbuff[i]->drag_icon_y();
-
-		tmp_x = x - selection_x;
-		tmp_y = y - selection_y;
-
-		selectionbuff[i]->drag(prev_x+tmp_x, prev_y+tmp_y, apply);
-
-		// very slow if is not checked
-		if(apply == true)
-			selectionbuff[i]->redraw();
-	}
-
-	selection_x = x;
-	selection_y = y;
-}
-
-void Desktop::unfocus_all(void) {
+void Desktop::unfocus_all(void) { 
 	unsigned int sz = icons.size();
+	DesktopIcon* ic;
 
 	for(unsigned int i = 0; i < sz; i++) {
-		if(icons[i]->is_focused()) {
-			icons[i]->do_unfocus();
-			icons[i]->redraw();
+		ic = icons[i];
+		if(ic->is_focused()) {
+			ic->do_unfocus();
+			ic->fast_redraw();
 		}
 	}
-
-	redraw();
 }
 
-bool Desktop::in_selection(const DesktopIcon* ic) {
+void Desktop::select(DesktopIcon* ic) { 
+	EASSERT(ic != NULL);
+
+	if(in_selection(ic))
+		return;
+
+	selectionbuff.push_back(ic);
+
+	if(!ic->is_focused()) {
+		ic->do_focus();
+		ic->fast_redraw();
+	}
+}
+
+void Desktop::select_only(DesktopIcon* ic) { 
+	EASSERT(ic != NULL);
+
+	unfocus_all();
+	selectionbuff.clear();
+	selectionbuff.push_back(ic);
+
+	ic->do_focus();
+	ic->fast_redraw();
+}
+
+bool Desktop::in_selection(const DesktopIcon* ic) { 
 	EASSERT(ic != NULL);
 
 	unsigned int sz = selectionbuff.size();
@@ -586,94 +449,47 @@ bool Desktop::in_selection(const DesktopIcon* ic) {
 	return false;
 }
 
-void Desktop::select(DesktopIcon* ic) {
-	EASSERT(ic != NULL);
-
-	if(in_selection(ic))
+void Desktop::move_selection(int x, int y, bool apply) { 
+	unsigned int sz = selectionbuff.size();
+	if(sz == 0)
 		return;
 
-	selectionbuff.push_back(ic);
-
-	if(!ic->is_focused()) {
-		ic->do_focus();
-		ic->redraw();
-	}
-
-	redraw();
-}
-
-void Desktop::select_noredraw(DesktopIcon* ic) {
-	EASSERT(ic != NULL);
-
-	if(in_selection(ic))
-		return;
-	selectionbuff.push_back(ic);
-}
-
-void Desktop::select_only(DesktopIcon* ic) {
-	EASSERT(ic != NULL);
-
-	unfocus_all();
-
-	selectionbuff.clear();
-	selectionbuff.push_back(ic);
-
-	ic->do_focus();
-	ic->redraw();
-
-	redraw();
-}
-
-void Desktop::select_in_area(void) {
-	if(!selbox->show)
-		return;
-
-	int ax = selbox->x;
-	int ay = selbox->y;
-	int aw = selbox->w;
-	int ah = selbox->h;
-
-	if(aw < 0) {
-		ax += aw;
-		aw = -aw;
-	} else if(!aw)
-		aw = 1;
-
-	if(ah < 0) {
-		ay += ah;
-		ah = -ah;
-	} else if(!ah)
-		ah = 1;
-
-	/*
-	 * XXX: This function can fail since icon coordinates are absolute (event_x_root)
-	 * but selbox use relative (event_root). It will work as expected if desktop is at x=0 y=0.
-	 * This should be checked further.
-	 */
-	unsigned int sz = icons.size();
-	DesktopIcon* ic = NULL;
+	int prev_x, prev_y, tmp_x, tmp_y;
+	DesktopIcon* ic;
 
 	for(unsigned int i = 0; i < sz; i++) {
-		ic = icons[i];
-		EASSERT(ic != NULL && "Impossible to happen");
+		ic = selectionbuff[i];
 
-		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
-			if(!ic->is_focused()) {
-				ic->do_focus();
-				ic->redraw();
-			}
-		} else {
-			if(ic->is_focused()) {
-				ic->do_unfocus();
-				ic->redraw();
-			}
-		}
+		prev_x = ic->drag_icon_x();
+		prev_y = ic->drag_icon_y();
+
+		tmp_x = x - selection_x;
+		tmp_y = y - selection_y;
+
+		ic->drag(prev_x + tmp_x, prev_y + tmp_y, apply);
+
+		// very slow if not checked
+		if(apply == true)
+			ic->fast_redraw();
 	}
+
+	selection_x = x;
+	selection_y = y;
+
+	/*
+	 * Redraw whole screen so it reflects
+	 * new icon position
+	 */
+	if(apply)
+		redraw();
 }
 
+#if 0
 /*
- * Tries to figure out icon below mouse (used for DND)
- * If fails, return NULL
+ * Tries to figure out icon below mouse. It is alternative to
+ * Fl::belowmouse() since with this we hunt only icons, not other
+ * childs (wallpaper, menu), which can be returned by Fl::belowmouse()
+ * and bad things be hapened.
  */
 DesktopIcon* Desktop::below_mouse(int px, int py) {
 	unsigned int sz = icons.size();
@@ -681,129 +497,39 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 	DesktopIcon* ic = NULL;
 	for(unsigned int i = 0; i < sz; i++) {
 		ic = icons[i];
-		EASSERT(ic != NULL && "Impossible to happen");
-
 		if(ic->x() < px && ic->y() < py && px < (ic->x() + ic->h()) && py < (ic->y() + ic->h()))
 			return ic;
 	}
 
 	return NULL;
 }
-
-
-// used to drop dnd context on desktop figuring out what it can be
-void Desktop::drop_source(const char* src, int x, int y) {
-	if(!src)
-		return;
-	IconSettings is;
-	is.x = x;
-	is.y = y;
-
-	// absolute path we (for now) see as non-url
-	if(src[0] == '/')
-		is.cmd_is_url = false;
-	else
-		is.cmd_is_url = true;
-
-	is.name = "XXX";
-	is.cmd  = "(none)";
-	is.type = ICON_NORMAL;
-	
-	edelib::MimeType mt;
-	if(!mt.set(src)) {
-		EDEBUG("MimeType for %s failed, not dropping icon\n", src);
-		return;
-	}
-
-	is.icon = mt.icon_name();
-
-	EDEBUG("---------> %s\n", is.icon.c_str());
-
-	DesktopIcon* dic = new DesktopIcon(&gisett, &is);
-	add_icon(dic);
-}
-
-void Desktop::draw(void) {
-#if 0
-	if(damage() & fltk::DAMAGE_ALL) {
-		fltk::Window::draw();
-	}
 #endif
-
-	if(damage() & fltk::DAMAGE_ALL) {
-		clear_flag(fltk::HIGHLIGHT);
-
-		int nchild = children();
-		if(damage() & ~fltk::DAMAGE_CHILD) {
-			draw_box();
-			draw_label();
-
-			for(int i = 0; i < nchild; i++) {
-				fltk::Widget& ch = *child(i);
-				draw_child(ch);
-				draw_outside_label(ch);
-			}
-		} else {
-			for(int i = 0; i < nchild; i++) {
-				fltk::Widget& ch = *child(i);
-				if(ch.damage() & fltk::DAMAGE_CHILD_LABEL) {
-					draw_outside_label(ch);
-					ch.set_damage(ch.damage() & ~fltk::DAMAGE_CHILD_LABEL);
-				}
-				update_child(ch);
-			}
-		}
-	}
-
-	if(damage() & (fltk::DAMAGE_ALL|EDAMAGE_OVERLAY)) {
-		clear_xoverlay();
-
-		if(selbox->show)
-			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
-		/*
-		 * now scan all icons and see if they needs redraw, and if do
-		 * just update their label since it is indicator of selection
-		 */
-		for(int i = 0; i < children(); i++) {
-			if(child(i)->damage() == fltk::DAMAGE_ALL) {
-				child(i)->set_damage(fltk::DAMAGE_CHILD_LABEL);
-				update_child(*child(i));
-			}
-		}
-	}
-}
 
 int Desktop::handle(int event) {
 	switch(event) {
-		case fltk::FOCUS:
-		case fltk::UNFOCUS:
+		case FL_FOCUS:
+		case FL_UNFOCUS:
 			return 1;
 
-		case fltk::PUSH: {
+		case FL_PUSH: {
 			/*
 			 * First check where we clicked. If we do it on desktop
 			 * unfocus any possible focused childs, and handle
 			 * specific clicks. Otherwise, do rest for childs.
 			 */
-			fltk::Widget* clicked = fltk::belowmouse();
-			EDEBUG(ESTRLOC ": %i\n", fltk::event_button());
-
-			if(clicked == this) {
-				unfocus_all();
+			Fl_Widget* clicked = Fl::belowmouse();
+			
+			if(NOT_SELECTABLE(clicked)) {
 				EDEBUG(ESTRLOC ": DESKTOP CLICK !!!\n");
-
-				if(!selectionbuff.empty())
+				if(!selectionbuff.empty()) {
+					/*
+					 * only focused are in selectionbuff, so this is 
+					 * fine to do; also will prevent full redraw when
+					 * is clicked on desktop
+					 */
+					unfocus_all();
 					selectionbuff.clear();
-
-				if(fltk::event_button() == 3)
-					pmenu->popup();
-
-				// track position so moving can be deduced
-				if(fltk::event_button() == 1) {
-					selbox->x = fltk::event_x();
-					selbox->y = fltk::event_y();
 				}
-
 				return 1;
 			}
 
@@ -818,15 +544,13 @@ int Desktop::handle(int event) {
 				return 1;
 
 			if(SELECTION_MULTI) {
-				fltk::event_is_click(0);
+				Fl::event_is_click(0);
 				select(tmp_icon);
 				return 1;
-			} else if (SELECTION_SINGLE) {
-
+			} else if(SELECTION_SINGLE) {
 				if(!in_selection(tmp_icon))
 					select_only(tmp_icon);
-
-			} else if (fltk::event_button() == 3)
+			} else if(Fl::event_button() == 3)
 				select_only(tmp_icon);
 
 			/* 
@@ -834,157 +558,79 @@ int Desktop::handle(int event) {
 			 * Also prevent click on other mouse buttons during move.
 			 */
 			if(!moving)
-				tmp_icon->handle(fltk::PUSH);
+				tmp_icon->handle(FL_PUSH);
 
-			selection_x = fltk::event_x_root();
-			selection_y = fltk::event_y_root();
-			EDEBUG(ESTRLOC ": fltk::PUSH from desktop\n");
+			EDEBUG(ESTRLOC ": FL_PUSH from desktop\n");
+			selection_x = Fl::event_x_root();
+			selection_y = Fl::event_y_root();
 	
 			return 1;
 		 }
 
-		case fltk::DRAG:
+		case FL_DRAG:
 			moving = true;
-
 			if(!selectionbuff.empty()) {
 				EDEBUG(ESTRLOC ": DRAG icon from desktop\n");
-				move_selection(fltk::event_x_root(), fltk::event_y_root(), false);
+				move_selection(Fl::event_x_root(), Fl::event_y_root(), false);
 			} else {
 				EDEBUG(ESTRLOC ": DRAG from desktop\n");
-
-				/*
-				 * Moving is started with pushed button.
-				 * From this point selection box is created and is rolled until release
-				 */
-				if(selbox->x != 0 || selbox->y != 0) {
-					selbox->w = fltk::event_x() - selbox->x;
-					selbox->h = fltk::event_y() - selbox->y;
-
-					selbox->show = true;
-
-					// see if there some icons inside selection area
-					select_in_area();
-
-					// redraw selection box
-					redraw(EDAMAGE_OVERLAY);
-				}
 			}
+
 			return 1;
 
-		case fltk::RELEASE:
+		case FL_RELEASE:
 			EDEBUG(ESTRLOC ": RELEASE from desktop\n");
-			EDEBUG(ESTRLOC ": clicks: %i\n", fltk::event_is_click());
-
-			if(selbox->show) {
-				selbox->x = selbox->y = selbox->w = selbox->h = 0;
-				selbox->show = false;
-				redraw(EDAMAGE_OVERLAY);
-				/*
-				 * Now pickup those who are in is_focused() state.
-				 * Here is not used select() since it will fill selectionbuff with
-				 * redrawing whole window each time. This is not what we want.
-				 *
-				 * Possible flickers due overlay will be later removed when is
-				 * called move_selection(), which will in turn redraw icons again
-				 * after position them.
-				 */
-				if(!selectionbuff.empty())
-					selectionbuff.clear();
-
-				for(unsigned int i = 0; i < icons.size(); i++) {
-					if(icons[i]->is_focused())
-						select_noredraw(icons[i]);
-				}
-				return 1;
-			}
+			EDEBUG(ESTRLOC ": clicks: %i\n", Fl::event_is_click());
 
 			if(!selectionbuff.empty() && moving)
-				move_selection(fltk::event_x_root(), fltk::event_y_root(), true);
+				move_selection(Fl::event_x_root(), Fl::event_y_root(), true);
 
 			/* 
-			 * Do not send fltk::RELEASE during move
+			 * Do not send FL_RELEASE during move
 			 *
-			 * TODO: should be alowed fltk::RELEASE to multiple icons? (aka. run 
+			 * TODO: should be alowed FL_RELEASE to multiple icons? (aka. run 
 			 * command for all selected icons ?
 			 */
 			if(selectionbuff.size() == 1 && !moving)
-				selectionbuff[0]->handle(fltk::RELEASE);
+				selectionbuff[0]->handle(FL_RELEASE);
 
 			moving = false;
-			return 1;
-
-		case fltk::DND_ENTER:
-		case fltk::DND_DRAG:
-		case fltk::DND_LEAVE:
-			return 1;
-
-		case fltk::DND_RELEASE: {
-			// fltk::belowmouse() can't be used within DND context :)
-			DesktopIcon* di = below_mouse(fltk::event_x_root(), fltk::event_y_root());
-			if(di) {
-				di->handle(event);
-			} else {
-				EDEBUG("DND on DESKTOP\n");
-			}
-			return 1;
-		}
-		case fltk::PASTE: {
-			DesktopIcon* di = below_mouse(fltk::event_x_root(), fltk::event_y_root());
-			if(di) {
-				di->handle(event);
-			} else {
-				EDEBUG("PASTE on desktop with %s\n", fltk::event_text());
-				drop_source(fltk::event_text(), fltk::event_x_root(), fltk::event_y_root());
-			}
-	  	}
 			return 1;
 
 		default:
 			break;
 	}
 
-	return fltk::Window::handle(event);
-}
-
-/*
- * This function is executed before desktop is actually showed
- * but after is internally created so net_make_me_desktop() specific code can
- * be executed correctly. 
- *
- * Calling net_make_me_desktop() after show() will confuse many wm's which will 
- * in turn partialy register us as desktop type.
- */
-void Desktop::create(void) {
-	fltk::Window::create();
-	net_make_me_desktop(this);
+	return Fl_Window::handle(event);
 }
 
 int main() {
 	signal(SIGTERM, exit_signal);
 	signal(SIGKILL, exit_signal);
-	signal(SIGINT, exit_signal);
+	signal(SIGINT,  exit_signal);
+	signal(SIGHUP,  restart_signal);
 
 	srand(time(NULL));
 
-	// TODO: init_locale_support()
+	// a lot of preparing code depends on this
+	fl_open_display();
 
-	//edelib::IconTheme::init("crystalsvg");
+	fl_register_images();
+
 	edelib::IconTheme::init("edeneu");
-
-	fltk::register_images();
 
 	Desktop::init();
 	Desktop::instance()->show();
 
 	/*
 	 * XSelectInput will redirect PropertyNotify messages, which
-	 * we are listen for
+	 * are listened for
 	 */
-	XSelectInput(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), PropertyChangeMask | StructureNotifyMask );
-	fltk::add_event_handler(desktop_xmessage_handler);
+	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask );
+	Fl::add_handler(desktop_xmessage_handler);
 
 	while(running) 
-		fltk::wait();
+		Fl::wait();
 
 	Desktop::shutdown();
 	edelib::IconTheme::shutdown();

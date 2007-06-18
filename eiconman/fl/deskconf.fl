@@ -1,87 +1,56 @@
-# data file for the FLTK User Interface Designer (FLUID)
-version 2.1000 
-images_dir fltk::Choice 
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
 header_name {.h} 
-code_name {.cxx} 
-gridx 5 
-gridy 5 
-snap 1
-Function {} {open selected
+code_name {.cxx}
+Function {} {open
 } {
-  {fltk::Window} {} {open
-    xywh {363 251 540 260} resizable visible
+  Fl_Window {} {open selected
+    xywh {416 256 540 260} type Double resizable visible
   } {
-    {fltk::InvisibleBox} {} {
+    Fl_Box {} {
       xywh {75 173 100 15} box BORDER_BOX
     }
-    {fltk::InvisibleBox} {} {
+    Fl_Box {} {
       xywh {20 20 210 158} box THIN_UP_BOX
     }
-    {fltk::InvisibleBox} {} {
-      xywh {30 30 190 138} box DOWN_BOX color 56
+    Fl_Box {} {
+      xywh {33 30 184 138} box DOWN_BOX color 56
+      code0 {/* box size is intentionaly odd so preserve aspect ratio */}
     }
-    {fltk::InvisibleBox} {} {
+    Fl_Box {} {
       xywh {50 183 145 14} box THIN_UP_BOX
     }
-    {fltk::Choice} {} {
-      label {Desktop:} open
-      xywh {310 20 220 25}
-    } {}
-    {fltk::CheckButton} {} {
-      label {Use wallpaper}
-      xywh {310 60 20 19} align 8
-    }
-    {fltk::Input} {} {
+    Fl_Input {} {
       label {Image:}
-      xywh {310 94 190 25}
+      xywh {310 55 190 25}
     }
-    {fltk::Button} {} {
+    Fl_Button {} {
       label {...}
-      xywh {505 94 25 25}
+      xywh {505 55 25 25}
     }
-    {fltk::Choice} {} {
+    Fl_Choice {} {
       label {Mode:} open
-      xywh {310 129 220 24}
+      xywh {310 91 220 24} down_box BORDER_BOX
     } {}
-    {fltk::Button} {} {
+    Fl_Button {} {
       label {Background color}
-      xywh {310 173 25 24} align 8 color 0x3ca700
+      xywh {310 136 25 24} color 73 align 8
     }
-    {fltk::Button} {} {
+    Fl_Button {} {
       label {&OK}
       xywh {250 227 90 25}
     }
-    {fltk::Button} {} {
+    Fl_Button {} {
       label {&Apply}
       xywh {345 227 90 25}
     }
-    {fltk::Button} {} {
+    Fl_Button {} {
       label {&Cancel}
       xywh {440 227 90 25}
     }
-    {fltk::Group} {} {open
-      xywh {20 210 210 40}
-    } {
-      {fltk::InvisibleBox} {} {
-        xywh {15 5 35 30} box THIN_DOWN_BOX color 0xffff0000
-      }
-      {fltk::Button} {} {
-        label {@<}
-        xywh {0 5 10 30} box FLAT_BOX
-      }
-      {fltk::Button} {} {
-        label {@>}
-        xywh {200 5 10 30} box FLAT_BOX
-      }
-      {fltk::InvisibleBox} {} {
-        xywh {55 5 35 30} box THIN_DOWN_BOX color 0x49a47d00
-      }
-      {fltk::InvisibleBox} {} {
-        xywh {95 5 35 30} box THIN_DOWN_BOX color 0x3a488800
-      }
-      {fltk::InvisibleBox} {} {
-        xywh {135 5 35 30} box THIN_DOWN_BOX color 0x808b3f00
-      }
+    Fl_Check_Button {} {
+      label { Use wallpaper}
+      xywh {310 20 220 25} down_box DOWN_BOX
     }
   }
 } 

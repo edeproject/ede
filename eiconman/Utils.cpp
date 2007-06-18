@@ -12,8 +12,10 @@
 
 #include "Utils.h"
 #include <X11/Xproto.h> // CARD32
-#include <fltk/x11.h>
+#include <FL/x.h>
 #include <edelib/Debug.h>
+
+#include <string.h> // strrchr
 
 Atom NET_WORKAREA = 0;
 Atom NET_WM_WINDOW_TYPE = 0;
@@ -27,20 +29,22 @@ int overlay_y = 0;
 int overlay_w = 0;
 int overlay_h = 0;
 
+Fl_Window* overlay_drawable = NULL;
+
 char dash_list[] = {1};
 
 bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	Atom real;
 
 	if(!NET_WORKAREA)
-		NET_WORKAREA= XInternAtom(fltk::xdisplay, "_NET_WORKAREA", 1);
+		NET_WORKAREA= XInternAtom(fl_display, "_NET_WORKAREA", 1);
 
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 	x = y = w = h = 0;
 
-	int status = XGetWindowProperty(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), 
+	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			NET_WORKAREA, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
 
 	if(status != Success)
@@ -60,18 +64,18 @@ bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	return false;
 }
 
-void net_make_me_desktop(fltk::Window* w) {
+void net_make_me_desktop(Fl_Window* w) {
 	if(!NET_WM_WINDOW_TYPE)
-		NET_WM_WINDOW_TYPE = XInternAtom(fltk::xdisplay, "_NET_WM_WINDOW_TYPE", False);
+		NET_WM_WINDOW_TYPE = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE", False);
 
 	if(!NET_WM_WINDOW_TYPE_DESKTOP)
-		NET_WM_WINDOW_TYPE_DESKTOP= XInternAtom(fltk::xdisplay, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
+		NET_WM_WINDOW_TYPE_DESKTOP= XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
 
 	/*
 	 * xid() will return zero if window is not shown;
 	 * make sure it is shown
 	 */
-	EASSERT(fltk::xid(w));
+	EASSERT(fl_xid(w));
 
 	/*
 	 * Reminder for me (others possible):
@@ -80,20 +84,20 @@ void net_make_me_desktop(fltk::Window* w) {
 	 *
 	 * I lost two hours messing with this ! (gdb is unusefull in X world)
 	 */
-	XChangeProperty(fltk::xdisplay, fltk::xid(w), NET_WM_WINDOW_TYPE, XA_ATOM, 32, PropModeReplace, 
+	XChangeProperty(fl_display, fl_xid(w), NET_WM_WINDOW_TYPE, XA_ATOM, 32, PropModeReplace, 
 			(unsigned char*)&NET_WM_WINDOW_TYPE_DESKTOP, sizeof(Atom));
 }
 
 int net_get_workspace_count(void) {
 	if(!NET_NUMBER_OF_DESKTOPS)
-		NET_NUMBER_OF_DESKTOPS = XInternAtom(fltk::xdisplay, "_NET_NUMBER_OF_DESKTOPS", False);
+		NET_NUMBER_OF_DESKTOPS = XInternAtom(fl_display, "_NET_NUMBER_OF_DESKTOPS", False);
 
 	Atom real;
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 
-	int status = XGetWindowProperty(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), 
+	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			NET_NUMBER_OF_DESKTOPS, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
 			(unsigned char**)&prop);
 
@@ -108,13 +112,13 @@ int net_get_workspace_count(void) {
 // desktops are starting from 0
 int net_get_current_desktop(void) {
 	if(!NET_CURRENT_DESKTOP)
-		NET_CURRENT_DESKTOP = XInternAtom(fltk::xdisplay, "_NET_CURRENT_DESKTOP", False);
+		NET_CURRENT_DESKTOP = XInternAtom(fl_display, "_NET_CURRENT_DESKTOP", False);
 	Atom real;
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 
-	int status = XGetWindowProperty(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), 
+	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			NET_CURRENT_DESKTOP, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
 
 	if(status != Success && !prop)
@@ -128,11 +132,11 @@ int net_get_current_desktop(void) {
 // call on this XFreeStringList(names)
 int net_get_workspace_names(char**& names) {
 	if(!NET_DESKTOP_NAMES)
-		NET_DESKTOP_NAMES = XInternAtom(fltk::xdisplay, "_NET_DESKTOP_NAMES", False);
+		NET_DESKTOP_NAMES = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
 
 	// FIXME: add _NET_SUPPORTING_WM_CHECK and _NET_SUPPORTED ???
 	XTextProperty wnames;
-	XGetTextProperty(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), &wnames, NET_DESKTOP_NAMES);
+	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &wnames, NET_DESKTOP_NAMES);
 
 	// if wm does not understainds _NET_DESKTOP_NAMES this is not set
 	if(!wnames.nitems || !wnames.value)
@@ -152,14 +156,14 @@ int net_get_workspace_names(char**& names) {
 
 #if 0
 int net_get_workspace_names(char** names) {
-	Atom nd = XInternAtom(fltk::xdisplay, "_NET_DESKTOP_NAMES", False);
-	Atom utf8_str = XInternAtom(fltk::xdisplay, "UTF8_STRING", False);
+	Atom nd = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
+	Atom utf8_str = XInternAtom(fl_display, "UTF8_STRING", False);
 	Atom real;
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 
-	int status = XGetWindowProperty(fltk::xdisplay, RootWindow(fltk::xdisplay, fltk::xscreen), 
+	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			nd, 0L, 0x7fffffff, False, utf8_str, &real, &format, &n, &extra, (unsigned char**)&prop);
 
 	if(status != Success && !prop)
@@ -185,16 +189,23 @@ void draw_overlay_rect(void) {
 	if(overlay_w <= 0 || overlay_h <= 0)
 		return;
 
-	XSetDashes(fltk::xdisplay, fltk::gc, 0, dash_list, 1);
-	XSetLineAttributes(fltk::xdisplay, fltk::gc, 1, LineOnOffDash, CapButt, JoinMiter);
+	XSetDashes(fl_display, fl_gc, 0, dash_list, 1);
+	XSetLineAttributes(fl_display, fl_gc, 1, LineOnOffDash, CapButt, JoinMiter);
 
-	XSetFunction(fltk::xdisplay, fltk::gc, GXxor);
-	XSetForeground(fltk::xdisplay, fltk::gc, 0xffffffff);
-	XDrawRectangle(fltk::xdisplay, fltk::xwindow, fltk::gc, overlay_x, overlay_y, overlay_w-1, overlay_h-1);
-	XSetFunction(fltk::xdisplay, fltk::gc, GXcopy);
+	XSetFunction(fl_display, fl_gc, GXxor);
+	XSetForeground(fl_display, fl_gc, 0xffffffff);
+
+	Window ow;
+	if(overlay_drawable)
+		ow = fl_xid(overlay_drawable);
+	else
+		ow = fl_window;
+	XDrawRectangle(fl_display, ow, fl_gc, overlay_x, overlay_y, overlay_w-1, overlay_h-1);
+
+	XSetFunction(fl_display, fl_gc, GXcopy);
 
 	// set line to 0 again
-	XSetLineAttributes(fltk::xdisplay, fltk::gc, 0, LineOnOffDash, CapButt, JoinMiter);
+	XSetLineAttributes(fl_display, fl_gc, 0, LineOnOffDash, CapButt, JoinMiter);
 }
 
 void draw_xoverlay(int x, int y, int w, int h) {
@@ -229,4 +240,16 @@ void clear_xoverlay(void) {
 		draw_overlay_rect();
 		overlay_w = 0;
 	}
+}
+
+void set_xoverlay_drawable(Fl_Window* win) {
+	overlay_drawable = win;
+}
+
+char* get_basename(const char* path) {
+	char* p = strrchr(path, '/');
+	if(p)
+		return (p + 1);
+
+	return (char*) path;
 }
