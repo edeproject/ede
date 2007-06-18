@@ -14,6 +14,7 @@
 #include "DesktopIcon.h"
 #include "Utils.h"
 #include "Wallpaper.h"
+#include "NotifyBox.h"
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -90,6 +91,8 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
 		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
+		notify = new NotifyBox();
+		notify->hide();
 	end();
 
 	read_config();
@@ -505,6 +508,14 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 }
 #endif
 
+void Desktop::notify_box(const char* msg) {
+	if(notify->shown())
+		notify->hide();
+	
+	notify->label(msg);
+	notify->show();
+}
+
 int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
@@ -548,10 +559,14 @@ int Desktop::handle(int event) {
 				select(tmp_icon);
 				return 1;
 			} else if(SELECTION_SINGLE) {
-				if(!in_selection(tmp_icon))
+				if(!in_selection(tmp_icon)) {
+					notify_box(tmp_icon->label());
 					select_only(tmp_icon);
-			} else if(Fl::event_button() == 3)
+				}
+			} else if(Fl::event_button() == 3) {
 				select_only(tmp_icon);
+				notify_box(tmp_icon->label());
+			}
 
 			/* 
 			 * Let child handle the rest.

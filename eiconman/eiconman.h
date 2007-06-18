@@ -66,6 +66,7 @@ struct IconSettings {
 
 class Wallpaper;
 class DesktopIcon;
+class NotifyBox;
 
 typedef edelib::vector<DesktopIcon*>     DesktopIconList;
 
@@ -80,6 +81,7 @@ class Desktop : public Fl_Window {
 		DesktopSettings*   dsett;
 
 		Wallpaper* wallpaper;
+		NotifyBox* notify;
 
 		DesktopIconList icons;
 		DesktopIconList selectionbuff;
@@ -115,6 +117,8 @@ class Desktop : public Fl_Window {
 
 		void update_workarea(void);
 		void set_bg_color(int c, bool do_redraw = true);
+
+		void notify_box(const char* msg);
 
 		Fl_Window* desktop_window(void) { return this; }
 };
