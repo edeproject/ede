@@ -40,8 +40,11 @@
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
-// which widgets Fl::belowmouse() to skip
-#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper))
+/*
+ * Which widgets Fl::belowmouse() should skip. This should be updated
+ * when new non-icon child is added to Desktop window.
+ */
+#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == notify))
 
 Desktop* Desktop::pinstance = NULL;
 bool running = false;
@@ -70,10 +73,30 @@ void restart_signal(int signum) {
 	EDEBUG(ESTRLOC ": Restarting (got signal %d)\n", signum);
 }
 
-int desktop_xmessage_handler(int event) { return 0; }
+int desktop_xmessage_handler(int event) { 
+	if(fl_xevent->type == PropertyNotify) {
+		if(fl_xevent->xproperty.atom == _XA_NET_CURRENT_DESKTOP) {
+			Desktop::instance()->notify_desktop_changed();
+			return 1;
+		}
+
+		if(fl_xevent->xproperty.atom == _XA_EDE_DESKTOP_NOTIFY) {
+			char buff[256];
+			if(ede_get_desktop_notify(buff, 256) && buff[0] != '\0')
+				Desktop::instance()->notify_box(buff, true);
+			return 1;
+		}
+
+		if(fl_xevent->xclient.message_type == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
+			Desktop::instance()->notify_box_color(ede_get_desktop_notify_color());
+			return 1;
+		}
+	}
+
+	return 0; 
+}
 
 Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
-
 	selection_x = selection_y = 0;
 	moving = false;
 
@@ -81,6 +104,7 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	dsett->color = FL_GRAY;
 	dsett->wp_use = false;
 
+	init_atoms();
 	update_workarea();
 
 	/*
@@ -90,8 +114,8 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	 */
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
-		notify = new NotifyBox();
+		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		notify = new NotifyBox(w(), h());
 		notify->hide();
 	end();
 
@@ -508,12 +532,36 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 }
 #endif
 
-void Desktop::notify_box(const char* msg) {
-	if(notify->shown())
-		notify->hide();
-	
-	notify->label(msg);
+void Desktop::notify_box(const char* msg, bool copy) {
+	if(!msg)
+		return;
+
+	if(copy)
+		notify->copy_label(msg);
+	else	
+		notify->label(msg);
+
 	notify->show();
+}
+
+void Desktop::notify_box_color(Fl_Color col) {
+	notify->color(col);
+}
+
+void Desktop::notify_desktop_changed(void) {
+	int num = net_get_current_desktop();
+	if(num == -1)
+		return;
+
+	char** names;
+	int ret = net_get_workspace_names(names);
+	if(num >= ret) {
+		XFreeStringList(names);
+		return;
+	}
+
+	notify_box(names[num], true);
+	XFreeStringList(names);
 }
 
 int Desktop::handle(int event) {
@@ -560,12 +608,18 @@ int Desktop::handle(int event) {
 				return 1;
 			} else if(SELECTION_SINGLE) {
 				if(!in_selection(tmp_icon)) {
-					notify_box(tmp_icon->label());
+					/*
+					 * for testing
+					 * notify_box(tmp_icon->label());
+					 */
 					select_only(tmp_icon);
 				}
 			} else if(Fl::event_button() == 3) {
 				select_only(tmp_icon);
-				notify_box(tmp_icon->label());
+				/*
+				 * for testing
+				 * notify_box(tmp_icon->label());
+				 */
 			}
 
 			/* 
@@ -641,7 +695,8 @@ int main() {
 	 * XSelectInput will redirect PropertyNotify messages, which
 	 * are listened for
 	 */
-	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask );
+	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask | ClientMessage);
+
 	Fl::add_handler(desktop_xmessage_handler);
 
 	while(running) 

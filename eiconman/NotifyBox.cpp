@@ -18,14 +18,24 @@
 #include <FL/fl_draw.h>
 #include <FL/Fl_Group.h>
 
-#define MAX_LABEL_WIDTH 100
+#define MAX_LABEL_WIDTH 200
 
-NotifyBox::NotifyBox() : Fl_Box(0, 0, 0, 0) { 
+#define TIMEOUT     (1.0f/60.0f)
+#define TIME_SHOWN  3.0f
+
+#define STATE_SHOWING 1
+#define STATE_HIDING  2
+#define STATE_DONE    3
+
+NotifyBox::NotifyBox(int aw, int ah) : Fl_Box(0, 0, 0, 0) { 
+	area_w = aw;
+	area_h = ah;
 	lwidth = lheight = 0;
 	is_shown = false;
-	in_animate = false;
-	box(FL_FLAT_BOX);
-	color(FL_RED);
+	state = 0;
+
+	box(FL_BORDER_BOX);
+	color(FL_WHITE);
 	align(FL_ALIGN_WRAP);
 }
 
@@ -36,8 +46,8 @@ NotifyBox::~NotifyBox() {
 void NotifyBox::update_label_size(void) {
     lwidth = MAX_LABEL_WIDTH;
     lheight= 0;
-	fl_font(labelfont(), labelsize());
 
+	fl_font(labelfont(), labelsize());
 	fl_measure(label(), lwidth, lheight, align());
 
     lwidth  += 10;
@@ -45,58 +55,81 @@ void NotifyBox::update_label_size(void) {
 }
 
 void NotifyBox::show(void) {
-	update_label_size();
-	resize(x(), y()-lheight, lwidth, lheight);
+	if(shown())
+		return;
 
-	EDEBUG("%i %i\n", w(), h());
+	if(state == STATE_HIDING)
+		return;
+
+	update_label_size();
+
+	// center box
+	int x_pos = (area_w/2) - (lwidth/2);
+	resize(x_pos, y() - lheight, lwidth, lheight);
 
 	Fl_Box::show();
 
-	if(!in_animate && !is_shown)
-		Fl::add_timeout(TIMEOUT, animate_show_cb, this);
+	state = STATE_SHOWING;
+	Fl::add_timeout(TIMEOUT, animate_cb, this);
 }
 
 void NotifyBox::hide(void) {
-	if(!in_animate && is_shown)
-		Fl::add_timeout(TIMEOUT, animate_hide_cb, this);
+	if(!shown())
+		return;
+
+	// explicitely remove timer when hide() is called
+	Fl::remove_timeout(animate_cb);
 
 	Fl_Box::hide();
+	is_shown = false;
+	state = 0;
 }
 
-void NotifyBox::animate_show(void) {
-	if(y() < 0) {
-		position(x(), y() + 1);
-		EDEBUG("y: %i\n", y());
-		redraw();
-		Fl::repeat_timeout(TIMEOUT, animate_show_cb, this);
-		in_animate = true;
-	} else {
-		Fl::remove_timeout(animate_show_cb);
-		in_animate = false;
-		is_shown = true;
-
-		// add visibility timeout
-		Fl::add_timeout(TIME_SHOWN, visible_timeout_cb, this);
-	}
+void NotifyBox::label(const char* l) {
+	Fl_Box::label(l);
 }
 
-void NotifyBox::animate_hide(void) {
-	if(y() > -lheight) {
-		position(x(), y() - 1);
-		redraw();
-		Desktop::instance()->redraw();
-		Fl::repeat_timeout(TIMEOUT, animate_hide_cb, this);
-		in_animate = true;
-	} else {
-		Fl::remove_timeout(animate_hide_cb);
-		Fl::remove_timeout(visible_timeout_cb);
-		in_animate = false;
-		is_shown = false;
-	EDEBUG("!!!!!!!!!!!!!!!!!\n");
+void NotifyBox::copy_label(const char* l) {
+	Fl_Box::copy_label(l);
+}
+
+const char* NotifyBox::label(void) {
+	return Fl_Box::label();
+}
+
+void NotifyBox::animate(void) {
+	if(state == STATE_SHOWING) {
+		if(y() < 0) {
+			position(x(), y() + 1);
+			redraw();
+			//EDEBUG("SHOWING...\n");
+			Fl::repeat_timeout(TIMEOUT, animate_cb, this);
+			state = STATE_SHOWING;
+		} else {
+			state = STATE_DONE;
+			is_shown = true;
+
+			// now set visible timeout, which will procede to hiding()
+			visible_timeout();
+		}
+	} else if(state == STATE_HIDING) {
+		if(y() > -lheight) {
+			position(x(), y() - 1);
+			//redraw();
+			//EDEBUG("%i %i\n", x(), y());
+			// this will prevent redrawing whole screen
+			Desktop::instance()->damage(FL_DAMAGE_ALL, x(), 0, w(), h());
+
+			//EDEBUG("HIDING...\n");
+			Fl::repeat_timeout(TIMEOUT, animate_cb, this);
+		} else {
+			state = STATE_DONE;
+			is_shown = false;
+		}
 	}
 }
 
 void NotifyBox::visible_timeout(void) {
-	EDEBUG("XXXXXXXXXXXXXXXXX\n");
-	animate_hide();
+	state = STATE_HIDING;
+	Fl::repeat_timeout(TIME_SHOWN, animate_cb, this);
 }

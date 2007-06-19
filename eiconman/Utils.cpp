@@ -15,14 +15,17 @@
 #include <FL/x.h>
 #include <edelib/Debug.h>
 
-#include <string.h> // strrchr
+#include <string.h> // strrchr, strncpy, strlen
 
-Atom NET_WORKAREA = 0;
-Atom NET_WM_WINDOW_TYPE = 0;
-Atom NET_WM_WINDOW_TYPE_DESKTOP = 0;
-Atom NET_NUMBER_OF_DESKTOPS = 0;
-Atom NET_CURRENT_DESKTOP = 0;
-Atom NET_DESKTOP_NAMES = 0;
+Atom _XA_NET_WORKAREA = 0;
+Atom _XA_NET_WM_WINDOW_TYPE = 0;
+Atom _XA_NET_WM_WINDOW_TYPE_DESKTOP = 0;
+Atom _XA_NET_NUMBER_OF_DESKTOPS = 0;
+Atom _XA_NET_CURRENT_DESKTOP = 0;
+Atom _XA_NET_DESKTOP_NAMES = 0;
+
+Atom _XA_EDE_DESKTOP_NOTIFY = 0;
+Atom _XA_EDE_DESKTOP_NOTIFY_COLOR = 0;
 
 int overlay_x = 0;
 int overlay_y = 0;
@@ -33,11 +36,20 @@ Fl_Window* overlay_drawable = NULL;
 
 char dash_list[] = {1};
 
+void init_atoms(void) {
+	_XA_NET_WORKAREA               = XInternAtom(fl_display, "_NET_WORKAREA", False);
+	_XA_NET_WM_WINDOW_TYPE         = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE", False);
+	_XA_NET_WM_WINDOW_TYPE_DESKTOP = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
+	_XA_NET_NUMBER_OF_DESKTOPS     = XInternAtom(fl_display, "_NET_NUMBER_OF_DESKTOPS", False);
+	_XA_NET_CURRENT_DESKTOP        = XInternAtom(fl_display, "_NET_CURRENT_DESKTOP", False);
+	_XA_NET_DESKTOP_NAMES          = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
+
+	_XA_EDE_DESKTOP_NOTIFY         = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY", False);
+	_XA_EDE_DESKTOP_NOTIFY_COLOR   = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY_COLOR", False);
+}
+
 bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	Atom real;
-
-	if(!NET_WORKAREA)
-		NET_WORKAREA= XInternAtom(fl_display, "_NET_WORKAREA", 1);
 
 	int format;
 	unsigned long n, extra;
@@ -45,7 +57,7 @@ bool net_get_workarea(int& x, int& y, int& w, int &h) {
 	x = y = w = h = 0;
 
 	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
-			NET_WORKAREA, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
+			_XA_NET_WORKAREA, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
 
 	if(status != Success)
 		return false;
@@ -65,12 +77,6 @@ bool net_get_workarea(int& x, int& y, int& w, int &h) {
 }
 
 void net_make_me_desktop(Fl_Window* w) {
-	if(!NET_WM_WINDOW_TYPE)
-		NET_WM_WINDOW_TYPE = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE", False);
-
-	if(!NET_WM_WINDOW_TYPE_DESKTOP)
-		NET_WM_WINDOW_TYPE_DESKTOP= XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE_DESKTOP", False);
-
 	/*
 	 * xid() will return zero if window is not shown;
 	 * make sure it is shown
@@ -79,26 +85,23 @@ void net_make_me_desktop(Fl_Window* w) {
 
 	/*
 	 * Reminder for me (others possible):
-	 * note '&NET_WM_WINDOW_TYPE_DESKTOP' conversion, since gcc will not report warning/error 
-	 * if placed 'NET_WM_WINDOW_TYPE_DESKTOP' only.
+	 * note '&_XA_NET_WM_WINDOW_TYPE_DESKTOP' conversion, since gcc will not report warning/error 
+	 * if placed '_XA_NET_WM_WINDOW_TYPE_DESKTOP' only.
 	 *
 	 * I lost two hours messing with this ! (gdb is unusefull in X world)
 	 */
-	XChangeProperty(fl_display, fl_xid(w), NET_WM_WINDOW_TYPE, XA_ATOM, 32, PropModeReplace, 
-			(unsigned char*)&NET_WM_WINDOW_TYPE_DESKTOP, sizeof(Atom));
+	XChangeProperty(fl_display, fl_xid(w), _XA_NET_WM_WINDOW_TYPE, XA_ATOM, 32, PropModeReplace, 
+			(unsigned char*)&_XA_NET_WM_WINDOW_TYPE_DESKTOP, sizeof(Atom));
 }
 
 int net_get_workspace_count(void) {
-	if(!NET_NUMBER_OF_DESKTOPS)
-		NET_NUMBER_OF_DESKTOPS = XInternAtom(fl_display, "_NET_NUMBER_OF_DESKTOPS", False);
-
 	Atom real;
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 
 	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
-			NET_NUMBER_OF_DESKTOPS, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
+			_XA_NET_NUMBER_OF_DESKTOPS, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
 			(unsigned char**)&prop);
 
 	if(status != Success && !prop)
@@ -111,15 +114,14 @@ int net_get_workspace_count(void) {
 
 // desktops are starting from 0
 int net_get_current_desktop(void) {
-	if(!NET_CURRENT_DESKTOP)
-		NET_CURRENT_DESKTOP = XInternAtom(fl_display, "_NET_CURRENT_DESKTOP", False);
 	Atom real;
 	int format;
 	unsigned long n, extra;
 	unsigned char* prop;
 
 	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
-			NET_CURRENT_DESKTOP, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
+			_XA_NET_CURRENT_DESKTOP, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
+			(unsigned char**)&prop);
 
 	if(status != Success && !prop)
 		return -1;
@@ -131,12 +133,9 @@ int net_get_current_desktop(void) {
 
 // call on this XFreeStringList(names)
 int net_get_workspace_names(char**& names) {
-	if(!NET_DESKTOP_NAMES)
-		NET_DESKTOP_NAMES = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
-
 	// FIXME: add _NET_SUPPORTING_WM_CHECK and _NET_SUPPORTED ???
 	XTextProperty wnames;
-	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &wnames, NET_DESKTOP_NAMES);
+	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &wnames, _XA_NET_DESKTOP_NAMES);
 
 	// if wm does not understainds _NET_DESKTOP_NAMES this is not set
 	if(!wnames.nitems || !wnames.value)
@@ -144,14 +143,57 @@ int net_get_workspace_names(char**& names) {
 
 	int nsz;
 
+	/*
+	 * FIXME: Here should as alternative Xutf8TextPropertyToTextList since
+	 * many wm's set UTF8_STRING property. Below is XA_STRING and for UTF8_STRING
+	 * will fail.
+	 */
 	if(!XTextPropertyToStringList(&wnames, &names, &nsz)) {
 		XFree(wnames.value);
 		return 0;
 	}
 
-	//XFreeStringList(names);
 	XFree(wnames.value);
 	return nsz;
+}
+
+bool ede_get_desktop_notify(char* txt, int txt_len) {
+	XTextProperty names;
+	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &names, _XA_EDE_DESKTOP_NOTIFY);
+	if(!names.nitems || !names.value)
+		return false;
+
+	char** vnames;
+	int nsz = 0;
+	if(!XTextPropertyToStringList(&names, &vnames, &nsz)) {
+		XFree(names.value);
+		return false;
+	}
+
+	strncpy(txt, vnames[0], txt_len);
+	XFreeStringList(vnames);
+	return true;
+}
+
+Fl_Color ede_get_desktop_notify_color(void) {
+	Atom real;
+	int format;
+	unsigned long n, extra;
+	unsigned char* prop;
+
+	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
+			_XA_EDE_DESKTOP_NOTIFY_COLOR, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
+			(unsigned char**)&prop);
+
+	int color = FL_WHITE;
+
+	if(status != Success && !prop)
+		return (Fl_Color)color;
+
+	color = int(*(long*)prop);
+	XFree(prop);
+
+	return (Fl_Color)color;
 }
 
 #if 0

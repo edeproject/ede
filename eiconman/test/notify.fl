@@ -1,0 +1,27 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {
+    label {Notify test} open
+    xywh {465 279 295 144} type Double visible
+  } {
+    Fl_Input {} {
+      xywh {10 15 275 25} labelsize 14 align 5 textsize 14
+    }
+    Fl_Button {} {
+      label {&Send}
+      xywh {195 110 90 25} labelsize 14
+    }
+    Fl_Button {} {
+      label Color
+      xywh {260 50 25 25} labelsize 14 align 4
+    }
+    Fl_Box {} {
+      label {Type some text and choose color, then press Send. Desktop should get notified about this.} selected
+      xywh {10 50 164 85} labelsize 14 align 128
+    }
+  }
+} 

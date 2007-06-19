@@ -64,7 +64,8 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	if(!settings->icon.empty()) {
 		const char* nn = settings->icon.c_str();
 
-		edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_MEDIUM);
+		//edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_MEDIUM);
+		edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_HUGE);
 		Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
 		if(img) {
 			int img_w = img->w();

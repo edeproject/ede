@@ -5,3 +5,4 @@ LINKLIBS += -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/loca
 C++FLAGS += -Wall -g3 -I/opt/ede/include ;
 
 Main eiconman : eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
+Main test/notify : test/notify.cpp ;

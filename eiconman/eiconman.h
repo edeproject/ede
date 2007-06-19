@@ -118,7 +118,9 @@ class Desktop : public Fl_Window {
 		void update_workarea(void);
 		void set_bg_color(int c, bool do_redraw = true);
 
-		void notify_box(const char* msg);
+		void notify_box(const char* msg, bool copy = false);
+		void notify_box_color(Fl_Color col);
+		void notify_desktop_changed(void);
 
 		Fl_Window* desktop_window(void) { return this; }
 };
