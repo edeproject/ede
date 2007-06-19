@@ -568,6 +568,7 @@ int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
 		case FL_UNFOCUS:
+		case FL_SHORTCUT:
 			return 1;
 
 		case FL_PUSH: {
