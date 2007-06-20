@@ -23,7 +23,7 @@ class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
 
-class DesktopIcon : public Fl_Button {
+class DesktopIcon : public Fl_Widget {
 	private:
 		IconSettings* settings;
 		const GlobalIconSettings* globals;

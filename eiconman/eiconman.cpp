@@ -87,8 +87,14 @@ int desktop_xmessage_handler(int event) {
 			return 1;
 		}
 
-		if(fl_xevent->xclient.message_type == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
+		//if(fl_xevent->xclient.message_type == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
+		if(fl_xevent->xproperty.atom == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
 			Desktop::instance()->notify_box_color(ede_get_desktop_notify_color());
+			return 1;
+		}
+
+		if(fl_xevent->xproperty.atom == _XA_NET_WORKAREA) {
+			Desktop::instance()->update_workarea();
 			return 1;
 		}
 	}
@@ -114,7 +120,9 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	 */
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		//wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
+		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 		notify = new NotifyBox(w(), h());
 		notify->hide();
 	end();

@@ -23,6 +23,7 @@ Atom _XA_NET_WM_WINDOW_TYPE_DESKTOP = 0;
 Atom _XA_NET_NUMBER_OF_DESKTOPS = 0;
 Atom _XA_NET_CURRENT_DESKTOP = 0;
 Atom _XA_NET_DESKTOP_NAMES = 0;
+Atom _XA_XROOTPMAP_ID = 0;
 
 Atom _XA_EDE_DESKTOP_NOTIFY = 0;
 Atom _XA_EDE_DESKTOP_NOTIFY_COLOR = 0;
@@ -43,6 +44,7 @@ void init_atoms(void) {
 	_XA_NET_NUMBER_OF_DESKTOPS     = XInternAtom(fl_display, "_NET_NUMBER_OF_DESKTOPS", False);
 	_XA_NET_CURRENT_DESKTOP        = XInternAtom(fl_display, "_NET_CURRENT_DESKTOP", False);
 	_XA_NET_DESKTOP_NAMES          = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
+	_XA_XROOTPMAP_ID               = XInternAtom(fl_display, "_XROOTPMAP_ID", False);
 
 	_XA_EDE_DESKTOP_NOTIFY         = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY", False);
 	_XA_EDE_DESKTOP_NOTIFY_COLOR   = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY_COLOR", False);
@@ -286,6 +288,64 @@ void clear_xoverlay(void) {
 
 void set_xoverlay_drawable(Fl_Window* win) {
 	overlay_drawable = win;
+}
+
+Pixmap create_mask(Fl_Image* img) {
+	if(!img)
+		return 0;
+
+	// no alpha
+	if(img->d() != 4)
+		return 0;
+
+	int iw = img->w();
+	int ih = img->h();
+
+	unsigned char* xim_data = new unsigned char[((iw >> 3) + 8) * ih];
+
+	XImage* xim = XCreateImage(fl_display, fl_visual->visual, 1, ZPixmap, 0, (char*)xim_data, iw, ih, 8, 0);
+	if(!xim) {
+		delete [] xim_data;
+		return 0;
+	}
+
+	const char* src = img->data()[0];
+	unsigned char r,g,b,a;
+
+	for(int y = 0; y < ih; y++) {
+		for(int x = 0; x < iw; x++) {
+			r = *src++;
+			g = *src++;
+			b = *src++;
+			a = *src++;
+
+			//EDEBUG("x: %i y: %i\n", x, y);
+
+			if(a < 128) 
+				XPutPixel(xim, x, y, 0);
+			else
+				XPutPixel(xim, x, y, 1);
+		}
+	}
+
+	Window drawable = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 0, 0, iw,
+              ih, 0, 0, BlackPixel(fl_display, fl_screen));
+
+	Pixmap pix = XCreatePixmap(fl_display, drawable, iw, ih, 1);
+
+	XGCValues gcv;
+	gcv.graphics_exposures = False;
+	GC dgc = XCreateGC(fl_display, pix, GCGraphicsExposures, &gcv);
+
+	XPutImage(fl_display, pix, dgc, xim, 0, 0, 0, 0, iw, ih);
+
+	XDestroyWindow(fl_display, drawable);
+	XFreeGC(fl_display, dgc);
+	delete [] xim->data;
+	xim->data = 0;
+	XDestroyImage(xim);
+
+	return pix;
 }
 
 char* get_basename(const char* path) {

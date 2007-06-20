@@ -34,8 +34,10 @@
 // label offset from icon y()+h(), so selection box can be drawn nicely
 #define LABEL_OFFSET 2
 
+#define SHAPE 1
+
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
-	Fl_Button(is->x, is->y, ICONSIZE, ICONSIZE) {
+	Fl_Widget(is->x, is->y, ICONSIZE, ICONSIZE) {
 
 	EASSERT(gs != NULL);
 
@@ -214,7 +216,29 @@ void DesktopIcon::draw(void) {
 }
 
 int DesktopIcon::handle(int event) {
-	return Fl_Button::handle(event);
+	switch(event) {
+		case FL_FOCUS:
+		case FL_UNFOCUS:
+		case FL_ENTER:
+		case FL_LEAVE:
+			return 1;
+		/* 
+		 * We have to handle FL_MOVE too, if want to get only once 
+		 * FL_ENTER when entered or FL_LEAVE when leaved.
+		 */
+		case FL_MOVE:
+			return 1;
+		case FL_PUSH:
+			return 1;
+		case FL_RELEASE:
+			if(Fl::event_clicks() > 0)
+				EDEBUG(ESTRLOC ": EXECUTE: %s\n", settings->cmd.c_str());
+			return 1;
+		default:
+			break;
+	}
+
+	return 1;
 }
 
 MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic) {
@@ -224,7 +248,16 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(),
 	color(ic->color());
 
 	begin();
+		Fl_Image* img = ic->icon_image();
+		/*
+		 * Force box be same width/height as icon so it
+		 * can fit inside masked window.
+		 */
+#ifdef SHAPE 
+		icon_box = new Fl_Box(0, 0, img->w(), img->h());
+#else
 		icon_box = new Fl_Box(0, 0, w(), h());
+#endif
 		icon_box->image(ic->icon_image());
 	end();
 }
@@ -235,8 +268,9 @@ MovableIcon::~MovableIcon() {
 void MovableIcon::show(void) {
 	if(!shown())
 		Fl_X::make_xid(this);
-#if 0
-	Pixmap mask = create_mask((Fl_RGB_Image*)icon->icon_image());
+
+#ifdef SHAPE
+	Pixmap mask = create_mask(icon->icon_image());
 	XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
 #endif
 }

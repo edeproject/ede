@@ -24,6 +24,7 @@ extern Atom _XA_NET_WM_WINDOW_TYPE_DESKTOP;
 extern Atom _XA_NET_NUMBER_OF_DESKTOPS;
 extern Atom _XA_NET_CURRENT_DESKTOP;
 extern Atom _XA_NET_DESKTOP_NAMES;
+extern Atom _XA_XROOTPMAP_ID;
 
 // via XGetTextProperty/XSetTextProperty
 extern Atom _XA_EDE_DESKTOP_NOTIFY;
@@ -45,7 +46,7 @@ void draw_xoverlay(int x, int y, int w, int h);
 void clear_xoverlay(void);
 void set_xoverlay_drawable(Fl_Window* win);
 
-Pixmap create_mask(Fl_RGB_Image* img);
+Pixmap create_mask(Fl_Image* img);
 
 char* get_basename(const char* path);
 
