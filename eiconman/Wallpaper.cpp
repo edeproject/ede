@@ -70,6 +70,9 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 			n >>= 1;
 			bshift--;
 		}
+	} else {
+		EWARNING("Depth %i not supported, for now\n", fl_visual->depth);
+		return 0;
 	}
 
 	// assume display == 16 depth
