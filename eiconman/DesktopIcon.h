@@ -19,6 +19,8 @@
 #include <FL/Fl_Button.h>
 #include <FL/Fl_Image.h>
 
+#include <X11/Xlib.h> // Pixmap
+
 class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
@@ -76,6 +78,7 @@ class MovableIcon : public Fl_Window {
 	private:
 		DesktopIcon* icon;
 		Fl_Box* icon_box;
+		Pixmap mask;
 
 	public:
 		MovableIcon(DesktopIcon* i);

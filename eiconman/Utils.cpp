@@ -310,21 +310,22 @@ Pixmap create_mask(Fl_Image* img) {
 	}
 
 	const char* src = img->data()[0];
-	unsigned char r,g,b,a;
+	unsigned char a;
 
 	for(int y = 0; y < ih; y++) {
 		for(int x = 0; x < iw; x++) {
-			r = *src++;
-			g = *src++;
-			b = *src++;
+			// jump rgb and pick alpha
+			src += 3;
 			a = *src++;
 
-			//EDEBUG("x: %i y: %i\n", x, y);
-
-			if(a < 128) 
+			if(a < 128) {
+				// these are transparent
 				XPutPixel(xim, x, y, 0);
-			else
+			}
+			else {
+				// these are opaque
 				XPutPixel(xim, x, y, 1);
+			}
 		}
 	}
 

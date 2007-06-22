@@ -22,7 +22,11 @@
 #include <edelib/Debug.h>
 #include <edelib/IconTheme.h>
 
-#include <X11/extensions/shape.h>
+#define USE_SHAPE 1
+
+#ifdef USE_SHAPE
+	#include <X11/extensions/shape.h>
+#endif
 
 // minimal icon size
 #define ICONSIZE 48
@@ -34,7 +38,6 @@
 // label offset from icon y()+h(), so selection box can be drawn nicely
 #define LABEL_OFFSET 2
 
-#define SHAPE 1
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
 	Fl_Widget(is->x, is->y, ICONSIZE, ICONSIZE) {
@@ -121,15 +124,42 @@ void DesktopIcon::update_label_size(void) {
 void DesktopIcon::drag(int x, int y, bool apply) {
 	if(!micon) {
 		micon = new MovableIcon(this);
+#if USE_SHAPE
+		/* 
+		 * This is used to calculate correct window startup/ending
+		 * position since icon is placed in the middle of the box.
+		 *
+		 * Opposite, window (shaped) will have small but noticeable 'jump off' and
+		 * dropped icon position will not be at the exact place where was dropped.
+		 */
+		int ix, iy;
+		ix = iy = 0;
+		if(image()) {
+			ix = (w()/2) - (image()->w()/2);
+			iy = (h()/2) - (image()->h()/2);
+		}
+
+		micon->position(micon->x() + ix, micon->y() + iy);
+#endif
 		micon->show();
+	} else {
+		EASSERT(micon != NULL);
+
+		micon->position(x, y);
 	}
 
-	EASSERT(micon != NULL);
-
-	micon->position(x, y);
-
 	if(apply) {
+#if USE_SHAPE
+		int ix, iy;
+		ix = iy = 0;
+		if(image()) {
+			ix = (w()/2) - (image()->w()/2);
+			iy = (h()/2) - (image()->h()/2);
+		}
+		position(micon->x() - ix, micon->y() - iy);
+#else
 		position(micon->x(), micon->y());
+#endif
 		delete micon;
 		micon = NULL;
 	}
@@ -241,20 +271,23 @@ int DesktopIcon::handle(int event) {
 	return 1;
 }
 
-MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic) {
+MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic), mask(0) {
 	EASSERT(icon != NULL);
 
 	set_override();
 	color(ic->color());
 
 	begin();
-		Fl_Image* img = ic->icon_image();
 		/*
 		 * Force box be same width/height as icon so it
 		 * can fit inside masked window.
 		 */
-#ifdef SHAPE 
-		icon_box = new Fl_Box(0, 0, img->w(), img->h());
+#ifdef USE_SHAPE 
+		Fl_Image* img = ic->icon_image();
+		if(img)
+			icon_box = new Fl_Box(0, 0, img->w(), img->h());
+		else
+			icon_box = new Fl_Box(0, 0, w(), h());
 #else
 		icon_box = new Fl_Box(0, 0, w(), h());
 #endif
@@ -263,14 +296,19 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(),
 }
 
 MovableIcon::~MovableIcon() {
+	if(mask)
+		XFreePixmap(fl_display, mask);
 }
 
 void MovableIcon::show(void) {
 	if(!shown())
 		Fl_X::make_xid(this);
 
-#ifdef SHAPE
-	Pixmap mask = create_mask(icon->icon_image());
-	XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
+#ifdef USE_SHAPE
+	if(icon->icon_image()) {
+		mask = create_mask(icon->icon_image());
+		if(mask)
+			XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
+	}
 #endif
 }

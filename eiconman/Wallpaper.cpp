@@ -18,14 +18,35 @@
 #include <FL/fl_draw.h>
 #include <FL/x.h>
 
+#define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
+	tmp = 0; \
+	if(rshift >= 0) \
+		tmp |= (((int)r << rshift) & rmask); \
+	else \
+		tmp |= (((int)r >> (-rshift)) & rmask); \
+\
+	if(gshift >= 0) \
+		tmp |= (((int)g << gshift) & gmask); \
+	else \
+		tmp |= (((int)g >> (-gshift)) & gmask); \
+\
+	if(bshift >= 0) \
+		tmp |= (((int)b << bshift) & bmask); \
+	else \
+		tmp |= (((int)b >> (-bshift)) & bmask);
+
+
 Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 	if(!img)
 		return 0;
 
 	if(xim) {
-		if(xim->data)
+		if(xim->data) {
 			delete [] xim->data;
+			xim->data = 0;
+		}
 		XDestroyImage(xim);
+		xim = 0;
 	}
 
 	if(pix)
@@ -70,25 +91,26 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 			n >>= 1;
 			bshift--;
 		}
-	} else {
-		EWARNING("Depth %i not supported, for now\n", fl_visual->depth);
-		return 0;
 	}
 
-	// assume display == 16 depth
-	xim = XCreateImage(fl_display, fl_visual->visual, 16, ZPixmap, 0, 0, img->w(), img->h(), 16, 0);
+	/*
+	 * Figure out bitmap_pad and create image coresponding to the current 
+	 * display depth except for 8 bpp display
+	 */
+	int bitmap_pad = 0;
+	if(fl_visual->depth > 16)
+		bitmap_pad = 32;
+	else if(fl_visual->depth > 8)
+		bitmap_pad = 16;
+	else {
+		EWARNING("Visual %i not supported\n", xim->bits_per_pixel);
 
-	if(xim->bits_per_pixel != 16) {
-		EWARNING("Visual %i not implemented yet\n", xim->bits_per_pixel);
 		XDestroyImage(xim);
+		xim = 0;
 		return 0;
 	}
 
-	if(img->d() < 3) {
-		EWARNING("Only RGB(A) images is supported for now\n");
-		XDestroyImage(xim);
-		return 0;
-	}
+	xim = XCreateImage(fl_display, fl_visual->visual, fl_visual->depth, ZPixmap, 0, 0, img->w(), img->h(), bitmap_pad, 0);
 
 	int iw = img->w();
 	int ih = img->h();
@@ -105,39 +127,136 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)img->data()[0];
 
-	for(int j = 0; j < ih; j++) {
-		for(int i = 0; i < iw; i++) {
-			r = *src++;
-			g = *src++;
-			b = *src++;
+	if(xim->bits_per_pixel == 32) {
+		if(id == 3 || id == 4) {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src++;
+					g = *src++;
+					b = *src++;
 
-			if(id == 4)
-				src++;
+					if(id == 4)
+						src++;
 
-			tmp = 0;
-			if(rshift >= 0)
-				tmp |= (((int)r << rshift) & rmask);
-			else
-				tmp |= (((int)r >> (-rshift)) & rmask);
+					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
 
-			if(gshift >= 0)
-				tmp |= (((int)g << gshift) & gmask);
-			else
-				tmp |= (((int)g >> (-gshift)) & gmask);
+					if(msb) {
+						// big endian
+						*destptr++ = (tmp & 0xff000000) >> 24;
+						*destptr++ = (tmp & 0xff0000) >> 16;
+						*destptr++ = (tmp & 0xff00) >> 8;
+						*destptr++ = (tmp & 0xff);
+					} else {
+						// little endian
+						*destptr++ = (tmp & 0xff);
+						*destptr++ = (tmp & 0xff00) >> 8;
+						*destptr++ = (tmp & 0xff0000) >> 16;
+						*destptr++ = (tmp & 0xff000000) >> 24;
+					}
+				}
+			}
+		} else {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src++;					
+					g = *src++;					
+					b = *src++;					
 
-			if(bshift >= 0)
-				tmp |= (((int)b << bshift) & bmask);
-			else
-				tmp |= (((int)b >> (-bshift)) & bmask);
+					if(msb) {
+						*destptr++ = 0;
+						*destptr++ = b;
+						*destptr++ = g;
+						*destptr++ = r;
+					} else {
+						*destptr++ = r;
+						*destptr++ = g;
+						*destptr++ = b;
+						*destptr++ = 0;
+					}
+				}
+			}
+		}
+	} else if(xim->bits_per_pixel == 24) {
+		if(id == 3 || id == 4) {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src++;
+					g = *src++;
+					b = *src++;
 
-			if(msb) {
-				// big endian
-				*destptr++ = (tmp >> 8) & 0xff;
-				*destptr++ = (tmp & 0xff);
-			} else {
-				// little endian
-				*destptr++ = (tmp & 0xff);
-				*destptr++ = (tmp >> 8) & 0xff;
+					if(id == 4)
+						src++;
+
+					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
+
+					if(msb) {
+						// big endian
+						*destptr++ = (tmp & 0xff0000) >> 16;
+						*destptr++ = (tmp & 0xff00) >> 8;
+						*destptr++ = (tmp & 0xff);
+
+					} else {
+						// little endian
+						*destptr++ = (tmp & 0xff);
+						*destptr++ = (tmp & 0xff00) >> 8;
+						*destptr++ = (tmp & 0xff0000) >> 16;
+					}
+				}
+			}
+		} else {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src++;
+					g = *src++;
+					b = *src++;
+					if(msb) {
+						// big endian
+						*destptr++ = b;
+						*destptr++ = g;
+						*destptr++ = r;
+					} else {
+						// little endian
+						*destptr++ = r;
+						*destptr++ = g;
+						*destptr++ = b;
+					}
+				}
+			}
+		} 
+	} else if(xim->bits_per_pixel == 16) {
+		if(id == 3 || id == 4) {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src++;
+					g = *src++;
+					b = *src++;
+
+					if(id == 4)
+						src++;
+
+					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
+
+					if(msb) {
+						// big endian
+						*destptr++ = (tmp >> 8) & 0xff;
+						*destptr++ = (tmp & 0xff);
+
+					} else {
+						// little endian
+						*destptr++ = (tmp & 0xff);
+						*destptr++ = (tmp >> 8) & 0xff;
+					}
+				}
+			}
+		} else {
+			for(int j = 0; j < ih; j++) {
+				for(int i = 0; i < iw; i++) {
+					r = *src >> 3; src++;
+					g = *src >> 2; src++;
+					b = *src >> 3; src++;
+
+					*destptr++ = r << 11 | g << 5 | b;
+				}
 			}
 		}
 	}

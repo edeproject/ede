@@ -120,8 +120,8 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	 */
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		//wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
-		wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
+		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 		notify = new NotifyBox(w(), h());
 		notify->hide();
