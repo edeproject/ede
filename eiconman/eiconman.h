@@ -98,6 +98,8 @@ class Desktop : public Fl_Window {
 		bool in_selection(const DesktopIcon* ic);
 		void move_selection(int x, int y, bool apply);
 
+		void drop_source(const char* src, int x, int y);
+
 		//DesktopIcon* below_mouse(int px, int py);
 
 	public:

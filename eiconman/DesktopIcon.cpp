@@ -71,18 +71,21 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 
 		//edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_MEDIUM);
 		edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_HUGE);
-		Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
-		if(img) {
-			int img_w = img->w();
-			int img_h = img->h();
+		if(!ipath.empty()) {
+			Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
+				if(img) {
+					int img_w = img->w();
+					int img_h = img->h();
 
-			// resize box if icon is larger
-			if(img_w > ICONSIZE || img_h > ICONSIZE)
-				size(img_w + OFFSET_W, img_h + OFFSET_H);
+					// resize box if icon is larger
+					if(img_w > ICONSIZE || img_h > ICONSIZE)
+						size(img_w + OFFSET_W, img_h + OFFSET_H);
 
-			image(img);
-		} else 
-			EDEBUG(ESTRLOC ": Unable to load %s\n", ipath.c_str());
+					image(img);
+				} else 
+					EDEBUG(ESTRLOC ": Unable to load %s\n", ipath.c_str());
+		} else
+			EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
 	}
 /*
 	EDEBUG(ESTRLOC ": Got label: %s\n", label());

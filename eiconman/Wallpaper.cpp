@@ -103,7 +103,7 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 	else if(fl_visual->depth > 8)
 		bitmap_pad = 16;
 	else {
-		EWARNING("Visual %i not supported\n", xim->bits_per_pixel);
+		EWARNING(ESTRLOC ": Visual %i not supported\n", xim->bits_per_pixel);
 
 		XDestroyImage(xim);
 		xim = 0;
@@ -428,4 +428,39 @@ void Wallpaper::draw(void) {
 
 	}
 #endif
+}
+
+#include <FL/Fl.h>
+
+int Wallpaper::handle(int event) {
+	switch(event) {
+		/* 
+		 * Route all DND events to parent (desktop), otherwise
+		 * desktop will not get them if Wallpaper is visible
+		 */
+		case FL_DND_ENTER:
+		case FL_DND_DRAG:
+		case FL_DND_LEAVE:
+		case FL_DND_RELEASE:
+			return parent()->handle(event);
+
+		case FL_PASTE:
+			/*
+			 * Since some stuff are in fltk unnedededly complicated, like
+			 * DND, this is needed to make it correctly work. After we got
+			 * FL_PASTE event (drag'n drop content released), that content
+			 * is routed to CLIPBOARD buffer of Desktop and in turn will trigger
+			 * FL_PASTE on Desktop.
+			 *
+			 * This is since fltk use XA_PRIMARY as default (or selection clipboard from X11)
+			 * not CLIPBOARD (as rest of normal world).
+			 *
+			 * Also, to make DND workable for Desktop, Wallpaper widget must be
+			 * always visible.
+			 */
+			Fl::paste(*parent(), 1);
+			return 1;
+	}
+
+	return Fl_Box::handle(event);
 }

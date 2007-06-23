@@ -121,6 +121,8 @@ Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
 		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		//wallpaper->hide();
+		//wallpaper->set("/home/sanelz/walls/katebig.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 		notify = new NotifyBox(w(), h());
@@ -168,6 +170,8 @@ void Desktop::show(void) {
 		Fl_X::make_xid(this);
 		net_make_me_desktop(this);
 	}
+
+	//Fl::dnd_text_ops(1);
 }
 
 /*
@@ -307,6 +311,7 @@ void Desktop::load_icons(const char* path, edelib::Config& conf) {
 		} else {
 			// then try to figure out it's mime; if fails, ignore it
 			if(mt.set(full_path.c_str())) {
+				EDEBUG(ESTRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
 				is.icon = mt.icon_name();
 				// icon label is name of file
 				is.name = name;
@@ -572,6 +577,34 @@ void Desktop::notify_desktop_changed(void) {
 	XFreeStringList(names);
 }
 
+void Desktop::drop_source(const char* src, int x, int y) {
+	if(!src)
+		return;
+	IconSettings is;
+	is.x = x;
+	is.y = y;
+
+	// absolute path is (for now) seen as non-url
+	if(src[0] == '/')
+		is.cmd_is_url = false;
+	else
+		is.cmd_is_url = true;
+
+	is.name = get_basename(src);
+	is.cmd = "(none)";
+	is.type = ICON_NORMAL;
+
+	edelib::MimeType mt;
+	if(!mt.set(src)) {
+		EWARNING(ESTRLOC ": MimeType for %s failed, not dropping icon\n", src);
+		return;
+	}
+
+	is.icon = mt.icon_name();
+	DesktopIcon* dic = new DesktopIcon(&gisett, &is, color());
+	add_icon(dic);
+}
+
 int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
@@ -673,6 +706,20 @@ int Desktop::handle(int event) {
 				selectionbuff[0]->handle(FL_RELEASE);
 
 			moving = false;
+			return 1;
+
+		case FL_DND_ENTER:
+		case FL_DND_DRAG:
+		case FL_DND_LEAVE:
+			return 1;
+
+		case FL_DND_RELEASE:
+			EDEBUG(ESTRLOC ": DND on desktop\n");
+			return 1;
+
+		case FL_PASTE:
+			EDEBUG("================> PASTE: %s\n", Fl::event_text());
+			drop_source(Fl::event_text(), Fl::event_x_root(), Fl::event_y_root());
 			return 1;
 
 		default:

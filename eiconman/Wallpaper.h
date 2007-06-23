@@ -37,6 +37,7 @@ class Wallpaper : public Fl_Box {
 		bool set(const char* path);
 		bool set_tiled(const char* path);
 		virtual void draw(void);
+		virtual int handle(int event);
 };
 
 #endif
