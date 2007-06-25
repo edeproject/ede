@@ -64,18 +64,28 @@ struct IconSettings {
 	edelib::String key_name;  // name used as key when storing positions
 };
 
+// Selection overlay
+struct SelectionOverlay {
+	int x, y, w, h;
+	bool show;
+};
+
 class Wallpaper;
 class DesktopIcon;
 class NotifyBox;
 
 typedef edelib::vector<DesktopIcon*>     DesktopIconList;
 
-class Desktop : public Fl_Window {
+#define DESKTOP_WINDOW Fl_Window
+
+class Desktop : public DESKTOP_WINDOW {
 	private:
 		static Desktop* pinstance;
 
 		int selection_x, selection_y;
 		bool moving;
+
+		SelectionOverlay*  selbox;
 
 		GlobalIconSettings gisett;
 		DesktopSettings*   dsett;
@@ -98,7 +108,9 @@ class Desktop : public Fl_Window {
 		bool in_selection(const DesktopIcon* ic);
 		void move_selection(int x, int y, bool apply);
 
-		void drop_source(const char* src, int x, int y);
+		void select_in_area(void);
+
+		void drop_source(const char* src, int src_len, int x, int y);
 
 		//DesktopIcon* below_mouse(int px, int py);
 
@@ -108,6 +120,7 @@ class Desktop : public Fl_Window {
 
 		virtual void show(void);
 		virtual void hide(void);
+		virtual void draw(void);
 		virtual int handle(int event);
 
 		static void init(void);

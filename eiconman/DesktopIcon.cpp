@@ -189,6 +189,7 @@ void DesktopIcon::fast_redraw(void) {
 
 	// LABEL_OFFSET + 2 include selection box line height too
 	parent()->damage(FL_DAMAGE_ALL, x(), y(), w(), h() + lheight + LABEL_OFFSET + 2);
+	//parent()->damage(FL_DAMAGE_CHILD, x(), y(), w(), h() + lheight + LABEL_OFFSET + 2);
 }
 
 void DesktopIcon::draw(void) { 

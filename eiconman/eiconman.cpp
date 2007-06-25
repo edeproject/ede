@@ -18,6 +18,7 @@
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
+#include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
@@ -31,8 +32,11 @@
 #include <signal.h>
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
+#include <ctype.h>  // isprint
 
 #define CONFIG_NAME  "eiconman.conf"
+
+#define EDAMAGE_OVERLAY  0x20
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
 #define SELECTION_MULTI (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
@@ -102,9 +106,13 @@ int desktop_xmessage_handler(int event) {
 	return 0; 
 }
 
-Desktop::Desktop() : Fl_Window(0, 0, 100, 100, "") {
+Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selection_x = selection_y = 0;
 	moving = false;
+
+	selbox = new SelectionOverlay;
+	selbox->x = selbox->y = selbox->w = selbox->h = 0;
+	selbox->show = false;
 
 	dsett = new DesktopSettings;
 	dsett->color = FL_GRAY;
@@ -139,6 +147,7 @@ Desktop::~Desktop() {
 	EDEBUG("Desktop::~Desktop()\n");
 
 	delete dsett;
+	delete selbox;
 }
 
 void Desktop::init(void) {
@@ -349,9 +358,9 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 		return false;
 	}
 
-	edelib::Config dconf;
+	edelib::DesktopFile dconf;
 	if(!dconf.load(path)) {
-		EDEBUG(ESTRLOC ": Can't read %s\n", path);
+		EWARNING(ESTRLOC ": Can't read %s\n", path);
 		return false;
 	}
 
@@ -359,7 +368,7 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	int buffsz = sizeof(buff);
 
 	/*
-	 * First check for 'EmptyIcon' key since via it is determined
+	 * Check for 'EmptyIcon' key since via it is determined
 	 * is icon trash type or not (in case of trash, 'Icon' key is used for full trash).
 	 * FIXME: any other way to check for trash icons ???
 	 */
@@ -368,65 +377,34 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 		is.icon = buff;
 	} else
 		is.type = ICON_NORMAL;
-
-	if(dconf.error() == edelib::CONF_ERR_SECTION) {
-		EDEBUG(ESTRLOC ": %s is not valid .desktop file\n");
+	
+	if(!dconf.icon(buff, buffsz)) {
+		EWARNING(ESTRLOC ": No Icon key, balling out\n");
 		return false;
 	}
-
-	dconf.get("Desktop Entry", "Icon", buff, buffsz);
 
 	if(is.type == ICON_TRASH)
 		is.icon2 = buff;
-	else {
+	else
 		is.icon = buff;
-		is.type = ICON_NORMAL;
-	}
 
-	EDEBUG(ESTRLOC ": Icon is: %s\n", is.icon.c_str());
-
-	char name[256];
-	// FIXME: UTF-8 safety
-	if(dconf.get_localized("Desktop Entry", "Name", name, sizeof(name))) {
-		EDEBUG(ESTRLOC ": Name is: %s\n", name);
-		is.name = name;
-	}
-
-	/*
-	 * Specs (desktop entry file) said that Type=Link means there must
-	 * be somewhere URL key. My thoughts is that in this case Exec key
-	 * should be ignored, even if exists. Then I will follow my thoughts.
-	 *
-	 * FIXME: 'Type' should be seen as test for .desktop file; if key
-	 * is not present, then file should not be considered as .desktop. This
-	 * should be checked before all others.
-	 */
-	if(!dconf.get("Desktop Entry", "Type", buff, buffsz)) {
-		EDEBUG(ESTRLOC ": Missing mandatory Type key\n");
-		return false;
-	}
-
-	if(strncmp(buff, "Link", 4) == 0) {
+	edelib::DesktopFileType dtype = dconf.type();
+	if(dtype == edelib::DESK_FILE_TYPE_LINK) {
 		is.cmd_is_url = true;
-		if(!dconf.get("Desktop Entry", "URL", buff, buffsz)) {
-			EDEBUG(ESTRLOC ": Missing expected URL key\n");
-			return false;
-		}
-		is.cmd = buff;
-	} else if(strncmp(buff, "Application", 11) == 0) {
-		is.cmd_is_url = false;
-		if(!dconf.get("Desktop Entry", "Exec", buff, buffsz)) {
-			EDEBUG(ESTRLOC ": Missing expected Exec key\n");
-			return false;
-		}
-		is.cmd = buff;
-	} else if(strncmp(buff, "Directory", 11) == 0) {
-		EDEBUG(ESTRLOC ": Type = Directory is not implemented yet\n");
-		return false;
-	} else {
-		EDEBUG(ESTRLOC ": Unknown %s type, ignoring...\n", buff);
-		return false;
+		dconf.url(buff, buffsz);
 	}
+	else {
+		is.cmd_is_url = false;
+		dconf.exec(buff, buffsz);
+	}
+
+	is.cmd = buff;
+
+	if(!dconf.name(buff, buffsz)) {
+		EDEBUG(ESTRLOC ": No Name key\n");
+		is.name = "(none)";
+	} else
+		is.name = buff;
 
 	return true;
 }
@@ -545,6 +523,55 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 }
 #endif
 
+void Desktop::select_in_area(void) {
+	if(!selbox->show)
+		return;
+
+	int ax = selbox->x;
+	int ay = selbox->y;
+	int aw = selbox->w;
+	int ah = selbox->h;
+
+	if(aw < 0) {
+		ax += aw;
+		aw = -aw;
+	} else if(!aw)
+		aw = 1;
+
+	if(ah < 0) {
+		ay += ah;
+		ah = -ah;
+	} else if(!ah)
+		ah = 1;
+
+	/*
+	 * XXX: This function can fail since icon coordinates are absolute (event_x_root)
+	 * but selbox use relative (event_root). It will work as expected if desktop is at x=0 y=0.
+	 * This should be checked further.
+	 */
+	unsigned int sz = icons.size();
+	DesktopIcon* ic = NULL;
+
+	for(unsigned int i = 0; i < sz; i++) {
+		ic = icons[i];
+		EASSERT(ic != NULL && "Impossible to happen");
+
+		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
+			if(!ic->is_focused()) {
+				ic->do_focus();
+				//ic->fast_redraw();
+				ic->redraw();
+			}
+		} else {
+			if(ic->is_focused()) {
+				ic->do_unfocus();
+				//ic->fast_redraw();
+				ic->redraw();
+			}
+		}
+	}
+}
+
 void Desktop::notify_box(const char* msg, bool copy) {
 	if(!msg)
 		return;
@@ -577,9 +604,27 @@ void Desktop::notify_desktop_changed(void) {
 	XFreeStringList(names);
 }
 
-void Desktop::drop_source(const char* src, int x, int y) {
+void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 	if(!src)
 		return;
+	/*
+	 * must copy clipboard content since with given size since
+	 * it could be null chars in the middle of it
+	 */
+	char* src_copy = new char[src_len+1];
+	int i;
+	for(i = 0; i < src_len; i+=2) {
+		if(isascii(src[i]) && src[i] != '\0')
+			src_copy[i] = src[i];
+	}
+	src_copy[i] = '\0';
+
+	EDEBUG(ESTRLOC ": DND, received %s\n", src_copy);
+
+	delete [] src_copy;
+
+	return;
+
 	IconSettings is;
 	is.x = x;
 	is.y = y;
@@ -605,6 +650,49 @@ void Desktop::drop_source(const char* src, int x, int y) {
 	add_icon(dic);
 }
 
+void Desktop::draw(void) {
+	/*
+	if(damage() & (FL_DAMAGE_ALL | FL_DAMAGE_EXPOSE)) {
+		Fl_Group::draw();
+		EDEBUG("REDRAW ALL\n");
+	} */
+	if(damage() & (~FL_DAMAGE_CHILD & ~EDAMAGE_OVERLAY)) {
+		draw_box();
+		draw_label();
+
+		Fl_Widget* const* a = array();
+		for(int i = children(); i--; ) {
+			Fl_Widget& o = **a++;
+			draw_child(o);
+			draw_outside_label(o);
+		}
+	} else if(damage() & FL_DAMAGE_CHILD) {
+		Fl_Widget* const* a = array();
+		for(int i = children(); i--; )
+			update_child(**a++);
+	}
+
+
+	if(damage() & (FL_DAMAGE_ALL | EDAMAGE_OVERLAY)) {
+		clear_xoverlay();
+		
+		if(selbox->show) {
+			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
+			EDEBUG("DRAW OVERLAY\n");
+		}
+
+		/*
+		 * now scan all icons and see if they needs redraw, and if do
+		 * just update their label since it is indicator of selection
+		 */
+		for(int i = 0; i < children(); i++) {
+			if(child(i)->damage() == FL_DAMAGE_ALL) {
+				update_child(*child(i));
+			}
+		}
+	}
+}
+
 int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
@@ -624,12 +712,17 @@ int Desktop::handle(int event) {
 				EDEBUG(ESTRLOC ": DESKTOP CLICK !!!\n");
 				if(!selectionbuff.empty()) {
 					/*
-					 * only focused are in selectionbuff, so this is 
-					 * fine to do; also will prevent full redraw when
-					 * is clicked on desktop
+					 * Only focused are in selectionbuff, so this is 
+					 * fine to do; also will prevent full redraw when is clicked on desktop
 					 */
 					unfocus_all();
 					selectionbuff.clear();
+				}
+
+				// track position so moving can be deduced
+				if(Fl::event_button() == 1) {
+					selbox->x = Fl::event_x();
+					selbox->y = Fl::event_y();
 				}
 				return 1;
 			}
@@ -651,7 +744,7 @@ int Desktop::handle(int event) {
 			} else if(SELECTION_SINGLE) {
 				if(!in_selection(tmp_icon)) {
 					/*
-					 * for testing
+					 * for testing:
 					 * notify_box(tmp_icon->label());
 					 */
 					select_only(tmp_icon);
@@ -659,7 +752,7 @@ int Desktop::handle(int event) {
 			} else if(Fl::event_button() == 3) {
 				select_only(tmp_icon);
 				/*
-				 * for testing
+				 * for testing:
 				 * notify_box(tmp_icon->label());
 				 */
 			}
@@ -685,6 +778,22 @@ int Desktop::handle(int event) {
 				move_selection(Fl::event_x_root(), Fl::event_y_root(), false);
 			} else {
 				EDEBUG(ESTRLOC ": DRAG from desktop\n");
+				/*
+				 * Moving is started with pushed button.
+				 * From this point selection box is created and is rolled until release
+				 */
+				if(selbox->x != 0 || selbox->y != 0) {
+					selbox->w = Fl::event_x() - selbox->x;
+					selbox->h = Fl::event_y() - selbox->y;
+
+					selbox->show = true;
+
+					// see if there some icons inside selection area
+					select_in_area();
+
+					// redraw selection box
+					damage(EDAMAGE_OVERLAY);
+				}
 			}
 
 			return 1;
@@ -692,6 +801,31 @@ int Desktop::handle(int event) {
 		case FL_RELEASE:
 			EDEBUG(ESTRLOC ": RELEASE from desktop\n");
 			EDEBUG(ESTRLOC ": clicks: %i\n", Fl::event_is_click());
+
+			if(selbox->show) {
+				selbox->x = selbox->y = selbox->w = selbox->h = 0;
+				selbox->show = false;
+				damage(EDAMAGE_OVERLAY);
+
+				/*
+				 * Now pickup those who are in is_focused() state.
+				 * Here is not used select() since it will fill selectionbuff with
+				 * redrawing whole window each time. This is not what we want.
+				 *
+				 * Possible flickers due overlay will be later removed when is
+				 * called move_selection(), which will in turn redraw icons again
+				 * after position them.
+				 */
+				if(!selectionbuff.empty())
+					selectionbuff.clear();
+
+				for(unsigned int i = 0; i < icons.size(); i++) {
+					if(icons[i]->is_focused())
+						select(icons[i]);
+				}
+
+				return 1;
+			}
 
 			if(!selectionbuff.empty() && moving)
 				move_selection(Fl::event_x_root(), Fl::event_y_root(), true);
@@ -707,26 +841,26 @@ int Desktop::handle(int event) {
 
 			moving = false;
 			return 1;
-
 		case FL_DND_ENTER:
 		case FL_DND_DRAG:
 		case FL_DND_LEAVE:
+			EDEBUG("FL_DND_ENTER|FL_DND_DRAG|FL_DND_LEAVE\n");
 			return 1;
-
 		case FL_DND_RELEASE:
 			EDEBUG(ESTRLOC ": DND on desktop\n");
+			//Fl::paste(*this);
 			return 1;
 
 		case FL_PASTE:
-			EDEBUG("================> PASTE: %s\n", Fl::event_text());
-			drop_source(Fl::event_text(), Fl::event_x_root(), Fl::event_y_root());
+			EDEBUG("=======> %s\n", Fl::event_text());
+			EDEBUG("=======> %s\n", Fl::event_text());
+			//drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x_root(), Fl::event_y_root());
 			return 1;
-
 		default:
 			break;
 	}
 
-	return Fl_Window::handle(event);
+	return DESKTOP_WINDOW::handle(event);
 }
 
 int main() {

@@ -430,7 +430,7 @@ void Wallpaper::draw(void) {
 #endif
 }
 
-#include <FL/Fl.h>
+//#include <FL/Fl.h>
 
 int Wallpaper::handle(int event) {
 	switch(event) {
@@ -442,24 +442,8 @@ int Wallpaper::handle(int event) {
 		case FL_DND_DRAG:
 		case FL_DND_LEAVE:
 		case FL_DND_RELEASE:
-			return parent()->handle(event);
-
 		case FL_PASTE:
-			/*
-			 * Since some stuff are in fltk unnedededly complicated, like
-			 * DND, this is needed to make it correctly work. After we got
-			 * FL_PASTE event (drag'n drop content released), that content
-			 * is routed to CLIPBOARD buffer of Desktop and in turn will trigger
-			 * FL_PASTE on Desktop.
-			 *
-			 * This is since fltk use XA_PRIMARY as default (or selection clipboard from X11)
-			 * not CLIPBOARD (as rest of normal world).
-			 *
-			 * Also, to make DND workable for Desktop, Wallpaper widget must be
-			 * always visible.
-			 */
-			Fl::paste(*parent(), 1);
-			return 1;
+			return parent()->handle(event);
 	}
 
 	return Fl_Box::handle(event);

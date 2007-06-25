@@ -234,7 +234,7 @@ void draw_overlay_rect(void) {
 		return;
 
 	XSetDashes(fl_display, fl_gc, 0, dash_list, 1);
-	XSetLineAttributes(fl_display, fl_gc, 1, LineOnOffDash, CapButt, JoinMiter);
+	XSetLineAttributes(fl_display, fl_gc, 2, LineOnOffDash, CapButt, JoinMiter);
 
 	XSetFunction(fl_display, fl_gc, GXxor);
 	XSetForeground(fl_display, fl_gc, 0xffffffff);
