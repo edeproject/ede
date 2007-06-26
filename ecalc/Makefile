@@ -1,43 +1,17 @@
-CC      = gcc
-CXX		= g++
-LD		= g++
 
-TARGET = ecalc
-FLUID = fluid
-PREFIX  = 
+CPPFILES = SciCalc.cpp Main.cpp
+TARGET   = ecalc
 
-IFLAGS = -I/usr/X11/include
-LFLAGS = -L/usr/X11R6/lib -L/usr/local/lib
-CPPFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
-CXXFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
-CFLAGS  = -O2 $(IFLAGS) $(DFLAGS) -Wall 
-LLIBS =
-LIBS = -lfltk -lX11 -lm
-OBJS =	Main.o SciCalc.o
+include ../makeinclude
 
+install:
+	$(INSTALL_PROGRAM) $(TARGET) $(bindir)
+	$(INSTALL_LOCALE)
 
-all : $(TARGET)
-
-.SUFFIXES:	.cpp .hh .o .fld
-
-.fld.cpp:
-	$(FLUID) -c $<
-.cpp.o :
-	$(CXX) -c $< -o $(<:.cpp=.o) $(CXXFLAGS)
-.c.o :
-	$(CC) -c $< -o $(<:.c=.o) $(CPPFLAGS)
-
-$(TARGET) : $(OBJS)
-	$(LD) -o $(TARGET) $(OBJS) $(LFLAGS) $(LLIBS) $(LIBS)
-	strip $(TARGET)
+uninstall:
+	$(RM) $(bindir)/$(TARGET)
 
 clean:
-	-rm *.o
-	-rm $(TARGET)
+	$(RM) $(TARGET)
+	$(RM) *.o
 
-backup:
-	tar cvf $(TARGET).tar $(PREFIX)*.cpp  $(PREFIX)*.h  *.fld ICONS  Makefile
-	gzip $(TARGET).tar
-
-protos:
-	cproto -e -q -E 0 -O /dev/null -o protos.h $(IFLAGS) $(PREFIX)*.cc  $(PREFIX)*.c
