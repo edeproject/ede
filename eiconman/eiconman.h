@@ -21,7 +21,8 @@
 #include <edelib/Config.h>
 #include <edelib/Vector.h>
 
-#define EDAMAGE_LABEL 0x20
+#define EDAMAGE_CHILD_LABEL    0x10
+#define EDAMAGE_OVERLAY        0x20
 
 struct DesktopSettings {
 	int  color;                   // background color

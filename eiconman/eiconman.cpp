@@ -36,7 +36,6 @@
 
 #define CONFIG_NAME  "eiconman.conf"
 
-#define EDAMAGE_OVERLAY  0x20
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
 #define SELECTION_MULTI (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
@@ -91,7 +90,6 @@ int desktop_xmessage_handler(int event) {
 			return 1;
 		}
 
-		//if(fl_xevent->xclient.message_type == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
 		if(fl_xevent->xproperty.atom == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
 			Desktop::instance()->notify_box_color(ede_get_desktop_notify_color());
 			return 1;
@@ -128,10 +126,13 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	 */
 	begin();
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
-		//wallpaper->hide();
+		//wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
+		//wallpaper->set_tiled("/home/sanelz/walls/katesmall.jpg");
+		//wallpaper->set_tiled("/home/sanelz/walls/kate.jpg");
 		//wallpaper->set("/home/sanelz/walls/katebig.jpg");
-		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
+		//wallpaper->hide();
+		wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 		notify = new NotifyBox(w(), h());
 		notify->hide();
@@ -559,14 +560,19 @@ void Desktop::select_in_area(void) {
 		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
 			if(!ic->is_focused()) {
 				ic->do_focus();
-				//ic->fast_redraw();
-				ic->redraw();
+				// updated from Desktop::draw()
+				ic->damage(EDAMAGE_CHILD_LABEL);
 			}
 		} else {
 			if(ic->is_focused()) {
 				ic->do_unfocus();
-				//ic->fast_redraw();
-				ic->redraw();
+				// updated from Desktop::draw()
+				ic->damage(EDAMAGE_CHILD_LABEL);
+				/*
+				 * need to redraw whole screen since icon label is
+				 * outside icon's drawable rectangle
+				 */
+				redraw();
 			}
 		}
 	}
@@ -651,44 +657,32 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 }
 
 void Desktop::draw(void) {
-	/*
 	if(damage() & (FL_DAMAGE_ALL | FL_DAMAGE_EXPOSE)) {
-		Fl_Group::draw();
-		EDEBUG("REDRAW ALL\n");
-	} */
-	if(damage() & (~FL_DAMAGE_CHILD & ~EDAMAGE_OVERLAY)) {
-		draw_box();
-		draw_label();
+		/*
+		 * If any overlay was previously visible during full
+		 * redraw, it will not be cleared because of fast flip.
+		 * This will assure that does not happened.
+		 */
+		clear_xoverlay();
 
-		Fl_Widget* const* a = array();
-		for(int i = children(); i--; ) {
-			Fl_Widget& o = **a++;
-			draw_child(o);
-			draw_outside_label(o);
-		}
-	} else if(damage() & FL_DAMAGE_CHILD) {
-		Fl_Widget* const* a = array();
-		for(int i = children(); i--; )
-			update_child(**a++);
+		DESKTOP_WINDOW::draw();
+		EDEBUG("REDRAW ALL\n");
 	}
 
-
 	if(damage() & (FL_DAMAGE_ALL | EDAMAGE_OVERLAY)) {
-		clear_xoverlay();
-		
 		if(selbox->show) {
 			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
 			EDEBUG("DRAW OVERLAY\n");
-		}
+		} else
+			clear_xoverlay();
 
 		/*
 		 * now scan all icons and see if they needs redraw, and if do
 		 * just update their label since it is indicator of selection
 		 */
 		for(int i = 0; i < children(); i++) {
-			if(child(i)->damage() == FL_DAMAGE_ALL) {
+			if(child(i)->damage() == EDAMAGE_CHILD_LABEL)
 				update_child(*child(i));
-			}
 		}
 	}
 }

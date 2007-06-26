@@ -73,17 +73,17 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 		edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_HUGE);
 		if(!ipath.empty()) {
 			Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
-				if(img) {
-					int img_w = img->w();
-					int img_h = img->h();
+			if(img) {
+				int img_w = img->w();
+				int img_h = img->h();
 
-					// resize box if icon is larger
-					if(img_w > ICONSIZE || img_h > ICONSIZE)
-						size(img_w + OFFSET_W, img_h + OFFSET_H);
+				// resize box if icon is larger
+				if(img_w > ICONSIZE || img_h > ICONSIZE)
+					size(img_w + OFFSET_W, img_h + OFFSET_H);
 
-					image(img);
-				} else 
-					EDEBUG(ESTRLOC ": Unable to load %s\n", ipath.c_str());
+				image(img);
+			} else 
+				EDEBUG(ESTRLOC ": Unable to load %s\n", ipath.c_str());
 		} else
 			EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
 	}
@@ -189,7 +189,6 @@ void DesktopIcon::fast_redraw(void) {
 
 	// LABEL_OFFSET + 2 include selection box line height too
 	parent()->damage(FL_DAMAGE_ALL, x(), y(), w(), h() + lheight + LABEL_OFFSET + 2);
-	//parent()->damage(FL_DAMAGE_CHILD, x(), y(), w(), h() + lheight + LABEL_OFFSET + 2);
 }
 
 void DesktopIcon::draw(void) { 
@@ -207,7 +206,7 @@ void DesktopIcon::draw(void) {
 		im->draw(ix, iy);
 	}
 
-	if(globals->label_draw && (damage() & (FL_DAMAGE_ALL))) {
+	if(globals->label_draw && (damage() & (FL_DAMAGE_ALL | EDAMAGE_CHILD_LABEL))) {
 		int X = x() + w()-(w()/2)-(lwidth/2);
 		int Y = y() + h() + LABEL_OFFSET;
 

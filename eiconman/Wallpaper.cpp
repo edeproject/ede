@@ -15,8 +15,11 @@
 
 #include <edelib/Debug.h>
 #include <FL/Fl_Shared_Image.h>
+#include <FL/Fl_RGB_Image.h>
 #include <FL/fl_draw.h>
 #include <FL/x.h>
+
+#include <string.h> // memcpy
 
 #define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
 	tmp = 0; \
@@ -288,6 +291,73 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 	return pix;
 }
 
+int pixel_pos(int x, int y, int w, int d) {
+	return ((y * w) + x) * d;
+}
+
+bool create_tile(Fl_Image* orig, Fl_RGB_Image*& copied, int X, int Y, int W, int H) {
+	if(orig->w() >= W && orig->h() >= H)
+		return false;
+
+	int iw = orig->w();
+	int ih = orig->h();
+	int tx = X - (X % iw);
+	int ty = Y - (Y % ih);
+	int tw = W + tx;
+	int th = H + ty;
+
+	unsigned char* dest = new unsigned char[tw * th * orig->d()];
+	memset(dest, 0, tw * th * orig->d());
+	unsigned char* destptr = dest;
+	unsigned char* src = (unsigned char*)orig->data()[0];
+
+	int ppos = 0;
+
+#if 0
+	// funny effect :)
+	for(int j = 0, cj = 0; j < th; j++, cj++) {
+		for(int i = 0, ci = 0; i < tw * orig->d(); i++, ci++) {
+			if(ci >= iw) ci = 0;
+			if(cj >= ih) cj = 0;
+
+			ppos = pixel_pos(ci, cj, iw, orig->d());
+			*destptr = src[ppos];
+			destptr++;
+		}
+	}
+#endif
+
+	for(int j = 0, cj = 0; j < th; j++, cj++) {
+		for(int i = 0, ci = 0; i < tw; i++, ci++) {
+			if(ci > iw) ci = 0;
+			if(cj > ih) cj = 0;
+
+			ppos = pixel_pos(ci, cj, iw, orig->d());
+
+			if(orig->d() == 3 || orig->d() == 4) {
+				*destptr++ = src[ppos];
+				*destptr++ = src[ppos+1];
+				*destptr++ = src[ppos+2];
+				if(orig->d() == 4)
+					*destptr++ = src[ppos+3];
+			} else if(orig->d() == 2) {
+				*destptr++ = src[ppos];
+				*destptr++ = src[ppos+1];
+			} else
+				*destptr++ = src[ppos];
+		}
+	}
+
+	Fl_RGB_Image* c = new Fl_RGB_Image(dest, tw, th, orig->d(), orig->ld());
+	//Fl_RGB_Image* c = new Fl_RGB_Image(dest, iw, ih, orig->d(), orig->ld());
+	c->alloc_array = 1;
+	copied = c;
+
+	EDEBUG("==> %i %i\n", copied->w(), copied->h());
+
+	return true;
+}
+
 Wallpaper::Wallpaper(int X, int Y, int W, int H) : 
 	Fl_Box(X, Y, W, H, 0), rootpmap_image(NULL), rootpmap_pixmap(0), img(NULL), tiled(false) { 
 }
@@ -320,10 +390,27 @@ bool Wallpaper::set(const char* path) {
 }
 
 bool Wallpaper::set_tiled(const char* path) {
+	EASSERT(path != NULL);
+
+	Fl_Image* i = Fl_Shared_Image::get(path);
+	if(!i)
+		return false;
+
+	EDEBUG("==> %i \n", i->w());
+	EDEBUG("==> %i \n", i->h());
+	Fl_RGB_Image* res = 0;
+	create_tile(i, res, x(), y(), w(), h());
+	EDEBUG("---> %p\n", res);
+	EDEBUG("==> %i \n", res->w());
+	EDEBUG("==> %i \n", res->h());
+	//EDEBUG("==> %i \n", res->d());
+	image(res);
+#if 0
 	bool ret = set(path);
 	if(ret)
 		tiled = true;
 	return ret;
+#endif
 }
 
 void Wallpaper::set_rootpmap(void) {
@@ -378,7 +465,7 @@ void Wallpaper::draw(void) {
 
 	if(iw == 0 || ih == 0)
 		return;
-
+#if 0
 	if(ih < h() || iw < w()) {
 		if(tiled) { 
 			// tile image across the box
@@ -405,6 +492,9 @@ void Wallpaper::draw(void) {
 		ix = x();
 		iy = y();
 	}
+#endif
+	ix = x();
+	iy = y();
 
 	im->draw(ix, iy);
 
