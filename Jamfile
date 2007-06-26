@@ -18,6 +18,7 @@ SubInclude TOP edialog ;
 SubInclude TOP eimage ;
 SubInclude TOP ecolorconf ;
 SubInclude TOP econtrol ;
+SubInclude TOP ecalc ;
 SubInclude TOP edisplayconf ;
 SubInclude TOP efinder ;
 SubInclude TOP eiconsconf ;
