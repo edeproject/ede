@@ -14,7 +14,6 @@
 #define __WALLPAPER_H__
 
 #include <FL/Fl_Box.h>
-#include <FL/Fl_Image.h>
 
 #include <X11/Xlib.h>  // XImage, Pixmap
 
@@ -26,7 +25,6 @@ class Wallpaper : public Fl_Box {
 	private:
 		XImage*   rootpmap_image;
 		Pixmap    rootpmap_pixmap;
-		Fl_Image* img;
 		bool tiled;
 		void set_rootpmap(void);
 
