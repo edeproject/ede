@@ -850,11 +850,17 @@ int Desktop::handle(int event) {
 			EDEBUG("=======> %s\n", Fl::event_text());
 			//drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x_root(), Fl::event_y_root());
 			return 1;
+
+		case FL_ENTER:
+		case FL_LEAVE:
+		case FL_MOVE:
+			return DESKTOP_WINDOW::handle(event);
+
 		default:
 			break;
 	}
 
-	return DESKTOP_WINDOW::handle(event);
+	return 0;
 }
 
 int main() {
