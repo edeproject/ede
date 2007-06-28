@@ -47,7 +47,7 @@
  * Which widgets Fl::belowmouse() should skip. This should be updated
  * when new non-icon child is added to Desktop window.
  */
-#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == notify))
+#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper))
 
 Desktop* Desktop::pinstance = NULL;
 bool running = false;
@@ -134,9 +134,9 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 		//wallpaper->hide();
 		wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
-		notify = new NotifyBox(w(), h());
-		notify->hide();
 	end();
+
+	notify = new NotifyBox(w(), h());
 
 	read_config();
 
@@ -149,6 +149,7 @@ Desktop::~Desktop() {
 
 	delete dsett;
 	delete selbox;
+	delete notify;
 }
 
 void Desktop::init(void) {
@@ -414,7 +415,6 @@ void Desktop::add_icon(DesktopIcon* ic) {
 	EASSERT(ic != NULL);
 
 	icons.push_back(ic);
-	// FIXME: validate this
 	add((Fl_Widget*)ic);
 }
 
@@ -587,7 +587,8 @@ void Desktop::notify_box(const char* msg, bool copy) {
 	else	
 		notify->label(msg);
 
-	notify->show();
+	if(!notify->shown())
+		notify->show();
 }
 
 void Desktop::notify_box_color(Fl_Color col) {
