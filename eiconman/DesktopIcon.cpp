@@ -38,7 +38,6 @@
 // label offset from icon y()+h(), so selection box can be drawn nicely
 #define LABEL_OFFSET 2
 
-
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
 	Fl_Widget(is->x, is->y, ICONSIZE, ICONSIZE) {
 
@@ -120,8 +119,8 @@ void DesktopIcon::update_label_size(void) {
 
 	fl_measure(label(), lwidth, lheight, align());
 
-    lwidth += 8;
-	lheight += 4;
+    lwidth += 12;
+	lheight += 5;
 }
 
 void DesktopIcon::drag(int x, int y, bool apply) {
@@ -217,6 +216,10 @@ void DesktopIcon::draw(void) {
 			fl_rectf(X, Y, lwidth, lheight);
 		}
 
+		// pseudo-shadow
+		fl_color(FL_BLACK);
+		fl_draw(label(), X+1, Y+1, lwidth, lheight, align(), 0, 0);
+
 		fl_color(globals->label_foreground);
 		fl_draw(label(), X, Y, lwidth, lheight, align(), 0, 0);
 
@@ -225,9 +228,8 @@ void DesktopIcon::draw(void) {
 			 * draw focused box on our way so later
 			 * this can be used to draw customised boxes
 			 */
-			fl_line_style(FL_DOT);
-
 			fl_color(globals->label_foreground);
+			fl_line_style(FL_DOT);
 
 			fl_push_matrix();
 			fl_begin_loop();

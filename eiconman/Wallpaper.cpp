@@ -528,8 +528,6 @@ void Wallpaper::draw(void) {
 #endif
 }
 
-//#include <FL/Fl.h>
-
 int Wallpaper::handle(int event) {
 	switch(event) {
 		/* 
