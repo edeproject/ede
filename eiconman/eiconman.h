@@ -77,7 +77,7 @@ class NotifyBox;
 
 typedef edelib::vector<DesktopIcon*>     DesktopIconList;
 
-#define DESKTOP_WINDOW Fl_Window
+#define DESKTOP_WINDOW Fl_Double_Window
 
 class Desktop : public DESKTOP_WINDOW {
 	private:
@@ -96,6 +96,8 @@ class Desktop : public DESKTOP_WINDOW {
 
 		DesktopIconList icons;
 		DesktopIconList selectionbuff;
+
+		void init_internals(void);
 
 		void load_icons(const char* path, edelib::Config& conf);
 		bool read_desktop_file(const char* path, IconSettings& is);

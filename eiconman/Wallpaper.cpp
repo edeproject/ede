@@ -219,6 +219,7 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 					r = *src++;
 					g = *src++;
 					b = *src++;
+
 					if(msb) {
 						// big endian
 						*destptr++ = b;
@@ -319,19 +320,6 @@ bool create_tile(Fl_Image* orig, Fl_RGB_Image*& copied, int X, int Y, int W, int
 	// for bounds checks
 	int imax = iw * ih * idepth;
 
-#if 0
-	// funny effect :)
-	for(int j = 0, cj = 0; j < th; j++, cj++) {
-		for(int i = 0, ci = 0; i < tw * orig->d(); i++, ci++) {
-			if(ci >= iw) ci = 0;
-			if(cj >= ih) cj = 0;
-
-			ppos = pixel_pos(ci, cj, iw, orig->d());
-			*destptr = src[ppos];
-			destptr++;
-		}
-	}
-#endif
 	if(idepth == 3 || idepth == 4) {
 		for(int j = 0, cj = 0; j < th; j++, cj++) {
 			if(cj > ih) cj = 0;

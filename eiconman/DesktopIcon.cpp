@@ -86,11 +86,26 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 		} else
 			EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
 	}
-/*
-	EDEBUG(ESTRLOC ": Got label: %s\n", label());
-	EDEBUG(ESTRLOC ": Got image: %s\n", settings->icon.c_str());
-	EDEBUG(ESTRLOC ": Got x/y  : %i %i\n", x(), y());
-*/
+
+	// make sure icons are visible on desktop
+	int dx = Desktop::instance()->x();
+	int dy = Desktop::instance()->y();
+	int dw = Desktop::instance()->w();
+	int dh = Desktop::instance()->h();
+	int ix = x();
+	int iy = y();
+
+	if(x() < dx)
+		ix = dx;
+	if(y() < dy)
+		iy = dy;
+	if(x() + w() > dw)
+		ix = (dx + dw) - w();
+	if(y() + h() > dh)
+		iy = (dy + dh) - h();
+
+	position(ix, iy);
+
 	//Use desktop color as color for icon background
 	color(bg);
 

@@ -38,7 +38,7 @@
 
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
-#define SELECTION_MULTI (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
+#define SELECTION_MULTI  (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
 
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
@@ -115,7 +115,17 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	dsett = new DesktopSettings;
 	dsett->color = FL_GRAY;
 	dsett->wp_use = false;
+}
 
+Desktop::~Desktop() { 
+	EDEBUG("Desktop::~Desktop()\n");
+
+	delete dsett;
+	delete selbox;
+	delete notify;
+}
+
+void Desktop::init_internals(void) {
 	init_atoms();
 	update_workarea();
 
@@ -130,32 +140,25 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
 		//wallpaper->set_tiled("/home/sanelz/walls/katesmall.jpg");
 		//wallpaper->set_tiled("/home/sanelz/walls/kate.jpg");
-		//wallpaper->set("/home/sanelz/walls/katebig.jpg");
+		wallpaper->set("/home/sanelz/walls/katebig.jpg");
 		//wallpaper->hide();
-		wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
+		//wallpaper->set("/home/sanelz/walls/katesmall.jpg");
+		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 	end();
 
 	notify = new NotifyBox(w(), h());
+	set_bg_color(dsett->color, false);
 
 	read_config();
-
-	set_bg_color(dsett->color, false);
 	running = true;
-}
-
-Desktop::~Desktop() { 
-	EDEBUG("Desktop::~Desktop()\n");
-
-	delete dsett;
-	delete selbox;
-	delete notify;
 }
 
 void Desktop::init(void) {
 	if(Desktop::pinstance != NULL)
 		return;
 	Desktop::pinstance = new Desktop();
+	Desktop::pinstance->init_internals();
 }
 
 void Desktop::shutdown(void) {
@@ -181,8 +184,6 @@ void Desktop::show(void) {
 		Fl_X::make_xid(this);
 		net_make_me_desktop(this);
 	}
-
-	//Fl::dnd_text_ops(1);
 }
 
 /*
