@@ -63,6 +63,7 @@ struct IconSettings {
 	edelib::String icon;
 	edelib::String icon2;     // for stateable icons, like trash (empty/full)
 	edelib::String key_name;  // name used as key when storing positions
+	edelib::String full_path; // for tracking changes
 };
 
 // Selection overlay
@@ -75,9 +76,11 @@ class Wallpaper;
 class DesktopIcon;
 class NotifyBox;
 
+class Fl_Menu_Button;
+
 typedef edelib::vector<DesktopIcon*>     DesktopIconList;
 
-#define DESKTOP_WINDOW Fl_Double_Window
+#define DESKTOP_WINDOW Fl_Window
 
 class Desktop : public DESKTOP_WINDOW {
 	private:
@@ -91,8 +94,9 @@ class Desktop : public DESKTOP_WINDOW {
 		GlobalIconSettings gisett;
 		DesktopSettings*   dsett;
 
-		Wallpaper* wallpaper;
-		NotifyBox* notify;
+		Fl_Menu_Button* dmenu;
+		Wallpaper*      wallpaper;
+		NotifyBox*      notify;
 
 		DesktopIconList icons;
 		DesktopIconList selectionbuff;
@@ -106,7 +110,7 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void unfocus_all(void);
 
-		void select(DesktopIcon* ic);
+		void select(DesktopIcon* ic, bool do_redraw = true);
 		void select_only(DesktopIcon* ic);
 		bool in_selection(const DesktopIcon* ic);
 		void move_selection(int x, int y, bool apply);
@@ -115,7 +119,7 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void drop_source(const char* src, int src_len, int x, int y);
 
-		//DesktopIcon* below_mouse(int px, int py);
+		DesktopIcon* below_mouse(int px, int py);
 
 	public:
 		Desktop();
@@ -134,13 +138,13 @@ class Desktop : public DESKTOP_WINDOW {
 		void save_config(void);
 
 		void update_workarea(void);
+		void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
+
 		void set_bg_color(int c, bool do_redraw = true);
 
 		void notify_box(const char* msg, bool copy = false);
 		void notify_box_color(Fl_Color col);
 		void notify_desktop_changed(void);
-
-		Fl_Window* desktop_window(void) { return this; }
 };
 
 #endif

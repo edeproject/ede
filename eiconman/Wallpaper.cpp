@@ -530,5 +530,5 @@ int Wallpaper::handle(int event) {
 			return parent()->handle(event);
 	}
 
-	return Fl_Box::handle(event);
+	return 0;
 }

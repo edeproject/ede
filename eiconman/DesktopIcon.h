@@ -25,6 +25,8 @@ class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
 
+class Fl_Menu_Button;
+
 class DesktopIcon : public Fl_Widget {
 	private:
 		IconSettings* settings;
@@ -36,7 +38,10 @@ class DesktopIcon : public Fl_Widget {
 
 		MovableIcon* micon;
 
+		Fl_Menu_Button* imenu;
+
 		void update_label_size(void);
+		void fix_position(int X, int Y);
 
 	public:
 		DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int bg);
@@ -71,7 +76,7 @@ class DesktopIcon : public Fl_Widget {
 
 		Fl_Image* icon_image(void) { return image(); }
 
-		const IconSettings* get_settings(void) const { return settings; }
+		void rename(const char* str);
 };
 
 class MovableIcon : public Fl_Window {

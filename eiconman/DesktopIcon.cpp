@@ -17,10 +17,13 @@
 #include <FL/Fl.h>
 #include <FL/fl_draw.h>
 #include <FL/Fl_Shared_Image.h>
+#include <FL/Fl_Menu_Button.h>
 #include <FL/x.h>
+#include <FL/fl_ask.h>
 
 #include <edelib/Debug.h>
 #include <edelib/IconTheme.h>
+#include <edelib/Nls.h>
 
 #define USE_SHAPE 1
 
@@ -37,6 +40,36 @@
 
 // label offset from icon y()+h(), so selection box can be drawn nicely
 #define LABEL_OFFSET 2
+
+
+void rename_cb(Fl_Widget*, void* d);
+
+Fl_Menu_Item icon_menu[] = {
+	{_("    &Open    "),   0, 0},
+	{_("    &Rename    "), 0, rename_cb, 0},
+	{_("    &Delete    "), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("    &Properties    "), 0, 0},
+	{0}
+};
+
+Fl_Menu_Item icon_trash_menu[] = {
+	{_("    &Open    "),       0, 0},
+	{_("    &Properties    "), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("    &Empty    "),      0, 0},
+	{0}
+};
+
+void rename_cb(Fl_Widget*, void* d) {
+	DesktopIcon* di = (DesktopIcon*)d;
+	EASSERT(di != NULL);
+
+	const char* new_name = fl_input(_("New name"), di->label());
+	if(!new_name)
+		return;
+	if(new_name[0] == '\0')
+		return;
+	di->rename(new_name);
+}
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
 	Fl_Widget(is->x, is->y, ICONSIZE, ICONSIZE) {
@@ -60,10 +93,23 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	settings->icon = is->icon;
 	settings->type = is->type;
 	settings->key_name= is->key_name;
+	settings->full_path = is->full_path;
 
 	// x,y are not needed since x(), y() are filled with it
 	
+	// setting fonts is TODO :P
+#if 0	
+	Fl::set_font((Fl_Font)20, "-windows-*-medium-r-*-*-14-*-*-*-*-*-*-*");
+	labelfont((Fl_Font)20);
+#endif
+
 	label(settings->name.c_str());
+
+	imenu = new Fl_Menu_Button(0, 0, 0, 0);
+	if(settings->type == ICON_TRASH)
+		imenu->menu(icon_trash_menu);
+	else
+		imenu->menu(icon_menu);
 
 	if(!settings->icon.empty()) {
 		const char* nn = settings->icon.c_str();
@@ -87,24 +133,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 			EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
 	}
 
-	// make sure icons are visible on desktop
-	int dx = Desktop::instance()->x();
-	int dy = Desktop::instance()->y();
-	int dw = Desktop::instance()->w();
-	int dh = Desktop::instance()->h();
-	int ix = x();
-	int iy = y();
-
-	if(x() < dx)
-		ix = dx;
-	if(y() < dy)
-		iy = dy;
-	if(x() + w() > dw)
-		ix = (dx + dw) - w();
-	if(y() + h() > dh)
-		iy = (dy + dh) - h();
-
-	position(ix, iy);
+	fix_position(x(), y());
 
 	//Use desktop color as color for icon background
 	color(bg);
@@ -120,6 +149,8 @@ DesktopIcon::~DesktopIcon() {
 		delete settings;
 	if(micon)
 		delete micon;
+
+	delete imenu;
 }
 
 void DesktopIcon::update_label_size(void) {
@@ -130,12 +161,32 @@ void DesktopIcon::update_label_size(void) {
 	 * make sure current font size/type is set (internaly to fltk)
 	 * so fl_measure() can correctly calculate label width and height
 	 */
+	int old = fl_font();
+	int old_sz = fl_size();
 	fl_font(labelfont(), labelsize());
 
 	fl_measure(label(), lwidth, lheight, align());
 
+	fl_font(old, old_sz);
+
     lwidth += 12;
 	lheight += 5;
+}
+
+void DesktopIcon::fix_position(int X, int Y) {
+	int dx, dy, dw, dh;
+	Desktop::instance()->area(dx, dy, dw, dh);
+
+	if(X < dx)
+		X = dx;
+	if(Y < dy)
+		Y = dy;
+	if(X + w() > dw)
+		X = (dx + dw) - w();
+	if(Y + h() > dh)
+		Y = (dy + dh) - h();
+
+	position(X, Y);
 }
 
 void DesktopIcon::drag(int x, int y, bool apply) {
@@ -173,9 +224,9 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 			ix = (w()/2) - (image()->w()/2);
 			iy = (h()/2) - (image()->h()/2);
 		}
-		position(micon->x() - ix, micon->y() - iy);
+		fix_position(micon->x() - ix, micon->y() - iy);
 #else
-		position(micon->x(), micon->y());
+		fix_position(micon->x(), micon->y());
 #endif
 		delete micon;
 		micon = NULL;
@@ -198,11 +249,31 @@ int DesktopIcon::drag_icon_y(void) {
 		return micon->y();
 }
 
+void DesktopIcon::rename(const char* str) {
+	if(!str)
+		return;
+	if(settings->name == str)
+		return;
+
+	settings->name = str;
+	label(settings->name.c_str());
+	update_label_size();
+	redraw();
+}
+
 void DesktopIcon::fast_redraw(void) {
 	EASSERT(parent() != NULL && "Impossible !");
 
-	// LABEL_OFFSET + 2 include selection box line height too
-	parent()->damage(FL_DAMAGE_ALL, x(), y(), w(), h() + lheight + LABEL_OFFSET + 2);
+	int wsz = w();
+	int xpos = x();
+
+	if(lwidth > w()) {
+		wsz = lwidth + 4;
+		xpos = x() - 4;
+	}
+
+	// LABEL_OFFSET + 2 include selection box line height too; same for xpos
+	parent()->damage(FL_DAMAGE_ALL, xpos, y(), wsz, h() + lheight + LABEL_OFFSET + 2);
 }
 
 void DesktopIcon::draw(void) { 
@@ -218,6 +289,8 @@ void DesktopIcon::draw(void) {
 		iy += y();
 
 		im->draw(ix, iy);
+
+		EDEBUG(ESTRLOC ": DesktopIcon icon redraw\n");
 	}
 
 	if(globals->label_draw && (damage() & (FL_DAMAGE_ALL | EDAMAGE_CHILD_LABEL))) {
@@ -231,12 +304,21 @@ void DesktopIcon::draw(void) {
 			fl_rectf(X, Y, lwidth, lheight);
 		}
 
+		int old_font = fl_font();
+		int old_font_sz = fl_size();
+
+		// draw with icon's font
+		fl_font(labelfont(), labelsize());
+
 		// pseudo-shadow
 		fl_color(FL_BLACK);
 		fl_draw(label(), X+1, Y+1, lwidth, lheight, align(), 0, 0);
 
 		fl_color(globals->label_foreground);
 		fl_draw(label(), X, Y, lwidth, lheight, align(), 0, 0);
+
+		// restore old font
+		fl_font(old_font, old_font_sz);
 
 		if(is_focused()) {
 			/* 
@@ -262,6 +344,8 @@ void DesktopIcon::draw(void) {
 
 		// revert to old color whatever that be
 		fl_color(old);
+
+		EDEBUG(ESTRLOC ": DesktopIcon label redraw\n");
 	}
 }
 
@@ -279,16 +363,34 @@ int DesktopIcon::handle(int event) {
 		case FL_MOVE:
 			return 1;
 		case FL_PUSH:
+			if(Fl::event_button() == 3) {
+				// Fl_Menu_Item::popup() by default does not call callbacks
+				const Fl_Menu_Item* m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
+				if(m && m->callback())
+					m->do_callback(0, this);
+			}
 			return 1;
 		case FL_RELEASE:
 			if(Fl::event_clicks() > 0)
 				EDEBUG(ESTRLOC ": EXECUTE: %s\n", settings->cmd.c_str());
 			return 1;
+
+		case FL_DND_ENTER:
+		case FL_DND_DRAG:
+		case FL_DND_LEAVE:
+			return 1;
+
+		case FL_DND_RELEASE:
+			EDEBUG(ESTRLOC ": FL_DND_RELEASE on icon\n");
+			return 1;
+		case FL_PASTE:
+			EDEBUG(ESTRLOC ": FL_PASTE on icon with %s\n", Fl::event_text());
+			return 1;
 		default:
 			break;
 	}
 
-	return 1;
+	return 0;
 }
 
 MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic), mask(0) {

@@ -354,5 +354,5 @@ char* get_basename(const char* path) {
 	if(p)
 		return (p + 1);
 
-	return (char*) path;
+	return (char*)path;
 }

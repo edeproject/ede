@@ -23,16 +23,23 @@
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
 #include <edelib/IconTheme.h>
+#include <edelib/Nls.h>
 
 #include <FL/Fl.h>
-#include <FL/Fl_Shared_Image.h>
 #include <FL/x.h>
+#include <FL/fl_draw.h>
 #include <FL/Fl_Box.h>
+#include <FL/Fl_Shared_Image.h>
+#include <FL/Fl_Menu_Button.h>
+#include <FL/fl_ask.h>
+
+#if 0
+#include <X11/extensions/Xdamage.h>
+#endif
 
 #include <signal.h>
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
-#include <ctype.h>  // isprint
 
 #define CONFIG_NAME  "eiconman.conf"
 
@@ -47,7 +54,34 @@
  * Which widgets Fl::belowmouse() should skip. This should be updated
  * when new non-icon child is added to Desktop window.
  */
-#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper))
+#define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == dmenu))
+
+Fl_Menu_Item desktop_menu[] = {
+	{_("    &New desktop item    "), 0, 0, 0, FL_SUBMENU},
+		{_("    &Application...    "), 0, 0},
+		{_("    &Directory...    "), 0, 0},
+		{_("    &URL...    "), 0, 0},
+		{_("    &Link...    "), 0, 0},
+		{0},
+	{_("    &Arrange    "), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
+		{_("    &By name    "), 0, 0},
+		{_("    &Vertical line up    "), 0, 0},
+		{_("    &Horizontal line up   "), 0, 0},
+		{0},
+	{_("    &Copy    "), 0, 0},
+	{_("    &Paste    "), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("    &Icons settings...    "), 0, 0},
+	{_("    &Background...    "), 0, 0},
+	{0}
+};
+
+
+#if 0
+XserverRegion xregion;
+XserverRegion xpart;
+Damage        xdamage;
+int           xevent_base, xerror_base;
+#endif
 
 Desktop* Desktop::pinstance = NULL;
 bool running = false;
@@ -77,6 +111,22 @@ void restart_signal(int signum) {
 }
 
 int desktop_xmessage_handler(int event) { 
+#if 0
+	if(fl_xevent->type == xevent_base + XDamageNotify) {
+		XDamageNotifyEvent* xdev = (XDamageNotifyEvent*)fl_xevent;
+
+		EDEBUG(ESTRLOC ": Damaged region %i %i %i %i on 0x%lx\n", xdev->area.x, xdev->area.y,
+				xdev->area.width, xdev->area.height, xdev->drawable);
+
+		//XDamageSubtract(fl_display, xdev->damage, None, None);
+  		XFixesSetRegion(fl_display, xpart, &xdev->area, 1);
+        XFixesUnionRegion(fl_display, xregion, xregion, xpart);
+	}
+
+		XDamageSubtract(fl_display, xdamage, xregion, None);
+    	XFixesSetRegion(fl_display, xregion, 0, 0);
+#endif
+
 	if(fl_xevent->type == PropertyNotify) {
 		if(fl_xevent->xproperty.atom == _XA_NET_CURRENT_DESKTOP) {
 			Desktop::instance()->notify_desktop_changed();
@@ -135,12 +185,15 @@ void Desktop::init_internals(void) {
 	 * then icons, so they can be drawn at top of them.
 	 */
 	begin();
+		dmenu = new Fl_Menu_Button(0, 0, 0, 0);
+		dmenu->menu(desktop_menu);
+
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		//wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
+		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
 		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
 		//wallpaper->set_tiled("/home/sanelz/walls/katesmall.jpg");
 		//wallpaper->set_tiled("/home/sanelz/walls/kate.jpg");
-		wallpaper->set("/home/sanelz/walls/katebig.jpg");
+		//wallpaper->set("/home/sanelz/walls/katebig.jpg");
 		//wallpaper->hide();
 		//wallpaper->set("/home/sanelz/walls/katesmall.jpg");
 		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
@@ -151,6 +204,7 @@ void Desktop::init_internals(void) {
 	set_bg_color(dsett->color, false);
 
 	read_config();
+
 	running = true;
 }
 
@@ -183,6 +237,13 @@ void Desktop::show(void) {
 	if(!shown()) {
 		Fl_X::make_xid(this);
 		net_make_me_desktop(this);
+#if 0
+		XDamageQueryExtension(fl_display, &xevent_base, &xerror_base);
+
+		xdamage = XDamageCreate(fl_display, fl_xid(this), XDamageReportBoundingBox);
+		xregion = XFixesCreateRegionFromWindow(fl_display, fl_xid(this), 0);
+		xpart   = XFixesCreateRegionFromWindow(fl_display, fl_xid(this), 0);
+#endif
 	}
 }
 
@@ -432,7 +493,7 @@ void Desktop::unfocus_all(void) {
 	}
 }
 
-void Desktop::select(DesktopIcon* ic) { 
+void Desktop::select(DesktopIcon* ic, bool do_redraw) { 
 	EASSERT(ic != NULL);
 
 	if(in_selection(ic))
@@ -442,7 +503,9 @@ void Desktop::select(DesktopIcon* ic) {
 
 	if(!ic->is_focused()) {
 		ic->do_focus();
-		ic->fast_redraw();
+
+		if(do_redraw)
+			ic->fast_redraw();
 	}
 }
 
@@ -489,8 +552,8 @@ void Desktop::move_selection(int x, int y, bool apply) {
 		ic->drag(prev_x + tmp_x, prev_y + tmp_y, apply);
 
 		// very slow if not checked
-		if(apply == true)
-			ic->fast_redraw();
+		//if(apply == true)
+		//	ic->fast_redraw();
 	}
 
 	selection_x = x;
@@ -504,7 +567,6 @@ void Desktop::move_selection(int x, int y, bool apply) {
 		redraw();
 }
 
-#if 0
 /*
  * Tries to figure out icon below mouse. It is alternative to
  * Fl::belowmouse() since with this we hunt only icons, not other
@@ -523,7 +585,6 @@ DesktopIcon* Desktop::below_mouse(int px, int py) {
 
 	return NULL;
 }
-#endif
 
 void Desktop::select_in_area(void) {
 	if(!selbox->show)
@@ -568,12 +629,10 @@ void Desktop::select_in_area(void) {
 			if(ic->is_focused()) {
 				ic->do_unfocus();
 				// updated from Desktop::draw()
-				ic->damage(EDAMAGE_CHILD_LABEL);
-				/*
-				 * need to redraw whole screen since icon label is
-				 * outside icon's drawable rectangle
-				 */
-				redraw();
+				ic->fast_redraw();
+				//ic->damage(EDAMAGE_CHILD_LABEL);
+				//ic->redraw();
+				//ic->damage(EDAMAGE_CHILD_LABEL);
 			}
 		}
 	}
@@ -615,50 +674,113 @@ void Desktop::notify_desktop_changed(void) {
 void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 	if(!src)
 		return;
-	/*
-	 * must copy clipboard content since with given size since
-	 * it could be null chars in the middle of it
-	 */
-	char* src_copy = new char[src_len+1];
-	int i;
-	for(i = 0; i < src_len; i+=2) {
-		if(isascii(src[i]) && src[i] != '\0')
-			src_copy[i] = src[i];
+
+	if(src_len < 1)
+		return;
+
+	char* src_copy = new char[src_len + 1];
+	int real_len = 0;
+
+	// mozilla sends junk in form: ascii<0>ascii<0>..., don't know why
+	for(int i = 0, j = 0; i < src_len; i++) {
+		if(src[i] != 0) {
+			src_copy[j++] = src[i];
+			real_len++;
+		}
 	}
-	src_copy[i] = '\0';
+	src_copy[real_len] = '\0';
 
-	EDEBUG(ESTRLOC ": DND, received %s\n", src_copy);
+	if(real_len < 1) {
+		delete [] src_copy;
+		return;
+	}
 
-	delete [] src_copy;
+	EDEBUG(ESTRLOC ": DND on Desktop, got: %s\n", src_copy);
 
-	return;
+	// valid url's (if got) ends with \r\n, clean that
+	char* pp = strstr(src_copy, "\r\n");
+	if(pp)
+		*pp = '\0';
+
+	char* sptr = 0;
+	if((real_len > 7) && (strncmp(src_copy, "file://", 7) == 0))
+		sptr = src_copy + 7;
+	else
+		sptr = src_copy;
+
+	if(!edelib::file_exists(sptr) && !edelib::dir_exists(sptr)) {
+		fl_message("Droping file content is not implemented yet. Soon, soon... :)");
+		delete [] src_copy;
+		return;
+	}
 
 	IconSettings is;
 	is.x = x;
 	is.y = y;
 
-	// absolute path is (for now) seen as non-url
-	if(src[0] == '/')
-		is.cmd_is_url = false;
-	else
-		is.cmd_is_url = true;
+	bool is_read = false;
 
-	is.name = get_basename(src);
-	is.cmd = "(none)";
-	is.type = ICON_NORMAL;
+	if(edelib::str_ends(src_copy, ".desktop")) {
+		edelib::DesktopFile dconf;
 
-	edelib::MimeType mt;
-	if(!mt.set(src)) {
-		EWARNING(ESTRLOC ": MimeType for %s failed, not dropping icon\n", src);
-		return;
+		edelib::String path = sptr;
+		edelib::DesktopFile dfile;
+
+		if(dfile.load(path.c_str())) {
+			char buff[256];
+			if(dfile.type() == edelib::DESK_FILE_TYPE_LINK) {
+				dfile.url(buff, 256);
+				is.cmd_is_url = true;
+			}
+			else {
+				dfile.exec(buff, 256);
+				is.cmd_is_url = false;
+			}
+			is.cmd = buff;
+			is.type = ICON_NORMAL;
+
+			dfile.name(buff, 256);
+			is.name = buff;
+			dfile.icon(buff, 256);
+			is.icon = buff;
+
+			is_read = true;
+		}
 	}
 
-	is.icon = mt.icon_name();
+	if(!is_read) {
+		// absolute path is (for now) seen as non-url
+		if(sptr[0] == '/')
+			is.cmd_is_url = false;
+		else
+			is.cmd_is_url = true;
+
+		is.cmd = "(none)";
+		is.type = ICON_NORMAL;
+
+		edelib::MimeType mt;
+		if(!mt.set(sptr)) {
+			EWARNING(ESTRLOC ": MimeType for %s (%s) failed, not dropping icon\n", sptr, src_copy);
+			delete [] src_copy;
+			return;
+		}
+
+		is.name = get_basename(sptr);
+		is.icon = mt.icon_name();
+	}
+
 	DesktopIcon* dic = new DesktopIcon(&gisett, &is, color());
 	add_icon(dic);
+
+	delete [] src_copy;
+
+	redraw();
 }
 
 void Desktop::draw(void) {
+	if(!damage())
+		return;
+
 	if(damage() & (FL_DAMAGE_ALL | FL_DAMAGE_EXPOSE)) {
 		/*
 		 * If any overlay was previously visible during full
@@ -668,14 +790,13 @@ void Desktop::draw(void) {
 		clear_xoverlay();
 
 		DESKTOP_WINDOW::draw();
-		EDEBUG("REDRAW ALL\n");
+		EDEBUG(ESTRLOC ": REDRAW ALL\n");
 	}
 
-	if(damage() & (FL_DAMAGE_ALL | EDAMAGE_OVERLAY)) {
-		if(selbox->show) {
+	if(damage() & EDAMAGE_OVERLAY) {
+		if(selbox->show)
 			draw_xoverlay(selbox->x, selbox->y, selbox->w, selbox->h);
-			EDEBUG("DRAW OVERLAY\n");
-		} else
+		else
 			clear_xoverlay();
 
 		/*
@@ -683,10 +804,15 @@ void Desktop::draw(void) {
 		 * just update their label since it is indicator of selection
 		 */
 		for(int i = 0; i < children(); i++) {
-			if(child(i)->damage() == EDAMAGE_CHILD_LABEL)
+			if(child(i)->damage() == EDAMAGE_CHILD_LABEL) {
 				update_child(*child(i));
+				child(i)->clear_damage();
+				EDEBUG(ESTRLOC ": ICON REDRAW \n");
+			}
 		}
 	}
+
+	clear_damage();
 }
 
 int Desktop::handle(int event) {
@@ -719,7 +845,10 @@ int Desktop::handle(int event) {
 				if(Fl::event_button() == 1) {
 					selbox->x = Fl::event_x();
 					selbox->y = Fl::event_y();
+				} else if(Fl::event_button() == 3) {
+					dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
 				}
+
 				return 1;
 			}
 
@@ -805,8 +934,6 @@ int Desktop::handle(int event) {
 
 				/*
 				 * Now pickup those who are in is_focused() state.
-				 * Here is not used select() since it will fill selectionbuff with
-				 * redrawing whole window each time. This is not what we want.
 				 *
 				 * Possible flickers due overlay will be later removed when is
 				 * called move_selection(), which will in turn redraw icons again
@@ -817,7 +944,7 @@ int Desktop::handle(int event) {
 
 				for(unsigned int i = 0; i < icons.size(); i++) {
 					if(icons[i]->is_focused())
-						select(icons[i]);
+						select(icons[i], false);
 				}
 
 				return 1;
@@ -837,21 +964,27 @@ int Desktop::handle(int event) {
 
 			moving = false;
 			return 1;
+
 		case FL_DND_ENTER:
 		case FL_DND_DRAG:
 		case FL_DND_LEAVE:
-			EDEBUG("FL_DND_ENTER|FL_DND_DRAG|FL_DND_LEAVE\n");
-			return 1;
-		case FL_DND_RELEASE:
-			EDEBUG(ESTRLOC ": DND on desktop\n");
-			//Fl::paste(*this);
 			return 1;
 
-		case FL_PASTE:
-			EDEBUG("=======> %s\n", Fl::event_text());
-			EDEBUG("=======> %s\n", Fl::event_text());
-			//drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x_root(), Fl::event_y_root());
+		case FL_DND_RELEASE: {
+			DesktopIcon* di = below_mouse(Fl::event_x(), Fl::event_y());
+			if(di)
+				return di->handle(event);
 			return 1;
+		}
+
+		case FL_PASTE: {
+			DesktopIcon* di = below_mouse(Fl::event_x(), Fl::event_y());
+			if(di)
+				return di->handle(event);
+
+			drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x(), Fl::event_y());
+			return 1;
+		}
 
 		case FL_ENTER:
 		case FL_LEAVE:
@@ -895,6 +1028,7 @@ int main() {
 		Fl::wait();
 
 	Desktop::shutdown();
+
 	edelib::IconTheme::shutdown();
 
 	return 0;
