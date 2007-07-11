@@ -1,0 +1,6 @@
+
+LINKLIBS = -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -L/usr/X11R6/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 -lstdc++ ;
+
+C++FLAGS += -I/opt/ede/include -Wall -pedantic -D_DEBUG -g3 -I/usr/local/include -I/usr/X11R6/include ;
+
+Main evoke : evoke.cpp EvokeService.cpp Log.cpp ;
