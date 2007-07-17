@@ -210,6 +210,9 @@ static void scroll_cb(Fl_Widget* w, void*) {
 EDE_Browser::EDE_Browser(int X,int Y,int W,int H,const char *L) : Fl_Icon_Browser(X,Y,W,H),
 	  totalwidth_(0), column_header_(0), sort_column(0), sort_type(NO_SORT), sort_direction(false) {
 
+
+fprintf (stderr, "ctor(%d,%d,%d,%d)\n",X,Y,W,H);
+
 	heading = new Heading(X,Y,W,buttonheight);
 	heading->end();
 	heading->hide();
@@ -243,7 +246,7 @@ void EDE_Browser::hide_header() {
 // Regenerate and display header
 void EDE_Browser::show_header() {
 	int button_x=0;
-	char *h = column_header_;
+	char *hdr = column_header_;
 	const int* l = Fl_Icon_Browser::column_widths();
 	heading->clear();
 	for (int i=0; i==0||l[i-1]; i++) {
@@ -255,10 +258,10 @@ void EDE_Browser::show_header() {
 		char *delim = 0;
 		Fl_Button *b;
 
-		if (h) {
-			delim = strchr(h, Fl_Icon_Browser::column_char());
+		if (hdr) {
+			delim = strchr(hdr, Fl_Icon_Browser::column_char());
 			if (delim) *delim='\0'; // temporarily
-			b=new Fl_Button(button_x,heading->y(),button_w,buttonheight,strdup(h));
+			b=new Fl_Button(button_x,heading->y(),button_w,buttonheight,strdup(hdr));
 		} else {
 			b=new Fl_Button(button_x,heading->y(),button_w,buttonheight,"");
 		}
@@ -272,10 +275,11 @@ void EDE_Browser::show_header() {
 
 		if (delim) {
 			*delim=Fl_Icon_Browser::column_char(); // put back delimiter
-			h=delim+1; // next field
+			hdr=delim+1; // next field
 		}
 	}
-	if (!heading->visible()) resize(x(),y()+buttonheight,w(),this->h()-buttonheight);
+fprintf (stderr, "showheader calls resize(%d,%d,%d,%d)\n",x(),y(),w(),h());
+	if (!heading->visible()) resize(x(),y()+buttonheight,w(),h()-buttonheight);
 	heading->resizable(0); // We will resize the heading and individual buttons manually
 	heading->show();
 	heading->redraw(); //in case it was already visible
@@ -322,30 +326,33 @@ const int* EDE_Browser::column_widths() const {
 
 // Subclassed handle() for keyboard searching
 int EDE_Browser::handle(int e) {
-	if (e==FL_KEYBOARD) {
+	if (e==FL_KEYBOARD && Fl::event_state()==0) {
 		// when user presses a key, jump to row starting with that character
 		int k=Fl::event_key();
 		if ((k>='a'&&k<='z') || (k>='A'&&k<='Z') || (k>='0'&&k<='9')) {
 			if (k>='A'&&k<='Z') k+=('a'-'A');
 			int ku = k - ('a'-'A'); //upper case
 			int p=lineno(selection());
-			for (int i=1; i<=size(); i++)
-				if (i!=p && (text(i)[0]==k || text(i)[0]==ku)) {
+			for (int i=1; i<=size(); i++) {
+				int mi = (i+p-1)%size() + 1; // search from currently selected one
+				if (text(mi)[0]==k || text(mi)[0]==ku) {
 					// select(line,0) just moves focus to line without selecting
 					// if line was already selected, it won't be anymore
-					select(i,selected(i)); 
-					middleline(i);
-					break;
+					select(mi,selected(mi));
+					middleline(mi);
+					//break;
+					return 1; // menu will get triggered on key press :(
 				}
+			}
 		}
 		// Attempt to fix erratic behavior on enter key
 		// Fl_Browser seems to do the following on enter key:
-		// - when item is both selected and focused, callback isn't called at all (even when FL_WHEN_ENTER...)
+		// - when item is both selected and focused, callback isn't called at all (even FL_WHEN_ENTER_KEY_ALWAYS)
 		// - when no item is selected, callback is called 2 times on focused item
 		// - when one item is selected and other is focused, callback is first called on selected then on
-		//   focused item
-		// This partial fix at least ensures that callback is always called. Callback should behave properly
-		// when called many times.
+		//   focused item, then the focused becomes selected
+		// This partial fix at least ensures that callback is always called. Callback function should
+		// deal with being called many times repeatedly.
 		if ((when() & FL_WHEN_ENTER_KEY_ALWAYS) && k == FL_Enter) {
 //			if (changed()!=0) {
 				//fprintf(stderr,"do_callback()\n"); 
@@ -358,20 +365,22 @@ int EDE_Browser::handle(int e) {
 
 // Overload resize for show/hide horizontal scrollbar
 void EDE_Browser::resize(int X, int Y, int W, int H) {
+	int fsbs = Fl::scrollbar_size();
 	if (W >= totalwidth_) {
 		// hide scrollbar
-		if (hscrollbar->visible()) 
+		if (hscrollbar->visible())
 			hscrollbar->hide();
-		Fl_Icon_Browser::resize(X,Y,W,H);
+		H += fsbs;
 	} else {
 		// show scrollbar
-		int fsbs = Fl::scrollbar_size();
-		if (!hscrollbar->visible())
-			hscrollbar->show();
-		Fl_Icon_Browser::resize(X,Y,W, H-fsbs);
 		hscrollbar->resize(X, Y+H-fsbs, W-fsbs, fsbs);
 		hscrollbar->value(hscrollbar->value(), W, 0, totalwidth_);
+		if (!hscrollbar->visible()) {
+			hscrollbar->show();
+			H -= fsbs;
+		}
 	}
+	Fl_Icon_Browser::resize(X,Y,W,H);
 }
 
 

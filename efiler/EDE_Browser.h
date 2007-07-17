@@ -176,6 +176,10 @@ public:
 		}
 		Fl_Icon_Browser::hposition(x);
 	}
+
+	// This is *really* needed :(
+	int get_focus() { return lineno(selection()); }
+	void set_focus(int row) { select(row,selected(row)); }
 };
 
 #endif
