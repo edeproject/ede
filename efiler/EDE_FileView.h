@@ -141,9 +141,38 @@ fprintf (stderr, "value: %s\n", value.c_str());
 //		browser->redraw_line(browser->find_item(row));*/
 	}
 
-//	void clear() { browser->clear(); }
-//	void callback(Fl_Callback* c) { browser->callback(c); }
+	// Change color of row to gray
+	void gray(int row) {
+		char *ntext = strdup(text(row));
+		if (ntext[0] == '@' && ntext[1] == 'C') { free(ntext); return; } //already greyed
+		ntext = (char*)realloc(ntext, strlen(ntext)+4);
+		for(int i=strlen(ntext); i>=0; i--) ntext[i+4]=ntext[i];
+		ntext[0]='@'; ntext[1]='C'; ntext[2]='2'; ntext[3]='5';
+		text(row,ntext);
+fprintf (stderr, "row(%d): '%s'\n",row,ntext);
+//		free(ntext);
 
+		// grey icon - it will work automagically since we work with a pointer
+		Fl_Image* im = get_icon(row)->copy();
+		im->inactive();
+		set_icon(row,im);
+
+		//redraw(); // OPTIMIZE
+	}
+
+	void ungray(int row) {
+		char *ntext = strdup(text(row));
+		if (ntext[0] != '@' || ntext[1] != 'C') { free(ntext); return; } //not greyed
+		snprintf(ntext, strlen(ntext), "%s", ntext+4);
+		text(row,ntext);
+		free(ntext);
+
+		// grey icon - it will work automagically since we work with a pointer
+		Fl_Image* im = get_icon(row);
+		im->uncache(); // doesn't work
+
+		//redraw(); // OPTIMIZE
+	}
 };
 
 
