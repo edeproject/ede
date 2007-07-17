@@ -133,6 +133,7 @@ public:
   // icon support
   void set_icon(int line, Fl_Image* icon);
   void remove_icon(int line);
+  Fl_Image* get_icon(int line);
 
 };
 

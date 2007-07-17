@@ -592,6 +592,8 @@ void Fl_Icon_Browser::remove_icon(int line) {
 	}
 }
 
+Fl_Image* Fl_Icon_Browser::get_icon(int line) { return find_line(line)->icon; }
+
 
 //
 // End of "$Id: Fl_Icon_Browser.cxx 5190 2006-06-09 16:16:34Z mike $".
