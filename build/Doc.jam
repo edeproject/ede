@@ -1,0 +1,57 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+ASCIIDOC  = "$(TOP)/docs/asciidoc/asciidoc.py" ;
+DOCDIR    = "$(TOP)/docs" ;
+MANUALDIR = "$(DOCDIR)/manual" ;
+
+# Must be relative to "docs" dir
+DOCICONS = "images" ;
+
+rule EdeManual
+{
+	if ! $(ASCIIDOC) {
+		Echo "ASCIIDOC not defined; documentation will not be built !" ;
+		return ;
+	}
+
+	local html_ext = ".html" ;
+	local path = $(SEARCH_SOURCE) ;
+
+	local i source target ;
+	for i in $(<) {
+		source = [ FFileName $(path) $(i) ] ;
+		# strip directory part so we can prepend
+		# another one (used as output directory)
+		target = $(source:D=) ;
+
+		# set output extension (asciidoc does not do that)
+		# and grist to prevent collision
+		target = $(target:S=$(html_ext):G="$(target)-html") ;
+
+		Depends $(target) : $(source) ;
+		Depends all : $(target) ;
+		Depends doc : $(target) ;
+
+		# set output to $(MANUALDIR) directory
+		MakeLocate $(target) : $(MANUALDIR) ;
+
+		AsciiDoc1 $(target) : $(source) ;
+		Clean clean : $(target) ;
+	}
+}
+
+actions AsciiDoc1
+{
+	$(ASCIIDOC) -a icons -a iconsdir=$(DOCICONS) -a edeversion="EDE 2.0 alpha 1" -o $(<) $(>)
+}
+
+NotFile doc ;
+Always doc ;

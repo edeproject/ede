@@ -1,0 +1,108 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+EDEBINDIR = "/home/sanel/xxx/bin" ;
+EDEICONDIR = "/home/sanel/xxx/icons" ;
+EDEDESKTOPFILES = "/home/sanel/xxx/desktop" ;
+
+# MakeInstallPrivate [location-dir] : [targets] : [opt-file-mode] : [opt-chown] : [opt-chgrp] ;
+rule MakeInstallPrivate
+{
+	local i t s ;
+	local dir = $(1) ;
+
+	MkDir $(dir) ;
+
+	# This was pain-in-the-ass to set up (bad docs)
+	# but this is the shortest possible explaination of it:
+	# files must be gristed (or foo/foo will not be build) and _after_
+	# that apply SEARCH on it, consulting SUBDIR. Otherwise
+	# known targets will be compiled, but unknown (icons etc.) will not
+	# be recognized as installable entity.
+	s = [ FGristFiles $(2) ] ;
+	SEARCH on $(s) = $(SUBDIR) ;
+
+	for i in $(s) {
+		t = $(i:BSR=$(dir):G=installed) ;
+		Depends $(t) : $(i) ;
+		Depends $(t) : $(dir) ;
+
+		Depends install : $(t) ;
+		Clean uninstall : $(t) ;
+
+		Install1 $(t) : $(i) ;
+
+		if $(3) {
+			MODE on $(t) = $(3) ;
+			Chmod $(t) ;
+		}
+
+		if $(4) {
+			OWNER on $(t) = $(4) ;
+			Chown $(t) ;
+		}
+
+		if $(5) {
+			GROUP on $(t) = $(5) ;
+			Chgrp $(t) ;
+		}
+	}
+}
+
+# InstallAny [location-dir] : [targets] : [opt-file-mode] : [opt-chown] : [opt-chgrp] ;
+# Install [targets] and [location-dir] directory. If directory does not exists, it will
+# be created (the same applies for it's parents).
+# [opt-file-mode], if given, is mode for installed files, which can be EXEMODE, FILEMODE or manually
+# supplied one (chmod will be called). [opt-chown], if given, will run chown with given
+# name and change owner of installed targets. [opt-chgrp], if given, will run chgrp and change
+# group of installed targets.
+rule InstallAny
+{
+	MakeInstallPrivate $(1) : $(2) : $(3) : $(4) : $(5) ;
+}
+
+# InstallProgram [location-dir] : [targets] : [opt-chown] : [opt-chgrp] ;
+rule InstallProgram
+{
+	MakeInstallPrivate $(1) : $(2) : $(EXEMODE) : $(3) : $(4) ;
+}
+
+# InstallData [location-dir] : [targets] : [opt-chown] : [opt-chgrp] ;
+rule InstallData
+{
+	MakeInstallPrivate $(1) : $(2) : $(FILEMODE) : $(3) : $(4) ;
+}
+
+# InstallEdeProgram [targets] ;
+rule InstallEdeProgram
+{
+	InstallProgram $(EDEBINDIR) : $(<) ;
+}
+
+# InstallEdeIcons [targets] ;
+rule InstallEdeIcons
+{
+	InstallData $(EDEICONDIR) : $(<) ;
+}
+
+# InstallEdeDesktopFiles [targets] ;
+rule InstallEdeDesktopFiles
+{
+	InstallData $(EDEDESKTOPFILES) : $(<) ;
+}
+
+
+actions Install1
+{
+	$(CP) "$(>)" "$(<)"
+}
+
+NotFile install uninstall ;
+Always install uninstall ;

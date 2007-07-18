@@ -10,29 +10,15 @@
 
 SubDir TOP ;
 
-# We must first build edelib
-SubInclude TOP $(EDELIBDIR) ;
+EdeManual HACKING.txt ;
+Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
-# Then the rest
-SubInclude TOP edialog ;
-SubInclude TOP eimage ;
-SubInclude TOP ecolorconf ;
+# SubInclude goes after local rules
 SubInclude TOP econtrol ;
 SubInclude TOP ecalc ;
-SubInclude TOP edisplayconf ;
-SubInclude TOP efinder ;
-SubInclude TOP eiconsconf ;
-SubInclude TOP einstaller ;
-SubInclude TOP ekeyconf ;
-SubInclude TOP elauncher ;
-SubInclude TOP emenueditor ;
-SubInclude TOP epanelconf ;
-SubInclude TOP etimedate ;
-SubInclude TOP etip ;
-SubInclude TOP evolume ;
-SubInclude TOP ewmconf ;
-
-# These can't be compiled for now
-
-#SubInclude TOP efiler ;
-#SubInclude TOP eiconman ;
+SubInclude TOP edewm ;
+SubInclude TOP eiconman ;
+SubInclude TOP evoke ;
+SubInclude TOP eimage ;
+SubInclude TOP datas ;
+SubInclude TOP docs ;

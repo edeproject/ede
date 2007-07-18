@@ -1,0 +1,32 @@
+/////////////////////////////////////////////////
+ From this file is generated index.html
+ and is placed in 'manual' directory. 
+ 
+ Also rest of the html files are generated
+ from various places in the tree and put
+ in 'manual' too.
+
+ Knowing this, url links should point in
+ local directory, not 'manual'.
+
+ Before doing _any_ changes, consulting asciidoc
+ documentation about tags and usage will be applauded.
+/////////////////////////////////////////////////
+
+{edeversion} manual 
+===================
+:Revision: 0.1
+
+*Bare info*
+
+- link:introduction.html[Introduction]
+
+*Programs*
+
+- link:ecalc.html[Ecalc]
+- link:econtrol.html[Econtrol]
+
+*Development*
+
+- link:HACKING.html[Contributing (in your spare time ;-)]
+- link:jambuild.html[Jam build]

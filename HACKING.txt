@@ -1,5 +1,5 @@
 Quick and dirty document for patchers
--------------------------------------
+=====================================
 
 Before sending any type of code patches, make sure to
 check a few things:
@@ -23,7 +23,6 @@ Memory
 ------
 What you allocate, make sure to deallocate too. Some things should not be deallocated 
 explicitly like some eFLTK/FLTK widgets, but for this, check above.
-
 
 After you read above, applied on code, and decided to send us, please test your code before
 sending. Test on everything. Test on power loss, bad food, cold coffee... And, of course

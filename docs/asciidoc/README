@@ -1,0 +1,27 @@
+This is stripped version of asciidoc with some additions, and is not meant 
+to be used outside EDE package. It will not be installed, and build scripts expect it 
+in this directory, so do not move it.
+
+Original copyright is below.
+
+Sanel Zukan
+
+-----------------------------------------------------
+asciidoc is copyright (C) 2000-2007 by Stuart Rackham
+
+Email: srackham@methods.co.nz
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+USA.

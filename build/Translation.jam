@@ -1,0 +1,109 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+DEFAULT_POT = "messages.pot" ;
+
+# ExtractStrings [dir-where] : [source] : [output-file] ;
+# Scans [source] file(s) for translatable strings (usually marked as _("foo"))
+# and store result in [output-file] in [dir-where] directory. If [dir-where]
+# does not exists, it will be created.
+# [output-file] can be omitted; in that case DEFAULT_POT will be used.
+rule ExtractStrings
+{
+	local strfile ;
+	if $(3) {
+		strfile = $(3) ;
+	} else {
+		strfile = $(DEFAULT_POT) ;
+	}
+
+	if ! $(XGETTEXT) {
+		Echo "XGETTEXT wasn't defined; $(strfile) will not be created !" ;
+		return ;
+	}
+
+	local path locale_dir target source i ;
+
+	path = $(SEARCH_SOURCE) ;
+	# Assure path name does not match pseudo target name by setting
+	# a specified grist. For example if grist wasn't set, and there is
+	# directory 'foo' with executable 'foo' in it, $(path) will be 'foo'
+	# which will confuse jam to see it as target too, (re)building it.
+	path = $(path:G=strings) ;
+
+	locale_dir = [ FDirName $(path) $(<) ] ;
+	target = [ FFileName $(locale_dir) $(strfile) ] ;
+	source = $(>:R=$(path)) ;
+
+	MkDir $(locale_dir) ;
+	for i in $(source) {
+		Depends $(target) : $(i) ;
+	}	
+
+	Depends $(target) : $(locale_dir) ;
+	Depends potfile : $(target) ;
+	Depends translation : $(target) ;
+	Depends all : $(target) ;
+
+	XGettext $(target) : $(source) ;
+
+	Clean clean : $(target) ;
+	CleandirSafe distclean : $(locale_dir) ;
+}
+
+# MakeTranslation [po-dir] : [file1.po file2.po...] ;
+# Compile translated files into binary representation, so they 
+# can be used by programs. [po-dir] is directory name where
+# to look for translated files (.po) and where will be placed
+# binary ones (.mo). Second parameter is list of .po files.
+rule MakeTranslation
+{
+	local moext mofile pofile path i ;
+
+	moext = ".mo" ;
+
+	path = $(SEARCH_SOURCE) ;
+	# Assure path name does not match pseudo target name by setting
+	# a specified grist. For example if grist wasn't set, and there is
+	# directory 'foo' with executable 'foo' in it, $(path) will be 'foo'
+	# which will confuse jam to see it as target too, (re)building it.
+	path = $(path:G=translation) ;
+
+	if ! $(MSGFMT) {
+		Echo "MSGFMT wasn't defined; $(moext) files will not be created !" ;
+		return ;
+	}
+
+	for i in $(>) {
+		pofile = [ FFileName $(path) $(<) $(i) ] ;
+		mofile = [ FFileName $(path) $(<) $(i:S=$(moext)) ] ;
+
+		Depends $(mofile) : $(pofile) ;
+		Depends all : $(mofile) ;
+		Depends translation : $(mofile) ;
+
+		MakeTranslation1 $(mofile) : $(pofile) ;
+
+		Clean clean : $(mofile) ;
+	}
+}
+
+actions XGettext
+{
+	$(XGETTEXT) -k'_' $(2) -o $(1) ;
+}
+
+actions MakeTranslation1
+{
+	$(MSGFMT) $(>) -o $(<) ;
+}
+
+NotFile translation potfile ;
+Always translation potfile ;

@@ -1,0 +1,167 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+
+RMDIR_UNSFE ?= $(RM) -Rf ;
+#RMDIR_SAFE  ?= "rmdir --ignore-fail-on-non-empty" ;
+RMDIR_SAFE  ?= "rmdir" ;
+CP ?= "cp" ;
+MV ?= "mv" ;
+MKDIRS ?= "mkdir -p" ;
+LINKCMD ?= "ln -s" ;
+
+# Fltk use .cxx extension for C++ files so it must
+# be registered. This rule is called by jam so final 
+# application must not use it.
+rule UserObject
+{
+	switch $(>:S) {
+		case .cxx : C++ $(<) : $(>) ;
+		case * : Exit "Unknown suffix on $(>)" ;
+	}
+}
+
+# Wildcard [optinal-directory :] [patterns] : [optional-prepend-directory] ;
+# Create a list of files that match [patterns]. If [optional-directory]
+# is given, it will return list from that directory. If [optional-prepend-directory]
+# is given, all returned files will be prepended with that directory name.
+#
+# For example with 'baz.cpp, baz2.cpp':
+#  list files in current directory
+#  lst = [ Wildcard *.cpp ] ;  -> 'baz.cpp baz2.cpp'
+#
+#  list files in 'foo' directory
+#  lst = [ Wildcard foo : *.cpp ] ; -> 'baz.cpp baz2.cpp'
+#
+#  list files in current directory and prepend with xxx directory name
+#  lst = [ Wildcard : *.cpp : xxx ] ; -> 'xxx/baz.cpp xxx/baz2.cpp'
+#
+# This rule is not the same rule from autojam, but that was a good inspiration :-)
+rule Wildcard
+{
+	local files dir sdir wildcards ;
+
+	if $(2) {
+		dir = "$(<)/" ;
+		wildcards = $(2) ;
+	} else {
+		dir = "" ;
+		wildcards = $(1) ;
+	}
+
+	if $(3) {
+		sdir = $(3) ;
+	} else {
+		sdir = "" ;
+	}
+
+	files = [ Glob [ FDirName $(SUBDIR) $(dir) ] : $(wildcards) ] ;
+	return $(files:BSR=$(sdir)) ;
+}
+
+# SymLink [link] : [source] : [opt-path-to-source];
+# Creates symbolic link [link] pointing at [source].
+# If [opt-path-to-source] is given, [link] will point to [opt-path-to-source]/[source].
+#
+# Addition of directory option to this rule is needed because of the way how
+# 'ln -s' works and how it fits to jam's way of seeing paths. For example,
+# setting 'SymLink foo.so : foo.so.2' will make correcty symlink _only_ in
+# directory where 'foo.so.2' is built; on other hand if 'foo' is in 'baz' directory
+# and jam is called outside of it, link will be 'baz/foo.so -> baz/foo.so.2' which is incorrect;
+# linking must be done locally (done via SYMLINKSRCPATH).
+rule SymLink
+{
+	if ! $(LINKCMD) {
+		Echo "LINKCMD wasn't defined, $(<) will not be created" ;
+		return ;
+	}
+
+	Depends $(<) : $(>) ;
+
+	if $(3) {
+		SYMLINKSRCPATH on $(<) = $(3) ;
+	} else {
+		# Can't be empty or SymLink1 will ignore source; also
+		# it is set on $(<) since jam only this way see it as valid variable
+		SYMLINKSRCPATH on $(<) = "" ;
+	}
+
+	SymLink1 $(<) : $(>) ;
+}
+
+# FFileName [items] ;
+# The same as FDirName (since FDirName correctly construct result if
+# ending item is non-dir), but provided for easier navigation.
+# In short, return pathed list of items, like: [ FFileName foo baz taz ]
+# will be 'foo/baz/taz'. Must be called inside [], as FDirName does.
+rule FFileName
+{
+	return [ FDirName $(<) ] ;
+}
+
+# MkDir [directory] ;
+# Make a directory and all its parent directories.
+# The default MkDir rule in Jambase has problems when paths contains a sequence
+# of multiple slashes (ie. bla////fup). We solve these problems and greatly
+# simply this rule by using the "mkdir -p" or mkdirs command. Stolen from autojam.
+rule MkDir
+{
+	if ! $(MKDIRS) { 
+		Echo "MKDIRS wasn't defined; $(<) will not be created" ;
+		return ;
+	}
+
+	# Ignore timestamps on directories: we only care if they 
+	# exist.
+	NoUpdate $(<) ;
+
+	# don't create the dir multiple times
+	if ! $($(<)-mkdir) {
+		$(<)-mkdir = true ;
+		MkDir1 $(<) ;
+	}
+}
+
+actions SymLink1 
+{
+	$(RM) "$(<)" && $(LINKCMD) "$(>:D=$(SYMLINKSRCPATH))" "$(<)"
+}
+
+actions MkDir1
+{
+	$(MKDIRS) "$(<)"
+}
+
+# Cleandir clean : [directory] ;
+# Removes directory in 'Clean clean' fassion
+actions piecemeal together existing Cleandir
+{
+	$(RMDIR_UNSAFE) "$(>)"
+}
+
+# Similar to Cleandir, but it will not remove directory
+# if it is not empty. Also 'ignore' modifier will notify jam 
+# to noy scream if directory is not empty.
+actions piecemeal together ignore existing CleandirSafe
+{
+	$(RMDIR_SAFE) "$(>)"
+}
+
+# Copy [target] : [source] ;
+actions Copy
+{
+	$(CP) "$(>)" "$(<)"
+}
+
+# Move [target] : [source] ;
+actions Move
+{
+	$(MV) "$(>)" "$(<)"
+}

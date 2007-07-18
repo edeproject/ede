@@ -1,0 +1,106 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+# MakeProgramPrivate [target] : [sources] : [libraries] : [flags] ;
+rule MakeProgramPrivate
+{
+	local target objects ;
+
+	# This will make happy original jam and ftjam since constructing it's 
+	# grist from source file will make it unique and prevent colision with the 
+	# same directory name
+	target = $(1:G=$(SOURCE_GRIST)) ;
+
+	# so 'jam foo' works when 'foo' is final executable
+	if $(target) != $(<) {
+		Depends $(<) : $(target) ;
+		NotFile $(<) ;
+	}
+
+	objects = [ FGristFiles $(2:S=$(SUFOBJ)) ] ;
+
+	# Pick up values if someone set flags outside (via ObjectCcFlags and etc.)
+	CFLAGS on $(objects) = [ on $(objects) return $(CFLAGS) ] $(4) ;
+	C++FLAGS on $(objects) = [ on $(objects) return $(C++FLAGS) ] $(4) ;
+
+	LINKLIBS on $(target) = $(3) [ on $(target) return $(LINKLIBS) ] ;
+
+	MainFromObjects $(target) : $(objects) ;
+	Objects $(>) ;
+}
+
+# Program [target] : [sources] : [libraries] : [flags] ;
+# Compiles and links [target] from [sources]. No external flags or
+# libraries are used since this should be generic rule for compiling
+# any program.
+rule Program
+{
+	MakeProgramPrivate $(1) : $(2) : $(3) : $(4) ;
+}
+
+# EdeProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# Creates EDE specific programs. They will be linked with EDELIBLIB
+# and FLTKLIB. If [optinal-libraries] or [optinal-flags] are given, they will be
+# used too.
+rule EdeProgram
+{
+	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
+		Echo "EDELIBINCLUDE or EDELIBLIB not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	MakeProgramPrivate $(1) : $(2) 
+		: $(3) $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
+		: $(4) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
+}
+
+# EfltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# Creates programs that will be linked with efltk. If [optinal-libraries] or
+# [optinal-flags] are given, they will be used too.
+rule EfltkProgram 
+{
+	if ! $(EFLTKINCLUDE) || ! $(EFLTKLIB) {
+		Echo "EFLTKINCLUDE or EFLTKLIB not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	MakeProgramPrivate $(1) : $(2) 
+		: $(3) $(EFLTKLIB) $(STDLIB) 
+		: $(4) $(EFLTKINCLUDE) ;
+}
+
+# FltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# Creates programs that will be linked with fltk only. It will use full fltk
+# dependencies (images).
+rule FltkProgram 
+{
+	if ! $(FLTKINCLUDE) || ! $(FLTKLIB) {
+		Echo "FLTKINCLUDE or FLTKLIB not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	MakeProgramPrivate $(1) : $(2) 
+		: $(3) $(FLTKLIB) $(STDLIB) 
+		: $(4) $(FLTKINCLUDE) ;
+}
+
+# FltkProgramBare [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# Creates programs that will be linked with fltk only. No images will be linked in it.
+rule FltkProgramBare
+{
+	if ! $(FLTKINCLUDE) || ! $(FLTKLIB_NOIMAGES) {
+		Echo "FLTKINCLUDE or FLTKLIB_NOIMAGES not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	MakeProgramPrivate $(1) : $(2) 
+		: $(3) $(FLTKLIB_NOIMAGES) $(STDLIB) 
+		: $(4) $(FLTKINCLUDE) ;
+}

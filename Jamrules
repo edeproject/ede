@@ -4,122 +4,58 @@
 # Part of Equinox Desktop Environment (EDE).
 # Copyright (c) 2000-2007 EDE Authors.
 #
-# This program is licenced under terms of the 
-# GNU General Public Licence version 2 or newer.
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
 # See COPYING for details.
 
 XGETTEXT ?= xgettext ;
 MSGFMT   ?= msgfmt ;
+RMDIR    ?= rmdir ;
 
-FLAGS  ?= -Wall -g3 -D_DEBUG -I$(TOP) ;
-STDLIB ?= -lstdc++ ;
+GLOBALFLAGS  ?= -Wall -g3 -D_DEBUG -I$(TOP) ;
+STDLIB       ?= -lstdc++ ;
 
-FLTKLIB    ?= -L/usr/local/lib -lfltk2 ;
-FLTKIMAGES ?= -L/usr/local/lib -lfltk2_images ;
+FLTKINCLUDE      ?= -I/usr/local/include ;
+FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 ;
+FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lX11 ;
+
+EDELIBINCLUDE ?= -I/opt/ede/include ;
+EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
 
 # backward
-EFLTKLIB    ?= -L/usr/local/lib -lefltk ;
-EFLTKIMAGES ?= -L/usr/local/lib -lefltk_images ;
+EFLTKINCLUDE       ?= -I/usr/local/include ;
+EFLTKLIB           ?= -L/usr/local/lib -lefltk_images -lpng -lz -ljpeg -lefltk -lX11 -lXext -lm ;
+EFLTKLIB_NOIMAGES  ?= -L/usr/local/lib -lefltk -lX11 -lXext -lm ;
 
-X11LIBS    ?= -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lXft -lpthread -lm -lXext ;
-IMGLIBS    ?= -lpng -ljpeg -lz ;
-
-EDELIB_NAME = libedelib ;
-EDELIB = -ledelib ;
-EDELIBDIR = edelib2 ;
-
-# this is used by jam
-CCFLAGS = $(FLAGS) ;
-C++FLAGS = $(FLAGS) ;
+CCFLAGS = ;
+C++FLAGS = ;
 OPTIM = ;
 
-# at least we differ for FDirName
-rule FFileName
+# only haiku jam
+JCACHEFILE = $(TOP)/.jamcache ;
+HCACHEFILE = $(TOP)/.jamhcache ;
+
+include $(TOP)/build/Utils.jam ;
+include $(TOP)/build/Library.jam ;
+include $(TOP)/build/Program.jam ;
+include $(TOP)/build/Translation.jam ;
+include $(TOP)/build/Install.jam ;
+include $(TOP)/build/Doc.jam ;
+
+actions quietly Help 
 {
-	return [ FDirName $(<) ] ;
+	echo ""
+	echo "Build options:"
+	echo "   jam                build all"
+	echo "   jam  clean         clean compiled and created data"
+	echo "   jam  distclean     clean all compiled and created data (development only)"
+	echo "   jam  [target]      build [target] only"
+	echo "   jam  translation   extract translation strings and compile existing"
+	echo "   jam  potfile       extract translation strings only"
+	echo "   jam  doc           build documentation"
+	echo "   jam  help          this help"
+	echo ""
 }
-
-rule MakeLibrary
-{
-	Library $(<) : $(>) ;
-}
-
-# internal used by MakeProgram and MakeEfltkProgram
-rule InternalMakeProgram
-{
-	local eldir ;
-	local target ;
-
-	eldir = [ FDirName $(TOP) $(EDELIBDIR) ] ;
-
-	# this will make happy original jam and ftjam
-	# since constructing it's grist from source file
-	# it will make it unique and prevent colision same directory name
-	target = $(1:G=$(SOURCE_GRIST)) ;
-
-	# check if we got additional flags
-	if $(3)
-	{
-		SUBDIRC++FLAGS += $(3) ;
-		SUBDIRCCFLAGS  += $(3) ;
-	}
-
-	LINKLIBS on $(target) = -L$(eldir) $(EDELIB) $(4) $(IMGLIBS) $(5) $(X11LIBS) $(6) $(STDLIB) ;
-	Main $(target) : $(2) ;
-}
-
-# This should be used to build ede2 apps.
-# MakeProgram <target> : <sources> : <optional-flags> : <optional-libs> ;
-rule MakeProgram
-{
-	InternalMakeProgram $(1) : $(2) : $(3) : $(FLTKIMAGES) : $(FLTKLIB) : $(4) ;
-}
-
-# This is for efltk (aka. previous code) compilation
-# so it can be tested with whole package.
-# It should be used only until efltk programs are translited
-# to fltk.
-# MakeEfltkProgram <target> : <sources> : <optional-flags> ;
-rule MakeEfltkProgram
-{
-	InternalMakeProgram $(1) : $(2) : $(3) : $(EFLTKIMAGES) : $(EFLTKLIB) ;
-}
-
-# ExtractStrings <dir-where> : <source> ;
-rule ExtractStrings
-{
-	local strfile = "messages.pot" ;
-	local path = $(SEARCH_SOURCE) ;
-	local locale_dir = [ FDirName $(path) $(<) ] ;
-	local target = [ FFileName $(locale_dir) $(strfile) ] ;
-	local source = $(>:R=$(path)) ;
-
-	if $(XGETTEXT)
-	{
-		MkDir $(locale_dir) ;
-		for i in $(source)
-		{
-			Depends $(target) : $(i) ;
-		}	
-
-		XGettext $(target) : $(source) ;
-		Depends $(target) : $(locale_dir) ;
-		Depends all : $(target) ;
-		Clean clean : $(target) ;
-	}
-}
-
-actions XGettext
-{
-	$(XGETTEXT) -k'_' $(2) -o $(1) ;
-}
-
-# MakeTranslation <where-are-po-files> : file1.po file2.po... ;
-# TODO:
-rule MakeTranslation
-{
-}
-
-actions MakeTranslation1
-{
-}
+Help help ;
+NotFile help ;
+Always help ;
