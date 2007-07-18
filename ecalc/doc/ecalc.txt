@@ -1,0 +1,7 @@
+Ecalc documentation
+===================
+
+Ecalc is small calculator with scientific functions. It is based on
+modified flCalc by Yves Usson.
+
+image:images/ecalc.jpg[Ecalc]

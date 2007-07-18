@@ -13,3 +13,4 @@ SubDir TOP ecalc ;
 SOURCE = SciCalc.cpp Main.cpp ;
 
 FltkProgramBare ecalc : $(SOURCE) ;
+EdeManual doc/ecalc.txt : doc/ecalc.jpg ;

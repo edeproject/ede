@@ -24,7 +24,6 @@
 *Programs*
 
 - link:ecalc.html[Ecalc]
-- link:econtrol.html[Econtrol]
 
 *Development*
 

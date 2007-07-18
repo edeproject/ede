@@ -13,8 +13,11 @@ DOCDIR    = "$(TOP)/docs" ;
 MANUALDIR = "$(DOCDIR)/manual" ;
 
 # Must be relative to "docs" dir
-DOCICONS = "images" ;
+MANUALICONS = "images" ;
 
+# EdeManual [file] : [optinal-images] ;
+# Creates [file].html via asciidoc. If [optinal-images] are
+# given, they will be copied in $(DOCICONS).
 rule EdeManual
 {
 	if ! $(ASCIIDOC) {
@@ -46,11 +49,30 @@ rule EdeManual
 		AsciiDoc1 $(target) : $(source) ;
 		Clean clean : $(target) ;
 	}
+
+	# copy images, if given
+	local imgdir = [ FDirName $(MANUALDIR) $(MANUALICONS) ] ;
+	if $(>) {
+		for i in $(>) {
+			source = [ FFileName $(path) $(i) ] ;
+			target = $(source:D=$(imgdir)) ;
+
+			MkDir $(imgdir) ;
+
+			Depends $(target) : $(imgdir) ;
+			Depends $(target) : $(source) ;
+			Depends all : $(target) ;
+			Depends doc : $(target) ;
+
+			Copy $(target) : $(source) ;
+			Clean clean : $(target) ;
+		}
+	}
 }
 
 actions AsciiDoc1
 {
-	$(ASCIIDOC) -a icons -a iconsdir=$(DOCICONS) -a edeversion="EDE 2.0 alpha 1" -o $(<) $(>)
+	$(ASCIIDOC) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0 alpha 1" -o $(<) $(>)
 }
 
 NotFile doc ;
