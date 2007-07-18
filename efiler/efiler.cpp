@@ -607,6 +607,9 @@ void do_paste() {
 		}
 
 		// Draw progress dialog
+		// NOTE: sometimes when copying/moving just one file, the window
+		// can get "stuck"
+		// See: fltk STR 1255, http://www.fltk.org/str.php?L1255
 		Window* progress_window = new Window(350,150);
 		if (operation_is_copy)
 			progress_window->label(_("Copying files"));
@@ -660,6 +663,8 @@ void do_paste() {
 				caption->redraw();
 				if (stop_now || !my_copy(files_list[i], dest))
 					break;
+				// Delete file after moving
+				if (!operation_is_copy) unlink(files_list[i]);
 				cut_copy_progress->position(cut_copy_progress->position()+1);
 				fltk::check(); // check to see if user pressed Stop
 			}

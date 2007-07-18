@@ -1,53 +1,25 @@
-#ifndef __ECONTROL_H__
-#define __ECONTROL_H__
+/*
+ * $Id$
+ *
+ * The EDE control center
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */
 
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Group.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Button.h>
-
-#include <edelib/IconTheme.h>
-#include <edelib/ExpandableGroup.h>
-
-struct ControlIcon {
-	edelib::String name;
-	edelib::String tip;
-	edelib::String exec;
-	edelib::String icon;
-	bool abspath;
-	int  pos;
-};
-
-class ControlButton : public Fl_Button {
-	private:
-		Fl_Box* tip;
-		edelib::String tipval;
-	public:
-		ControlButton(Fl_Box* t, edelib::String tv, int x, int y, int w, int h, const char* l = 0);
-		~ControlButton();
-		int handle(int event);
-};
-
-class ControlWin : public Fl_Window {
-	private:
-		Fl_Group* titlegrp;
-		Fl_Box* title;
-		Fl_Button* close;
-		//Fl_Button* options;
-		edelib::ExpandableGroup* icons;
-		Fl_Box* rbox;
-		Fl_Box* tipbox;
-
-		edelib::vector<ControlIcon> iconlist;
-
-		void init(void);
-		void load_icons(void);
-
-	public:
-		ControlWin(const char* title, int w = 455, int h = 330);
-		~ControlWin();
-		void do_close(void);
-};
-
-
+#ifndef econtrol_h
+#define econtrol_h
+#include <fltk/Window.h>
+#include <fltk/MenuBar.h>
+#include <fltk/ItemGroup.h>
+#include <fltk/Item.h>
+#include <fltk/Group.h>
+#include <fltk/InvisibleBox.h>
+#include <fltk/TiledGroup.h>
+#include <fltk/ScrollGroup.h>
+#include <fltk/Button.h>
+#include <fltk/StatusBarGroup.h>
 #endif

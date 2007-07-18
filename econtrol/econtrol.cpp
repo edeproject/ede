@@ -1,162 +1,371 @@
+/*
+ * $Id$
+ *
+ * The EDE control center
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */
+#include <stdlib.h>
+#include <fltk/run.h>
 
 #include "econtrol.h"
 
-#include <edelib/Config.h>
-#include <edelib/StrUtil.h>
-#include <edelib/Debug.h>
-#include <edelib/Nls.h>
+#include "../edelib2/Run.h"
+#include "../edelib2/about_dialog.h"
+#include "../edelib2/NLS.h"
+#include "../edelib2/Icon.h"
 
-#include <FL/Fl.h>
-#include <FL/Fl_Shared_Image.h>
-#include <FL/fl_draw.h>
+#include "../edeconf.h"
 
+using namespace fltk;
 using namespace edelib;
 
-ControlButton::ControlButton(Fl_Box* t, String tv, int x, int y, int w, int h, const char* l) : 
-Fl_Button(x, y, w, h, l) {
-	tip = t;
-	tipval = tv;
-	box(FL_FLAT_BOX);
-	align(FL_ALIGN_WRAP);
-	color(FL_WHITE);
+
+
+// Widgets
+
+Window *configPanelWindow=(Window *)0;
+MenuBar *main_menubar=(MenuBar *)0;
+StatusBarGroup *status_bar=(StatusBarGroup *)0;
+ScrollGroup *scroll=(ScrollGroup *)0;
+Group *main_view=(Group *)0;
+InvisibleBox *help_window=(InvisibleBox *)0;
+
+
+// Callbacks
+
+static void cb_Quit(Item*, void*)
+{
+	exit(0);
 }
 
-ControlButton::~ControlButton() {
+static void cb_About(Item*, void*)
+{
+	about_dialog("Control panel", "1.99");
 }
 
-int ControlButton::handle(int event) {
-	switch(event) {
-		case FL_ENTER:
-			tip->label(tipval.c_str());
-			return 1;
-		case FL_LEAVE:
-			tip->label("");
-			return 1;
-		case FL_PUSH:
-			return 1;
-		case FL_RELEASE:
-			return 1;
-		default:
-			return Fl_Button::handle(event);
-	}
-	return Fl_Button::handle(event);
+
+static void cb_Icons(Button*, void*)
+{
+	help_window->label(_("Change behaviour of your desktop icons."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("eiconsconf &");
 }
 
-void close_cb(Fl_Widget*, void* w) {
-	ControlWin* cw = (ControlWin*)w;
-	cw->do_close();
+
+static void cb_Colors(Button*, void*)
+{
+	help_window->label(_("Configure global colors and fonts used by EDE applications."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("ecolorconf &");
 }
 
-ControlWin::ControlWin(const char* title, int w, int h) : Fl_Window(w, h, title) {
-
-	IconTheme::init("edeneu");
-
-	fl_register_images();
-	load_icons();
-	init();
+static void cb_Screen(Button*, void*)
+{
+	help_window->label(_("Configure the screensaver."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("esvrconf &");
 }
 
-ControlWin::~ControlWin() {
-	IconTheme::shutdown();
+static void cb_Window(Button*, void*)
+{
+	help_window->label(_("Setup window decorations and other options."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("ewmconf &");
 }
 
-void ControlWin::load_icons(void) {
-	Config c;
+static void cb_Display(Button*, void*) 
+{
+	help_window->label(_("Set various options for the X windowing system."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("edisplayconf &");
+}
 
-	if(!c.load("econtrol.conf")) {
-		EWARNING("Can't load config\n");
-		return;
-	}
+static void cb_Install(Button*, void*)
+{
+	help_window->label(_("This utility helps you to install new software."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("einstaller",false);
+}
 
-	char buff[1024];
-	if(!c.get("Control Panel", "Items", buff, sizeof(buff))) {
-		EWARNING("Can't find Items key\n");
-		return;
-	}
+static void cb_Time(Button*, void*)
+{
+	help_window->label(_("Show and set computer time and date."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("etimedate",false);
+}
 
-	vector<String> spl;
-	stringtok(spl, buff, ",");
-	char* sect;
+static void cb_Panel(Button*, void*) 
+{
+	help_window->label(_("Change panel behaviour and choose applets."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("epanelconf",false);
+}
 
-	ControlIcon cicon;
-	for(unsigned int i = 0; i < spl.size(); i++) {
-		sect = (char*)spl[i].c_str();
-		str_trim(sect);
+static void cb_Keyboard(Button*, void*) 
+{
+	help_window->label(_("Configure keyboard shortcuts and other options."));
+	help_window->redraw();
+	//if (Fl::event_clicks())
+	run_program("ekeyconf",false);
+}
 
-		if(c.get(sect, "Name", buff, sizeof(buff)))
-			cicon.name = buff;
-		else {
-			EWARNING("No %s, skipping...\n", spl[i].c_str());
-			continue;
+static void cb_Color(Item* i, void*) 
+{
+	const char* label = i->label();
+	if (strcmp(label,"White")==0) { scroll->color(WHITE); }
+	if (strcmp(label,"Gray")==0) { scroll->color(GRAY75); }
+	if (strcmp(label,"Black")==0) { scroll->color(BLACK); }
+	if (strcmp(label,"Red")==0) { scroll->color(RED); }
+	if (strcmp(label,"Blue")==0) { scroll->color(BLUE); }
+	scroll->redraw();
+}
+
+
+// Main program
+
+int main (int argc, char **argv) {
+
+//fl_init_locale_support("econtrol", PREFIX"/share/locale");
+Window* configPanelWindow = new Window(450, 310, "Control panel");
+configPanelWindow->begin();
+{main_menubar = new MenuBar(0, 0, 450, 26);
+	main_menubar->begin();
+	{ItemGroup* o = new ItemGroup(_("&File"));
+		o->begin();
+		{Item* o = new Item(_("&Quit"));
+			o->shortcut(0x40071);
+			o->callback((Callback*)cb_Quit);
+			//o->x_offset(18);
 		}
-
-		if(c.get(sect, "Tip", buff, sizeof(buff)))
-			cicon.tip = buff;
-		if(c.get(sect, "Exec", buff, sizeof(buff)))
-			cicon.exec = buff;
-		if(c.get(sect, "Icon", buff, sizeof(buff))) {
-			cicon.icon = buff;
-			EDEBUG("setting icon (%s): %s\n", spl[i].c_str(), cicon.icon.c_str());
-		}
-
-		c.get(spl[i].c_str(), "IconPathAbsolute", cicon.abspath, false);
-		c.get(spl[i].c_str(), "Position", cicon.abspath, -1);
-
-		iconlist.push_back(cicon);
+		o->end();
 	}
-}
-
-void ControlWin::init(void) {
-	begin();
-		titlegrp = new Fl_Group(0, 0, 455, 50);
-		titlegrp->box(FL_FLAT_BOX);
-		titlegrp->color(138);
-		titlegrp->begin();
-			title = new Fl_Box(10, 10, 435, 30, label());
-			title->color(138);
-			title->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-			title->labelcolor(23);
-			title->labelfont(FL_HELVETICA_BOLD);
-			title->labelsize(16);
-		titlegrp->end();
-		titlegrp->resizable(title);
-
-		icons = new ExpandableGroup(10, 60, 435, 225);
-		icons->box(FL_DOWN_BOX);
-		icons->color(FL_BACKGROUND2_COLOR);
-		icons->end();
-
-		tipbox = new Fl_Box(10, 295, 240, 25, _("Double click on desired item"));
-		tipbox->box(FL_FLAT_BOX);
-		tipbox->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
-
-		for(unsigned int i = 0; i < iconlist.size(); i++) {
-			ControlButton* b = new ControlButton(tipbox, iconlist[i].tip, 0, 0, 80, 100);
-			//String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_MEDIUM);
-			String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_LARGE);
-			b->label(iconlist[i].name.c_str());
-
-			if(!iconpath.empty())
-				b->image(Fl_Shared_Image::get(iconpath.c_str()));
-			icons->add(b);
+	{ItemGroup* o = new ItemGroup(_("&Color"));
+		o->align(ALIGN_CENTER);
+		o->begin();
+		{Item* o = new Item("White");
+			o->callback((Callback*)cb_Color);
+			o->type(Item::RADIO);
+			o->set();
 		}
-
-		//options = new Fl_Button(260, 295, 90, 25, _("&Options"));
-		close = new Fl_Button(355, 295, 90, 25, _("&Close"));
-		close->callback(close_cb, this);
-
-		// resizable invisible box
-		rbox = new Fl_Box(10, 220, 120, 65);
-		resizable(rbox);
-	end();
+		{Item* o = new Item("Gray");
+			o->callback((Callback*)cb_Color);
+			o->type(Item::RADIO);
+		}
+		{Item* o = new Item("Black");
+			o->callback((Callback*)cb_Color);
+			o->type(Item::RADIO);
+		}
+		{Item* o = new Item("Red");
+			o->callback((Callback*)cb_Color);
+			o->type(Item::RADIO);
+		}
+		{Item* o = new Item("Blue");
+			o->callback((Callback*)cb_Color);
+			o->type(Item::RADIO);
+		}
+		o->end();
+	}
+	{ItemGroup* o = new ItemGroup(_("&Help"));
+		o->align(ALIGN_CENTER);
+		o->begin();
+		{Item* o = new Item(_("&About"));
+			o->shortcut(0x40061);
+			o->callback((Callback*)cb_About);
+			//o->x_offset(18);
+		}
+		o->end();
+	}
+	main_menubar->end();
+}
+{main_view = new Group(0, 26, 450, 280);
+	main_view->begin();
+	{InvisibleBox* o = new InvisibleBox(0, 0, 450, 41, _("Control panel"));
+		o->box(FLAT_BOX);
+		o->labeltype(SHADOW_LABEL);
+		o->color((Color)0xd089d00);
+		o->buttoncolor((Color)0xe6e7e600);
+		o->labelcolor((Color)0xffffff00);
+		o->highlight_color((Color)0xe6e7e600);
+		o->labelsize(20);
+		o->textsize(29);
+		o->align(ALIGN_INSIDE);
+	}
+	{TiledGroup* o = new TiledGroup(0, 40, 450, 215);
+		o->box(FLAT_BOX);
+		o->color((Color)0xd93b4300);
+		o->begin();
+		{help_window = new InvisibleBox(0, 0, 110, 195, _("Welcome to the control panel. Here you can setup most things on your computer."));
+			help_window->set_vertical();
+			help_window->box(DOWN_BOX);
+			help_window->color((Color)0xfff9e400);
+			help_window->labelcolor((Color)32);
+			help_window->align(ALIGN_WRAP);
+			//help_window->set_value();
+		}
+		{scroll = new ScrollGroup(110, 0, 340, 195);
+			scroll->box(DOWN_BOX);
+			scroll->color(WHITE);
+			scroll->align(ALIGN_CENTER);
+			scroll->begin();
+			{Button* o = new Button(0, 15, 60, 75, _("Icons"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/behaviour.xpm"));
+			//            o->image(EDE_Icon::get("desktop-mdk",EDE_Icon::SMALL));
+			//            o->image(EDE_Icon::get("kappfinder",EDE_Icon::SMALL));
+				o->image(Icon::get("desktop",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->buttonbox(NO_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Icons);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Icons settings"));
+			}
+			{Button* o = new Button(75, 15, 60, 75, _("Colors and Fonts"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/themes.xpm"));
+				o->image(Icon::get("fonts",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Colors);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Colors settings"));
+			}
+			{Button* o = new Button(140, 15, 60, 75, _("Screen Saver"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/screensaver.xpm"));
+				o->image(Icon::get("terminal",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Screen);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Screensaver configuration"));
+			}
+			{Button* o = new Button(10, 95, 60, 75, _("Window Manager"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/windowmanager.xpm"));
+			//            o->image(EDE_Icon::get("kcmkwm",EDE_Icon::SMALL));
+			//            o->image(EDE_Icon::get("kpersonalizer",EDE_Icon::SMALL));
+				o->image(Icon::get("window_list",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Window);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Window manager settings"));
+			}
+			{Button* o = new Button(75, 95, 60, 75, _("Display"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/display.xpm"));
+			//            o->image(EDE_Icon::get("kcmx",EDE_Icon::SMALL));
+			//            o->image(EDE_Icon::get("randr",EDE_Icon::SMALL));
+				o->image(Icon::get("looknfeel",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Display);
+				o->tooltip(_("Display settings"));
+			}
+			{Button* o = new Button(140, 95, 60, 75, _("Install New Software"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/newsoft.xpm"));
+			//            o->image(EDE_Icon::get("ark",EDE_Icon::SMALL));
+				o->image(Icon::get("package",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Install);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Software installation."));
+			}
+			{Button* o = new Button(205, 95, 60, 75, _("Time and Date"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/timedate.xpm"));
+				o->image(Icon::get("date",Icon::SMALL));
+			//            o->image(EDE_Icon::get("karm",EDE_Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Time);
+				o->align(ALIGN_WRAP);
+				o->tooltip(_("Time and date settings."));
+			}
+			{Button* o = new Button(205, 15, 60, 75, _("Panel"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/panel.xpm"));
+				o->image(Icon::get("kcmkicker",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Panel);
+				o->tooltip(_("Panel configuration."));
+			}
+			{Button* o = new Button(265, 15, 60, 75, _("Keyboard"));
+				o->set_vertical();
+			//            o->image(SharedImage::get("icons/keyboard.xpm"));
+			//            o->image(EDE_Icon::get("kxkb",EDE_Icon::SMALL));
+				o->image(Icon::get("keyboard",Icon::SMALL));
+				o->box(HIGHLIGHT_DOWN_BOX);
+				o->buttonbox(NO_BOX);
+				o->color((Color)7);
+				o->highlight_color((Color)7);
+				o->highlight_textcolor((Color)32);
+				o->labelsize(10);
+				o->callback((Callback*)cb_Keyboard);
+				o->tooltip(_("Keyboard settings"));
+			}
+			scroll->end();
+			//o->edge_offset(10);
+		}
+		o->end();
+		o->parent()->resizable(o);
+		Group::current()->resizable(o);
+	}
+	main_view->end();
+	Group::current()->resizable(main_view);
+}
+{status_bar = new StatusBarGroup(0, 281, 450, 24, _("Ready"));
+	status_bar->box(DOWN_BOX);
 }
 
-void ControlWin::do_close(void) {
-	hide();
-}
+configPanelWindow->end();
+configPanelWindow->size_range(configPanelWindow->w(), configPanelWindow->h());
 
-int main() {
-	ControlWin cw(_("EDE Control Panel"));
-	cw.show();
-	return Fl::run();
+
+	//  configPanelWindow->menu(main_menubar);
+	//  configPanelWindow->view(main_view);
+	//  configPanelWindow->status(status_bar);
+	configPanelWindow->show(argc, argv);
+	return  run();
 }

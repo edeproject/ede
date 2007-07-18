@@ -282,6 +282,7 @@ DirTree::load()
 			}
 		}
 	}
+	fclose(mtab);
 
 	this->end();
 	system->set_flag(fltk::OPENED);
