@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Screensaver settings
+  Exec=esvrconf
+  Icon=konsole2.png
+  Name[sk]=Nastavenie šetriča
+

@@ -1,0 +1,135 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:17+0100\n"
+"PO-Revision-Date: 2002-11-28 HO:MI+ZONE\n"
+"Last-Translator: aabbvv <null@list.ru>\n"
+"Language-Team: RUSSIAN <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: emenueditor.cpp:40
+msgid "Executables (*.*), *, All files (*.*), *"
+msgstr "Исполняемые (*.*), *, Все файлы (*.*), *"
+
+#: emenueditor.cpp:41
+msgid "File selection ..."
+msgstr "Выбор файла..."
+
+#: emenueditor.cpp:52
+msgid "Menu editor"
+msgstr "Редактор меню"
+
+#: emenueditor.cpp:56
+msgid "&File"
+msgstr "Файл"
+
+#: emenueditor.cpp:57
+msgid "&Quit"
+msgstr "Выход"
+
+#: emenueditor.cpp:65
+msgid "Programs:"
+msgstr "Программы:"
+
+#: emenueditor.cpp:67
+msgid "Click on the submenu or on the item you want"
+msgstr "Щёлкните на требуемое Вам подменю или элемент"
+
+#: emenueditor.cpp:72
+msgid "New submenu"
+msgstr "Новое подменю"
+
+#: emenueditor.cpp:75
+msgid "Delete submenu"
+msgstr "Удалить подменю"
+
+#: emenueditor.cpp:78
+msgid "New item"
+msgstr "Новый элемент"
+
+#: emenueditor.cpp:81
+msgid "Delete item"
+msgstr "Удалить элемент"
+
+#: emenueditor.cpp:84
+msgid "Edit Item"
+msgstr "Изменить элемент"
+
+#: emenueditor.cpp:153
+msgid "Please, enter the name of the menu item."
+msgstr "Пожалуйста введите имя элемента."
+
+#: emenueditor.cpp:183
+msgid "Icons (*.png), *.png, All files (*.*), *"
+msgstr "Значки (*.png), *.png, Все файлы (*.*), *"
+
+#: emenueditor.cpp:184
+msgid "Choose icon file..."
+msgstr "Выбор значка..."
+
+#: emenueditor.cpp:196
+msgid "Edit item"
+msgstr "Редактирование элемента"
+
+#: emenueditor.cpp:198
+msgid "Filename:"
+msgstr "Имя файла:"
+
+#: emenueditor.cpp:201
+msgid "Name in the menu:"
+msgstr "Имя в меню:"
+
+#: emenueditor.cpp:204
+msgid "Command to execute:"
+msgstr "Команда:"
+
+#: emenueditor.cpp:208
+msgid "Bro&wse..."
+msgstr "Просмотр..."
+
+#: emenueditor.cpp:212
+msgid "Icon filename:"
+msgstr "Файл значка:"
+
+#: emenueditor.cpp:216
+msgid "&Save"
+msgstr "Сохранить"
+
+#: emenueditor.cpp:220
+msgid "&Cancel"
+msgstr "Отмена"
+
+#: emenueditor.cpp:224
+msgid "&Browse..."
+msgstr "Просмотр..."
+
+#: emenueditor.cpp:231
+msgid "New folder"
+msgstr "Новый каталог"
+
+#: emenueditor.cpp:277
+msgid "Please enter name of the new submenu:"
+msgstr "Пожалуйста введите имя подменю:"
+
+#: emenueditor.cpp:284
+msgid "Cannot create submenu!"
+msgstr "Не могу создать подменю!"
+
+#: emenueditor.cpp:350
+msgid ""
+"You should delete all the items from the submenu, before you can delete it!"
+msgstr "Вы должны сначала удалить все элементы в этом подменю"
+
+#~ msgid "Go up..."
+#~ msgstr "Вверх..."
+
+#~ msgid "Go up one level"
+#~ msgstr "На уровень выше"

@@ -1,0 +1,275 @@
+# data file for the eFLTK User Interface Designer (eFLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// EControl applet for colors and fonts} {} 
+
+decl {// Copyright (c) 2000. - 2005. EDE Authors} {} 
+
+decl {// This program is licenced under terms of the} {} 
+
+decl {// GNU General Public Licence version 2 or newer.} {} 
+
+decl {// See COPYING for details} {} 
+
+decl {//} {} 
+
+decl {\#include <edeconf.h>} {} 
+
+decl {\#include <efltk/Fl_Color_Chooser.h>} {} 
+
+decl {\#include "ecolorutils.h"} {} 
+
+Function {} {open
+} {
+  code {fl_init_locale_support("ecolorconf", PREFIX"/share/locale");} {}
+  Fl_Window windowColorSettings {
+    label {Colors and fonts settings}
+    callback {exit(0);} open
+    xywh {507 139 330 360} resizable visible
+  } {
+    Fl_Tabs {} {open
+      private xywh {3 5 320 195} color 0xfffffffe
+    } {
+      Fl_Group {} {
+        label {Default colors} open
+        xywh {1 24 318 170} align FL_ALIGN_TOP|FL_ALIGN_LEFT hide
+      } {
+        Fl_Button colorBox {
+          label Widgets
+          callback ChangeBoxColor
+          xywh {91 31 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button labelColorBox {
+          label Label
+          callback ChangeBoxColor
+          xywh {16 76 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button selectionColorBox {
+          label {Sel. back.}
+          callback ChangeBoxColor
+          xywh {241 121 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button selectionTextColorBox {
+          label Selection
+          callback ChangeBoxColor
+          xywh {166 121 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button highlightColorBox {
+          label Highlight
+          callback ChangeBoxColor
+          xywh {166 31 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button highlightLabelColorBox {
+          label Highlight
+          callback ChangeBoxColor
+          xywh {166 76 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button textColorBox {
+          label Text
+          callback ChangeBoxColor
+          xywh {16 121 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button backgroundBox {
+          label Background
+          callback ChangeBoxColor
+          xywh {16 31 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button textBackgroundBox {
+          label Background
+          callback ChangeBoxColor
+          xywh {91 121 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+      }
+      Fl_Group {} {
+        label Tooltips open
+        xywh {1 24 318 170} align FL_ALIGN_TOP|FL_ALIGN_LEFT hide
+      } {
+        Fl_Button tooltipBox {
+          label {Tooltip color}
+          callback ChangeBoxColor
+          xywh {157 45 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Button tooltipTextColorButton {
+          label {Tooltip text color}
+          callback ChangeBoxColor
+          xywh {237 45 65 20} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Check_Button tooltipsEnableEffects {
+          label {Enable effects}
+          xywh {7 45 145 25}
+        }
+        Fl_Check_Button tooltipsEnable {
+          label Enabled
+          xywh {7 15 145 25}
+        }
+        Fl_Choice tooltipsEffectType {
+          label {Effect type:}
+          xywh {77 82 115 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+        } {
+          Fl_Item {} {
+            label None
+            }
+          Fl_Item {} {
+            label Animation
+            }
+          Fl_Item {} {
+            label Fading
+            }
+        }
+        Fl_Value_Input tooltipsDelay {
+          label {Delay:}
+          xywh {77 120 50 25}
+        }
+      }
+      Fl_Group {} {
+        label Fonts open
+        xywh {1 24 318 170} align FL_ALIGN_TOP|FL_ALIGN_LEFT
+        extra_code {o->label(_(o->label()));}
+      } {
+        Fl_Button setLabelFont {
+          label {...}
+          callback {labelfont_cb();}
+          xywh {276 16 30 25}
+        }
+        Fl_Button setTextFont {
+          label {...}
+          callback {textfont_cb();}
+          xywh {276 51 30 25}
+        }
+        Fl_Box labelFontInput {
+          label label
+          xywh {76 16 190 25} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Box textFontInput {
+          label label
+          xywh {76 52 190 24} align FL_ALIGN_TOP|FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP box DOWN_BOX
+        }
+        Fl_Box {} {
+          label {Label font:}
+          xywh {11 16 65 25} align FL_ALIGN_RIGHT|FL_ALIGN_INSIDE
+        }
+        Fl_Box {} {
+          label {Text font:}
+          xywh {11 51 65 25} align FL_ALIGN_RIGHT|FL_ALIGN_INSIDE
+        }
+      }
+      Fl_Group {} {
+        label Menus open
+        xywh {1 24 318 170} hide
+      } {
+        Fl_Check_Button menusEnableEffects {
+          label {Enable effects}
+          xywh {7 5 305 25}
+        }
+        Fl_Check_Button menusEnableSubwindowEffects {
+          label {Enable subwindow effects}
+          xywh {7 30 305 25}
+        }
+        Fl_Choice menusEffectType {
+          label {Effect type:} open
+          xywh {77 60 115 23} align FL_ALIGN_LEFT|FL_ALIGN_WRAP
+        } {
+          Fl_Item {} {
+            label None
+            }
+          Fl_Item {} {
+            label Animation
+            }
+          Fl_Item {} {
+            label Fading
+            }
+        }
+        Fl_Value_Input menusSpeed {
+          label {Speed:}
+          xywh {77 95 45 25}
+        }
+        Fl_Value_Input menusDelay {
+          label {Delay:}
+          xywh {212 95 50 25}
+        }
+      }
+      Fl_Group {} {
+        label Others open
+        xywh {1 24 318 170} hide
+      } {
+        Fl_Check_Button mdiAnimation {
+          label {Enable MDI animation}
+          xywh {12 10 300 25}
+        }
+        Fl_Check_Button mdiOpaqueAnimation {
+          label {MDI opaque animation}
+          xywh {12 40 300 25}
+        }
+        Fl_Check_Button imagesStateEffect {
+          label {Enable images state effect}
+          xywh {12 70 300 25}
+        }
+      }
+    }
+    Fl_Group {} {open
+      xywh {3 210 320 100} box DOWN_BOX
+    } {
+      Fl_Button {} {
+        label {&Save as...}
+        callback {saveSchemeAs();}
+        private xywh {197 20 80 25}
+      }
+      Fl_Check_Button allApplyRadioButton {
+        label {Ap&ply colors to all programs}
+        xywh {9 60 299 25} align FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_WRAP when CHANGED
+      }
+      Fl_Choice schemeListBox {
+        label {Schemes:}
+        callback {getSchemeColors();} open
+        xywh {12 22 175 23} align FL_ALIGN_TOP|FL_ALIGN_LEFT when CHANGED
+        extra_code {\#include <efltk/Fl_Input_Browser.h>
+o->type(1);
+fillItems();}
+        class Fl_Input_Browser
+      } {}
+    }
+    Fl_Button {} {
+      label {&OK}
+      callback {//windowColorSettings->hide();
+saveActiveScheme();
+applyColors();
+saveEfltkConfig();
+exit(0);}
+      private xywh {75 328 80 25}
+    }
+    Fl_Button {} {
+      label {&Apply}
+      callback {saveActiveScheme();
+applyColors();
+saveEfltkConfig();}
+      private xywh {160 328 80 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      callback {exit(0);}
+      private xywh {245 328 80 25}
+    }
+  }
+  code {//updateFontAll();
+loadEfltkConfig();} {}
+} 
+
+Function {ChangeBoxColor(Fl_Button *box, void *)} {open return_type void
+} {
+  code {Fl_Button *colorBox = box;
+Fl_Color oldColor = colorBox->color();
+Fl_Color defColor = oldColor;
+fl_color_chooser(_("Choose color"), defColor);
+if (defColor != oldColor) 
+{
+	colorBox->color(defColor);
+	colorBox->highlight_color(defColor);
+	colorBox->redraw();
+}} {}
+} 

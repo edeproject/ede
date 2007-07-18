@@ -1,0 +1,93 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 11:58+0100\n"
+"PO-Revision-Date: 2002-11-28 HO:MI+ZONE\n"
+"Last-Translator: aabbvv <null@list.ru>\n"
+"Language-Team: RUSSIAN <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=koi8-r\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: etip.cpp:809
+#, fuzzy
+msgid ""
+"To start any application is simple. Press on the button with your user name, "
+"go to the Programs menu, select category and click on the wished program."
+msgstr ""
+"Запустить приложение очень просто, нажмите кнопку EDE, выберите пункт "
+"Программы, выберите категорию и щёлкните мышью на выбранной программе."
+
+#: etip.cpp:810
+#, fuzzy
+msgid ""
+"To exit the Equinox Desktop environment, press button with your user name "
+"and then logout."
+msgstr "Для выхода из EDE нажмите кнопку EDE, затем выберите пункт выйти."
+
+#: etip.cpp:811
+#, fuzzy
+msgid "To lock the computer, press button with your user name and then lock."
+msgstr ""
+"Чтобы запереть экран, нажмите кнопку EDE и выберите пункт запереть экран."
+
+#: etip.cpp:812
+#, fuzzy
+msgid ""
+"To setup things on the computer, press button with your user name, Panel "
+"menu and then the Control panel."
+msgstr ""
+"Для каких-либо настроек компьютера нажмите кнопку EDE войдите в меню \"Панель"
+"\" и выберите пункт панель управления."
+
+#: etip.cpp:813
+#, fuzzy
+msgid ""
+"To add a program that is not in the Programs menu, click on the button with "
+"your user, Panel menu, and then Edit panels menu."
+msgstr ""
+"Чтобы добавить программу в меню нажмите кнопку EDE, выберите подменю панель,"
+"выберите пункт редактировать меню, затем добавьте желаемые программы."
+
+#: etip.cpp:814
+msgid ""
+"Notice that this is still development version, so please send your bug "
+"reports or comments on EDE forum, EDE bug reporting system (on project's "
+"page), or karijes@users.sourceforge.net."
+msgstr ""
+
+#: etip.cpp:815
+msgid ""
+"You can download latest release on - http://sourceforge.net/projects/ede."
+msgstr ""
+
+#: etip.cpp:820
+msgid "Startup tips"
+msgstr "Советы и подсказки"
+
+#: etip.cpp:825
+msgid "Do not show this dialog next time"
+msgstr "Больше это не показывать"
+
+#: etip.cpp:840
+#, fuzzy
+msgid "Welcome to Equinox Desktop Environment version "
+msgstr "Добро пожаловать в Equinox Desktop Environment"
+
+#: etip.cpp:850
+msgid "<< &Previous"
+msgstr "<< Назад"
+
+#: etip.cpp:854
+msgid "&Next >>"
+msgstr "Далее >>"
+
+#: etip.cpp:859
+msgid "&Close"
+msgstr "Закрыть"

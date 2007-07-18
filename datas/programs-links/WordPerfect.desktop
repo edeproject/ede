@@ -1,0 +1,38 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=WordPerfect
+  Name[sl]=WordPerfect
+  Name[da]=WordPerfect
+  Name[de]=WordPerfect
+  Name[fi]=WordPerfect
+  Name[fr]=WordPerfect
+  Name[it]=WordPerfect
+  Name[lt]=WordPerfect
+  Name[no]=WordPerfect
+  Name[pt_BR]=WordPerfect
+  Name[ro]=WordPerfect
+  Name[sk]=WordPerfect
+  Name[sv]=WordPerfect
+  Comment=WordPerfect for Linux
+  Comment[sl]=WordPerfect za Linux
+  Comment[da]=WordPerfect til Linux
+  Comment[de]=WordPerfect für Linux
+  Comment[el]=WordPerfect ăéá Linux
+  Comment[fi]=WordPerfect Linuxille
+  Comment[fr]=WordPerfect pour Linux
+  Comment[it]=WordPerfect per Linux
+  Comment[lt]=Linux'inis WordPerfect
+  Comment[no]=WordPerfect for Linux
+  Comment[pt_BR]=WordPerfect para Linux
+  Comment[ro]=WordPerfect pentru Linux
+  Comment[sk]=WordPerfect pre Linux
+  Comment[sv]=WordPerfect för Linux
+  Comment[wa]=Li programe di traitment di tecsse WordPerfect
+  TryExec=/u/s/wp
+  Exec=wp
+  Icon=synaptic.png
+  Terminal=false
+  MultipleArgs=false
+  Type=Application
+

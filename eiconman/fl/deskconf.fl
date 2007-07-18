@@ -1,0 +1,56 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {open selected
+    xywh {416 256 540 260} type Double resizable visible
+  } {
+    Fl_Box {} {
+      xywh {75 173 100 15} box BORDER_BOX
+    }
+    Fl_Box {} {
+      xywh {20 20 210 158} box THIN_UP_BOX
+    }
+    Fl_Box {} {
+      xywh {33 30 184 138} box DOWN_BOX color 56
+      code0 {/* box size is intentionaly odd so preserve aspect ratio */}
+    }
+    Fl_Box {} {
+      xywh {50 183 145 14} box THIN_UP_BOX
+    }
+    Fl_Input {} {
+      label {Image:}
+      xywh {310 55 190 25}
+    }
+    Fl_Button {} {
+      label {...}
+      xywh {505 55 25 25}
+    }
+    Fl_Choice {} {
+      label {Mode:} open
+      xywh {310 91 220 24} down_box BORDER_BOX
+    } {}
+    Fl_Button {} {
+      label {Background color}
+      xywh {310 136 25 24} color 73 align 8
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {250 227 90 25}
+    }
+    Fl_Button {} {
+      label {&Apply}
+      xywh {345 227 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {440 227 90 25}
+    }
+    Fl_Check_Button {} {
+      label { Use wallpaper}
+      xywh {310 20 220 25} down_box DOWN_BOX
+    }
+  }
+} 

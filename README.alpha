@@ -1,0 +1,101 @@
+README for EDE 2.0 pre-alpha
+============================
+
+($Id$)
+
+Please read this document before using or contributing to EDE 2.0 source code
+before or during 2.0alpha release.
+
+
+Build requirements
+------------------
+
+EDE 2.0 is using fltk2 toolkit which is not officially released yet. Lately 
+fltk2 has been pretty stable, so you should be able to use any reasonably
+fresh SVN snapshot from www.fltk.org. Nevertheless, we will (soon) keep our own "fork" 
+called fltk-copy which is basically the last SVN snapshot that EDE is known 
+to work with. If there are any patches required for proper EDE functioning, 
+you should find them in fltk-copy tree. Further instructions will be in 
+fltk-copy/README.ede
+
+Make sure you have efltk installed, because some packages still requires it.
+
+Also you will need Jam utility. Jam is make replacement and removes a lot of it's
+limitations. Current source can be built either via jam or make, but note that make
+builds will be soon removed. 
+
+Jam can be downloaded from our repository.
+
+
+Compiling
+---------
+
+At the moment, certain modules in EDE do not compile! In order to build and install
+EDE do the following:
+
+1. run ./prepare
+
+2. (old method, soon will be removed)
+	./configure [OPTIONS] (we suggest using --enable-debug)
+	cd edelib2; make; cd ..
+
+  Then go into directories of individual modules and compile them. Type
+	cd $MODULE; make; make install; cd ..
+
+3. (new method, default)
+	./configure [OPTIONS] (we suggest using --enable-debug)
+	jam
+
+  Installation is not finished yet.
+
+
+Stuff that doesn't compile
+--------------------------
+
+- edewm
+- eiconman
+- eworkpanel
+We are in the process of rewriting these modules from scratch. Please use edewm,
+eiconman and eworkpanel from EDE 1.x (it should work without major problems).
+
+- efinder
+It will be ported to fltk2 as soon as we finish efiler (see below) cause we 
+would like to use same widgets for displaying file list.
+
+- emenueditor
+It will either be completely rewritten or removed, because EDE 2 will use XDG menus
+(FreeDesktop.org).
+
+
+New modules in EDE 2.0
+----------------------
+
+- edialog
+Command line utility for displaying dialogs (useful for scripting). It is very
+UNFINISHED.
+
+- efiler
+Small file manager. Currently you can only view files but not copy/rename/delete 
+etc. 
+
+- eimage
+Small image viewer. It should be fully usable but still some bugs present.
+
+
+Contributors wanted
+-------------------
+
+We would very appreciate help from contributors willing to take any of following 
+tasks:
+
+  - Complete edialog and become its maintainer
+  - Port efinder to fltk2/edelib2 and become its maintainer
+  - Write new enotepad using editor from fltk/test (I believe this is easier than
+porting old enotepad to fltk2/edelib2) and become its maintainer
+  - Propose new designs for econtrol and eworkpanel (that are realistic to implement
+with fltk, ofcourse :)
+  - Find any old ede application, port to fltk2/edelib2 and become its maintainer
+  - Find useful fltk2 apps on www.fltk.org and see if they can be ede-ified
+
+Also, EDE code is sparkled with comments starting with TODO and FIXME - please see 
+what of that you can do. EDE coding standards and EDE HIG documents are being prepared.

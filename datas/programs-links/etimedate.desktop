@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Time and date
+  Exec=etimedate
+  Icon=quicktime.png
+  Name[sk]=Čas a dátum
+

@@ -1,0 +1,276 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.0100 
+images_dir ./ 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {/*
+ * $Id$
+ *
+ * Colors and fonts settings
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2006 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */} {} 
+
+decl {\#include "../edeconf.h"} {} 
+
+decl {\#include <fltk/ColorChooser.h>} {} 
+
+decl {\#include "ecolorutils.h"} {} 
+
+Function {} {open
+} {
+  code {//fl_init_locale_support("ecolorconf", PREFIX"/share/locale");} {}
+  {fltk::Window} windowColorSettings {
+    label {Colors and fonts settings}
+    callback {exit(0);} open
+    xywh {507 139 330 360} resizable visible
+  } {
+    {fltk::TabGroup} {} {open
+      private xywh {5 5 318 200} color 0xfffffffe
+    } {
+      {fltk::Group} {} {
+        label {Default colors} open
+        xywh {0 25 318 175}
+      } {
+        {fltk::Button} colorBox {
+          label Widgets
+          callback ChangeBoxColor
+          xywh {90 30 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} labelColorBox {
+          label Label
+          callback ChangeBoxColor
+          xywh {15 75 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} selectionColorBox {
+          label {Sel. back.}
+          callback ChangeBoxColor
+          xywh {240 120 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} selectionTextColorBox {
+          label Selection
+          callback ChangeBoxColor
+          xywh {165 120 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} highlightColorBox {
+          label Highlight
+          callback ChangeBoxColor
+          xywh {165 30 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} highlightLabelColorBox {
+          label Highlight
+          callback ChangeBoxColor
+          xywh {165 75 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} textColorBox {
+          label Text
+          callback ChangeBoxColor
+          xywh {15 120 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} backgroundBox {
+          label Background
+          callback ChangeBoxColor
+          xywh {15 30 65 20} align 5 buttonbox DOWN_BOX
+        }
+        {fltk::Button} textBackgroundBox {
+          label Background
+          callback ChangeBoxColor
+          xywh {90 120 65 20} align 5 buttonbox DOWN_BOX
+        }
+      }
+      {fltk::Group} {} {
+        label Tooltips open
+        xywh {0 26 318 169} hide
+      } {
+        {fltk::Button} tooltipBox {
+          label {Tooltip color}
+          callback ChangeBoxColor
+          xywh {156 44 65 20} align 133 buttonbox DOWN_BOX
+        }
+        {fltk::Button} tooltipTextColorButton {
+          label {Tooltip text color}
+          callback ChangeBoxColor
+          xywh {236 44 65 20} align 133 buttonbox DOWN_BOX
+        }
+        {fltk::CheckButton} tooltipsEnableEffects {
+          label {Enable effects}
+          xywh {10 39 145 25}
+        }
+        {fltk::CheckButton} tooltipsEnable {
+          label Enabled
+          xywh {10 14 145 25}
+        }
+        {fltk::Choice} tooltipsEffectType {
+          label {Effect type:} open
+          xywh {75 80 115 23} align 0
+        } {
+          {fltk::Item} {} {
+            label None
+            }
+          {fltk::Item} {} {
+            label Animation
+            }
+          {fltk::Item} {} {
+            label Fading
+            }
+        }
+        {fltk::ValueInput} tooltipsDelay {
+          label {Delay:}
+          xywh {75 119 50 25}
+        }
+      }
+      {fltk::Group} {} {
+        label Fonts open
+        xywh {0 26 318 169} hide
+        extra_code {o->label(_(o->label()));}
+      } {
+        {fltk::Button} setLabelFont {
+          label {...}
+          callback {labelfont_cb();}
+          xywh {275 14 30 25}
+        }
+        {fltk::Button} setTextFont {
+          label {...}
+          callback {textfont_cb();}
+          xywh {275 49 30 25}
+        }
+        {fltk::InvisibleBox} labelFontInput {
+          label label
+          xywh {75 14 190 25} align 36 box DOWN_BOX
+        }
+        {fltk::InvisibleBox} textFontInput {
+          label label
+          xywh {75 50 190 24} align 36 box DOWN_BOX
+        }
+        {fltk::InvisibleBox} {} {
+          label {Label font:}
+          xywh {15 14 65 25} align 40
+        }
+        {fltk::InvisibleBox} {} {
+          label {Text font:}
+          xywh {15 49 65 25} align 40
+        }
+      }
+      {fltk::Group} {} {
+        label Menus open
+        xywh {0 26 318 174} hide
+      } {
+        {fltk::CheckButton} menusEnableEffects {
+          label {Enable effects}
+          xywh {10 14 305 25}
+        }
+        {fltk::CheckButton} menusEnableSubwindowEffects {
+          label {Enable subwindow effects}
+          xywh {10 39 305 25}
+        }
+        {fltk::Choice} menusEffectType {
+          label {Effect type:}
+          xywh {75 80 115 23} align 0
+        } {
+          {fltk::Item} {} {
+            label None
+            }
+          {fltk::Item} {} {
+            label Animation
+            }
+          {fltk::Item} {} {
+            label Fading
+            }
+        }
+        {fltk::ValueInput} menusSpeed {
+          label {Speed:}
+          xywh {75 119 45 25}
+        }
+        {fltk::ValueInput} menusDelay {
+          label {Delay:}
+          xywh {211 119 50 25}
+        }
+      }
+      {fltk::Group} {} {
+        label Others open
+        xywh {0 26 318 174} hide
+      } {
+        {fltk::CheckButton} mdiAnimation {
+          label {Enable MDI animation}
+          xywh {11 14 300 25}
+        }
+        {fltk::CheckButton} mdiOpaqueAnimation {
+          label {MDI opaque animation}
+          xywh {11 44 300 25}
+        }
+        {fltk::CheckButton} imagesStateEffect {
+          label {Enable images state effect}
+          xywh {11 74 300 25}
+        }
+      }
+    }
+    {fltk::Group} {} {open
+      xywh {3 210 320 110} box DOWN_BOX
+    } {
+      {fltk::Button} {} {
+        label {&Save as...}
+        callback {saveSchemeAs();}
+        private xywh {194 25 80 25}
+      }
+      {fltk::CheckButton} allApplyRadioButton {
+        label {Ap&ply colors to all programs}
+        xywh {6 65 299 25} when CHANGED
+      }
+      {fltk::Choice} schemeListBox {
+        label {Schemes:}
+        callback {getSchemeColors();} open selected
+        xywh {9 27 175 23} align 5 when CHANGED
+        extra_code {\#include <efltk/Fl_Input_Browser.h>
+o->type(1);
+o->begin();
+fillItems();
+o->end();}
+        class {fltk::InputBrowser}
+      } {}
+    }
+    {fltk::Button} {} {
+      label {&OK}
+      callback {//windowColorSettings->hide();
+saveActiveScheme();
+applyColors();
+saveEfltkConfig();
+exit(0);}
+      private xywh {75 328 80 25}
+    }
+    {fltk::Button} {} {
+      label {&Apply}
+      callback {saveActiveScheme();
+applyColors();
+saveEfltkConfig();}
+      private xywh {160 328 80 25}
+    }
+    {fltk::Button} {} {
+      label {&Cancel}
+      callback {exit(0);}
+      private xywh {245 328 80 25}
+    }
+  }
+  code {//updateFontAll();
+loadEfltkConfig();} {}
+} 
+
+Function {ChangeBoxColor(fltk::Button *box, void *)} {open return_type void
+} {
+  code {//Fl_Button *colorBox = box;
+fltk::Color oldColor = box->color();
+fltk::Color defColor = oldColor;
+fltk::color_chooser(_("Choose color"), defColor);
+if (defColor != oldColor) 
+{
+	box->color(defColor);
+	box->highlight_color(defColor);
+	box->redraw();
+}} {}
+} 

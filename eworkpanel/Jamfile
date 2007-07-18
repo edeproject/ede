@@ -1,0 +1,15 @@
+SubDir TOP eworkpanel ;
+
+SOURCE = aboutdialog.cpp 
+		logoutdialog.cpp 
+		panelbutton.cpp 
+		keyboardchooser.cpp 
+		taskbutton.cpp 
+		workpanel.cpp 
+		item.cpp 
+		cpumonitor.cpp 
+		dock.cpp 
+		mainmenu.cpp 
+		mainmenu_scan.cpp ;
+
+MakeEfltkProgram eworkpanel : $(SOURCE) ;

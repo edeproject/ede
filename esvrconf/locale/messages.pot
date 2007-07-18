@@ -1,0 +1,67 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2002-04-21 14:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: escreensaver.cpp:385
+msgid "Couldn't fork screensaver subprocess."
+msgstr ""
+
+#: escreensaver.cpp:397
+msgid "Couldn't fork shell subprocess."
+msgstr ""
+
+#: escrsaverconf.cpp:377
+msgid "Screensaver settings"
+msgstr ""
+
+#: escrsaverconf.cpp:382
+msgid "Screensaver"
+msgstr ""
+
+#: escrsaverconf.cpp:399
+msgid "Timeout:"
+msgstr ""
+
+#: escrsaverconf.cpp:412
+msgid "&OK"
+msgstr ""
+
+#: escrsaverconf.cpp:418
+msgid "&Cancel"
+msgstr ""
+
+#: escrsaverconf.cpp:424
+msgid "DPMS"
+msgstr ""
+
+#: escrsaverconf.cpp:433
+msgid "Standby:"
+msgstr ""
+
+#: escrsaverconf.cpp:441
+msgid "Suspend:"
+msgstr ""
+
+#: escrsaverconf.cpp:449
+msgid "Off:"
+msgstr ""
+
+#: escrsaverconf.cpp:459
+msgid "Enabled"
+msgstr ""
+
+#: escrsaverconf.cpp:474
+msgid "&Apply"
+msgstr ""

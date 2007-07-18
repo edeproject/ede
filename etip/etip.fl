@@ -1,0 +1,42 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.1000 
+header_name {.h} 
+code_name {.cxx} 
+gridx 5 
+gridy 5 
+snap 3
+Function {} {open
+} {
+  {fltk::Window} {} {open
+    xywh {446 296 460 200} resizable visible
+  } {
+    {fltk::InvisibleBox} {} {
+      xywh {10 10 70 65} box FLAT_BOX
+      image {icons/hint.xpm}
+    }
+    {fltk::InvisibleBox} {} {
+      label {Did you know}
+      xywh {85 15 365 25} align 36 box FLAT_BOX labelfont 1
+    }
+    {fltk::InvisibleBox} {} {
+      label {To start any application is simple. Press on the button with your user name, go to the Programs menu, select category and click on the wished program.}
+      xywh {85 45 365 110} align 165 box FLAT_BOX
+    }
+    {fltk::CheckButton} {} {
+      label {Do not bother me}
+      xywh {10 165 155 25}
+    }
+    {fltk::Button} {} {
+      label {@< Previous}
+      xywh {170 165 90 25}
+    }
+    {fltk::Button} {} {
+      label {Next @>} selected
+      xywh {265 165 90 25}
+    }
+    {fltk::Button} {} {
+      label {&Close}
+      xywh {360 165 90 25}
+    }
+  }
+} 

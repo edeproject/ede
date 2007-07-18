@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Scientific calculator
+  Exec=esccplus
+  Icon=bookmark.png
+  Name[sk]=Vedecká kalkulačka
+

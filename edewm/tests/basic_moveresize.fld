@@ -1,0 +1,61 @@
+# data file for the eFLTK User Interface Designer (eFLUID)
+version 2.0003 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+Function {} {open
+} {
+  Fl_Window {} {
+    label {Basic Window Operations} open
+    xywh {361 170 300 290} resizable visible
+  } {
+    Fl_Box {} {
+      label {Below buttons should apply changes to this window}
+      xywh {10 10 280 50} align FL_ALIGN_INSIDE|FL_ALIGN_WRAP
+    }
+    Fl_Group {} {
+      label Move open
+      xywh {10 85 280 75} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+    } {
+      Fl_Button {} {
+        label {@<}
+        xywh {130 10 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@<}
+        xywh {130 35 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@<}
+        xywh {105 35 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@>}
+        xywh {155 35 25 25} label_type SYMBOL_LABEL
+      }
+    }
+    Fl_Group {} {
+      label Resize open selected
+      xywh {10 190 280 75} align FL_ALIGN_TOP|FL_ALIGN_LEFT box ENGRAVED_BOX
+    } {
+      Fl_Button {} {
+        label {@<}
+        xywh {130 10 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@<}
+        xywh {130 35 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@<}
+        xywh {105 35 25 25} label_type SYMBOL_LABEL
+      }
+      Fl_Button {} {
+        label {@>}
+        xywh {155 35 25 25} label_type SYMBOL_LABEL
+      }
+    }
+  }
+} 

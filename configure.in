@@ -1,0 +1,111 @@
+dnl
+dnl $Id$
+dnl
+dnl Part of Equinox Desktop Environment (EDE).
+dnl Copyright (c) 2000-2007 EDE Authors.
+dnl 
+dnl This program is licenced under terms of the 
+dnl GNU General Public Licence version 2 or newer.
+dnl See COPYING for details.
+
+dnl If edeconf.h.in missing, parse this file with autoheader
+dnl or run './prepare'.
+
+AC_PREREQ(2.16)
+AC_INIT(EDE, 2.0.0 alpha, [karijes@users.sourceforge.net])
+AC_DEFINE(VERSION, 200, [Short version number])
+
+dnl dummy real file from source, so older autoconf versions
+dnl does not require creating EDE file in source root
+AC_CONFIG_SRCDIR(COPYING)
+
+AC_CONFIG_HEADER(edeconf.h:edeconf.h.in)
+
+dnl $PACKAGE_VERSION is filled from AC_INIT
+EDE_VERSION=$PACKAGE_VERSION
+
+if test "$prefix" = NONE; then
+	INSTALL_DIR="/usr/local"
+else
+	INSTALL_DIR="$prefix"
+fi
+AC_DEFINE_UNQUOTED(PREFIX, "$INSTALL_DIR", [Default installation place. Overwrite if you like.])
+
+SOURCE_DIR="`pwd`"
+OPTIMFLAGS="-O2"
+DEBUGFLAGS=""
+
+AC_PROG_CXX
+AC_PROG_CPP
+AC_PATH_PROG(MSGFMT, msgfmt)
+AC_PATH_PROG(XGETTEXT, xgettext)
+AC_PATH_PROG(DOXYGEN, doxygen)
+dnl sh/gdb is used by elauncher
+AC_PATH_PROG(GDB, gdb)
+AC_PATH_PROG(SH, sh)
+
+EDE_PROG_JAM()
+
+dnl basic headers
+AC_HEADER_STDC
+dnl TODO: it would be nice if we could pass parameter
+dnl for custom STL implementation (via STDLIB var), and
+dnl test be linked against it
+EDE_CHECK_STL()
+
+AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H, 1, [Define to 1 if you have dirent.h]))
+AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H, 1, [Define to 1 if you have ndir.h]))
+AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H, 1, [Define to 1 if you have sys/dir.h]))
+AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H, 1, [Define to 1 if you have sys/ndir.h]))
+
+dnl functions and headers used by pty.h
+AC_CHECK_FUNCS(grantpt, AC_DEFINE(HAVE_GRANTPT, 1, [Define to 1 if you have grantpt() in stdlib.h]))
+AC_CHECK_FUNCS(ptsname, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have ptsname() in stdlib.h]))
+AC_CHECK_FUNCS(unlockpt, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have unlockpt() in stdlib.h]))
+AC_CHECK_FUNCS(_getpty, AC_DEFINE(HAVE__GETPTY, 1, [Define to 1 if you have _getpty()]))
+AC_CHECK_HEADER(pty.h, AC_DEFINE(HAVE_PTY_H, 1, [Define to 1 if you have pty.h]))
+AC_CHECK_HEADER(libutil.h, AC_DEFINE(HAVE_LIBUTIL_H, 1, [Define to 1 if you have libutil.h]))
+AC_CHECK_HEADER(util.h, AC_DEFINE(HAVE_UTIL_H, 1, [Define to 1 if you have util.h]))
+
+EDE_CHECK_TIME_FUNCS()
+
+EDE_CHECK_X11()
+
+dnl --enable-debug and --enable-profile options
+EDE_DEVELOPMENT()
+
+dnl --enable-shape option
+EDE_X11_SHAPE()
+
+dnl set FLTKFLAGS, FLTKLIBS
+EDE_CHECK_FLTK()
+dnl set EFLTKFLAGS, EFLTKLIBS
+EDE_CHECK_EFLTK()
+
+EDE_CHECK_LIBMAGIC()
+
+dnl sound stuff
+EDE_CHECK_ALSA()
+dnl --enable-sound option
+dnl set SOUNDFLAGS, SOUNDLIBS
+EDE_SOUND()
+
+EDE_INIT_JAM()
+AC_SUBST(SOURCE_DIR)
+AC_SUBST(OPTIMFLAGS)
+AC_SUBST(DEBUGFLAGS)
+AC_SUBST(FLTKFLAGS)
+AC_SUBST(FLTKLIBS)
+AC_SUBST(EFLTKFLAGS)
+AC_SUBST(EFLTKLIBS)
+AC_SUBST(SOUNDFLAGS)
+AC_SUBST(SOUNDLIBS)
+AC_SUBST(MAKE_EVOLUME)
+AC_SUBST(INSTALL_DIR)
+AC_SUBST(XGETTEXT)
+AC_SUBST(MSGFMT)
+AC_SUBST(DOXYGEN)
+
+AC_OUTPUT([
+ Jamconfig
+])

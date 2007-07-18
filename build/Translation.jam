@@ -1,0 +1,62 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+DEFAULT_POT = "messages.pot" ;
+
+# ExtractStrings [dir-where] : [source] : [output-file] ;
+# Scans [source] file(s) for translatable strings (usually marked as _("foo"))
+# and store result in [output-file] in [dir-where] directory. If [dir-where]
+# does not exists, it will be created.
+# [output-file] can be omitted; in that case DEFAULT_POT will be used.
+rule ExtractStrings
+{
+	local strfile ;
+	if $(3) {
+		strfile = $(3) ;
+	} else {
+		strfile = $(DEFAULT_POT) ;
+	}
+
+	local path = $(SEARCH_SOURCE) ;
+	local locale_dir = [ FDirName $(path) $(<) ] ;
+	local target = [ FFileName $(locale_dir) $(strfile) ] ;
+	local source = $(>:R=$(path)) ;
+
+	if $(XGETTEXT) {
+		MkDir $(locale_dir) ;
+		for i in $(source) {
+			Depends $(target) : $(i) ;
+		}	
+
+		XGettext $(target) : $(source) ;
+		Depends $(target) : $(locale_dir) ;
+		Depends translation : $(target) ;
+		Depends all : $(target) ;
+		Clean clean : $(target) ;
+	}
+}
+
+actions XGettext
+{
+	$(XGETTEXT) -k'_' $(2) -o $(1) ;
+}
+
+# TODO:
+# MakeTranslation <where-are-po-files> : file1.po file2.po... ;
+rule MakeTranslation
+{
+}
+
+actions MakeTranslation1
+{
+}
+
+NotFile translation ;
+Always translation ;

@@ -1,0 +1,27 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open selected
+} {
+  Fl_Window {} {open
+    xywh {365 175 480 364} type Double visible
+  } {
+    Fl_Box {} {
+      image {splash-alpha1.png} xywh {0 0 480 364} labelsize 14
+    }
+    Fl_Box {} {
+      label {Starting window manager...}
+      xywh {20 322 440 23} labelsize 14 align 16
+    }
+    Fl_Box {} {
+      image {../../../../.icons/edeneu/32x32/actions/address-book-new.png} xywh {135 259 60 53} labelsize 14
+    }
+    Fl_Box {} {
+      image {../../../../.icons/edeneu/32x32/actions/appointment-new.png} xywh {200 259 60 53} labelsize 14
+    }
+    Fl_Box {} {
+      image {../../../../.icons/edeneu/32x32/apps/evolution.png} xywh {265 259 60 53} labelsize 14
+    }
+  }
+} 

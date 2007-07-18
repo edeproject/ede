@@ -1,0 +1,25 @@
+
+[widgets]
+
+  [widgets/tooltip]
+    color = -16784896
+    label color = 32
+
+  [widgets/default]
+    color = 7
+    label color = 32
+    selection color = 153381120
+    selection text color = 7
+    highlight color = 17
+    off color = -623654656
+    text color = 796173568
+    highlight label color = -1659739904
+    text background = 7
+    label font = tahoma
+    text font = tahoma
+    label size = 12
+    text size = 12
+    font encoding = iso8859-2
+
+[global colors]
+  background = 17

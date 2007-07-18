@@ -1,0 +1,8 @@
+#LINKLIBS += -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -lfltk2_images -lpng -lfltk2_images -ljpeg -lz -lfltk2 -L/usr/X11R6/lib -lX11 -lXi -lXinerama -lpthread -lm -lXext -lstdc++ ;
+
+LINKLIBS += -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -L/usr/X11R6/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 -lstdc++ ;
+
+C++FLAGS += -Wall -g3 -I/opt/ede/include ;
+
+Main eiconman : eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
+Main test/notify : test/notify.cpp ;

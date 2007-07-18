@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: evolume 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 11:54+0100\n"
+"PO-Revision-Date: 2002-04-21 14:50+0200\n"
+"Last-Translator: Martin Pekar <cortex@nextra.sk>\n"
+"Language-Team: Slovak <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: evolume.cpp:158
+msgid "Cannot setup device, sorry."
+msgstr "Nemôžem nastaviť zariadenie, ľutujem."
+
+#: evolume.cpp:256
+#, c-format
+msgid "Volume control: [%s]"
+msgstr "Ovládanie hlasitosti: [%s]"
+
+#: evolume.cpp:269
+msgid "Volume control"
+msgstr "Ovládanie hlasitosti"
+
+#: evolume.cpp:274
+msgid "&File"
+msgstr "&Súbor"
+
+#: evolume.cpp:275 prefs.cpp:63
+msgid "Preferencies"
+msgstr "Nastavenia"
+
+#: evolume.cpp:279
+msgid "Quit"
+msgstr "Koniec"
+
+#: evolume.cpp:285
+msgid "&Help"
+msgstr "&Nápoveda"
+
+#: evolume.cpp:286
+msgid "About"
+msgstr "O programe"
+
+#: evolume.cpp:406
+#, c-format
+msgid ""
+"Opening mixer device %s failed. Setup correct device in configuration dialog."
+msgstr ""
+"Otvorenie zariadenia mixéra %s zlyhalo. Nastavte správne zariadenie v "
+"konfiguračnom dialógu."
+
+#: prefs.cpp:66
+msgid "Sound device"
+msgstr "Zvukové zariadenie"
+
+#: prefs.cpp:68
+msgid "Device name:"
+msgstr "Meno zariadenia:"
+
+#: prefs.cpp:80
+msgid "&OK"
+msgstr "&OK"
+
+#: prefs.cpp:84
+msgid "&Cancel"
+msgstr "&Zrušiť"
+
+#~ msgid "About Volume control"
+#~ msgstr "O Ovládaní hlasitosti"
+
+#~ msgid "&Close"
+#~ msgstr "&Zavrieť"
+
+#~ msgid ""
+#~ "This program is based in part on the work of FLTK project (www.fltk.org). "
+#~ "This program is free software, you can redistribute it and/or modify it "
+#~ "under the terms of GNU General Public License as published by the Free "
+#~ "Software Foundation, either version 2 of the License, or (at your option) "
+#~ "any later version. This program is distributed in the hope that it will "
+#~ "be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+#~ "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General "
+#~ "Public License for more details. You should have received a copy of the "
+#~ "GNU General Public Licence along with this program; if not, write to the "
+#~ "Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA"
+#~ msgstr ""
+#~ "Tento program je z časti založený na práci projektu FLTK (www.fltk.org)."
+#~ "Tento program je voľný softvér, môžete ho redistribuovať a/alebo "
+#~ "modifikovať podľa podmienok licencie GNU General Public License "
+#~ "publikovanej nadáciou the Free Software Foundation, buď verzie 2 tejto "
+#~ "licencie, alebo (podľa vášho uváženia) ľubovoľnej novšej verzie. Tento "
+#~ "program je distribuovaný v nádeji, že bude užitočný, ale BEZ AKEJKOĽVEK "
+#~ "ZÁRUKY; dokonca bez obsiahnutej záruky OBCHODOVATEĽNOSTI alebo VÝHOD PRE "
+#~ "URČITÝ ÚČEL. Ďalšie podrobnosti hľadajte v licencii GNU General Public "
+#~ "License. S týmto programom by ste mali dostať kópiu licencie GNU General "
+#~ "Public Licence; ak nie, napíšte do nadácie the Free Software Foundation, "
+#~ "Inc., 675 Mass Ave, Cambridge, MA 02139, USA."

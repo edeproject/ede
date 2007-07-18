@@ -1,0 +1,257 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eworkpanel 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 11:48+0100\n"
+"PO-Revision-Date: 2002-12-02 04:33+0100\n"
+"Last-Translator: Dejan Lekic <dejan@nu6.org>\n"
+"Language-Team: LINUKS.org T.T. <i18n@linuks.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: aboutdialog.cpp:14
+msgid "About Equinox Desktop Environment"
+msgstr "О Иквинокс Десктоп Окружењу"
+
+#: aboutdialog.cpp:17
+#, fuzzy
+msgid "Equinox Desktop Environment "
+msgstr "О Иквинокс Десктоп Окружењу"
+
+#: aboutdialog.cpp:25
+msgid ""
+" This program is based in part on the work of FLTK project (www.fltk.org). "
+"This program is free software, you can redistribute it and/or modify it "
+"under the terms of GNU General Public License as published by the Free "
+"Software Foundation, either version 2 of the License, or (at your option) "
+"any later version. This program is distributed in the hope that it will be "
+"useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General "
+"Public License for more details. You should have received a copy of the GNU "
+"General Public Licence along with this program; if not, write to the Free "
+"Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA"
+msgstr ""
+"Овај програм је базиран на FLTK пројекту (www.fltk.org). Овај програм је "
+"слободан софтвер, можете га редистрибуирати и/или модификовати под условима "
+"постављеним GNU General Public лиценцом објављеном од стране Free Software "
+"Foundation, било да је то верзија 2 Лиценце, или (опционо) било која каснија "
+"верзија. Овај програм је дистрибуиран у нади да ће бити употребљив, али БЕЗ "
+"ИКАКВИХ ГАРАНЦИЈА; чак без имплицитне гаранције ПРОДАЈЕ РОБЕ или ПОГОДНОСТИ "
+"ЗА НЕКУ СПЕЦИФИЧНУ НАМЕНУ. Погледајте \"GNU General Public License\" за више "
+"детаља. Требало би да сте добили копију \"GNU General Public License\" "
+"лиценце заједно са овим програмом; ако нисте, пишите на Free Software "
+"Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+
+#: aboutdialog.cpp:38 logoutdialog.cpp:220
+msgid "&OK"
+msgstr "&ОК"
+
+#: aboutdialog.cpp:42
+msgid "label"
+msgstr ""
+
+#: aboutdialog.cpp:43
+msgid "(C)Copyright 2000-2004 EDE Authors"
+msgstr ""
+
+#: cpumonitor.cpp:194
+#, c-format
+msgid ""
+"CPU Load:\n"
+"User: %d%%\n"
+"Nice: %d%%\n"
+"Sys:  %d%%\n"
+"Idle: %d%%"
+msgstr ""
+
+#: item.cpp:91
+#, fuzzy
+msgid "Open with terminal..."
+msgstr "Отвори са икс-терм-ом."
+
+#: item.cpp:92
+#, fuzzy
+msgid "Open with browser..."
+msgstr "Отвори са браузером..."
+
+#: item.cpp:94
+msgid "Close Menu"
+msgstr "Затвори мени"
+
+#: keyboardchooser.cpp:86 keyboardchooser.cpp:179
+msgid "More..."
+msgstr ""
+
+#: logoutdialog.cpp:92
+msgid "You are not allowed to restart !"
+msgstr ""
+
+#: logoutdialog.cpp:111
+msgid "You are not allowed to shutdown !"
+msgstr ""
+
+#: logoutdialog.cpp:185
+msgid "Logout"
+msgstr "Излогуј"
+
+#: logoutdialog.cpp:194
+msgid "&logout from the current session"
+msgstr "Из&логуј ме из тренутне сесије"
+
+#: logoutdialog.cpp:197
+msgid "Logout from the current session."
+msgstr "Излогуј ме из тренутне сесије."
+
+#: logoutdialog.cpp:200
+msgid "&restart the computer"
+msgstr "&Рестартуј рачунар"
+
+#: logoutdialog.cpp:203
+#, fuzzy
+msgid "Restart the computer."
+msgstr "&Рестартуј рачунар"
+
+#: logoutdialog.cpp:205
+msgid "Restart the computer. You do not have privileges to do that."
+msgstr ""
+
+#: logoutdialog.cpp:210
+msgid "&shut down the computer"
+msgstr "&Угаси рачунар"
+
+#: logoutdialog.cpp:213
+#, fuzzy
+msgid "Shut down the computer."
+msgstr "&Угаси рачунар"
+
+#: logoutdialog.cpp:215
+msgid "Shut down the computer. You do not have privileges to do that."
+msgstr ""
+
+#: logoutdialog.cpp:224
+msgid "&Cancel"
+msgstr "&Одустани"
+
+#: logoutdialog.cpp:228
+msgid "Logout, restart or shut down the computer?"
+msgstr "Излогуј ме, рестартуј или угаси рачунар?"
+
+#: mainmenu.cpp:45
+msgid "Welcome to the Equinox Desktop Environment."
+msgstr "Добродошли у Иквинокс Десктоп Окружење."
+
+#: mainmenu_scan.cpp:45
+msgid "Open Directory.."
+msgstr "Отвори директоријум..."
+
+#: taskbutton.cpp:165
+#, fuzzy
+msgid " Close   "
+msgstr "Затвори мени"
+
+#: taskbutton.cpp:167
+msgid " Kill"
+msgstr ""
+
+#: taskbutton.cpp:172
+msgid " Minimize"
+msgstr ""
+
+#: taskbutton.cpp:173
+msgid " Restore"
+msgstr ""
+
+#: workpanel.cpp:253
+#, c-format
+msgid ""
+"Received: %ld kB (%.1f kB/s)\n"
+"Sent:     %ld kB (%.1f  kB/s)\n"
+"Duration: %d min %d sec"
+msgstr ""
+"Дошло: %ld kB (%.1f kB/s)\n"
+"Послато:     %ld kB (%.1f  kB/s)\n"
+"Трајање: %d min %d sec"
+
+#: workpanel.cpp:331
+msgid "Workspace"
+msgstr "Радна површина"
+
+#: workpanel.cpp:465
+msgid "Show desktop"
+msgstr ""
+
+#: workpanel.cpp:479
+msgid "Workspaces"
+msgstr "Радне површине"
+
+#: workpanel.cpp:523
+msgid "Settings"
+msgstr "Подешавања"
+
+#: workpanel.cpp:528
+msgid "About EDE..."
+msgstr "О ЕДЕ-у..."
+
+#: workpanel.cpp:597
+msgid "Volume control"
+msgstr "Контрола звука"
+
+#~ msgid "CPU Load: %3.2f %3.2f %3.2f, %d processes."
+#~ msgstr "CPU Лоад: %3.2f %3.2f %3.2f, %d процеса."
+
+#~ msgid "&Programs"
+#~ msgstr "&Програми"
+
+#~ msgid "&Favourites"
+#~ msgstr "&Омиљени"
+
+#~ msgid "F&ind"
+#~ msgstr "&Тражи"
+
+#~ msgid "&Help"
+#~ msgstr "По&моћ"
+
+#~ msgid "&About"
+#~ msgstr "&О..."
+
+#~ msgid "&Run..."
+#~ msgstr "&Старт"
+
+#~ msgid "&Panel"
+#~ msgstr "П&анел"
+
+#~ msgid "Edit panels menu"
+#~ msgstr "Едитуј панел меније"
+
+#~ msgid "Panel settings"
+#~ msgstr "Панел подешавање"
+
+#~ msgid "Control panel"
+#~ msgstr "Контролни панел"
+
+#~ msgid "Install new software"
+#~ msgstr "Инсталирај нови софтвер"
+
+#~ msgid "L&ock screen"
+#~ msgstr "&Закључај екран"
+
+#~ msgid "&Logout"
+#~ msgstr "&Излогуј ме"
+
+#~ msgid "Restart the computer. This action is only allowed to \"root\" user!"
+#~ msgstr "Рестартуј рачунар. Ова акција је дозвољена само \"root\" кориснику!"
+
+#~ msgid ""
+#~ "Shut down the computer. This action is only allowed to \"root\" user!"
+#~ msgstr "Угаси рачунар. Ова акција је дозвољена само \"root\" кориснику!"
+
+#~ msgid "&User programs"
+#~ msgstr "&Кориснички програми"
+
+#~ msgid "&Browser"
+#~ msgstr "&Браузер"

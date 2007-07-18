@@ -1,0 +1,76 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2,0003 
+images_dir ./ 
+i18n 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Work Panel for EDE is (C) Copyright 2000-2002 by Martin Pekar, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include <efltk/Fl_Locale.h>} {} 
+
+decl {\#include <efltk/Fl_Util.h>} {} 
+
+Function {LogoutFunction(Fl_Widget *, void *)} {selected return_type void
+} {
+  code {if (logoutRadioItemLogoutDialog->value()==1) { 
+	exit(0);
+}
+if (restartRadioItemLogoutDialog->value()==1) 
+	fl_start_child_process( "shutdown -r now" );
+if (shutdownRadioItemLogoutDialog->value() == 1) 
+	fl_start_child_process( "shutdown -h now" );} {}
+} 
+
+Function {LogoutDialog(Fl_Widget*, void *)} {return_type void
+} {
+  Fl_Window windowLogoutDialog {
+    label Logout open
+    xywh {171 160 330 190} set_xy hide
+    extra_code {o->x( Fl::info().w/2 - (o->w()/2) );
+o->y( (Fl::info().h/2) - (o->h()/2) );} modal
+  } {
+    Fl_Group {} {open
+      xywh {5 12 55 45} align 16 image {icons/penguin.xpm}
+    } {}
+    Fl_Round_Button logoutRadioItemLogoutDialog {
+      label {&logout from the current session}
+      tooltip {Logout from the current session.}
+      xywh {80 67 225 20} type RADIO value 1
+    }
+    Fl_Round_Button restartRadioItemLogoutDialog {
+      label {&restart the computer}
+      tooltip {Restart the computer. This action is only allowed to "root" user!}
+      xywh {80 88 225 20} type RADIO
+    }
+    Fl_Round_Button shutdownRadioItemLogoutDialog {
+      label {&shut down the computer}
+      tooltip {Shut down the computer. This action is only allowed to "root" user!}
+      xywh {80 110 225 20} type RADIO
+    }
+    Fl_Button {} {
+      label {&OK}
+      callback LogoutFunction
+      private xywh {85 157 80 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      callback {windowLogoutDialog->hide();}
+      private xywh {170 157 80 25}
+    }
+    Fl_Box {} {
+      label {Logout, restart or shut down the computer?}
+      private xywh {65 7 260 63} align 148 label_size 18
+    }
+    Fl_Divider {} {
+      label label
+      xywh {60 130 210 20}
+    }
+  }
+  code {windowLogoutDialog->end();
+windowLogoutDialog->show();} {}
+} 

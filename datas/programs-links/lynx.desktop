@@ -1,0 +1,40 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Lynx
+  Name[sl]=Lynx
+  Name[da]=Lynx
+  Name[de]=Lynx
+  Name[el]=Lynx
+  Name[fi]=Lynx
+  Name[fr]=Lynx
+  Name[it]=Lynx
+  Name[lt]=Lynx
+  Name[no]=Lynx
+  Name[pt_BR]=Lynx
+  Name[ro]=Lynx
+  Name[sk]=Lynx
+  Name[sv]=Lynx
+  Name[wa]=Lynx
+  Comment=Text based web browser
+  Comment[sl]=Tekstovni spletni brskalnik
+  Comment[da]=Tekstbaseret netsurfningsprogram
+  Comment[de]=Textbasierter Webbrowser
+  Comment[el]=ÖőëëďěĺôńçôŢň Äéęôýďő ęáôÜóôáóçň ôĺńěáôéęďý
+  Comment[fi]=Tekstipohjainen Internet-selain
+  Comment[fr]=Navigateur Web en mode texte
+  Comment[it]=Browser web testuale
+  Comment[lt]=Tekstinë web narđyklë
+  Comment[no]=Tekstbasert webleser
+  Comment[pt_BR]=Navegador da Internet baseado em texto
+  Comment[ro]=Browser web în mod text
+  Comment[sk]=Textový prehliadač WWW
+  Comment[sv]=Textbaserad webbläsare
+  Comment[wa]=Lynx est on betcheu waibe č môde tecsse
+  TryExec=rxvt -title Lynx -e lynx ~/.netscape/bookmarks.html
+  Exec=xterm -title Lynx -e lynx ~/.netscape/bookmarks.html
+  Icon=log.png
+  Terminal=false
+  MultipleArgs=false
+  Type=Application
+

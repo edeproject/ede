@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=Acrobat Reader
+  Exec=acroread
+  Icon=pdf-document.png
+  Name[sk]=Acrobat Reader
+

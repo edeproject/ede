@@ -1,0 +1,38 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {open
+    xywh {392 251 455 330} type Double resizable visible
+  } {
+    Fl_Group {} {open
+      xywh {0 0 455 50} box FLAT_BOX color 138
+    } {
+      Fl_Box {} {
+        label {EDE Control Panel}
+        xywh {10 10 435 30} box FLAT_BOX color 138 labelfont 1 labelsize 16 labelcolor 23 align 20 resizable
+      }
+    }
+    Fl_Button {} {
+      label {&Close}
+      xywh {355 295 90 25}
+    }
+    Fl_Button {} {
+      label {&Options}
+      xywh {260 295 90 25}
+    }
+    Fl_Box {} {
+      label {This is some label }
+      xywh {10 295 240 25} box FLAT_BOX align 84
+    }
+    Fl_Box {} {
+      xywh {10 60 435 225} box DOWN_BOX color 7
+    }
+    Fl_Box {} {selected
+      xywh {10 220 120 65} resizable
+      code0 {/* invisible resizable box */}
+    }
+  }
+} 

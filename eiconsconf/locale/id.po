@@ -1,0 +1,71 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eiconsconf 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-02-04 12:25+0100\n"
+"PO-Revision-Date: 202-11-29 14:58+0700\n"
+"Last-Translator: Bambang Purnomosidi D. P. <i-am-the-boss@bpdp.org>\n"
+"Language-Team: id <i-am-the-boss@bpdp.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: eiconsconf.cpp:85
+msgid "Icons settings"
+msgstr "Seting ikon"
+
+#: eiconsconf.cpp:87
+msgid "&OK"
+msgstr "&OK"
+
+#: eiconsconf.cpp:90
+msgid "&Cancel"
+msgstr "&Batal"
+
+#: eiconsconf.cpp:93
+msgid "&Apply"
+msgstr "&Terapkan"
+
+#: eiconsconf.cpp:97
+msgid "Look&&feel"
+msgstr "Look&&feel"
+
+#: eiconsconf.cpp:99
+msgid "Background color: "
+msgstr "Warna latar belakang"
+
+#: eiconsconf.cpp:106
+msgid "Label color: "
+msgstr "Warna label"
+
+#: eiconsconf.cpp:112
+msgid "Maximum width: "
+msgstr "Lebar maximum: "
+
+#: eiconsconf.cpp:123
+msgid "Font height: "
+msgstr "Tinggi font: "
+
+#: eiconsconf.cpp:134
+msgid "Grid spacing: "
+msgstr "Spasi grid: "
+
+#: eiconsconf.cpp:145
+msgid "Auto arrange icons"
+msgstr "Ikon tersusun otomatis"
+
+#: eiconsconf.cpp:151
+msgid "Engage with just one click"
+msgstr "Bekerja hanya dengan satu klik"
+
+#: eiconsconf.cpp:159
+msgid "Clear this, to get transparent background."
+msgstr "Bersihkan ini, untuk mendapatkan latar belakang transparan."
+
+#: eiconsconf.cpp:176
+msgid "Choose color"
+msgstr "Pilih warna"

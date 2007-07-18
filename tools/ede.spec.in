@@ -1,0 +1,76 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2006 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
+
+# Note that this is NOT a relocatable package
+# rpm -bb ede.spec ; /usr/src/RPM/SPECS
+
+%define name		ede
+%define ver      	@EDE_VERSION@
+%define rel		1
+%define localstatedir   /var/lib
+%define pakdir		%{name}-%{ver}
+
+Summary:         The core programs for the Equinox Desktop Environment.
+Name: 		 %{name}
+Version: 	 	 %ver
+Release: 	 	 %rel
+Copyright: 	 GPL
+Group: 		 X11/EDE/Base
+Source:         %{name}-%{ver}.tar.gz
+BuildRoot: 	 /var/tmp/%{name}-%{version}-root
+URL: 		 http://sourceforge.net/projects/ede
+Prereq: 	 	 /sbin/install-info
+Requires:       efltk-devel >= 2.0.4
+
+%description
+Equinox Desktop Environment (EDE) is desktop environment - the piece of
+software that enables you to launch applications in a convenient way,
+show what windows you have opened, manages icons and background of your
+desktop, etc. This core package provides panel with tasklist, clock,
+load status; icon manager that take care of your icons on background,
+control panel for easy access to your settings, helpbook for reading
+documentation, color configuration, panel configuration, display configuration
+utility, menu editor, icons configuration, tips, time/date and timezone
+configuration, fast file search tool and of course window manager that manages 
+your windows with config utility.
+
+%prep
+%setup -q -n %{pakdir}
+
+%build
+
+./build.gcc --prefix=%{_prefix}
+
+%install
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+make prefix=$RPM_BUILD_ROOT%{_prefix} install
+ 
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+%post
+#/sbin/ldconfig
+
+%postun
+#/sbin/ldconfig
+
+%files
+%doc AUTHORS COPYING ChangeLog NEWS README
+%defattr (-, root, root)
+%{_bindir}/*
+#%{_sysconfdir}/
+%{_datadir}/locale/*/*/*
+%{_datadir}/ede/*
+%{_datadir}/ede/.ede/*
+
+%changelog
+

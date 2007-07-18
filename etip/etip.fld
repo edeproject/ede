@@ -1,0 +1,100 @@
+# data file for the FLTK User Interface Designer (FLUID)
+version 2.0100 
+images_dir ./ 
+header_name {.h} 
+code_name {.cpp} 
+gridx 5 
+gridy 5 
+snap 3
+decl {// Tips for EDE is (C) Copyright 2001-2002 by Martin Pekar, this program is provided under the terms of GNU GPL v.2, see file COPYING for more information.} {} 
+
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include "EDE_Config.h"} {} 
+
+decl {\#include "NLS.h"} {} 
+
+decl {char *tips[5];} {} 
+
+decl {int activeTip = 0;} {} 
+
+decl {EDE_Config conf("EDE Team", "etip");} {} 
+
+Function {} {open
+} {
+  code {//fl_init_locale_support("etip", PREFIX"/share/locale");
+bool show = true;
+conf.set_section("Tips");
+conf.read("Show", show, true);
+if (!show)
+	return 0;
+tips[0]=_("To start any application is simple. Press on the EDE button, go to the Programs menu, select category and click on the wished program.");
+tips[1]=_("To exit the Equinox Desktop environment, press EDE button and then logout.");
+tips[2]=_("To lock the computer, press EDE button and then lock.");
+tips[3]=_("To setup things on the computer, press EDE button, Panel menu and then the Control panel.");
+tips[4]=_("To add a program that is not in the Programs menu, click on the EDE button, Panel menu, and then Edit panels menu.");} {}
+  {fltk::Window} {} {
+    label {Startup tips} open selected
+    xywh {394 319 400 205} resizable
+    extra_code {o->size_range(o->w(), o->h());} visible
+  } {
+    {fltk::InvisibleBox} {} {
+      xywh {10 15 60 145} image {/home/vedran/ede/ede2/etip/icons/hint.xpm}
+    }
+    {fltk::CheckButton} show_check {
+      label {Do not show this dialog next time}
+      xywh {77 145 313 20} align 148
+    }
+    {fltk::Group} {} {open
+      xywh {80 15 310 125} align 209 resizable box BORDER_FRAME color 0xf4da1200 labelsize 18
+    } {
+      {fltk::InvisibleBox} tipsBox {
+        xywh {1 46 308 74} align 144 resizable box FLAT_BOX color 7
+        extra_code {o->label(tips[activeTip]);
+o->window()->redraw();}
+      }
+      {fltk::InvisibleBox} {} {
+        label {Welcome to Equinox Desktop Environment}
+        xywh {5 5 300 45} align 144 box FLAT_BOX color 0xf4da1200 labelcolor 32 labelsize 18
+      }
+    }
+    {fltk::Group} {} {open
+      xywh {0 165 400 40}
+    } {
+      {fltk::Button} {} {
+        label {<< &Previous}
+        callback {if (activeTip>0 && activeTip<=4) {
+activeTip--;
+tipsBox->label(tips[activeTip]);
+tipsBox->window()->redraw();
+}}
+        xywh {125 7 90 23} align 128
+      }
+      {fltk::Button} {} {
+        label {&Next >>}
+        callback {if (activeTip>=0 && activeTip<4) {
+activeTip++;
+tipsBox->label(tips[activeTip]);
+tipsBox->window()->redraw();
+}}
+        xywh {215 7 90 23}
+      }
+      {fltk::InvisibleBox} {} {
+        xywh {0 5 157 30}
+        extra_code {// Fluid sucks in layouting...
+o->parent()->resizable(o);}
+      }
+      {fltk::Button} {} {
+        label {&Close}
+        callback {//Fl_Config conf(fl_find_config_file("apps/etip.conf", 1));
+conf.set_section("Tips");
+conf.write("Show", !show_check->value()); 
+conf.flush(); 
+exit(0);}
+        xywh {320 7 70 23}
+      }
+    }
+  }
+} 

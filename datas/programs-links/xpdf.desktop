@@ -1,0 +1,8 @@
+# EFLTK Configuration - Version 2,003000
+
+[Desktop Entry]
+  Name=PDF Viewer
+  Exec=epdfreader
+  Icon=pdf-document.png
+  Name[sk]=PDF Viewer
+

@@ -1,0 +1,128 @@
+$Id: COMPLIANCE 1688 2006-07-19 12:01:58Z karijes $
+
+Edewm standards compliance
+==========================
+
+Map:
+----
+ (?): pending for implementation
+ (+): implemented
+ (/): partially implemented
+ (x): listed in _NET_SUPPORTED, but not implemented
+ (-): probably will not be implemented
+
+Netwm compliance (http://freedesktop.org/Standards/wm-spec/)
+============================================================
+
+Root window
+-----------
+
+(+) _NET_SUPPORTED,
+(x) _NET_SUPPORTING_WM_CHECK
+(?) _NET_CLIENT_LIST
+(?) _NET_CLIENT_LIST_STACKING
+(?) _NET_NUMBER_OF_DESKTOPS
+(?) _NET_DESKTOP_GEOMETRY
+(?) _NET_DESKTOP_VIEWPORT
+(?) _NET_CURRENT_DESKTOP
+(?) _NET_DESKTOP_NAMES
+(?) _NET_ACTIVE_WINDOW
+(?) _NET_WORKAREA
+(?) _NET_SUPPORTING_WM_CHECK
+(-) _NET_VIRTUAL_ROOTS
+(?) _NET_DESKTOP_LAYOUT
+(?) _NET_SHOWING_DESKTOP
+(?) _NET_CLOSE_WINDOW
+(?) _NET_MOVERESIZE_WINDOW
+(?) _NET_WM_MOVERESIZE
+
+Application window
+------------------
+
+(x) _NET_WM_NAME
+(/) _NET_WM_WINDOW_TYPE
+	(+) _NET_WM_WINDOW_TYPE_NORMAL
+	(?) _NET_WM_WINDOW_TYPE_DOCK
+	(+) _NET_WM_WINDOW_TYPE_TOOLBAR
+	(+) _NET_WM_WINDOW_TYPE_MENU
+	(?) _NET_WM_WINDOW_TYPE_UTIL
+	(?) _NET_WM_WINDOW_TYPE_DIALOG
+	(+) _NET_WM_WINDOW_TYPE_SPLASH
+	(?) _NET_WM_WINDOW_TYPE_DESKTOP
+
+(/) _NET_WM_STATE
+	(?) _NET_WM_STATE_MODAL
+	(?) _NET_WM_STATE_STICKY
+	(/) _NET_WM_STATE_MAXIMIZED_VERT
+	(/) _NET_WM_STATE_MAXIMIZED_HORZ
+	(+) _NET_WM_STATE_SHADED
+	(?) _NET_WM_STATE_SKIP_TASKBAR
+	(?) _NET_WM_STATE_SKIP_PAGER
+	(?) _NET_WM_STATE_HIDDEN
+	(?) _NET_WM_STATE_FULLSCREEN
+	(?) _NET_WM_STATE_ABOVE
+	(?) _NET_WM_STATE_BELOW
+
+(-) _NET_WM_ALLOWED_ACTIONS
+	Although in edewm there is facility for easier implementing
+	this message, I am not quite sure where will be used.
+
+(?) _NET_WM_STRUT
+(?) _NET_WM_STRUT_PARTIAL
+(?) _NET_WM_ICON_GEOMETRY
+(?) _NET_WM_ICON
+
+(-) _NET_WM_PID
+	Probably later will be implemented. For now it is not needed
+	at all.
+	
+(-) _NET_WM_HANDLED_ICONS
+(?) _NET_WM_USER_TIME
+
+
+Icccm compliance
+================
+
+Version 2.0 is used as guide.
+
+Note: in WM_NORMAL_HINTS, win_gravitiy is ignored since edewm always
+assume and use NorthWestGravity. This will be changed.
+
+
+Other
+=====
+
+Motif
+-----
+
+(/) _MOTIF_HINTS
+	This hint is, as I can see, very standardized now, but implementations
+	differ. Edewm use only decor data from it, since based on decor, allowed
+	actions are deduced.
+
+KDE
+---
+(?) _KWM_WIN_ICON
+	Previous edewm version loaded this message, but not used. Probably
+	will be implemented for history reasons (hm...)
+
+GNOME
+-----
+(-) None of them, since no one requested it.
+
+
+Ambiguities 
+===========
+If ambiguities arise between similar hints, Netwm is preferred. Then
+comes Icccm and Other.
+
+
+Notes
+=====
+This document will be tried to be up to date with package. If you notice some
+omissions, please mail me at [karijes at users.sf.net].
+
+Important: since standard's documentation is very sparse (nothing unusual) and 
+possibility for bad/wrong interpretation of some parts exists, your notice about
+them (or different behaviors among other window managers) will be much appreciated.
+Mail is above.
