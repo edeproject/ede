@@ -2,7 +2,7 @@ Jam build
 =========
 
 This is a short description of build library for EDE, based
-on http://www.perforce.com/jam/[Jam] tool, an alternative to make.
+on http://www.perforce.com/jam/jam.html[Jam] tool, an alternative to make.
 But, this is *not* detail tutorial about jam, only detail description
 of EDE build library. For jam tutorial you should consult jam documentation.
 
@@ -139,3 +139,58 @@ SOURCE = abc.cpp ;
 EdeProgram abc : abc.cpp ;
 -------------------------
 
+EfltkProgram [target] : [sources] : [optional-libraries] : [optional-flags] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The same as EdeProgram, but will link with efltk libraries. This rule is used to compile 
+some programs from 1.x version, and will be removed when those programs are ported
+to the edelib and fltk code.
+
+FltkProgram [target] : [sources] : [optional-libraries] : [optional-flags] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create [target] linking it with fltk libraries only. Also will link with images libraries.
+
+
+FltkProgramBare [target] : [sources] : [optional-libraries] : [optional-flags] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Same as FltkProgram, but will *not* link with images libraries. Usefull for programs
+which does not require images support.
+
+Library rules
+~~~~~~~~~~~~~
+These rules are used to build either static or shared libraries.
+
+StaticLibrary [library] : [sources] : [optional-flags] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creates static library from [sources] files. If [optional-flags] are given, they
+will be passed to the compiler. Sample:
+
+-------------------------
+# Compile each file with -D_DEBUG flag and create
+# mylib.a library
+StaticLibrary mylib : file1.cpp file2.cpp file3.cpp : -D_DEBUG ;
+-------------------------
+
+SharedLibrary [library] : [sources] : [optional-linklibs] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creates a shared library from [sources] and link with [optional-linklibs]. Shared library
+will, by default, have a '.so' extension, if extension in [library] was not given.
+
+SharedLibraryVersioned [library] : [sources] : [optional-linklibs] : [optional-version] : [nolink] ;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creates a versioned shared library (like foo.so.1.2.0) and symbolic link (foo.so) to it.
+If [optional-version] is given, it will be used to add version extension, if not,
+this rule behaves the same as SharedLibrary (meaning symbolic link will *not* be created).
+
+If option [nolink] was given, but [optional-version] does, symbolic link will not be created.
+Here are few samples:
+
+-------------------------
+# Create foo.so.1.2.0 and symbolic link to it
+SharedLibraryVersioned foo : file1.cpp file2.cpp : -L/some/path -lsomelib : 1.2.0 ;
+
+# Create foo.so.1.2.0 without symbolic link
+SharedLibraryVersioned foo : file1.cpp file2.cpp : -L/some/path -lsomelib : 1.2.0 : nolink ;
+
+# Create foo.so.1.2.0 without linking with external libraries
+SharedLibraryVersioned foo : file1.cpp file2.cpp : : 1.2.0 : nolink ;
+-------------------------
