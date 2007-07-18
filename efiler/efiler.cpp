@@ -17,6 +17,8 @@
 #include <sys/time.h> // timer
 #include <unistd.h> // edelib/Run needs it :(
 #include <sys/resource.h> // for core
+#include <sys/vfs.h> // used for statfs()
+
 
 #include <Fl/Fl.H>
 #include <Fl/Fl_Double_Window.H>
@@ -30,7 +32,9 @@
 #include <edelib/Nls.h>
 #include <edelib/MimeType.h>
 #include <edelib/String.h>
+#include <edelib/StrUtil.h>
 #include <edelib/Run.h>
+#include <edelib/File.h>
 
 #include "EDE_FileView.h"
 #include "Util.h"
@@ -49,10 +53,6 @@ bool semaphore;
 bool dirsfirst;
 bool ignorecase;
 
-// These variables are global to save time on construction/destruction
-edelib::MimeType mime_resolver;
-struct stat buf;
-
 
 // constants
 
@@ -63,14 +63,90 @@ const int statusbar_height = 24;
 const int statusbar_width = 400;
 
 
-// This is just a temporary fix so that efiler works atm.
+/*-----------------------------------------------------------------
+	Filesystem functions
+-------------------------------------------------------------------*/
+
+// Read filesystems - adapted from fltk file chooser
+char filesystems[50][PATH_MAX]; // must be global
+int get_filesystems() {
+	FILE	*mtab;		// /etc/mtab or /etc/mnttab file
+
+	// Results are cached in a static array
+	static int fs_number=0;
+
+	// On first access read filesystems
+	if (fs_number == 0) {
+		mtab = fopen("/etc/mnttab", "r");	// Fairly standard
+		if (mtab == NULL)
+			mtab = fopen("/etc/mtab", "r");	// More standard
+		if (mtab == NULL)
+			mtab = fopen("/etc/fstab", "r");	// Otherwise fallback to full list
+		if (mtab == NULL)
+			mtab = fopen("/etc/vfstab", "r");	// Alternate full list file
+
+		char	line[PATH_MAX];	// Input line
+		char	device[PATH_MAX], mountpoint[PATH_MAX], fs[PATH_MAX];
+		while (mtab!= NULL && fgets(line, sizeof(line), mtab) != NULL) {
+			if (line[0] == '#' || line[0] == '\n')
+				continue;
+			if (sscanf(line, "%s%s%s", device, mountpoint, fs) != 3)
+				continue;
+			strcpy(filesystems[fs_number],mountpoint);
+			fs_number++;
+		}	
+		fclose (mtab);
+
+		if (fs_number == 0) return 0; // error reading mtab/fstab
+	}
+	return fs_number;
+}
+
+
+// Get mount point of filesystem for given file
+const char* find_fs_for(const char* file) {
+	int fs_number = get_filesystems();
+	if (fs_number==0) return 0; // error reading mtab/fstab
+
+	// Find filesystem for file (largest mount point match)
+	char *max;
+	int maxlen = 0;
+	for (int i=0; i<fs_number; i++) {
+		int mylen = strlen(filesystems[i]);
+		if ((strncmp(file,filesystems[i],mylen)==0) && (mylen>maxlen)) {
+			maxlen=mylen;
+			max = (char*)filesystems[i];
+		}
+	}
+	if (maxlen == 0) return 0; // doesn't match any fs? there should always be root
+	return max;
+}
+
+
+// Tests if two files are on the same filesystem
+bool is_on_same_fs(const char* file1, const char* file2) {
+	const char* fs1 = find_fs_for(file1);
+	// See if file2 matches the same filesystem
+	return (strncmp(file1,fs1,strlen(fs1))==0);
+}
+
+
+
+
+/*-----------------------------------------------------------------
+	"Simple opener" - keep a list of openers in text file
+	This is just a temporary fix so that efiler works atm.
+-------------------------------------------------------------------*/
+
+// These variables are global to save time on construction/destruction
+edelib::MimeType mime_resolver;
+struct stat stat_buffer;
+
 struct sopeners {
 	char* type;
 	char* opener;
 	sopeners* next;
 } *openers=0;
-
-
 
 char *simpleopener(const char* mimetype) {
 	sopeners* p;
@@ -112,17 +188,17 @@ char *simpleopener(const char* mimetype) {
 
 
 
+/*-----------------------------------------------------------------
+	LoadDir()
+-------------------------------------------------------------------*/
+
 // modification of versionsort which ignores case
-void lowercase(char* s) { 
-	for (int i=0;i<strlen(s);i++)
-		if (s[i]>='A' && s[i]<='Z') s[i] += 'a'-'A';
-}
 int myversionsort(const void *a, const void *b) {
 	struct dirent** ka = (struct dirent**)a;
 	struct dirent** kb = (struct dirent**)b;
-	char *ma = strdup((*ka)->d_name);
-	char *mb = strdup((*kb)->d_name);
-	lowercase(ma); lowercase(mb);
+	char* ma = strdup((*ka)->d_name);
+	char* mb = strdup((*kb)->d_name);
+	edelib::str_tolower((unsigned char*)ma); edelib::str_tolower((unsigned char*)mb);
 	int k = strverscmp(ma,mb);
 	free(ma); free(mb);
 	return k;
@@ -203,18 +279,18 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 		char fullpath[FL_PATH_MAX];
 		snprintf (fullpath,FL_PATH_MAX-1,"%s%s",current_dir,n);
 
-		if (stat(fullpath,&buf)) continue; // error
+		if (stat(fullpath,&stat_buffer)) continue; // error
 
 		FileItem *item = new FileItem;
 		item->name = n;
 		item->realpath = fullpath;
-		item->date = nice_time(buf.st_mtime);
+		item->date = nice_time(stat_buffer.st_mtime);
 		item->permissions = ""; // todo
 		if (strcmp(n,"..")==0) {
 			item->icon = "undo";
 			item->description = "Go up";
 			item->size = "";
-		} else if (S_ISDIR(buf.st_mode)) { // directory
+		} else if (S_ISDIR(stat_buffer.st_mode)) { // directory
 			item->icon = "folder";
 			item->description = "Directory";
 			// item->name += "/";
@@ -222,7 +298,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 		} else {
 			item->icon = "unknown";
 			item->description = "Unknown";
-			item->size = nice_size(buf.st_size);
+			item->size = nice_size(stat_buffer.st_size);
 		}
 
 		item_list[fsize++] = item;
@@ -251,6 +327,8 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 			mime_resolver.set(item_list[i]->realpath.c_str());
 			edelib::String desc,icon;
 			desc = mime_resolver.comment();
+			// First letter of desc should be upper case:
+			if (desc[0]>='a' && desc[0]<='z') desc[0] = desc[0]-'a'+'A';
 			icon = mime_resolver.icon_name();
 			if (desc!="" || icon!="") {
 				if (desc != "") item_list[i]->description = desc;
@@ -267,8 +345,18 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 	delete[] item_list;
 	semaphore=false;
 
-	// TODO Get free space for statusbar
-	statusbar->label(_("Ready."));
+	// TODO Attempt to cache the results in a meaningful way
+	static struct statfs statfs_buffer;
+	if (statfs(current_dir, &statfs_buffer)==0) {
+		double totalsize = double(statfs_buffer.f_bsize) * statfs_buffer.f_blocks;
+		double freesize = double(statfs_buffer.f_bsize) * statfs_buffer.f_bavail; // This is what df returns
+										// f_bfree is size available to root
+		double percent = double(statfs_buffer.f_blocks-statfs_buffer.f_bavail)/statfs_buffer.f_blocks*100;
+		char *tmp = strdup(nice_size(totalsize)); // nice_size() operates on a static char buffer, we can't use two calls at the same time
+		statusbar->label(tasprintf(_("Filesystem %s, Size %s, Free %s (%4.1f%% used)"), find_fs_for(current_dir), tmp, nice_size(freesize), percent));
+		free(tmp);
+	} else
+		statusbar->label(_("Error reading filesystem information!"));
 }
 
 
@@ -283,10 +371,6 @@ bool overwrite_all, skip_all;
 
 char **cut_copy_buffer = 0;
 bool operation_is_copy = false;
-
-
-// Yada n'exist cest pas
-bool fl_filename_exist(const char* file) { return (stat(file,&buf)==0); }
 
 
 
@@ -355,54 +439,6 @@ void do_cut_copy(bool m_copy) {
 
 // Helper functions for paste:
 
-// Tests if two files are on the same filesystem
-bool is_on_same_fs(const char* file1, const char* file2) {
-	FILE	*mtab;		// /etc/mtab or /etc/mnttab file
-	static char filesystems[50][PATH_MAX];
-	static int fs_number=0;
-
-	// On first access read filesystems
-	if (fs_number == 0) {
-		mtab = fopen("/etc/mnttab", "r");	// Fairly standard
-		if (mtab == NULL)
-			mtab = fopen("/etc/mtab", "r");	// More standard
-		if (mtab == NULL)
-			mtab = fopen("/etc/fstab", "r");	// Otherwise fallback to full list
-		if (mtab == NULL)
-			mtab = fopen("/etc/vfstab", "r");	// Alternate full list file
-
-		char	line[PATH_MAX];	// Input line
-		char	device[PATH_MAX], mountpoint[PATH_MAX], fs[PATH_MAX];
-		while (mtab!= NULL && fgets(line, sizeof(line), mtab) != NULL) {
-			if (line[0] == '#' || line[0] == '\n')
-				continue;
-			if (sscanf(line, "%s%s%s", device, mountpoint, fs) != 3)
-				continue;
-			strcpy(filesystems[fs_number],mountpoint);
-			fs_number++;
-		}	
-		fclose (mtab);
-
-		if (fs_number == 0) return false; // some kind of error
-	}
-
-	// Find filesystem for file1 (largest mount point match)
-	char *max;
-	int maxlen = 0;
-	for (int i=0; i<fs_number; i++) {
-		int mylen = strlen(filesystems[i]);
-		if ((strncmp(file1,filesystems[i],mylen)==0) && (mylen>maxlen)) {
-			maxlen=mylen;
-			max = filesystems[i];
-		}
-	}
-	if (maxlen == 0) return false; // some kind of error
-
-	// See if file2 matches the same filesystem
-	return (strncmp(file2,max,maxlen)==0);
-}
-
-
 // Copy single file. Returns true if operation should continue
 bool my_copy(const char* src, const char* dest) {
 	FILE *fold, *fnew;
@@ -412,7 +448,7 @@ bool my_copy(const char* src, const char* dest) {
 		// this shouldn't happen
 		return true;
 
-	if (fl_filename_exist(dest)) {
+	if (edelib::file_exists(dest)) {
 		// if both src and dest are directories, do nothing
 		if (fl_filename_isdir(src) && fl_filename_isdir(dest))
 			return true;
@@ -529,7 +565,7 @@ void do_paste() {
 		for (int i=0; cut_copy_buffer[i]; i++) {
 			char *newname;
 			asprintf(&newname, "%s%s", current_dir, fl_filename_name(cut_copy_buffer[i]));
-			if (fl_filename_exist(newname)) {
+			if (edelib::file_exists(newname)) {
 				int c = -1;
 				if (!overwrite_all && !skip_all) {
 					// here was choice_alert
@@ -663,6 +699,8 @@ void open_cb(Fl_Widget*w, void*data) {
 fprintf (stderr,"cb\n");
 	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu) {
 fprintf (stderr,"enter\n");
+//if (Fl::event_clicks()) fprintf(stderr, "clicks\n");
+//if (Fl::event_key()==FL_Enter) fprintf(stderr, "ekey\n");
 		static timeval tm = {0,0};
 		timeval newtm;
 		gettimeofday(&newtm,0);
@@ -675,8 +713,8 @@ fprintf (stderr,"enter\n");
 		char* path = (char*)view->data(view->value());
 		fprintf(stderr, "Path: %s (ev %d)\n",path,Fl::event());
 
-		if (stat(path,&buf)) return; // error
-		if (S_ISDIR(buf.st_mode)) {  // directory
+		if (stat(path,&stat_buffer)) return; // error
+		if (S_ISDIR(stat_buffer.st_mode)) {  // directory
 			loaddir(path);
 			return;
 		}
