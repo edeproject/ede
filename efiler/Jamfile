@@ -1,0 +1,16 @@
+#
+# $Id: Jamfile 2002 2007-07-18 17:32:49Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP efiler ;
+
+SOURCE = Fl_Icon_Browser.cxx EDE_Browser.cpp EDE_FileView.h Util.cpp efiler.cpp ;
+
+EdeProgram efiler : $(SOURCE) ;
+#EdeManual doc/efiler.txt : doc/efiler.jpg ;
