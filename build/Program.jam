@@ -45,7 +45,7 @@ rule Program
 	MakeProgramPrivate $(1) : $(2) : $(3) : $(4) ;
 }
 
-# EdeProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# EdeProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
 # Creates EDE specific programs. They will be linked with EDELIBLIB
 # and FLTKLIB. If [optinal-libraries] or [optinal-flags] are given, they will be
 # used too.
@@ -59,9 +59,13 @@ rule EdeProgram
 	MakeProgramPrivate $(1) : $(2) 
 		: $(3) $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
 		: $(4) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
+
+	if $(5) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
 }
 
-# EfltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# EfltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
 # Creates programs that will be linked with efltk. If [optinal-libraries] or
 # [optinal-flags] are given, they will be used too.
 rule EfltkProgram 
@@ -74,9 +78,14 @@ rule EfltkProgram
 	MakeProgramPrivate $(1) : $(2) 
 		: $(3) $(EFLTKLIB) $(STDLIB) 
 		: $(4) $(EFLTKINCLUDE) ;
+
+	# install it where ede binaries resides
+	if $(5) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
 }
 
-# FltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# FltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
 # Creates programs that will be linked with fltk only. It will use full fltk
 # dependencies (images).
 rule FltkProgram 
@@ -89,9 +98,14 @@ rule FltkProgram
 	MakeProgramPrivate $(1) : $(2) 
 		: $(3) $(FLTKLIB) $(STDLIB) 
 		: $(4) $(FLTKINCLUDE) ;
+
+	# install it where ede binaries resides
+	if $(5) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
 }
 
-# FltkProgramBare [target] : [sources] : [optinal-libraries] : [optinal-flags] ;
+# FltkProgramBare [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
 # Creates programs that will be linked with fltk only. No images will be linked in it.
 rule FltkProgramBare
 {
@@ -103,4 +117,9 @@ rule FltkProgramBare
 	MakeProgramPrivate $(1) : $(2) 
 		: $(3) $(FLTKLIB_NOIMAGES) $(STDLIB) 
 		: $(4) $(FLTKINCLUDE) ;
+
+	# install it where ede binaries resides
+	if $(5) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
 }

@@ -9,13 +9,12 @@
 # See COPYING for details.
 
 
-RMDIR_UNSFE ?= $(RM) -Rf ;
-#RMDIR_SAFE  ?= "rmdir --ignore-fail-on-non-empty" ;
-RMDIR_SAFE  ?= "rmdir" ;
-CP ?= "cp" ;
-MV ?= "mv" ;
-MKDIRS ?= "mkdir -p" ;
-LINKCMD ?= "ln -s" ;
+#RMDIR_UNSFE ?= $(RM) -Rf ;
+#RMDIR_SAFE  ?= "rmdir" ;
+#CP ?= "cp" ;
+#MV ?= "mv" ;
+#MKDIRS ?= "mkdir -p" ;
+#LINKCMD ?= "ln -s" ;
 
 # Fltk use .cxx extension for C++ files so it must
 # be registered. This rule is called by jam so final 

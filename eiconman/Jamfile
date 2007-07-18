@@ -13,6 +13,6 @@ SubDir TOP eiconman ;
 SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
 
 EdeProgram eiconman : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
 
-FltkProgram test/notify : test/notify.cpp ;
+FltkProgram test/notify : test/notify.cpp : : : noinstall ;

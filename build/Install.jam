@@ -8,9 +8,9 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-EDEBINDIR = "/home/sanel/xxx/bin" ;
-EDEICONDIR = "/home/sanel/xxx/icons" ;
-EDEDESKTOPFILES = "/home/sanel/xxx/desktop" ;
+#EDEBINDIR = "/home/sanel/xxx/bin" ;
+#EDEICONDIR = "/home/sanel/xxx/icons" ;
+#EDEDESKTOPFILES = "/home/sanel/xxx/desktop" ;
 
 # MakeInstallPrivate [location-dir] : [targets] : [opt-file-mode] : [opt-chown] : [opt-chgrp] ;
 rule MakeInstallPrivate
@@ -86,18 +86,27 @@ rule InstallEdeProgram
 	InstallProgram $(EDEBINDIR) : $(<) ;
 }
 
-# InstallEdeIcons [targets] ;
+# InstallEdeIcons [app-dir:] [targets] ;
 rule InstallEdeIcons
 {
-	InstallData $(EDEICONDIR) : $(<) ;
+	if $(2) {
+		InstallData [ FDirName $(EDEICONDIR) $(1) ] : $(2) ;
+	} else {
+		InstallData $(EDEICONDIR) : $(1) ;
+	}
 }
 
 # InstallEdeDesktopFiles [targets] ;
 rule InstallEdeDesktopFiles
 {
-	InstallData $(EDEDESKTOPFILES) : $(<) ;
+	InstallData $(EDEDESKTOPDIR) : $(<) ;
 }
 
+# InstallEdeDesktopFiles [targets] ;
+rule InstallEdeConfigFiles
+{
+	InstallData $(EDECONFIGDIR) : $(<) ;
+}
 
 actions Install1
 {

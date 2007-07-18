@@ -13,6 +13,6 @@ SubDir TOP edewm ;
 SOURCE  = [ Wildcard *.cpp ] ;
 POFILES = [ Wildcard locale : *.po ] ;
 
-EfltkProgram    edewm : $(SOURCE) ;
-ExtractStrings  locale : $(SOURCE) ;
-MakeTranslation locale : $(POFILES) ;
+EfltkProgram        edewm : $(SOURCE) ;
+TranslationStrings  locale : $(SOURCE) ;
+Translation         locale : $(POFILES) ;

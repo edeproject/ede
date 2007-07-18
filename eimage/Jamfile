@@ -11,4 +11,4 @@
 SubDir TOP eimage ;
 
 FltkProgram eimage : eimage.cpp ;
-ExtractStrings locale : eimage.cpp ;
+TranslationStrings locale : eimage.cpp ;

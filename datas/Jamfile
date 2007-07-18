@@ -15,6 +15,8 @@ ICONS16 = [ Wildcard icons-16 : *.png : icons-16 ] ;
 PLINKS  = [ Wildcard programs-links : *.desktop : programs-links ] ;
 CONFS   = [ Wildcard *.conf ] ;
 
-#InstallEdeConfig   $(CONFS) ;
-#InstallEdeIcons    $(ICONS16) $(ICONS48) ;
-#InstallEdeDesktopFiles $(PLINKS) ;
+InstallEdeIcons icons-16 : $(ICONS16) ;
+InstallEdeIcons icons-48 : $(ICONS48) ;
+
+InstallEdeConfigFiles  $(CONFS) ;
+InstallEdeDesktopFiles $(PLINKS) ;

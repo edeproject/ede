@@ -10,12 +10,12 @@
 
 DEFAULT_POT = "messages.pot" ;
 
-# ExtractStrings [dir-where] : [source] : [output-file] ;
+# TranslationStrings [dir-where] : [source] : [output-file] ;
 # Scans [source] file(s) for translatable strings (usually marked as _("foo"))
 # and store result in [output-file] in [dir-where] directory. If [dir-where]
 # does not exists, it will be created.
 # [output-file] can be omitted; in that case DEFAULT_POT will be used.
-rule ExtractStrings
+rule TranslationStrings
 {
 	local strfile ;
 	if $(3) {
@@ -58,12 +58,12 @@ rule ExtractStrings
 	CleandirSafe distclean : $(locale_dir) ;
 }
 
-# MakeTranslation [po-dir] : [file1.po file2.po...] ;
+# Translation [po-dir] : [file1.po file2.po...] ;
 # Compile translated files into binary representation, so they 
 # can be used by programs. [po-dir] is directory name where
 # to look for translated files (.po) and where will be placed
 # binary ones (.mo). Second parameter is list of .po files.
-rule MakeTranslation
+rule Translation
 {
 	local moext mofile pofile path i ;
 

@@ -8,25 +8,43 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-XGETTEXT ?= xgettext ;
-MSGFMT   ?= msgfmt ;
-RMDIR    ?= rmdir ;
+# tools used by jam rules
+XGETTEXT    ?= xgettext ;
+MSGFMT      ?= msgfmt ;
+RMDIR_UNSFE ?= $(RM) -Rf ;
+RMDIR_SAFE  ?= rmdir ;
+CP          ?= cp ;
+MV          ?= mv ;
+MKDIRS      ?= "mkdir -p" ;
+LINKCMD     ?= "ln -s" ;
 
-GLOBALFLAGS  ?= -Wall -g3 -D_DEBUG -I$(TOP) ;
+# directories where data will be installed
+PREFIX        ?= "/opt/ede2" ;
+EDEBINDIR     ?= "$(PREFIX)/bin" ;
+EDECONFIGDIR  ?= "$(PREFIX)/data/config" ;
+EDEICONDIR    ?= "$(PREFIX)/data/icons" ;
+EDEDESKTOPDIR ?= "$(PREFIX)/data/desktop" ;
+
+# global flags used to be passed to every target
+GLOBALFLAGS  ?= -Wall -pedantic -g3 -D_DEBUG -I$(TOP) ;
 STDLIB       ?= -lstdc++ ;
 
+# edelib libraries path
+EDELIBINCLUDE ?= -I/opt/ede/include ;
+EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
+
+# fltk libraries path
 FLTKINCLUDE      ?= -I/usr/local/include ;
 FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 ;
 FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lX11 ;
 
-EDELIBINCLUDE ?= -I/opt/ede/include ;
-EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
-
-# backward
+# backward; efltk libraries path
 EFLTKINCLUDE       ?= -I/usr/local/include ;
 EFLTKLIB           ?= -L/usr/local/lib -lefltk_images -lpng -lz -ljpeg -lefltk -lX11 -lXext -lm ;
 EFLTKLIB_NOIMAGES  ?= -L/usr/local/lib -lefltk -lX11 -lXext -lm ;
 
+# by default all flags that jam uses directly are cleared
+# here should _not_ be set anything since they are filled per target
 CCFLAGS = ;
 C++FLAGS = ;
 OPTIM = ;

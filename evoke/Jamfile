@@ -13,4 +13,4 @@ SubDir TOP evoke ;
 SOURCE = evoke.cpp EvokeService.cpp Log.cpp ;
 
 EdeProgram evoke : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
