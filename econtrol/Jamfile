@@ -8,11 +8,8 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eiconman ;
+SubDir TOP econtrol ;
 
-SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
+SOURCE = econtrol.cpp ;
 
-EdeProgram eiconman : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
-
-FltkProgram test/notify : test/notify.cpp ;
+EdeProgram econtrol : $(SOURCE) ;

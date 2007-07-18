@@ -8,11 +8,11 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eiconman ;
+SubDir TOP edewm ;
 
-SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
+SOURCE  = [ Wildcard *.cpp ] ;
+POFILES = [ Wildcard locale : *.po ] ;
 
-EdeProgram eiconman : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
-
-FltkProgram test/notify : test/notify.cpp ;
+EfltkProgram    edewm : $(SOURCE) ;
+ExtractStrings  locale : $(SOURCE) ;
+MakeTranslation locale : $(POFILES) ;

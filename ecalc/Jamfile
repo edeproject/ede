@@ -8,9 +8,8 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-
 SubDir TOP ecalc ;
 
-SOURCE = SciCalc.cpp Main.cpp ;
+SOURCE = SciCalc.cxx Main.cpp ;
 
-MakeProgram ecalc : $(SOURCE) ;
+FltkProgramBare ecalc : $(SOURCE) ;

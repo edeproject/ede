@@ -1,6 +1,16 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
 
-LINKLIBS = -L/opt/ede/lib -ledelib -lao -lvorbis -lvorbisfile -lmad -L/usr/local/lib -L/usr/X11R6/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 -lstdc++ ;
+SubDir TOP evoke ;
 
-C++FLAGS += -I/opt/ede/include -Wall -pedantic -D_DEBUG -g3 -I/usr/local/include -I/usr/X11R6/include ;
+SOURCE = evoke.cpp EvokeService.cpp Log.cpp ;
 
-Main evoke : evoke.cpp EvokeService.cpp Log.cpp ;
+EdeProgram evoke : $(SOURCE) ;
+ExtractStrings locale : $(SOURCE) ;
