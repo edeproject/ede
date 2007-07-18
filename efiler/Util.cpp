@@ -206,19 +206,23 @@ char* wstrim(const char *string)
 const char* nice_size(double size) {
 	static char buffer[256];
 	if (size<1024) {
-		snprintf(buffer,255,"%d B",(int)size);
+		snprintf(buffer,255,"%.0f B",size);
 	} else if (size<1024*10) {
-		snprintf(buffer,255,"%.1f kB",(float)size/1024);
+		snprintf(buffer,255,"%.2f kB",size/1024);
+	} else if (size<1024*100) {
+		snprintf(buffer,255,"%.1f kB",size/1024);
 	} else if (size<1024*1024) {
-		snprintf(buffer,255,"%d kB",(int)size/1024);
+		snprintf(buffer,255,"%.0f kB",size/1024);
 	} else if (size<1024*1024*10) {
-		snprintf(buffer,255,"%.1f MB",(float)size/(1024*1024));
+		snprintf(buffer,255,"%.2f MB",size/(1024*1024));
+	} else if (size<1024*1024*10) {
+		snprintf(buffer,255,"%.1f MB",size/(1024*1024));
 	} else if (size<1024*1024*1024) {
-		snprintf(buffer,255,"%d MB",(int)size/(1024*1024));
+		snprintf(buffer,255,"%.0f MB",size/(1024*1024));
 	} else if (size<1024*1024*1024*10) {
-		snprintf(buffer,255,"%.1f GB",(float)size/(1024*1024*1024));
+		snprintf(buffer,255,"%.2f GB",size/(1024*1024*1024));
 	} else {
-		snprintf(buffer,255,"%d GB",(int)size/(1024*1024*1024));
+		snprintf(buffer,255,"%.1f GB",size/(1024*1024*1024));
 	}
 	return (const char*) buffer;
 }
