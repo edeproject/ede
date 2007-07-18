@@ -12,7 +12,7 @@
 
 #include "Windowmanager.h"
 #include "debug.h"
-#include <edeconf.h>
+//#include <edeconf.h>
 
 #include <efltk/filename.h>
 #include <efltk/fl_draw.h>
@@ -38,7 +38,7 @@ int main(int argc, char ** argv)
 	signal(SIGINT, exit_signal);
 
 	Fl::args(argc, argv);
-	fl_init_locale_support("edewm", PREFIX"/share/locale");
+	//fl_init_locale_support("edewm", PREFIX"/share/locale");
 
 	WindowManager::init(argc, argv);
 	Fl_Style::load_theme();

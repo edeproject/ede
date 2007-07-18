@@ -10,6 +10,6 @@
 
 SubDir TOP ecalc ;
 
-SOURCE = SciCalc.cxx Main.cpp ;
+SOURCE = SciCalc.cpp Main.cpp ;
 
 FltkProgramBare ecalc : $(SOURCE) ;

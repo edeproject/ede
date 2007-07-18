@@ -1,0 +1,20 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP datas ;
+
+ICONS48 = [ Wildcard icons-48 : *.png : icons-48 ] ;
+ICONS16 = [ Wildcard icons-16 : *.png : icons-16 ] ;
+PLINKS  = [ Wildcard programs-links : *.desktop : programs-links ] ;
+CONFS   = [ Wildcard *.conf ] ;
+
+#InstallEdeConfig   $(CONFS) ;
+#InstallEdeIcons    $(ICONS16) $(ICONS48) ;
+#InstallEdeDesktopFiles $(PLINKS) ;
