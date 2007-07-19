@@ -10,7 +10,7 @@
 
 SubDir TOP efiler ;
 
-SOURCE = Fl_Icon_Browser.cxx EDE_Browser.cpp EDE_FileView.h Util.cpp efiler.cpp ;
+SOURCE = Fl_Icon_Browser.cxx EDE_Browser.cpp Util.cpp efiler.cpp ;
 
 EdeProgram efiler : $(SOURCE) ;
 #EdeManual doc/efiler.txt : doc/efiler.jpg ;

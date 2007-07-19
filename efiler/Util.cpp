@@ -20,7 +20,6 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <fltk/filename.h>
 
 
 #ifdef _WIN32
