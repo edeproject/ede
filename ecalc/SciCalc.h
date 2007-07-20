@@ -12,25 +12,25 @@ class SciCalc {
   enum {MaxNumBrkts=10}; 
   enum Operator {PLUS,MINUS,MULT,DIV,POW,INVPOW,EVAL}; 
   enum mode {NONE=0,DOT=-1,NORM=-2,EXP=-3}; 
-  double value[4*(MaxNumBrkts+1)];    /* The values on the stack */; 
-  int priority[6];   /* the priorities of each operator */; 
-  int oper[3*(MaxNumBrkts+1)];        /* the operators between them */; 
-  int top;                            /* the top of the stack */; 
-  int startbrkt[(MaxNumBrkts+1)];     /* the positions of the left brackets */; 
-  int currentbrkt;                    /* bracketing we are in */; 
-  double mem;             /* The memory value */; 
+  double value[4*(MaxNumBrkts+1)];    /* The values on the stack */
+  int priority[6];   /* the priorities of each operator */
+  int oper[3*(MaxNumBrkts+1)];        /* the operators between them */
+  int top;                            /* the top of the stack */
+  int startbrkt[(MaxNumBrkts+1)];     /* the positions of the left brackets */
+  int currentbrkt;                    /* bracketing we are in */
+  double mem;             /* The memory value */
   int ready;              /* Whether last number is ready.
                            if "ready" is set, then typing another number
-                           overwrites the current number. */; 
-  int dot;                /* Whether the dot has been typed */; 
-  double diver;           /* The divider when behind the dot */; 
-  int behind;             /* Number of digits behind dot */; 
-  int inv;                /* Whether inverse key is depressed */; 
-  int emode;              /* Whether we are entering the exponent */; 
-  int exponent;           /* the exponent value whilst entering exponent */; 
-  double mantissa;        /* the mantissa value whilst entering exponent */; 
-  int base;               /* the base we are working in (2,8,10 or 16) */; 
-  int drgmode;            /* whether we are in deg, rad or grad mode */; 
+                           overwrites the current number. */
+  int dot;                /* Whether the dot has been typed */
+  double diver;           /* The divider when behind the dot */
+  int behind;             /* Number of digits behind dot */
+  int inv;                /* Whether inverse key is depressed */
+  int emode;              /* Whether we are entering the exponent */
+  int exponent;           /* the exponent value whilst entering exponent */
+  double mantissa;        /* the mantissa value whilst entering exponent */
+  int base;               /* the base we are working in (2,8,10 or 16) */
+  int drgmode;            /* whether we are in deg, rad or grad mode */
 public:
   SciCalc();
 private:

@@ -13,10 +13,12 @@ rule MakeProgramPrivate
 {
 	local target objects ;
 
-	# This will make happy original jam and ftjam since constructing it's 
-	# grist from source file will make it unique and prevent colision with the 
-	# same directory name
-	target = $(1:G=$(SOURCE_GRIST)) ;
+	# If this is gristed, targets of LinkAgainst, SharedLibrary and SharedLibraryVersioned
+	# _must_ be too. As I could see, in Jambase target is not gristed.
+	# I'm not sure what for cases foo/foo, but for now, things looking very good.
+	# target = $(1:G=$(SOURCE_GRIST)) ;
+
+	target = $(1) ;
 
 	# so 'jam foo' works when 'foo' is final executable
 	if $(target) != $(<) {
@@ -27,8 +29,8 @@ rule MakeProgramPrivate
 	objects = [ FGristFiles $(2:S=$(SUFOBJ)) ] ;
 
 	# Pick up values if someone set flags outside (via ObjectCcFlags and etc.)
-	CFLAGS on $(objects) = [ on $(objects) return $(CFLAGS) ] $(4) ;
-	C++FLAGS on $(objects) = [ on $(objects) return $(C++FLAGS) ] $(4) ;
+	CFLAGS on $(objects) += $(4) ;
+	C++FLAGS on $(objects) += $(4) ;
 
 	LINKLIBS on $(target) = $(3) [ on $(target) return $(LINKLIBS) ] ;
 
@@ -36,19 +38,30 @@ rule MakeProgramPrivate
 	Objects $(>) ;
 }
 
-# Program [target] : [sources] : [libraries] : [flags] ;
+# LinkAgainst [taraget] : [libraries] ;
+# Add [libraries] to list of libraries for linking with [taraget]. This
+# rule is similar to jam's LinkLibraries, but it will not built those libraries
+# nor marked them for building. Also requires [libraries] are in the form '-lfoo'.
+rule LinkAgainst
+{
+	# Here is not used grist on target (LinkLibraries does not use it too).
+	# If gristing is added, make shure is added to SharedLibrary and SharedLibraryVersioned
+	# or it will not pick libraries and symlink will not be created.
+	LINKLIBS on $(1) = [ on $(1) return $(LINKLIBS) ] $(2) ;
+}
+
+# Program [target] : [sources] ;
 # Compiles and links [target] from [sources]. No external flags or
 # libraries are used since this should be generic rule for compiling
 # any program.
 rule Program
 {
-	MakeProgramPrivate $(1) : $(2) : $(3) : $(4) ;
+	Main $(1) : $(2) ;
 }
 
-# EdeProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
+# EdeProgram [target] : [sources] : [noinstall] ;
 # Creates EDE specific programs. They will be linked with EDELIBLIB
-# and FLTKLIB. If [optinal-libraries] or [optinal-flags] are given, they will be
-# used too.
+# and FLTKLIB. If [noinstall] is given, [target] will not be installed wit 'jam install'.
 rule EdeProgram
 {
 	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
@@ -57,17 +70,17 @@ rule EdeProgram
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(3) $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
-		: $(4) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
+		: $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
+		: $(GLOBALFLAGS) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
 
-	if $(5) != "noinstall" {
+	if $(3) != "noinstall" {
 		InstallEdeProgram $(1) ;
 	}
 }
 
-# EfltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
-# Creates programs that will be linked with efltk. If [optinal-libraries] or
-# [optinal-flags] are given, they will be used too.
+# EfltkProgram [target] : [sources] : [noinstall] ;
+# Creates programs that will be linked with efltk. If [noinstall] is given, 
+# [target] will not be installed wit 'jam install'.
 rule EfltkProgram 
 {
 	if ! $(EFLTKINCLUDE) || ! $(EFLTKLIB) {
@@ -76,16 +89,16 @@ rule EfltkProgram
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(3) $(EFLTKLIB) $(STDLIB) 
-		: $(4) $(EFLTKINCLUDE) ;
+		: $(EFLTKLIB) $(STDLIB) 
+		: $(GLOBALFLAGS) $(EFLTKINCLUDE) ;
 
 	# install it where ede binaries resides
-	if $(5) != "noinstall" {
+	if $(3) != "noinstall" {
 		InstallEdeProgram $(1) ;
 	}
 }
 
-# FltkProgram [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
+# FltkProgram [target] : [sources] : [noinstall] ;
 # Creates programs that will be linked with fltk only. It will use full fltk
 # dependencies (images).
 rule FltkProgram 
@@ -96,16 +109,16 @@ rule FltkProgram
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(3) $(FLTKLIB) $(STDLIB) 
-		: $(4) $(FLTKINCLUDE) ;
+		: $(FLTKLIB) $(STDLIB) 
+		: $(GLOBALFLAGS) $(FLTKINCLUDE) ;
 
 	# install it where ede binaries resides
-	if $(5) != "noinstall" {
+	if $(3) != "noinstall" {
 		InstallEdeProgram $(1) ;
 	}
 }
 
-# FltkProgramBare [target] : [sources] : [optinal-libraries] : [optinal-flags] : [noinstall] ;
+# FltkProgramBare [target] : [sources] : [noinstall] ;
 # Creates programs that will be linked with fltk only. No images will be linked in it.
 rule FltkProgramBare
 {
@@ -115,11 +128,11 @@ rule FltkProgramBare
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(3) $(FLTKLIB_NOIMAGES) $(STDLIB) 
-		: $(4) $(FLTKINCLUDE) ;
+		: $(FLTKLIB_NOIMAGES) $(STDLIB) 
+		: $(GLOBALFLAGS) $(FLTKINCLUDE) ;
 
 	# install it where ede binaries resides
-	if $(5) != "noinstall" {
+	if $(3) != "noinstall" {
 		InstallEdeProgram $(1) ;
 	}
 }

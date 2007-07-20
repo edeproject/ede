@@ -10,29 +10,11 @@
 
 SUFSHAREDLIB = ".so" ;
 
-# StaticLibrary [lib-name] : [source-files] : [flags] ;
+# StaticLibrary [lib-name] : [source-files] ;
 rule StaticLibrary
 {
-	local objects = [ FGristFiles $(>:S=$(SUFOBJ)) ] ;
-	C++FLAGS on $(objects) = [ on $(objects) return $(C++FLAGS) ] $(3) ;
-	CCFLAGS on $(objects) = [ on $(objects) return $(CCFLAGS) ] $(3) ;
-
 	Library $(<) : $(>) ;
 }
-
-# Not used (althought it do the job) since MainFromObjects defines
-# 'exe' target ('jam exe') which will build the library; I want 'lib' target :-P
-#rule SharedLibraryFromObjects
-#{
-#	local shlib = $(1) ;
-#	# In case path be part of $(shlib), gcc will set bad soname
-#	# so it must be removed
-#	local shlib_only = $(1:D=) ;
-#
-#	MainFromObjects $(shlib) : $(2) ;
-#	LINKFLAGS on $(shlib) = [ on $(shlib) return $(LINKFLAGS) ] 
-#		-shared -Wl,-soname,\"$(shlib_only)\" $(3) ;
-#}
 
 rule SharedLibraryFromObjects
 {
@@ -46,9 +28,9 @@ rule SharedLibraryFromObjects
 	t = $(1) ;
 	s = [ FGristFiles $(2) ] ;
 
-	# Rip directory part from target because this will
+	# Rip directory and grist parts from target because this will
 	# be passed to compiler as soname
-	t_only = $(t:D=) ;
+	t_only = $(t:D=:G=) ;
 
 	# if given suffix, skip it; otherwise add SUFSHAREDLIB
 	if ! $(t:S) {
@@ -62,9 +44,7 @@ rule SharedLibraryFromObjects
 		MakeLocate $(t) $(t)($(s:BS)) : $(LOCATE_TARGET) ;
 	}
 
-	# FIXME: option 'on $(t) return $(LINKLIBS)' can be re-used
-	# instead $(3) parameter so [opt-linklibs] are not needed. Check this.
-	LINKLIBS on $(t) = [ on $(t) return $(LINKLIBS) ] -shared -Wl,-soname,\"$(t_only)\" $(3) ;
+	LINKLIBS on $(t) = -shared -Wl,-soname,\"$(t_only)\" [ on $(t) return $(LINKLIBS) ] ;
 
 	# Let target is dependant on source
 	Depends $(t) : $(s) ;
@@ -73,10 +53,8 @@ rule SharedLibraryFromObjects
 	Clean clean : $(t) ;
 }
 
-# SharedLibrary [libname] : [sources] : [opt-linklibs] ;
-# Creates shared library [libname] from [sources]. If [opt-linklibs] are provided,
-# library will be linked with them (they _must_ be in form -lfoo which will be directly
-# passed to compiler).
+# SharedLibrary [libname] : [sources] ;
+# Creates shared library [libname] from [sources].
 #
 # Note: ftjam in later versions provide rule with the same name, althought it calls
 # libtool in the background. The way jam works, selecting latest redefined rules, ftjam's
@@ -85,24 +63,27 @@ rule SharedLibrary
 {
 	local shlib = $(1) ;
 	local src = $(2) ;
-	local objects = $(src:S=$(SUFOBJ)) ;
+	local objects = [ FGristFiles $(src:S=$(SUFOBJ)) ] ;
 
-	SharedLibraryFromObjects $(shlib) : $(objects) : $(3) ;
+	CCFLAGS on $(objects) += -fPIC ;
+	C++FLAGS on $(objects) += -fPIC ;
+
+	SharedLibraryFromObjects $(shlib) : $(objects) ;
 	Objects $(src) ;
 }
 
-# SharedLibraryVersioned [libname] : [sources] : [opt-linklibs] : [opt-version] : ["nolink"] ;
+# SharedLibraryVersioned [libname] : [sources] : [opt-version] : ["nolink"] ;
 # Creates versioned shared library (foo.so.[version]) which is often library naming
 # on unix platforms. If [opt-version] is not given, it is like calling SharedLibrary only.
 # By default it will create, besides [libname], ".so" symlink to it too. If "nolink" is given
-# as 5 parameter, it will skip symlink creation.
+# as 4 parameter, it will skip symlink creation.
 rule SharedLibraryVersioned
 {
-	if $(4) {
+	if $(3) {
 		local target target_dir symlink versioned ;
 
 		# Set .so.version extension
-		versioned = "$(SUFSHAREDLIB).$(4)" ;
+		versioned = "$(SUFSHAREDLIB).$(3)" ;
 
 		# Jam is not smart about ripping suffixes so cases 'foo.so.2.0' 	
 		# will produce 'foo.so.2'. We must hope that provided [libname] does _not_
@@ -110,10 +91,10 @@ rule SharedLibraryVersioned
 		# With good hopes, we set first full target name and it's link abbreviation.
 		target = $(1:S=$(versioned)) ;
 		symlink = $(1:S=$(SUFSHAREDLIB)) ;
-		SharedLibrary $(target) : $(2) : $(3) ;
+		SharedLibrary $(target) : $(2) ;
 	
 		# Create symlink
-		if $(5) != "nolink" {
+		if $(4) != "nolink" {
 			# copy target directory or symlink will be created
 			# from place where jam is called
 			LOCATE on $(symlink) = [ on $(target) return $(LOCATE) ] ;
@@ -124,6 +105,6 @@ rule SharedLibraryVersioned
 			Clean clean : $(symlink) ;
 		}
 	} else {
-		SharedLibrary $(1) : $(2) : $(3) ;
+		SharedLibrary $(1) : $(2) ;
 	}
 }
