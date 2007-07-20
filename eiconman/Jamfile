@@ -15,4 +15,4 @@ SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
 EdeProgram eiconman : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
 
-FltkProgram test/notify : test/notify.cpp : : : noinstall ;
+FltkProgramBare test/notify : test/notify.cpp : noinstall ;
