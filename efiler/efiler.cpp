@@ -15,7 +15,6 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/time.h> // timer
-#include <unistd.h> // edelib/Run needs it :(
 #include <sys/resource.h> // for core
 #include <sys/vfs.h> // used for statfs()
 
@@ -24,8 +23,6 @@
 #include <Fl/Fl_Double_Window.H>
 #include <Fl/Fl_Menu_Bar.H>
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
-#include <Fl/Fl_Progress.H>
-#include <Fl/Fl_Button.H>
 #include <Fl/filename.H>
 #include <Fl/fl_ask.H>
 
@@ -34,10 +31,11 @@
 #include <edelib/String.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Run.h>
-#include <edelib/File.h>
 
-#include "EDE_FileView.h"
-#include "Util.h"
+#include "EDE_FileView.h" // our file view widget
+#include "Util.h" // ex-edelib
+
+#include "fileops.h" // file operations
 
 
 #define DEFAULT_ICON "misc-vedran"
@@ -279,7 +277,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 		char fullpath[FL_PATH_MAX];
 		snprintf (fullpath,FL_PATH_MAX-1,"%s%s",current_dir,n);
 
-		if (stat(fullpath,&stat_buffer)) continue; // error
+		if (stat(fullpath,&stat_buffer)) continue; // happens when user has traverse but not read privilege
 
 		FileItem *item = new FileItem;
 		item->name = n;
@@ -306,17 +304,20 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 
 
 	// Populate view
+	for (int i=0; i<fsize; i++)
+		if (item_list[i]->description == "Go up")
+			view->add(item_list[i]);
 	if (dirsfirst) {
-		for (int i=0; i<fsize; i++) {
-			if (item_list[i]->description == "Directory" || item_list[i]->description == "Go up")
+		for (int i=0; i<fsize; i++)
+			if (item_list[i]->description == "Directory")
 				view->add(item_list[i]);
-		}
 		for (int i=0; i<fsize; i++) 
 			if (item_list[i]->description != "Directory" && item_list[i]->description != "Go up")
 				view->add(item_list[i]);
 	} else {
 		for (int i=0; i<fsize; i++) 
-			view->add(item_list[i]);
+			if (item_list[i]->description != "Go up")
+				view->add(item_list[i]);
 	}
 	view->redraw();
 	Fl::check();
@@ -328,7 +329,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 			edelib::String desc,icon;
 			desc = mime_resolver.comment();
 			// First letter of desc should be upper case:
-			if (desc[0]>='a' && desc[0]<='z') desc[0] = desc[0]-'a'+'A';
+			if (desc.length()>0 && desc[0]>='a' && desc[0]<='z') desc[0] = desc[0]-'a'+'A';
 			icon = mime_resolver.icon_name();
 			if (desc!="" || icon!="") {
 				if (desc != "") item_list[i]->description = desc;
@@ -345,6 +346,7 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 	delete[] item_list;
 	semaphore=false;
 
+	// Get partition size and free space
 	// TODO Attempt to cache the results in a meaningful way
 	static struct statfs statfs_buffer;
 	if (statfs(current_dir, &statfs_buffer)==0) {
@@ -365,330 +367,6 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 	File moving and copying operations
 -------------------------------------------------------------------*/
 
-Fl_Progress* cut_copy_progress;
-bool stop_now;
-bool overwrite_all, skip_all;
-
-char **cut_copy_buffer = 0;
-bool operation_is_copy = false;
-
-
-
-// Execute cut or copy operation when List View is active
-void do_cut_copy(bool m_copy) {
-
-	// Count selected icons, for malloc
-	int num = view->size();
-	int nselected = 0;
-	for (int i=1; i<=num; i++)
-		if (view->selected(i)) {
-			nselected++;
-
-			// Can not cut/copy the up directory button (..)
-			const char* tmp = view->text(i);
-			if (tmp[0]=='.' && tmp[1]=='.' && (tmp[2]=='\0' || tmp[2]==view->column_char())) return;
-		}
-
-	// Clear cut/copy buffer and optionally ungray the previously cutted icons
-	if (cut_copy_buffer) {
-		for (int i=0; cut_copy_buffer[i]; i++)
-			free(cut_copy_buffer[i]);
-		free(cut_copy_buffer);
-		if (!operation_is_copy) {
-			for (int i=1; i<=num; i++)
-				view->ungray(i);
-		}
-	}
-
-	// Allocate buffer
-	cut_copy_buffer = (char**)malloc(sizeof(char*) * (nselected+2));
-
-	// Add selected files to buffer and optionally grey icons (for cut effect)
-	int buf=0;
-	for (int i=1; i<=num; i++) {
-		if (view->selected(i)==1) {
-			cut_copy_buffer[buf] = strdup((char*)view->data(i));
-			if (!m_copy) view->gray(i);
-			buf++;
-		}
-	}
-	if (buf==0) { //nothing selected, use the focused item
-		int i=view->get_focus();
-		cut_copy_buffer[buf] = strdup((char*)view->data(i));
-		if (!m_copy) view->gray(i);
-		buf++;
-		nselected=1;
-	}
-
-	cut_copy_buffer[buf] = 0;
-	operation_is_copy = m_copy;
-
-	// Deselect all
-	int focused = view->get_focus();
-	for (int i=1; i<=num; i++)
-		if (view->selected(i)) view->select(i,0);
-	view->set_focus(focused);
-
-	// Update statusbar
-	if (m_copy)
-		statusbar->label(tasprintf(_("Selected %d items for copying"), nselected));
-	else
-		statusbar->label(tasprintf(_("Selected %d items for moving"), nselected));
-}
-
-
-// Helper functions for paste:
-
-// Copy single file. Returns true if operation should continue
-bool my_copy(const char* src, const char* dest) {
-	FILE *fold, *fnew;
-	int c;
-
-	if (strcmp(src,dest)==0)
-		// this shouldn't happen
-		return true;
-
-	if (edelib::file_exists(dest)) {
-		// if both src and dest are directories, do nothing
-		if (fl_filename_isdir(src) && fl_filename_isdir(dest))
-			return true;
-
-		int c = -1;
-		if (!overwrite_all && !skip_all) {
-			// here was choice_alert
-			c = fl_choice(tsprintf(_("File already exists: %s. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("*&Skip"), _("Skip &all"), 0); // asterisk (*) means default
-		}
-		if (c==1) overwrite_all=true;
-		if (c==3) skip_all=true;
-		if (c==2 || skip_all) {
-			return true;
-		}
-		// At this point either c==0 (overwrite) or overwrite_all == true
-
-		// copy directory over file
-		if (fl_filename_isdir(src))
-			unlink(dest);
-
-		// copy file over directory
-		// TODO: we will just skip this case, but ideally there should be
-		// another warning
-		if (fl_filename_isdir(dest))
-			return true;
-	}
-
-	if (fl_filename_isdir(src)) {
-		if (mkdir (dest, umask(0))==0)
-			return true; // success
-			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot create directory %s"),dest), _("*&Continue"), _("&Stop"), 0);
-		if (q == 0) return true; else return false;
-	}
-
-	if ( ( fold = fopen( src, "rb" ) ) == NULL ) {
-			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot read file %s"),src), _("*&Continue"), _("&Stop"), 0);
-		if (q == 0) return true; else return false;
-	}
-
-	if ( ( fnew = fopen( dest, "wb" ) ) == NULL  )
-	{
-		fclose ( fold );
-			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot create file %s"),dest), _("*&Continue"), _("&Stop"), 0);
-		if (q == 0) return true; else return false;
-	}
-	
-	while (!feof(fold)) {
-		c = fgetc(fold);
-		fputc(c, fnew);
-	}
-	// TODO: Add more error handling using ferror()
-	fclose(fold);
-	fclose(fnew);
-	return true;
-}
-
-
-// Recursive function that creates a list of all files to be 
-// copied, expanding directories etc. The total number of elements
-// will be stored in listsize. Returns false if user decided to
-// interrupt copying.
-bool create_list(const char* src, char** &list, int &list_size, int &list_capacity) {
-	// Grow list if neccessary
-	if (list_size >= list_capacity-1) {
-		list_capacity += 1000;
-		list = (char**)realloc(list, sizeof(char**)*list_capacity);
-	}
-
-	// We add both files and diretories to list
-	list[list_size++] = strdup(src);
-
-	if (fl_filename_isdir(src)) {
-		char new_src[PATH_MAX];
-		dirent	**files;
-		// FIXME: use same sort as currently used
-		// FIXME: detect errors on accessing folder
-		int num_files = fl_filename_list(src, &files, fl_casenumericsort);
-		for (int i=0; i<num_files; i++) {
-			if (strcmp(files[i]->d_name,"./")==0 || strcmp(files[i]->d_name,"../")==0) continue;
-			snprintf(new_src, PATH_MAX, "%s%s", src, files[i]->d_name);
-			Fl::check(); // update gui
-			if (stop_now || !create_list(new_src, list, list_size, list_capacity))
-				return false;
-		}
-	}
-	return true;
-}
-
-
-// Callback for Stop button on progress window
-void stop_copying_cb(Fl_Widget*,void* v) {
-	stop_now=true;
-	// Let's inform user that we're stopping...
-	Fl_Box* caption = (Fl_Box*)v;
-	caption->label(_("Stopping..."));
-	caption->redraw();
-	caption->parent()->redraw();
-}
-
-// Execute paste operation - this will copy or move files based on last 
-// operation
-void do_paste() {
-
-	if (!cut_copy_buffer || !cut_copy_buffer[0]) return;
-
-	overwrite_all=false; skip_all=false;
-
-	// Moving files on same filesystem is trivial, just like rename
-	// We don't even need a progress bar
-	if (!operation_is_copy && is_on_same_fs(current_dir, cut_copy_buffer[0])) {
-		for (int i=0; cut_copy_buffer[i]; i++) {
-			char *newname;
-			asprintf(&newname, "%s%s", current_dir, fl_filename_name(cut_copy_buffer[i]));
-			if (edelib::file_exists(newname)) {
-				int c = -1;
-				if (!overwrite_all && !skip_all) {
-					// here was choice_alert
-					c = fl_choice(tsprintf(_("File already exists: %s. What to do?"), newname), _("&Overwrite"), _("Over&write all"), _("*&Skip"), _("Skip &all")); // * means default
-				}
-				if (c==1) overwrite_all=true;
-				if (c==3) skip_all=true;
-				if (c==2 || skip_all) {
-					free(cut_copy_buffer[i]);
-					continue; // go to next entry
-				}
-				// At this point c==0 (Overwrite) or overwrite_all == true
-				unlink(newname);
-			} 
-			rename(cut_copy_buffer[i],newname);
-			free(cut_copy_buffer[i]);
-		}
-		free(cut_copy_buffer);
-		cut_copy_buffer=0;
-		loaddir(current_dir); // Update display
-		return;
-
-	//
-	// Real file moving / copying using recursive algorithm
-	//
-
-	} else {
-		stop_now = false;
-
-		// Create srcdir string
-		char *srcdir = strdup(cut_copy_buffer[0]);
-		char *p = strrchr(srcdir,'/');
-		if (*(p+1) == '\0') { // slash is last - find one before
-			*p = '\0';
-			p = strrchr(srcdir,'/');
-		}
-		*(p+1) = '\0';
-
-		if (strcmp(srcdir,current_dir)==0) {
-			fl_alert(_("You cannot copy a file onto itself!"));
-			return;
-		}
-
-		// Draw progress dialog
-		// NOTE: sometimes when copying/moving just one file, the window
-		// can get "stuck"
-		// See: fltk STR 1255, http://www.fltk.org/str.php?L1255
-		Fl_Window* progress_window = new Fl_Window(350,150);
-		if (operation_is_copy)
-			progress_window->label(_("Copying files"));
-		else
-			progress_window->label(_("Moving files"));
-		progress_window->set_modal();
-		progress_window->begin();
-		Fl_Box* caption = new Fl_Box(20,20,310,25, _("Counting files in directories"));
-		caption->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-		cut_copy_progress = new Fl_Progress(20,60,310,20);
-		Fl_Button* stop_button = new Fl_Button(145,100,60,40, _("&Stop"));
-		stop_button->callback(stop_copying_cb,caption);
-		progress_window->end();
-		progress_window->show();
-
-		// How many items do we copy?
-		int copy_items=0;
-		for (; cut_copy_buffer[copy_items]; copy_items++);
-		// Set ProgressBar range accordingly
-		cut_copy_progress->minimum(0);
-		cut_copy_progress->maximum(copy_items);
-		cut_copy_progress->value(0);
-
-		// Count files in directories
-		int list_size = 0, list_capacity = 1000;
-		char** files_list = (char**)malloc(sizeof(char**)*list_capacity);
-		for (int i=0; i<copy_items; i++) {
-			// We must ensure that cut_copy_buffer is deallocated
-			// even if user clicked on Stop
-			if (!stop_now) create_list(cut_copy_buffer[i], files_list, list_size, list_capacity);
-			free(cut_copy_buffer[i]);
-			cut_copy_progress->value(i+1);
-			Fl::check(); // check to see if user pressed Stop
-		}
-		free (cut_copy_buffer);
-		cut_copy_buffer=0;
-
-		// Now copying those files
-		if (!stop_now) {
-			char label[150];
-			char dest[PATH_MAX];
-			cut_copy_progress->minimum(0);
-			cut_copy_progress->maximum(list_size);
-			cut_copy_progress->value(0);
-
-			for (int i=0; i<list_size; i++) {
-				// Prepare dest filename
-				char *srcfile = files_list[i] + strlen(srcdir);
-				snprintf (dest, PATH_MAX, "%s%s", current_dir, srcfile);
-
-				snprintf(label, 150, _("Copying %d of %d files to %s"), i, list_size, current_dir);
-				caption->label(label);
-				caption->redraw();
-				if (stop_now || !my_copy(files_list[i], dest))
-					break;
-				// Delete file after moving
-				if (!operation_is_copy) unlink(files_list[i]);
-				cut_copy_progress->value(cut_copy_progress->value()+1);
-				Fl::check(); // check to see if user pressed Stop
-			}
-		}
-		progress_window->hide();
-
-		// Deallocate files_list[][]
-		for (int i=0; i<list_size; i++) 
-			free(files_list[i]);
-		free(files_list);
-
-		// Reload current dir
-		loaddir(current_dir);
-	}
-}
-
-
-
-
 
 /*-----------------------------------------------------------------
 	Main menu callbacks
@@ -706,6 +384,7 @@ fprintf (stderr,"enter\n");
 		gettimeofday(&newtm,0);
 		if (newtm.tv_sec - tm.tv_sec < 1 || (newtm.tv_sec-tm.tv_sec==1 && newtm.tv_usec<tm.tv_usec)) return; // no calling within 1 second
 		tm=newtm;
+		if (view->value()==0) return; // This can happen while efiler is loading
 
 		char* filename = strdup(view->text(view->value()));
 		if (char*k = strchr(filename, view->column_char())) *k='\0';
@@ -750,11 +429,14 @@ void location_cb(Fl_Widget*, void*) {
 	if (dir) loaddir(dir);
 }
 
+void new_cb(Fl_Widget*, void*) { edelib::run_program(tsprintf("efiler %s",current_dir),false); }
+
 void quit_cb(Fl_Widget*, void*) {exit(0);}
 
 void cut_cb(Fl_Widget*, void*) { do_cut_copy(false); }
 void copy_cb(Fl_Widget*, void*) { do_cut_copy(true); }
 void paste_cb(Fl_Widget*, void*) { do_paste(); }
+void delete_cb(Fl_Widget*, void*) { do_delete(); }
 
 
 void showhidden_cb(Fl_Widget*, void*) { showhidden=!showhidden; loaddir(current_dir); }
@@ -770,7 +452,6 @@ void dirsfirst_cb(Fl_Widget*, void*) { dirsfirst=!dirsfirst; loaddir(current_dir
 
 // dummy callbacks
 void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
-void delete_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // popup a warning
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void iconsview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void listview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
@@ -791,6 +472,7 @@ Fl_Menu_Item main_menu_definition[] = {
 		{_("&Open"),		FL_CTRL+'o',	open_cb},
 		{_("Open &with..."),	0,		ow_cb,		0,FL_MENU_DIVIDER},
 		{_("Open &location"),	0,		location_cb,	0,FL_MENU_DIVIDER},
+		{_("&New window"),	FL_CTRL+'n',	new_cb,		0,FL_MENU_DIVIDER},
 		{_("&Quit"),		FL_CTRL+'q',	quit_cb},
 		{0},
 
@@ -805,13 +487,13 @@ Fl_Menu_Item main_menu_definition[] = {
 
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
 		{_("&Icons"),		FL_F+8,		iconsview_cb,	0,	FL_MENU_RADIO}, // coming soon
-		{_("&Detailed list"),	FL_F+8,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_DIVIDER}, 
+		{_("&Detailed list"),	FL_F+8,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
 		{_("&Show hidden"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE},
 		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER}, // coming soon
 		{_("&Refresh"),		FL_F+5,		refresh_cb},
 		{_("S&ort"),	0, 0, 0, FL_SUBMENU},
 			{_("&Case sensitive"),	0,	case_cb,	0,	FL_MENU_TOGGLE},
-			{_("D&irectories first"), 0,	dirsfirst_cb,	0,	FL_MENU_TOGGLE},
+			{_("D&irectories first"), 0,	dirsfirst_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 			{0},
 		{0},
 
@@ -841,6 +523,8 @@ edelib::IconTheme::init("crystalsvg");
 
 		view = new FileDetailsView(0, menubar_height, default_window_width, default_window_height-menubar_height-statusbar_height, 0);
 		view->callback(open_cb);
+		// callback for renaming
+		view->rename_callback(do_rename);
 
 		Fl_Group *sbgroup = new Fl_Group(0, default_window_height-statusbar_height, default_window_width, statusbar_height);
 			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);
