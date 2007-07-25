@@ -21,9 +21,6 @@
 
 #include <string.h>
 #include <signal.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #define FOREVER       1e20
 #define CONFIG_FILE   "evoke.conf"
@@ -60,7 +57,6 @@ void help(void) {
 	puts("Options:");
 	puts("  -h, --help            this help");
 	puts("  -s, --startup         run in starup mode");
-	puts("  -f, --foreground      run in foreground");
 	puts("  -c, --config [FILE]   use FILE as config file");
 	puts("  -p, --pid [FILE]      use FILE to store PID number");
 	puts("  -l, --log [FILE]      log traffic to FILE\n");
@@ -72,7 +68,6 @@ int main(int argc, char** argv) {
 	const char* log_file    = NULL;
 
 	bool do_startup     = false;
-	bool do_foreground  = false;
 
 	if(argc > 1) {
 		const char* a;
@@ -105,8 +100,6 @@ int main(int argc, char** argv) {
 			} 
 			else if(CHECK_ARGV(a, "-s", "--startup"))
 				do_startup = true;
-			else if(CHECK_ARGV(a, "-f", "--foreground"))
-				do_foreground = true;
 			else {
 				printf("Unknown parameter '%s'. Run '"APPNAME" -h' for options\n", a);
 				return 1;
@@ -114,9 +107,11 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	// make sure X11 is running before fork
+	// make sure X11 is running before rest of code is called
 	fl_open_display();
 
+	// actually, evoke must not fork itself
+#if 0
 	// start service
 	if(!do_foreground) {
 		int x;
@@ -127,6 +122,7 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 	}
+#endif
 
 	EvokeService* service = EvokeService::instance();
 
