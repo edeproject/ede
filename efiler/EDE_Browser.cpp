@@ -118,6 +118,10 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 	int hlen=strlen(h);
 	char colchar = Fl_Icon_Browser::column_char();
 
+	// FIXME sort() shouldn't call column_header() because that calls show_header() and that
+	// deletes all buttons from header (so they could be recreated). This cause valgrind errors
+	// since sort is called in button callback - you can't delete a widget in its own callback
+
 	// Remove old sort direction symbol (if any) from header
 	char *delim = 0;
 	int col=0;
@@ -125,7 +129,7 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 		bool found=false;
 		while (delim=strchr(h, colchar)) {
 			if (col==sort_column) {
-				strncpy(delim-SYMLEN+1,delim,strlen(delim)+1);
+				for (int i=0; i<=strlen(delim); i++) delim[i-SYMLEN+1]=delim[i];
 				found=true;
 				break;
 			}
@@ -211,8 +215,6 @@ EDE_Browser::EDE_Browser(int X,int Y,int W,int H,const char *L) : Fl_Icon_Browse
 	  totalwidth_(0), column_header_(0), sort_column(0), sort_type(NO_SORT), sort_direction(false) {
 
 
-fprintf (stderr, "ctor(%d,%d,%d,%d)\n",X,Y,W,H);
-
 	heading = new Heading(X,Y,W,buttonheight);
 	heading->end();
 	heading->hide();
@@ -236,10 +238,20 @@ fprintf (stderr, "ctor(%d,%d,%d,%d)\n",X,Y,W,H);
 }
 
 
+// Deallocate all memory used by header labels
+void EDE_Browser::cleanup_header() {
+	// Deallocate old button labels
+	for (int i=0; i<heading->children(); i++) {
+		char *l = (char*)heading->child(i)->label();
+		if (l && l[0]!='\0') free(l);
+	}
+	heading->clear();
+}
+
 //make buttons invisible
 void EDE_Browser::hide_header() {
 	if (heading->visible()) resize(x(),y()-buttonheight,w(),h()+buttonheight);
-	heading->clear();
+	cleanup_header();
 	heading->hide();
 }
 
@@ -248,7 +260,7 @@ void EDE_Browser::show_header() {
 	int button_x=0;
 	char *hdr = column_header_;
 	const int* l = Fl_Icon_Browser::column_widths();
-	heading->clear();
+	cleanup_header();
 	for (int i=0; i==0||l[i-1]; i++) {
 		// If the button is last, calculate size
 		int button_w = l[i];
@@ -278,7 +290,6 @@ void EDE_Browser::show_header() {
 			hdr=delim+1; // next field
 		}
 	}
-fprintf (stderr, "showheader calls resize(%d,%d,%d,%d)\n",x(),y(),w(),h());
 	if (!heading->visible()) resize(x(),y()+buttonheight,w(),h()-buttonheight);
 	heading->resizable(0); // We will resize the heading and individual buttons manually
 	heading->show();
@@ -293,17 +304,19 @@ void EDE_Browser::column_widths(const int* l) {
 //	if (total>=scroll->w()) {
 //		Fl_Icon_Browser::size(total,h());
 //	}
-fprintf(stderr, "Total width is: %d\n", totalwidth_);
 	// If there was heading before, regenerate
 	if (heading->visible())
 		heading->size(totalwidth_,buttonheight);
 //		show_header();
 
 	// Second array for the Fl_Browser
-	int *tmp = new int[i]; // FIXME: Someone should cleanup this memory sometimes...
+	static int *tmp = 0;
+	if (tmp) delete[] tmp;
+	tmp=new int[i]; // FIXME: Dtor should cleanup this memory
 	for (int j=0; j<i-1; j++) tmp[j]=l[j];
 	tmp[i-1]=0;
 	Fl_Icon_Browser::column_widths(tmp);
+	// delete[] tmp; -- can't do this, browser goes berserk
 
 	// Redraw parent so we don't get ugly artifacts after shrinking last button
 	// Doesn't work anymore!
@@ -315,7 +328,9 @@ const int* EDE_Browser::column_widths() const {
 	const int *l=Fl_Icon_Browser::column_widths();
 	for (i=0; l[i]; i++) total+=l[i];
 
-	int *tmp = new int[i+2]; // FIXME: Someone should cleanup this memory sometimes...
+	static int *tmp = 0;
+	if (tmp) delete[] tmp;
+	tmp=new int[i+2]; // FIXME: Someone should cleanup this memory sometimes...
 	for (int j=0; l[j]; j++) tmp[j]=l[j];
 
 	tmp[i]=(totalwidth_-total);
@@ -521,7 +536,7 @@ int EDE_Browser::Heading::handle(int event) {
 			EDE_Browser*b = (EDE_Browser*)parent(); 
 			b->column_widths(columns);
 			b->redraw(); // OPTIMIZE (some smart damage in column_widths() ?)
-			free(columns);
+			delete[] columns;
 			
 			// There will be many RELEASE events, so we update sx (used when calculating dx)
 			sx=Fl::event_x();

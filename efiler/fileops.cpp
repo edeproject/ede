@@ -88,9 +88,9 @@ void do_cut_copy(bool m_copy) {
 
 	// Update statusbar
 	if (m_copy)
-		statusbar->label(tasprintf(_("Selected %d items for copying"), nselected));
+		statusbar->label(tsprintf(_("Selected %d items for copying"), nselected));
 	else
-		statusbar->label(tasprintf(_("Selected %d items for moving"), nselected));
+		statusbar->label(tsprintf(_("Selected %d items for moving"), nselected));
 }
 
 
@@ -149,19 +149,20 @@ bool my_copy(const char* src, const char* dest) {
 		if (q == 0) return true; else return false;
 	}
 
-	if ( !edelib::file_writeable(dest)  )
+// edelib::file_writeable() returns false if dest doesn't exist
+/*	if ( !edelib::file_writeable(dest)  )
 	{
 			// here was choice_alert
 		int q = fl_choice(tsprintf(_("Cannot create file %s"),dest), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return true; else return false;
-	}
+	}*/
 
 	// we will try to preserve permissions etc. cause that's usually what people want
 	if (!edelib::file_copy(src,dest,true)) 
 		fl_alert(tsprintf(_("Error copying %s to %s"),src,dest));
 
-	fclose(fold);
-	fclose(fnew);
+//	fclose(fold);
+//	fclose(fnew);
 	return true;
 }
 
@@ -239,6 +240,7 @@ void do_paste() {
 			} 
 			rename(cut_copy_buffer[i],newname);
 			free(cut_copy_buffer[i]);
+			free(newname);
 		}
 		free(cut_copy_buffer);
 		cut_copy_buffer=0;
@@ -263,6 +265,7 @@ void do_paste() {
 
 		if (strcmp(srcdir,current_dir)==0) {
 			fl_alert(_("You cannot copy a file onto itself!"));
+			free(srcdir);
 			return;
 		}
 
@@ -333,13 +336,22 @@ void do_paste() {
 		}
 		progress_window->hide();
 
-		// Deallocate files_list[][]
-		for (int i=0; i<list_size; i++) 
-			free(files_list[i]);
-		free(files_list);
-
 		// Reload current dir
 		loaddir(current_dir);
+
+		// select the just pasted files and cleanup memory
+		for (int i=0; i<list_size; i++) { 
+			char* tmp = strrchr(files_list[i],'/')+1;
+//			if (!tmp) { fprintf (stderr, "not found\n"); continue; }
+//			tmp++;
+			for (int j=1; j<=view->size(); j++) 
+				if (strncmp(tmp, view->text(j), strlen(tmp))==0)
+					view->select(j,1);
+			free(files_list[i]);
+		}
+
+		free(files_list);
+		free(srcdir);
 	}
 }
 
@@ -350,11 +362,9 @@ void do_delete() {
 	int list_size = 0, list_capacity = 1000;
 	char** files_list = (char**)malloc(sizeof(char**)*list_capacity);
 
-	for (int i=1; i<=view->size(); i++) {
-		if (view->selected(i)==1) {
+	for (int i=1; i<=view->size(); i++)
+		if (view->selected(i)==1)
 			expand_dirs((char*)view->data(i), files_list, list_size, list_capacity);
-		}
-	}
 
 	if (list_size==0) { //nothing selected, use the focused item
 		int i=view->get_focus();
@@ -374,7 +384,10 @@ void do_delete() {
 	// delete
 	for (int i=0; i<list_size; i++) 
 		edelib::file_remove(files_list[i]);
-	loaddir(current_dir);
+	// loaddir(current_dir); - optimized
+	for (int i=1; i<=view->size(); i++)
+		if (view->selected(i)==1)
+			view->remove(i);
 }
 
 
@@ -404,4 +417,53 @@ void do_rename(const char* c) {
 		view->text(focus,vline.c_str());
 	}
 
+}
+
+// Drag & drop callback - mostly copied from do_cut_copy()
+void dnd_cb(const char* from,const char* to) {
+	fprintf (stderr, "PASTE from '%s', to '%s'\n",from,to);
+	return;
+
+	char *t = (char*)to;
+	if (!fl_filename_isdir(to))
+		t=current_dir;
+
+	
+/*
+	// Clear cut/copy buffer and optionally ungray the previously cutted icons
+	if (cut_copy_buffer) {
+		for (int i=0; cut_copy_buffer[i]; i++)
+			free(cut_copy_buffer[i]);
+		free(cut_copy_buffer);
+		if (!operation_is_copy) {
+			for (int i=1; i<=num; i++)
+				view->ungray(i);
+		}
+	}
+
+	// Allocate buffer
+	cut_copy_buffer = (char**)malloc(sizeof(char*) * (nselected+2));
+
+	// Add selected files to buffer
+	int buf=0;
+	for (int i=1; i<=num; i++)
+		if (view->selected(i)==1)
+			cut_copy_buffer[buf++] = strdup((char*)view->data(i));
+			// We don't know yet if this is cut or copy, so no need to gray anything
+
+	// 
+
+	// Clear cut/copy buffer and optionally ungray the previously cutted icons
+	if (cut_copy_buffer) {
+		for (int i=0; cut_copy_buffer[i]; i++)
+			free(cut_copy_buffer[i]);
+		free(cut_copy_buffer);
+		if (!operation_is_copy) {
+			for (int i=1; i<=num; i++)
+				view->ungray(i);
+		}
+	}
+	
+	
+	int c = fl_choice(tsprintf(_("Do you want to copy or move file %s to directory %s?"), k+1), _("Do&n't delete"), _("&Delete"), 0);*/
 }

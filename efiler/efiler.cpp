@@ -157,6 +157,7 @@ char *simpleopener(const char* mimetype) {
 			if (buf[0]=='\0' || buf[1]=='\0' || buf[0]=='#') continue;
 			buf[strlen(buf)-1]='\0';
 			char *tmp = strstr(buf, "||");
+			if (!tmp) continue; // malformatted opener
 			*tmp = '\0';
 			sopeners* q = new sopeners; 
 			q->type=strdup(buf);
@@ -215,7 +216,7 @@ void loaddir(const char *path) {
 		if (path[0] == '~') // Expand tilde
 			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),path+1);
 		else 
-			strcpy(current_dir,path);
+			if (path!=current_dir) strcpy(current_dir,path);
 	} else
 		strcpy(current_dir,getenv("HOME"));
 
@@ -255,7 +256,9 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 	}
 
 	// set window label
-	win->label(tasprintf(_("%s - File manager"), current_dir));
+	// unlike fltk2, labels can be pointers to static char
+	win->label(tsprintf(_("%s - File manager"), current_dir));
+	statusbar->label(tsprintf(_("Scanning directory %s..."), current_dir)); 
 
 	view->clear();
 
@@ -264,6 +267,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 
 	for (int i=0; i<size; i++) {
 		char *n = files[i]->d_name; //shortcut
+		if (i>0) free(files[i-1]); // see scandir(3)
 
 		// don't show . (current directory)
 		if (strcmp(n,".")==0) continue;
@@ -301,6 +305,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 
 		item_list[fsize++] = item;
 	}
+	free(files[size-1]); free(files); // see scandir(3)
 
 
 	// Populate view
@@ -355,17 +360,12 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 										// f_bfree is size available to root
 		double percent = double(statfs_buffer.f_blocks-statfs_buffer.f_bavail)/statfs_buffer.f_blocks*100;
 		char *tmp = strdup(nice_size(totalsize)); // nice_size() operates on a static char buffer, we can't use two calls at the same time
-		statusbar->label(tasprintf(_("Filesystem %s, Size %s, Free %s (%4.1f%% used)"), find_fs_for(current_dir), tmp, nice_size(freesize), percent));
+		statusbar->label(tsprintf(_("Filesystem %s, Size %s, Free %s (%4.1f%% used)"), find_fs_for(current_dir), tmp, nice_size(freesize), percent));
 		free(tmp);
 	} else
 		statusbar->label(_("Error reading filesystem information!"));
 }
 
-
-
-/*-----------------------------------------------------------------
-	File moving and copying operations
--------------------------------------------------------------------*/
 
 
 /*-----------------------------------------------------------------
@@ -385,9 +385,6 @@ fprintf (stderr,"enter\n");
 		if (newtm.tv_sec - tm.tv_sec < 1 || (newtm.tv_sec-tm.tv_sec==1 && newtm.tv_usec<tm.tv_usec)) return; // no calling within 1 second
 		tm=newtm;
 		if (view->value()==0) return; // This can happen while efiler is loading
-
-		char* filename = strdup(view->text(view->value()));
-		if (char*k = strchr(filename, view->column_char())) *k='\0';
 
 		char* path = (char*)view->data(view->value());
 		fprintf(stderr, "Path: %s (ev %d)\n",path,Fl::event());
@@ -411,15 +408,21 @@ fprintf (stderr,"enter\n");
 
 		const char *o2 = tsprintf(opener,path);
 		fprintf (stderr, "run_program: %s\n", o2);
+
+		// construct filename for the message
+		char* filename = strdup(view->text(view->value()));
+		if (char*k = strchr(filename, view->column_char())) *k='\0';
+
 		if (opener) { 
 			int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 		} else
-			statusbar->label(tasprintf(_("No program to open %s!"), filename));
+			statusbar->label(tsprintf(_("No program to open %s!"), filename));
 
 		free(filename);
 
 	rlim->rlim_cur = old_rlimit;
 	setrlimit (RLIMIT_CORE, rlim);
+	free(rlim);
 
 	}
 } // open_cb
@@ -525,6 +528,7 @@ edelib::IconTheme::init("crystalsvg");
 		view->callback(open_cb);
 		// callback for renaming
 		view->rename_callback(do_rename);
+		view->dnd_callback(dnd_cb);
 
 		Fl_Group *sbgroup = new Fl_Group(0, default_window_height-statusbar_height, default_window_width, statusbar_height);
 			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);

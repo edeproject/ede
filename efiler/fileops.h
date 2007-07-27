@@ -20,6 +20,9 @@ void do_delete();
 // Rename the file with focus to given name
 void do_rename(const char*);
 
+// Callback for drag&drop operations
+void dnd_cb(const char*from,const char*to);
+
 
 extern FileDetailsView* view;
 extern Fl_Box* statusbar;

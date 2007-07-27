@@ -81,6 +81,7 @@ private:
 	SortType sort_type; 
 	bool sort_direction;
 
+	void cleanup_header();
 	void hide_header();
 	void show_header();
 
@@ -92,6 +93,7 @@ public:
 
 	~EDE_Browser() {
 		delete[] column_sort_types_;
+		cleanup_header();
 		delete heading;
 		// delete scroll;
 		delete hscrollbar;
