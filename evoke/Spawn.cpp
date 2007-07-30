@@ -21,7 +21,7 @@
 
 extern char** environ;
 
-int run_fork(const char* cmd, bool wait) {
+int spawn_program(const char* cmd) {
 	if(!cmd)
 		return SPAWN_EMPTY;
 
@@ -61,9 +61,4 @@ int run_fork(const char* cmd, bool wait) {
 	}
 
 	return status_ret;
-}
-
-
-int spawn_program(const char* cmd, bool wait) {
-	return run_fork(cmd, wait);
 }

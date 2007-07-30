@@ -216,7 +216,7 @@ bool Splash::next_client(void) {
 	redraw();
 
 	if(!dry_run)
-		spawn_program(cmd, false);
+		spawn_program(cmd);
 
 	++clist_it;
 	++counter;
@@ -243,7 +243,7 @@ bool Splash::next_client(void) {
 	redraw();
 
 	if(!dry_run)
-		spawn_program(cmd, false);
+		spawn_program(cmd);
 
 	counter++;
 #endif
@@ -272,7 +272,7 @@ bool Splash::next_client_nosplash(void) {
 	printf("%s\n", buff);
 
 	if(!dry_run)
-		spawn_program(cmd, false);
+		spawn_program(cmd);
 
 	++clist_it;
 	++counter;
@@ -298,7 +298,7 @@ bool Splash::next_client_nosplash(void) {
 	printf("%s\n", buff);
 
 	if(!dry_run)
-		spawn_program(cmd, false);
+		spawn_program(cmd);
 
 	counter++;
 #endif

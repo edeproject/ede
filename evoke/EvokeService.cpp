@@ -247,7 +247,7 @@ int EvokeService::handle(const XEvent* ev) {
 
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
 				logfile->printf("Got _EVOKE_SPAWN with %s. Starting client...\n", buff);
-				int r = spawn_program(buff, false);
+				int r = spawn_program(buff);
 
 				if(r != 0)
 					fl_alert("Unable to start %s. Got code %i", buff, r);

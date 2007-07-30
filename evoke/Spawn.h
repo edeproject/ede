@@ -28,6 +28,6 @@
 #define SPAWN_PTY_FAILED      65529  // TODO
 #define SPAWN_USER_CANCELED   65528  // TODO
 
-int spawn_program(const char* cmd, bool wait);
+int spawn_program(const char* cmd);
 
 #endif
