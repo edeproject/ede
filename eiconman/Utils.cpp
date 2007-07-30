@@ -173,6 +173,7 @@ bool ede_get_desktop_notify(char* txt, int txt_len) {
 	}
 
 	strncpy(txt, vnames[0], txt_len);
+	txt[txt_len] = '\0';
 	XFreeStringList(vnames);
 	return true;
 }

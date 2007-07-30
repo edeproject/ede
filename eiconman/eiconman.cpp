@@ -15,6 +15,7 @@
 #include "Utils.h"
 #include "Wallpaper.h"
 #include "NotifyBox.h"
+#include "Utf8.h"
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -678,10 +679,25 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 	if(src_len < 1)
 		return;
 
+#if 0
+	/*
+	 * Commented for now since is_utf16() does not works as expected;
+	 * on other hand, UTF-16 conversion is fine
+	 */
+	if(is_utf16((unsigned short*)src, src_len)) {
+		char* utf_src = new char[src_len * 5];
+		if(utf16_to_utf8_str((unsigned short*)src, src_len, utf_src)) {
+			utf_src[src_len] = '\0';
+			EDEBUG(ESTRLOC ":==========> %s|\n", utf_src);
+		}
+
+		delete [] utf_src;
+	}
+#endif
 	char* src_copy = new char[src_len + 1];
 	int real_len = 0;
 
-	// mozilla sends junk in form: ascii<0>ascii<0>..., don't know why
+	// mozilla sends UTF-16 form; for now use this hack untill Utf8.cpp code is ready
 	for(int i = 0, j = 0; i < src_len; i++) {
 		if(src[i] != 0) {
 			src_copy[j++] = src[i];
