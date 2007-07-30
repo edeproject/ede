@@ -5,7 +5,7 @@ code_name {.cxx}
 Function {} {open selected
 } {
   Fl_Window {} {open
-    xywh {365 175 480 364} type Double visible
+    xywh {365 175 480 365} type Double visible
   } {
     Fl_Box {} {
       image {splash-alpha1.png} xywh {0 0 480 364} labelsize 14

@@ -10,7 +10,8 @@
 
 SubDir TOP evoke ;
 
-SOURCE = evoke.cpp EvokeService.cpp Log.cpp ;
+SOURCE = evoke.cpp EvokeService.cpp Spawn.cpp Splash.cpp Log.cpp ;
 
 EdeProgram evoke : $(SOURCE) ;
-TranslationStrings locale : $(SOURCE) ;
+FltkProgramBare test/evoke_test : test/evoke_test.cpp ;
+#TranslationStrings locale : $(SOURCE) ;

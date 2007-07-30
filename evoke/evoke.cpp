@@ -26,18 +26,22 @@
 #define CONFIG_FILE   "evoke.conf"
 #define APPNAME       "evoke"
 #define DEFAULT_PID   "/tmp/evoke.pid"
+/*
+ * Used to assure unique instance, even if is given another 
+ * path for pid. This option can't be modified by user.
+ * TODO: add lock on file so it can't be removed ?
+ */
+#define LOCK_FILE  "/tmp/.evoke.lock"
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
-bool running = false;
-
 void quit_signal(int sig) {
 	EVOKE_LOG("Got quit signal %i\n", sig);
-	running = false;
+	EvokeService::instance()->stop();
 }
 
 int xmessage_handler(int e) {
-	return EvokeService::instance()->handle(e);
+	return EvokeService::instance()->handle(fl_xevent);
 }
 
 const char* next_param(int curr, char** argv, int argc) {
@@ -57,9 +61,11 @@ void help(void) {
 	puts("Options:");
 	puts("  -h, --help            this help");
 	puts("  -s, --startup         run in starup mode");
+	puts("  -n, --no-splash       do not show splash screen in starup mode");
+	puts("  -d, --dry-run         run in starup mode, but don't execute anything");
 	puts("  -c, --config [FILE]   use FILE as config file");
 	puts("  -p, --pid [FILE]      use FILE to store PID number");
-	puts("  -l, --log [FILE]      log traffic to FILE\n");
+	puts("  -l, --log [FILE]      log traffic to FILE (FILE can be stdout/stderr for console output)\n");
 }
 
 int main(int argc, char** argv) {
@@ -67,7 +73,9 @@ int main(int argc, char** argv) {
 	const char* pid_file    = NULL;
 	const char* log_file    = NULL;
 
-	bool do_startup     = false;
+	bool do_startup  = 0;
+	bool do_dryrun   = 0;
+	bool no_splash   = 0;
 
 	if(argc > 1) {
 		const char* a;
@@ -99,7 +107,11 @@ int main(int argc, char** argv) {
 				i++;
 			} 
 			else if(CHECK_ARGV(a, "-s", "--startup"))
-				do_startup = true;
+				do_startup = 1;
+			else if(CHECK_ARGV(a, "-d", "--dry-run"))
+				do_dryrun = 1;
+			else if(CHECK_ARGV(a, "-n", "--no-splash"))
+				no_splash = 1;
 			else {
 				printf("Unknown parameter '%s'. Run '"APPNAME" -h' for options\n", a);
 				return 1;
@@ -109,20 +121,6 @@ int main(int argc, char** argv) {
 	
 	// make sure X11 is running before rest of code is called
 	fl_open_display();
-
-	// actually, evoke must not fork itself
-#if 0
-	// start service
-	if(!do_foreground) {
-		int x;
-		if((x = fork()) > 0)
-			exit(0);
-		else if(x == -1) {
-			printf("Fatal: fork failed !\n");
-			return 1;
-		}
-	}
-#endif
 
 	EvokeService* service = EvokeService::instance();
 
@@ -136,8 +134,9 @@ int main(int argc, char** argv) {
 	if(!pid_file)
 		pid_file = DEFAULT_PID;
 
-	if(!service->setup_pid(pid_file)) {
+	if(!service->setup_pid(pid_file, LOCK_FILE)) {
 		EVOKE_LOG("Either another "APPNAME" instance is running or can't create pid file. Please correct this\n");
+		EVOKE_LOG("Note: if program abnormaly crashed before, just remove '%s' and start it again\n", LOCK_FILE);
 		EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
 		return 1;
 	}
@@ -145,10 +144,12 @@ int main(int argc, char** argv) {
 	if(!config_file)
 		config_file = CONFIG_FILE; // TODO: XDG paths
 
-	if(!service->setup_config(config_file, do_startup)) {
-		EVOKE_LOG("Unable to read correctly %s. Please check it is correct config file\n");
-		EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
-		return 1;
+	if(do_startup) {
+		if(!service->init_splash(config_file, no_splash, do_dryrun)) {
+			EVOKE_LOG("Unable to read correctly %s. Please check it is correct config file\n", config_file);
+			EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
+			return 1;
+		}
 	}
 
 	service->setup_atoms(fl_display);
@@ -157,9 +158,9 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, quit_signal);
 	signal(SIGKILL, quit_signal);
 
-	running = true;
+	service->start();
 
-	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask | ClientMessage);
+	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | SubstructureNotifyMask | ClientMessage);
 
 	/*
 	 * Register event listener and run in infinite loop. Loop will be
@@ -171,7 +172,7 @@ int main(int argc, char** argv) {
 	 * So stick with the simplicity :)
 	 */
 	Fl::add_handler(xmessage_handler);
-	while(running)
+	while(service->running())
 		Fl::wait(FOREVER);
 
 	EVOKE_LOG("= "APPNAME" nice shutdown =\n");
