@@ -1,0 +1,35 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open selected
+} {
+  Fl_Window {} {open
+    xywh {365 265 325 185} type Double visible
+  } {
+    Fl_Box {} {
+      label {Logout, restart or shut down the computer ?}
+      xywh {10 9 305 39} labelfont 1 align 148
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {225 150 90 25}
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {130 150 90 25}
+    }
+    Fl_Round_Button {} {
+      label {Logout from the current session}
+      xywh {25 60 275 20} down_box ROUND_DOWN_BOX
+    }
+    Fl_Round_Button {} {
+      label {Restart the computer}
+      xywh {25 85 215 20} down_box ROUND_DOWN_BOX
+    }
+    Fl_Round_Button {} {
+      label {Shut down the computer}
+      xywh {25 110 215 20} down_box ROUND_DOWN_BOX
+    }
+  }
+} 

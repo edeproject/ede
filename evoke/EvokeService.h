@@ -58,8 +58,8 @@ class EvokeService {
 		bool setup_logging(const char* file);
 		bool setup_pid(const char* file, const char* lock);
 		void setup_atoms(Display* d);
-
 		bool init_splash(const char* config, bool no_splash, bool dry_run);
+		void init_autostart(void);
 
 		int handle(const XEvent* ev);
 
@@ -67,6 +67,8 @@ class EvokeService {
 
 		void register_top(Fl_Double_Window* win) { top_win = win; }
 		void unregister_top(void) { top_win = NULL; }
+
+		void quit_x11(void);
 };
 
 #define EVOKE_LOG EvokeService::instance()->log()->printf

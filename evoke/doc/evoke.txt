@@ -1,0 +1,5 @@
+Evoke documentation
+===================
+
+Evoke is EDE head service responsible for starting environment, running
+requested applications and shutting down environment respectively.

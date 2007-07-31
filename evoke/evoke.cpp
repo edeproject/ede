@@ -63,6 +63,7 @@ void help(void) {
 	puts("  -s, --startup         run in starup mode");
 	puts("  -n, --no-splash       do not show splash screen in starup mode");
 	puts("  -d, --dry-run         run in starup mode, but don't execute anything");
+	puts("  -a, --autostart       read autostart directory");
 	puts("  -c, --config [FILE]   use FILE as config file");
 	puts("  -p, --pid [FILE]      use FILE to store PID number");
 	puts("  -l, --log [FILE]      log traffic to FILE (FILE can be stdout/stderr for console output)\n");
@@ -73,9 +74,10 @@ int main(int argc, char** argv) {
 	const char* pid_file    = NULL;
 	const char* log_file    = NULL;
 
-	bool do_startup  = 0;
-	bool do_dryrun   = 0;
-	bool no_splash   = 0;
+	bool do_startup   = 0;
+	bool do_dryrun    = 0;
+	bool no_splash    = 0;
+	bool do_autostart = 0;
 
 	if(argc > 1) {
 		const char* a;
@@ -112,6 +114,8 @@ int main(int argc, char** argv) {
 				do_dryrun = 1;
 			else if(CHECK_ARGV(a, "-n", "--no-splash"))
 				no_splash = 1;
+			else if(CHECK_ARGV(a, "-a", "--autostart"))
+				do_autostart = 1;
 			else {
 				printf("Unknown parameter '%s'. Run '"APPNAME" -h' for options\n", a);
 				return 1;
@@ -150,6 +154,10 @@ int main(int argc, char** argv) {
 			EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
 			return 1;
 		}
+	}
+
+	if(do_autostart) {
+		service->init_autostart();
 	}
 
 	service->setup_atoms(fl_display);
