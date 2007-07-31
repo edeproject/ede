@@ -24,6 +24,7 @@
 *Programs*
 
 - link:ecalc.html[Ecalc]
+- link:evoke.html[Evoke]
 
 *Development*
 
