@@ -60,7 +60,18 @@ const char* twstrim(const char *string);
 // Not actually used...
 char* strstrmulti(const char *haystack, const char *needles, const char *separator);
 
-// Returns nicely formatted string for byte sizes e.g. "1.2 kB" for size=1284
+/*! \fn const char* edelib::nice_size(double size)
+
+Converts the given number into a human-readable file size. Number is double since
+it can store larger numbers than long (e.g. >4GB). Function returns a pointer to
+a local static char array, which means that you need to use it (e.g. display on 
+screen) before the next call to nice_size(). E.g. if you use it for a fltk label,
+be sure to use copy_label() method. Example:
+	struct stat buf;
+	stat("somefile.txt",&buf);
+	size_box->copy_label(nice_size(buf.st_size));
+*/
+
 const char* nice_size(double size);
 
 // Returns nicely formatted string for date and time given in seconds since
@@ -72,19 +83,27 @@ const char* nice_time(long int epoch);
 
 
 /*! \fn const char* edelib::tsprintf(char* format, ...)
+\fn const char* edelib::tasprintf(char* format, ...)
 
-A useful function which executes sprintf() on a static char[] variable big enough to
-hold short temporary strings. The variable remains valid until next call.
+"Temporary sprintf" - does the same as sprintf() except that the value is stored in
+a temporary char array (actually a static variable). This means that the value will
+be valid until you call tsprintf the next time. This is useful for data that is
+temporary in nature e.g. user interface messages, debugging messages etc.
 
-Use:
+Example:
 	run_program(tsprintf(PREFIX"/bin/eiconsconf %s",param));
 
-When setting text values of fltk objects, instead use tasprintf which executes a strdup.
-Example:
-	window->label(tasprintf("%s, version %s",appname,appversion));
+When setting text labels of fltk objects, use method copy_label() which creates a 
+local copy, otherwise labels will change misteriously :)
+	window->copy_label(tsprintf("Welcome to %s, version %s",appname,appversion));
+
+tasprintf(...) also does allocation ("Temporary Allocate sprintf"), it's just a 
+shortcut for strdup(tsprintf(...)) - with tasprintf you have to explicitely call
+free() on created strings, with tsprintf you don't.
 */
 
 const char* tsprintf(char* format, ...);
+
 
 char* tasprintf(char* format, ...);
 
