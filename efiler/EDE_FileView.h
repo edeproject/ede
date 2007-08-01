@@ -39,15 +39,15 @@ struct FileItem {
 };
 
 
-
 // Type for rename_callback
 // I don't know how to do this without creating a new type :(
 typedef void (rename_callback_type)(const char*);
-typedef void (paste_callback_type)(const char*,const char*);
+typedef void (paste_callback_type)(const char*);
 
 
 
-class FileDetailsView : public EDE_Browser {
+
+class FileDetailsView_ : public EDE_Browser {
 private:
 //	EDE_Browser* browser; - yada
 	// internal list of items
@@ -66,13 +66,17 @@ private:
 	}
 
 
+	rename_callback_type* rename_callback_;
+	paste_callback_type* paste_callback_;
+	Fl_Callback* context_callback_;
+
 	// Subclass Fl_Input so we can handle keyboard
 	class EditBox : public Fl_Input {
 		friend class FileDetailsView;
 	public:
 		EditBox(int x, int y, int w, int h, const char* label = 0) : Fl_Input(x,y,w,h,label)  {}
 		int handle (int e) {
-			FileDetailsView* view = (FileDetailsView*)parent();
+			FileDetailsView_* view = (FileDetailsView_*)parent();
 			if (e==FL_KEYBOARD && visible()) {
 				int k = Fl::event_key();
 				if (Fl::event_key()==FL_Enter && visible()) {
@@ -94,9 +98,6 @@ private:
 	}* editbox_;
 	int editbox_row;
 
-	rename_callback_type* rename_callback_;
-	paste_callback_type* dnd_callback_;
-
 	// show editbox at specified row and make the row "invisible" (bgcolor same as fgcolor)
 	void show_editbox(int row) {
 		if (!rename_callback_) return;
@@ -111,14 +112,16 @@ private:
 		char* tmp = strchr(filename, column_char());
 		if (tmp) *tmp='\0';
 		editbox_->value(filename);
+		bucket.add(filename);
 
 		// make the row "invisible"
 		editbox_row=row;
-		char* ntext = (char*)malloc(sizeof(char)*strlen(text(row))+5); // add 4 places for format chars
-		strncpy(ntext+5, text(row), strlen(text(row)));
-		ntext[0]='@'; ntext[1]='C'; ntext[2]='2'; ntext[3]='5'; ntext[4]='5';
+		char* ntext = (char*)malloc(sizeof(char)*(strlen(text(row))+8)); // add 7 places for format chars
+		strncpy(ntext+7, text(row), strlen(text(row)));
+		strncpy(ntext, "@C255@.", 7);
+		ntext[strlen(text(row))+7]='\0';
 		text(row,ntext);
-		free(ntext);
+		bucket.add(ntext);
 
 
 		// calculate location for editbox
@@ -143,10 +146,11 @@ private:
 		editbox_->hide();
 
 		// Make the edited row visible again
-		char* ntext = (char*)malloc(sizeof(char)*strlen(text(editbox_row))-5); // add 4 places for format chars
-		strncpy(ntext, text(editbox_row)+5, strlen(text(editbox_row))-5);
+		char* ntext = (char*)malloc(sizeof(char)*(strlen(text(editbox_row))-6)); // remove 7 places for format chars
+		strncpy(ntext, text(editbox_row)+7, strlen(text(editbox_row))-7);
+		ntext[strlen(text(editbox_row))-7]='\0';
 		text(editbox_row,ntext);
-		free(ntext);
+		bucket.add(ntext);
 	}
 
 	// Do the rename
@@ -189,7 +193,7 @@ private:
 	} bucket;
 
 public:
-	FileDetailsView(int X, int Y, int W, int H, char*label=0) : EDE_Browser(X,Y,W,H,label) {
+	FileDetailsView_(int X, int Y, int W, int H, char*label=0) : EDE_Browser(X,Y,W,H,label) {
 //		browser = new EDE_Browser(X,Y,W,H,label);
 //		browser->end();
 //		end();
@@ -214,7 +218,8 @@ public:
 		editbox_->hide();
 
 		rename_callback_ = 0;
-		dnd_callback_ = 0;
+		paste_callback_ = 0;
+		context_callback_ = 0;
 	}
 //	~FileDetailsView() { delete browser; }
 
@@ -247,10 +252,9 @@ fprintf (stderr, "value: %s\n", value.c_str());
 
 		//EDE_Browser::remove(row);
 		//insert(row, item);
-		// this was reimplemented because a) it's unoptimized, b) adds stuff at the end, 
+		// this was reimplemented because a) it's unoptimized, b) adds everything at the end, 
 		// c) causes browser to lose focus, making it impossible to click on something while
 		// directory is loading
-
 
 		edelib::String value;
 		value = item->name+"\t"+item->description+"\t"+item->size+"\t"+item->date+"\t"+item->permissions;
@@ -266,14 +270,23 @@ fprintf (stderr, "value: %s\n", value.c_str());
 		set_icon(row, Fl_Shared_Image::get(icon.c_str()));
 	}
 
+	// This is needed because update() uses path to find item in list
+	void update_path(const char* oldpath,const char* newpath) {
+		int row=findrow(oldpath);
+		if (row==0) return;
+		char* c = strdup(newpath);
+		data(row,c);
+		bucket.add(c);
+	}
+
 	// Change color of row to gray
 	void gray(int row) {
 		if (text(row)[0] == '@' && text(row)[1] == 'C') return; // already greyed
 
-		char *ntext = (char*)malloc(sizeof(char)*strlen(text(row))+5); // add 4 places for format chars
-		strncpy(ntext+4, text(row), strlen(text(row)));
-		ntext[0]='@'; ntext[1]='C'; ntext[2]='2'; ntext[3]='5'; // @C25 - nice shade of gray
-		ntext[strlen(text(row))+4]='\0'; // in case text(row) was broken
+		char *ntext = (char*)malloc(sizeof(char)*(strlen(text(row))+7)); // add 6 places for format chars
+		strncpy(ntext+6, text(row), strlen(text(row)));
+		strncpy(ntext, "@C25@.", 6);
+		ntext[strlen(text(row))+6]='\0';
 		text(row,ntext);
 		bucket.add(ntext);
 
@@ -287,28 +300,56 @@ fprintf (stderr, "value: %s\n", value.c_str());
 	void ungray(int row) {
 		if (text(row)[0] != '@' || text(row)[1] != 'C') return;  // not greyed
 
-		char *ntext = (char*)malloc(sizeof(char)*strlen(text(row))-4); // 4 places for format chars
-		strncpy(ntext, text(row)+4, strlen(text(row))-4);
+		char *ntext = (char*)malloc(sizeof(char)*(strlen(text(row))-5)); // remove 6 places for format chars
+		strncpy(ntext, text(row)+6, strlen(text(row))-6);
+		ntext[strlen(text(row))-6]='\0';
 		text(row,ntext);
 		bucket.add(ntext);
 
-		// don't work
+		// doesn't work
 		//Fl_Image* im = get_icon(row);
 		//im->uncache(); // doesn't work
 
 		//redraw(); // OPTIMIZE
 	}
 
+
+	// Overloaded handle for file renaming and dnd support
+
 	int handle(int e) {
-		// Rename support
-		if (e==FL_KEYBOARD) {
+		// Right click
+
+//fprintf(stderr, "Event: %d\n", e);
+
+		if (e==FL_RELEASE && Fl::event_button()==3) {
+			void* item = item_first();
+			int itemy=y()-position();
+			int i;
+			for (i=1; i<=size(); i++) {
+				itemy+=item_height(item);
+				if (itemy>Fl::event_y()) break;
+			}
+			
+			set_focus(i);
+			Fl::event_is_click(0); // prevent doubleclicking with right button
+			if (context_callback_) context_callback_(this, data(i));
+			return 1;
+		}
+//		if (e==FL_RELEASE && Fl::event_button()==3) { return 1; }
+
+		/* ------------------------------
+			Rename support
+		--------------------------------- */
+//		fprintf (stderr, "Event: %d\n", e);
+
+/*		if (e==FL_KEYBOARD) {
 			if (Fl::event_key()==FL_F+2) {
 				if (editbox_->visible())
 					hide_editbox();
 				else
 					show_editbox(get_focus());
 			}
-		}
+		}*/
 		if (e==FL_PUSH && editbox_->visible() && !Fl::event_inside(editbox_))
 			hide_editbox(); // hide editbox when user clicks outside of it
 		if (e==FL_MOUSEWHEEL && editbox_->visible())
@@ -322,6 +363,7 @@ fprintf (stderr, "value: %s\n", value.c_str());
 			if (Fl::event_x()<x() || Fl::event_x()>x()+l[0])
 				return Fl_Icon_Browser::handle(e); // we're only interested in first column
 			
+			// Is clicked item also focused?
 			void* item = item_first();
 			int focusy=y()-position();
 			for (int i=1; i<get_focus(); i++) {
@@ -330,74 +372,109 @@ fprintf (stderr, "value: %s\n", value.c_str());
 				item=item_next(item);
 			}
 			if (Fl::event_y()<focusy || Fl::event_y()>focusy+item_height(item))
-				return Fl_Icon_Browser::handle(e); // Click outside selected item
+				return Fl_Icon_Browser::handle(e); // It isn't
 			if (selected(get_focus())!=1)
-				return Fl_Icon_Browser::handle(e); // allow to select item if it's just focused
+				return Fl_Icon_Browser::handle(e); // If it isn't selected, then this action is select
 			
-			renaming=true;
+			renaming=true; // On next event, we will check if it's doubleclick
 		}
-		if (e==FL_RELEASE && renaming && Fl::event_clicks()==0) {
+
+		if (renaming && (e==FL_DRAG || e==FL_RELEASE || e==FL_MOVE) && Fl::event_is_click()==0) {
+			// Fl::event_is_click() will be >0 on doubleclick
 			show_editbox(get_focus());
 			renaming=false;
-			return 1; // don't pass mouse event, otherwise item will become selected again
+			return 1; // don't pass mouse event, otherwise item will become reselected which is a bit ugly
 		}
 
-		// Drag&drop support
-		static int paste_event_y;
+		/* ------------------------------
+			Drag&drop support
+		--------------------------------- */
 
-		/*--- This is to get dnd events from non-fltk apps ---
-		static bool dragging=false;
-		if (e==FL_PUSH) dragging=false;
-		if (e==FL_DND_ENTER) dragging=true;
-		if (e==FL_RELEASE && dragging) {
-			paste_event_y=Fl::event_y();
-			Fl::paste(*this,0);
-			dragging=false;
+		// If paste_callback_ isn't set, that means we don't support dnd
+		if (paste_callback_==0) return EDE_Browser::handle(e);
+
+		// Let the window manager know that we accept dnd
+		if (e==FL_DND_ENTER||e==FL_DND_DRAG) return 1;
+
+		// Scroll the view by dragging to border (only works on heading... :( )
+		if (e==FL_DND_LEAVE) {
+			if (Fl::event_y()<y())
+				position(position()-1);
+			if (Fl::event_y()>y()+h())
+				position(position()+1);
+			return 1;
 		}
-		/*--- End ugly hack ---*/
 
-		// Don't unselect on FL_PUSH cause that could be dragging
+		// Don't unselect items on FL_PUSH cause that could be dragging
 		if (e==FL_PUSH && Fl::event_clicks()!=1) return 1;
 
+		static int dragx,dragy;
 		if (e==FL_DRAG) { 
 			edelib::String selected_items;
 			for (int i=1; i<=size(); i++)
 				if (selected(i)==1) {
-					if (selected_items != "") selected_items += ",";
+					if (selected_items != "") selected_items += "\n";
 					selected_items += (char*)data(i);
 				}
 			Fl::copy(selected_items.c_str(),selected_items.length(),0);
 			Fl::dnd();
+			dragx = Fl::event_x(); dragy = Fl::event_y();
 			return 1; // don't do the multiple selection thing from Fl_Browser
 		}
-		
+
+		static bool dndrelease=false;
 		if (e==FL_DND_RELEASE) {
-			paste_event_y=Fl::event_y();
-			Fl::paste(*this,0);
+			if (Fl::event_y()<y() || Fl::event_y()>y()+h()) return 1; 
+				// ^^ this can be a source of crashes in Fl::dnd()
+
+fprintf(stderr, "FL_DND_RELEASE\n");
+			// Sometimes drag is accidental
+			if (abs(Fl::event_x()-dragx)>10 || abs(Fl::event_y()-dragy)>10) {
+				dndrelease=true;
+				Fl::paste(*this,0);
+			}
 		}
 		if (e==FL_PASTE) {
+fprintf(stderr, "FL_PASTE\n");
 			if (!Fl::event_text() || !Fl::event_length()) return 1;
+fprintf(stderr, "1 '%s' (%d)\n",Fl::event_text(),Fl::event_length());
+
+			// Paste comes from menu/keyboard
+			if (!dndrelease) {
+				paste_callback_(0);
+				return 1;
+			}
+			dndrelease=false;
 
 			// Where is the user dropping?
+			// If it's not the first column, we assume the current directory
+			const int* l = column_widths();
+			if (Fl::event_x()<x() || Fl::event_x()>x()+l[0]) {
+				paste_callback_(0);
+				return 1;
+			}
+
+			// Find item where stuff is dropped
 			void* item = item_first();
 			int itemy=y()-position();
 			int i;
 			for (i=1; i<=size(); i++) {
 				itemy+=item_height(item);
-				if (itemy>paste_event_y) break;
+				if (itemy>Fl::event_y()) break;
 			}
-			dnd_callback_(Fl::event_text(),(const char*)data(i));
-		}
-//		if (e==FL_DND_ENTER) { take_focus(); Fl::focus(this); Fl::belowmouse(this); Fl_Icon_Browser::handle(FL_FOCUS); }
-//		if (e==FL_DND_LEAVE) { take_focus(); Fl::focus(this); Fl::belowmouse(this); Fl_Icon_Browser::handle(FL_FOCUS); }
-		//fprintf (stderr, "Event: %d\n", e);
 
-		return Fl_Icon_Browser::handle(e);
+			paste_callback_((const char*)data(i));
+			return 1; // Fl_Browser doesn't know about paste so don't bother it
+		}
+
+
+		return EDE_Browser::handle(e);
 	}
 
 	// Setup callback that will be used when renaming and dnd
 	void rename_callback(rename_callback_type* cb) { rename_callback_ = cb; }
-	void dnd_callback(paste_callback_type* cb) { dnd_callback_ = cb; }
+	void paste_callback(paste_callback_type* cb) { paste_callback_ = cb; }
+	void context_callback(Fl_Callback* cb) { context_callback_ = cb; }
 
 	// Avoid memory leak
 	void clear() {
@@ -405,6 +482,70 @@ fprintf(stderr, "Call FileView::clear()\n");
 		bucket.empty();
 		EDE_Browser::clear();
 	}
+};
+
+
+
+
+class FileView : public Fl_Group {
+public:
+	FileView(int X, int Y, int W, int H, char*label=0) : Fl_Group(X,Y,W,H,label) {}
+
+	void insert(int row, FileItem *item);
+	void add(FileItem *item);
+	void remove(FileItem *item);
+	void update(FileItem *item);
+
+	void update_path(const char* oldpath,const char* newpath);
+
+	void gray(int row);
+	void ungray(int row);
+
+	void rename_callback(rename_callback_type* cb);
+	void paste_callback(paste_callback_type* cb);
+};
+
+
+class FileDetailsView : public FileView {
+private:
+	FileDetailsView_ *browser;
+public:
+	FileDetailsView(int X, int Y, int W, int H, char*label=0) : FileView(X,Y,W,H,label) {
+		browser = new FileDetailsView_(X,Y,W,H,label);
+		browser->end();
+		end();
+	}
+//	~FileDetailsView() { delete browser; }
+
+	void insert(int row, FileItem *item) { browser->insert(row,item); }
+	void add(FileItem *item) { browser->add(item); }
+	void remove(FileItem *item) { browser->remove(item); }
+	void update(FileItem *item) { browser->update(item); }
+
+	void update_path(const char* oldpath,const char* newpath) { browser->update_path(oldpath,newpath); }
+
+	void gray(int row) { browser->gray(row); }
+	void ungray(int row) { browser->ungray(row); }
+
+	void rename_callback(rename_callback_type* cb) { browser->rename_callback(cb); }
+	void paste_callback(paste_callback_type* cb) { browser->paste_callback(cb); }
+	void context_callback(Fl_Callback* cb) { browser->context_callback(cb); }
+
+	// Browser methods
+	const char* path(int i) { return (const char*)browser->data(i); }
+	int size() { return browser->size(); }
+	int selected(int i) { return browser->selected(i); }
+	void select(int i, int k) { browser->select(i,k); browser->middleline(i); }
+	int get_focus() { return browser->get_focus(); }
+	void set_focus(int i) { browser->set_focus(i); }
+	void remove(int i) { browser->remove(i); }
+	void clear() { browser->clear(); }
+	void callback(Fl_Callback*cb) { browser->callback(cb); }
+
+	// These methods are used by do_rename
+	const char* text(int i) { return browser->text(i); }
+	void text(int i, const char* c) { return browser->text(i,c); }
+	uchar column_char() { return browser->column_char(); }
 };
 
 

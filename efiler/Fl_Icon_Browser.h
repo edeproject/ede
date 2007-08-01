@@ -135,6 +135,22 @@ public:
   void remove_icon(int line);
   Fl_Image* get_icon(int line);
 
+  // focus management
+  int get_focus() { return lineno(selection()); }
+  void set_focus(int row) { select(row,selected(row)); }
+
+  // tree support
+  void indent(int line, int level);
+  int indent(int line);
+  void collapse(void*l);
+  void expand(void*l);
+  void toggle_collapse(void*l);
+  void collapse(int line);
+  void expand(int line);
+  void toggle_collapse(int line);
+  void collapse_all();
+  void expand_all();
+  int handle(int);
 };
 
 #endif

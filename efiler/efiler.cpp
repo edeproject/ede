@@ -14,9 +14,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/time.h> // timer
-#include <sys/resource.h> // for core
-#include <sys/vfs.h> // used for statfs()
+#include <sys/time.h> // timer in cb_open
+#include <sys/resource.h> // for core dumps
 
 
 #include <Fl/Fl.H>
@@ -25,6 +24,8 @@
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
 #include <Fl/filename.H>
 #include <Fl/fl_ask.H>
+#include <Fl/fl_ask.H>
+#include <Fl/Fl_File_Input.H> // location bar
 
 #include <edelib/Nls.h>
 #include <edelib/MimeType.h>
@@ -33,23 +34,32 @@
 #include <edelib/Run.h>
 
 #include "EDE_FileView.h" // our file view widget
+#include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
 
 #include "fileops.h" // file operations
+#include "filesystem.h" // filesystem support
 
-
-#define DEFAULT_ICON "misc-vedran"
 
 Fl_Window* win;
 FileDetailsView* view;
 Fl_Menu_Bar* main_menu;
 Fl_Box* statusbar;
+DirTree* dirtree;
+Fl_Tile* tile;
+Fl_Group* location_bar;
+Fl_File_Input* location_input;
+Fl_Menu_Button* context_menu;
+
 
 char current_dir[FL_PATH_MAX];
 bool showhidden;
 bool semaphore;
 bool dirsfirst;
 bool ignorecase;
+bool showtree;
+bool showlocation;
+int tree_width;
 
 
 // constants
@@ -57,78 +67,11 @@ bool ignorecase;
 const int default_window_width = 600;
 const int default_window_height = 400;
 const int menubar_height = 30;
+const int location_bar_height = 40;
 const int statusbar_height = 24;
 const int statusbar_width = 400;
 
-
-/*-----------------------------------------------------------------
-	Filesystem functions
--------------------------------------------------------------------*/
-
-// Read filesystems - adapted from fltk file chooser
-char filesystems[50][PATH_MAX]; // must be global
-int get_filesystems() {
-	FILE	*mtab;		// /etc/mtab or /etc/mnttab file
-
-	// Results are cached in a static array
-	static int fs_number=0;
-
-	// On first access read filesystems
-	if (fs_number == 0) {
-		mtab = fopen("/etc/mnttab", "r");	// Fairly standard
-		if (mtab == NULL)
-			mtab = fopen("/etc/mtab", "r");	// More standard
-		if (mtab == NULL)
-			mtab = fopen("/etc/fstab", "r");	// Otherwise fallback to full list
-		if (mtab == NULL)
-			mtab = fopen("/etc/vfstab", "r");	// Alternate full list file
-
-		char	line[PATH_MAX];	// Input line
-		char	device[PATH_MAX], mountpoint[PATH_MAX], fs[PATH_MAX];
-		while (mtab!= NULL && fgets(line, sizeof(line), mtab) != NULL) {
-			if (line[0] == '#' || line[0] == '\n')
-				continue;
-			if (sscanf(line, "%s%s%s", device, mountpoint, fs) != 3)
-				continue;
-			strcpy(filesystems[fs_number],mountpoint);
-			fs_number++;
-		}	
-		fclose (mtab);
-
-		if (fs_number == 0) return 0; // error reading mtab/fstab
-	}
-	return fs_number;
-}
-
-
-// Get mount point of filesystem for given file
-const char* find_fs_for(const char* file) {
-	int fs_number = get_filesystems();
-	if (fs_number==0) return 0; // error reading mtab/fstab
-
-	// Find filesystem for file (largest mount point match)
-	char *max;
-	int maxlen = 0;
-	for (int i=0; i<fs_number; i++) {
-		int mylen = strlen(filesystems[i]);
-		if ((strncmp(file,filesystems[i],mylen)==0) && (mylen>maxlen)) {
-			maxlen=mylen;
-			max = (char*)filesystems[i];
-		}
-	}
-	if (maxlen == 0) return 0; // doesn't match any fs? there should always be root
-	return max;
-}
-
-
-// Tests if two files are on the same filesystem
-bool is_on_same_fs(const char* file1, const char* file2) {
-	const char* fs1 = find_fs_for(file1);
-	// See if file2 matches the same filesystem
-	return (strncmp(file1,fs1,strlen(fs1))==0);
-}
-
-
+int default_tree_width=150;
 
 
 /*-----------------------------------------------------------------
@@ -212,7 +155,8 @@ void loaddir(const char *path) {
 	strncpy(old_dir,current_dir,strlen(current_dir)); // Restore olddir in case of error
 
 	// Set current_dir
-	if (fl_filename_isdir(path)) {
+	// fl_filename_isdir() thinks that / isn't a dir :(
+	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
 		if (path[0] == '~') // Expand tilde
 			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),path+1);
 		else 
@@ -233,14 +177,13 @@ void loaddir(const char *path) {
 		*tmp='\0';
 	}
 
-fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
-
 	// Update directory tree
-//	dirtree->set_current(current_dir);
+	dirtree->set_current(current_dir);
+	location_input->value(current_dir);
 
 	// variables used later
 	int size=0;
-	dirent **files;
+		dirent **files;
 
 	// List all files in directory
 	if (ignorecase) 
@@ -256,12 +199,13 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 	}
 
 	// set window label
-	// unlike fltk2, labels can be pointers to static char
-	win->label(tsprintf(_("%s - File manager"), current_dir));
-	statusbar->label(tsprintf(_("Scanning directory %s..."), current_dir)); 
+	// copy_label() is a method that calls strdup() and later free()
+	win->copy_label(tsprintf(_("%s - File manager"), current_dir));
+	statusbar->copy_label(tsprintf(_("Scanning directory %s..."), current_dir)); 
 
 	view->clear();
 
+fprintf(stderr, "Size: %d\n", size);
 	FileItem **item_list = new FileItem*[size];
 	int fsize=0;
 
@@ -297,6 +241,7 @@ fprintf (stderr, "loaddir(%s) = (%s)\n",path,current_dir);
 			item->description = "Directory";
 			// item->name += "/";
 			item->size = "";
+			item->realpath += "/";
 		} else {
 			item->icon = "unknown";
 			item->description = "Unknown";
@@ -352,15 +297,11 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 	semaphore=false;
 
 	// Get partition size and free space
-	// TODO Attempt to cache the results in a meaningful way
-	static struct statfs statfs_buffer;
-	if (statfs(current_dir, &statfs_buffer)==0) {
-		double totalsize = double(statfs_buffer.f_bsize) * statfs_buffer.f_blocks;
-		double freesize = double(statfs_buffer.f_bsize) * statfs_buffer.f_bavail; // This is what df returns
-										// f_bfree is size available to root
-		double percent = double(statfs_buffer.f_blocks-statfs_buffer.f_bavail)/statfs_buffer.f_blocks*100;
-		char *tmp = strdup(nice_size(totalsize)); // nice_size() operates on a static char buffer, we can't use two calls at the same time
-		statusbar->label(tsprintf(_("Filesystem %s, Size %s, Free %s (%4.1f%% used)"), find_fs_for(current_dir), tmp, nice_size(freesize), percent));
+	double totalsize, freesize;
+	if (fs_usage(current_dir,totalsize,freesize)) {
+		double percent = (totalsize-freesize)/totalsize*100;
+		char *tmp = strdup(nice_size(totalsize)); // nice_size() operates on a static char buffer, we can't use two calls in the same command
+		statusbar->copy_label(tsprintf(_("Filesystem %s, Size %s, Free %s (%4.1f%% used)"), find_fs_for(current_dir), tmp, nice_size(freesize), percent));
 		free(tmp);
 	} else
 		statusbar->label(_("Error reading filesystem information!"));
@@ -375,7 +316,7 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 // Open callback
 void open_cb(Fl_Widget*w, void*data) {
 fprintf (stderr,"cb\n");
-	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu) {
+	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu || w==context_menu) {
 fprintf (stderr,"enter\n");
 //if (Fl::event_clicks()) fprintf(stderr, "clicks\n");
 //if (Fl::event_key()==FL_Enter) fprintf(stderr, "ekey\n");
@@ -384,9 +325,9 @@ fprintf (stderr,"enter\n");
 		gettimeofday(&newtm,0);
 		if (newtm.tv_sec - tm.tv_sec < 1 || (newtm.tv_sec-tm.tv_sec==1 && newtm.tv_usec<tm.tv_usec)) return; // no calling within 1 second
 		tm=newtm;
-		if (view->value()==0) return; // This can happen while efiler is loading
+		if (view->get_focus()==0) return; // This can happen while efiler is loading
 
-		char* path = (char*)view->data(view->value());
+		char* path = (char*)view->path(view->get_focus());
 		fprintf(stderr, "Path: %s (ev %d)\n",path,Fl::event());
 
 		if (stat(path,&stat_buffer)) return; // error
@@ -406,19 +347,13 @@ fprintf (stderr,"enter\n");
 	rlim->rlim_cur = RLIM_INFINITY;
 	setrlimit (RLIMIT_CORE, rlim);
 
-		const char *o2 = tsprintf(opener,path);
+		const char *o2 = tsprintf(opener,path); // opener should contain %s
 		fprintf (stderr, "run_program: %s\n", o2);
-
-		// construct filename for the message
-		char* filename = strdup(view->text(view->value()));
-		if (char*k = strchr(filename, view->column_char())) *k='\0';
 
 		if (opener) { 
 			int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 		} else
-			statusbar->label(tsprintf(_("No program to open %s!"), filename));
-
-		free(filename);
+			statusbar->copy_label(tsprintf(_("No program to open %s!"), fl_filename_name(view->path(view->get_focus()))));
 
 	rlim->rlim_cur = old_rlimit;
 	setrlimit (RLIMIT_CORE, rlim);
@@ -438,18 +373,58 @@ void quit_cb(Fl_Widget*, void*) {exit(0);}
 
 void cut_cb(Fl_Widget*, void*) { do_cut_copy(false); }
 void copy_cb(Fl_Widget*, void*) { do_cut_copy(true); }
-void paste_cb(Fl_Widget*, void*) { do_paste(); }
+void paste_cb(Fl_Widget*, void*) { Fl::paste(*view,1); } // view->handle() will call do_paste()
 void delete_cb(Fl_Widget*, void*) { do_delete(); }
 
 
-void showhidden_cb(Fl_Widget*, void*) { showhidden=!showhidden; loaddir(current_dir); }
+void showtree_cb(Fl_Widget*, void*) {
+	showtree = !showtree;
+	if (!showtree) {
+		tree_width = dirtree->w();
+		tile->position(default_tree_width, 1, 1, 1); // NOTE!
+fprintf(stderr, "Hide tree: %d\n", tree_width);
+//		showtree->clear();
+	} else {
+		int currentw = dirtree->w();
+		tile->position(currentw, 1, tree_width, 1);
+fprintf(stderr, "Show tree: %d %d\n", currentw, tree_width);
+//		showtree->set();
+	}
+}
 
 void refresh_cb(Fl_Widget*, void*) { 
 	loaddir(current_dir); 
 	// TODO: reload directory tree as well-
 }
 
-void case_cb(Fl_Widget*, void*) { ignorecase=!ignorecase; loaddir(current_dir); }
+void locationbar_cb(Fl_Widget*, void*) {
+	showlocation = !showlocation;
+	if (showlocation) {
+		location_bar->show();
+		location_bar->resize(0, menubar_height, win->w(), location_bar_height);
+		tile->resize(0, menubar_height+location_bar_height, win->w(), win->h()-menubar_height-location_bar_height-statusbar_height);
+		win->redraw();
+	} else {
+		location_bar->hide();
+//		location_bar->resize(0, menubar_height, win->w(), 0);
+		tile->resize(0, menubar_height, win->w(), win->h()-menubar_height-statusbar_height);
+		win->redraw();
+	}
+}
+
+void showhidden_cb(Fl_Widget*, void*) { 
+	showhidden=!showhidden; 
+	dirtree->show_hidden(showhidden);
+	dirtree->reload(); 
+	loaddir(current_dir); 
+}
+
+void case_cb(Fl_Widget*, void*) { 
+	ignorecase=!ignorecase;
+	dirtree->ignore_case(ignorecase);
+	dirtree->reload(); 
+	loaddir(current_dir); 
+}
 
 void dirsfirst_cb(Fl_Widget*, void*) { dirsfirst=!dirsfirst; loaddir(current_dir); }
 
@@ -458,11 +433,39 @@ void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list 
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void iconsview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void listview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
-void showtree_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void about_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void aboutede_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 
 
+
+// Directory tree callback
+void tree_cb(Fl_Widget*, void*) { 
+	if (Fl::event_clicks() || Fl::event_key() == FL_Enter) {
+		int selected = dirtree->get_focus();
+		loaddir((char*)dirtree->data(selected));
+	}
+}
+
+// User entered a location
+void location_input_cb(Fl_Widget*, void*) { loaddir(location_input->value()); }
+
+Fl_Menu_Item context_menu_definition[] = {
+	{_("&Open"),		0,	open_cb},
+	{_("Open &with..."),	0,	ow_cb,		0,FL_MENU_DIVIDER},
+	{_("&Cut"),		0,	cut_cb},
+	{_("Co&py"),		0,	copy_cb},
+	{_("Pa&ste"),		0,	paste_cb},
+	{_("&Delete"),		0,	delete_cb,	0,FL_MENU_DIVIDER},
+	{_("P&references..."),	0,	pref_cb},
+	{0}
+};
+
+// Right click - show context menu
+void context_cb(Fl_Widget*, void*) {
+//	context_menu->position(Fl::event_x_root(),Fl::event_y_root());
+	context_menu->popup();
+	context_menu->value(-1);
+}
 
 
 /*-----------------------------------------------------------------
@@ -474,7 +477,7 @@ Fl_Menu_Item main_menu_definition[] = {
 	{_("&File"),	0, 0, 0, FL_SUBMENU},
 		{_("&Open"),		FL_CTRL+'o',	open_cb},
 		{_("Open &with..."),	0,		ow_cb,		0,FL_MENU_DIVIDER},
-		{_("Open &location"),	0,		location_cb,	0,FL_MENU_DIVIDER},
+//		{_("Open &location"),	0,		location_cb,	0,FL_MENU_DIVIDER},
 		{_("&New window"),	FL_CTRL+'n',	new_cb,		0,FL_MENU_DIVIDER},
 		{_("&Quit"),		FL_CTRL+'q',	quit_cb},
 		{0},
@@ -491,8 +494,9 @@ Fl_Menu_Item main_menu_definition[] = {
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
 		{_("&Icons"),		FL_F+8,		iconsview_cb,	0,	FL_MENU_RADIO}, // coming soon
 		{_("&Detailed list"),	FL_F+8,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
-		{_("&Show hidden"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE},
-		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER}, // coming soon
+		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
+		{_("&Location bar"),	FL_F+10,	locationbar_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
+		{_("&Show hidden"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER},
 		{_("&Refresh"),		FL_F+5,		refresh_cb},
 		{_("S&ort"),	0, 0, 0, FL_SUBMENU},
 			{_("&Case sensitive"),	0,	case_cb,	0,	FL_MENU_TOGGLE},
@@ -524,11 +528,30 @@ edelib::IconTheme::init("crystalsvg");
 		main_menu->menu(main_menu_definition);
 		main_menu->textsize(12); // hack for label size
 
-		view = new FileDetailsView(0, menubar_height, default_window_width, default_window_height-menubar_height-statusbar_height, 0);
-		view->callback(open_cb);
-		// callback for renaming
-		view->rename_callback(do_rename);
-		view->dnd_callback(dnd_cb);
+		location_bar = new Fl_Group(0, menubar_height, default_window_width, location_bar_height);
+		location_bar->begin();
+			location_input = new Fl_File_Input(70, menubar_height+2, default_window_width-200, location_bar_height-5, _("Location:"));
+			location_input->labelsize(12); // hack for label size
+			location_input->textsize(12); // hack for label size
+			location_input->align(FL_ALIGN_LEFT);
+			location_input->callback(location_input_cb);
+		location_bar->end();
+		location_bar->box(FL_UP_BOX); // hack for label size
+		location_bar->resizable(location_input);
+
+		tile = new Fl_Tile(0, menubar_height+location_bar_height, default_window_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
+		tile->begin();
+			dirtree = new DirTree(0, menubar_height+location_bar_height, default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
+			dirtree->textsize(12); // hack for label size
+			dirtree->callback(tree_cb);
+
+			view = new FileDetailsView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
+			view->callback(open_cb);
+			// callback for renaming
+			view->rename_callback(do_rename);
+			view->paste_callback(do_paste);
+			view->context_callback(context_cb);
+		tile->end();
 
 		Fl_Group *sbgroup = new Fl_Group(0, default_window_height-statusbar_height, default_window_width, statusbar_height);
 			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);
@@ -541,14 +564,27 @@ edelib::IconTheme::init("crystalsvg");
 		sbgroup->end();
 		sbgroup->resizable(filler);
 
+		context_menu = new Fl_Menu_Button (0,0,0,0);
+		context_menu->type(Fl_Menu_Button::POPUP3);
+		context_menu->menu(context_menu_definition);
+		context_menu->textsize(12); // hack for label size
+		context_menu->box(FL_NO_BOX);
+
 	win->end();
-	win->resizable(view);
+	win->resizable(tile);
+//	win->resizable(view);
 //	win->icon(Icon::get("folder",Icon::TINY));
 	win->show(argc,argv);
+	view->take_focus();
+
+	// Yet another hack for label size....
+	fl_message_font(FL_HELVETICA, 12);
 
 	// TODO remember previous configuration
-	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false;
+	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
+	tree_width = default_tree_width;
 
+	dirtree->init();
 	if (argc==1) // No params
 		loaddir ("");
 	else 

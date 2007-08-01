@@ -25,6 +25,7 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Scrollbar.H>
 #include <FL/Fl_Image.H>
+#include <FL/fl_draw.H>
 
 #include "Fl_Icon_Browser.h"
 
@@ -67,6 +68,12 @@ private:
 	public:
 		Heading(int x, int y, int w, int h, const char *label = 0) : Fl_Group(x,y,w,h,label) {}
 		int handle(int e);
+		void draw() {
+			if (!visible()) return;
+			if (x() && y() && w() && h() && fl_not_clipped(x(),y(),w(),h())) fl_push_clip(x(),y(),w(),h());
+			Fl_Group::draw();
+			if (x() && y() && w() && h() && fl_not_clipped(x(),y(),w(),h())) fl_pop_clip();
+		}
 	} *heading;
 
 	Fl_Scrollbar *hscrollbar;
@@ -171,17 +178,21 @@ public:
 	void resize(int X, int Y, int W, int H);
 
 	// Overload hposition(), so that heading scrolls together with browser
-	void hposition(int x) {
+	void hposition(int X) {
 		if (heading->visible()) {
-			heading->resize(0-x,heading->y(),totalwidth_,buttonheight);
+			static int oldX=0;
+			// Move each button by X pixels
+			for(int i=0; i<heading->children(); i++) {
+				Fl_Widget* c = heading->child(i);
+				c->position(c->x()-X+oldX, c->y());
+			}
+			fl_push_clip(x(),y(),w(),h());
 			heading->redraw();
+			fl_pop_clip();
+			oldX=X;
 		}
-		Fl_Icon_Browser::hposition(x);
+		Fl_Icon_Browser::hposition(X);
 	}
-
-	// This is *really* needed :(
-	int get_focus() { return lineno(selection()); }
-	void set_focus(int row) { select(row,selected(row)); }
 };
 
 #endif

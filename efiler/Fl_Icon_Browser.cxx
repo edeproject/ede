@@ -42,7 +42,7 @@
 // up.
 
 // Also added the ability to "hide" a line.  This set's it's height to
-// zero, so the Fl_Icon_Browser_ cannot pick it.
+// zero, so the Fl_Browser_ cannot pick it.
 
 #define SELECTED 1
 #define NOTDISPLAYED 2
@@ -54,6 +54,7 @@ struct FL_BLINE {	// data is in a linked list of these
   Fl_Image* icon;
   short length;		// sizeof(txt)-1, may be longer than string
   char flags;		// selected, displayed
+  int level;		// indentation level for tree
   char txt[1];		// start of allocated array
 };
 
@@ -174,6 +175,7 @@ void Fl_Icon_Browser::insert(int line, const char* newtext, void* d) {
   strcpy(t->txt, newtext);
   t->data = d;
   t->icon = 0;
+  t->level = 0;
   insert(line, t);
 }
 
@@ -194,6 +196,7 @@ void Fl_Icon_Browser::text(int line, const char* newtext) {
     n->length = (short)l;
     n->flags = t->flags;
     n->icon = t->icon;
+    n->level = t->level;
     n->prev = t->prev;
     if (n->prev) n->prev->next = n; else first = n;
     n->next = t->next;
@@ -336,6 +339,151 @@ void Fl_Icon_Browser::item_draw(void* v, int X, int Y, int W, int H) const {
       e = strchr(str, column_char());
       if (e) {*e = 0; w1 = *i++;}
     }
+
+
+    // Tree drawing code
+    // TODO: try to avoid using item_height...
+    #define TREE_GLYPH_WIDTH 10
+    // [+] and [-] box size
+    #define TREE_BOX_SIZE 6 
+    if (first && blind->level>0) {
+       if (blind->flags & SELECTED)
+          fl_color(fl_contrast(textcolor(), selection_color()));
+       else
+          fl_color(textcolor());
+       fl_line_style(FL_DOT);
+       int ih = item_height(blind);
+       int hspace = (TREE_GLYPH_WIDTH-TREE_BOX_SIZE)/2;
+       int vspace = (ih-TREE_BOX_SIZE)/2;
+
+       // Draw vertical lines for parents
+       for(int i=1; i<blind->level; i++) {
+          // is there anything below to connect?
+          FL_BLINE* k = blind->next;
+          while (k && k->level > i)
+             k = k->next;
+          if (k && k->level==i) 
+             fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+ih);
+          X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       }
+
+       if (blind->next && blind->next->level > blind->level) {
+          // draw dotted lines before and after
+          if (blind->prev)
+             fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+vspace);
+          // is there another item with same level?
+          FL_BLINE* p = blind->next;
+          bool collapsed=true;
+          while (p && p->level > blind->level) {
+             if (!(p->flags&NOTDISPLAYED)) collapsed=false;
+             p = p->next;
+          }
+          if (p && p->level == blind->level)
+             fl_line(X+TREE_GLYPH_WIDTH/2, Y+ih-vspace, X+TREE_GLYPH_WIDTH/2, Y+ih);
+
+          // draw [+] glyph
+          fl_color(fl_lighter(fl_color()));
+          fl_line_style(0);
+          fl_line(X+hspace, Y+vspace, X+TREE_GLYPH_WIDTH-hspace, Y+vspace);
+          fl_line(X+TREE_GLYPH_WIDTH-hspace, Y+vspace, X+TREE_GLYPH_WIDTH-hspace, Y+ih-vspace-(ih%2));
+          fl_line(X+TREE_GLYPH_WIDTH-hspace, Y+ih-vspace-(ih%2), X+hspace, Y+ih-vspace-(ih%2));
+          fl_line(X+hspace, Y+ih-vspace-(ih%2), X+hspace, Y+vspace);
+
+          fl_line(X+hspace+2, Y+ih/2, X+TREE_GLYPH_WIDTH-hspace-2, Y+ih/2); // minus
+          if (collapsed)
+            fl_line(X+TREE_GLYPH_WIDTH/2, Y+vspace+2, X+TREE_GLYPH_WIDTH/2, Y+ih-vspace-2-(ih%2)); // plus
+
+          fl_color(fl_darker(fl_color()));
+       } 
+       else if (blind->next && blind->next->level == blind->level) {
+          // draw |- glyph
+          fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+ih);
+          fl_line(X+TREE_GLYPH_WIDTH/2+2, Y+ih/2, X+TREE_GLYPH_WIDTH-1, Y+ih/2);
+       }
+       else  {
+          // draw L glyph
+          fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+ih/2);
+          fl_line(X+TREE_GLYPH_WIDTH/2+2, Y+ih/2, X+TREE_GLYPH_WIDTH-1, Y+ih/2);
+       } 
+       X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       fl_line_style(0);
+    }
+
+
+	// NOTE: This version is drawing continuous lines, but the problem is,
+	// if parent item is invisible (e.g. scrolled out) it's line isn't drawn :(
+/*    #define TREE_GLYPH_WIDTH 10
+    #define TREE_BOX_SIZE 6 // box size
+    if (first && blind->level>0) {
+       if (blind->flags & SELECTED)
+          fl_color(fl_contrast(textcolor(), selection_color()));
+       else
+          fl_color(textcolor());
+       fl_line_style(FL_DOT);
+       int ih = item_height(blind);
+       int hspace = (TREE_GLYPH_WIDTH-TREE_BOX_SIZE)/2;
+       int vspace = (ih-TREE_BOX_SIZE)/2;
+
+       for(int i=1; i<blind->level; i++) {
+          // leave space for the vertical line
+          X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       }
+
+       if (blind->next && blind->next->level > blind->level) {
+
+          // draw dotted lines before and after
+          if (blind->prev)
+             fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+vspace);
+          int lineend = Y+ih;
+          FL_BLINE* p = blind->next;
+          bool collapsed=true;
+          while (p && p->level > blind->level) {
+             lineend += item_height(p);
+             if (!(p->flags&NOTDISPLAYED)) collapsed=false;
+             p = p->next;
+          }
+          if (p && p->level == blind->level)
+             fl_line(X+TREE_GLYPH_WIDTH/2, Y+ih-vspace, X+TREE_GLYPH_WIDTH/2, lineend);
+
+          // draw [+] glyph
+          fl_color(fl_lighter(fl_color()));
+          fl_line_style(0);
+          fl_line(X+hspace, Y+vspace, X+TREE_GLYPH_WIDTH-hspace, Y+vspace);
+          fl_line(X+TREE_GLYPH_WIDTH-hspace, Y+vspace, X+TREE_GLYPH_WIDTH-hspace, Y+ih-vspace-(ih%2));
+          fl_line(X+TREE_GLYPH_WIDTH-hspace, Y+ih-vspace-(ih%2), X+hspace, Y+ih-vspace-(ih%2));
+          fl_line(X+hspace, Y+ih-vspace-(ih%2), X+hspace, Y+vspace);
+
+          fl_line(X+hspace+2, Y+ih/2, X+TREE_GLYPH_WIDTH-hspace-2, Y+ih/2); // minus
+          if (collapsed)
+            fl_line(X+TREE_GLYPH_WIDTH/2, Y+vspace+2, X+TREE_GLYPH_WIDTH/2, Y+ih-vspace-2-(ih%2)); // plus
+
+          fl_color(fl_darker(fl_color()));
+          fl_line_style(FL_DOT);
+          X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       } 
+       else if (blind->next && blind->next->level == blind->level) {
+          // draw |- glyph
+          int lineend = Y+ih;
+          FL_BLINE* p = blind->next;
+          FL_BLINE* q = blind;
+          while (p && p->level == blind->level) {
+             lineend += item_height(p);
+             q = p;
+             p = p->next;
+          }
+          lineend -= item_height(q);
+          fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, lineend);
+          fl_line(X+TREE_GLYPH_WIDTH/2+2, Y+ih/2, X+TREE_GLYPH_WIDTH-1, Y+ih/2);
+          X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       }
+       else  {
+          // draw L glyph
+          fl_line(X+TREE_GLYPH_WIDTH/2, Y, X+TREE_GLYPH_WIDTH/2, Y+ih/2);
+          fl_line(X+TREE_GLYPH_WIDTH/2+2, Y+ih/2, X+TREE_GLYPH_WIDTH-1, Y+ih/2);
+          X += TREE_GLYPH_WIDTH; W -= TREE_GLYPH_WIDTH; w1 -= TREE_GLYPH_WIDTH;
+       } 
+       fl_line_style(0);
+    }*/
 
     // Icon drawing code
     if (first) {
@@ -592,7 +740,133 @@ void Fl_Icon_Browser::remove_icon(int line) {
 	}
 }
 
-Fl_Image* Fl_Icon_Browser::get_icon(int line) { return find_line(line)->icon; }
+Fl_Image* Fl_Icon_Browser::get_icon(int line) { 
+	if (line < 1 || line > lines) return 0;
+	return find_line(line)->icon; 
+}
+
+
+// Tree support
+
+void Fl_Icon_Browser::indent(int line, int level) {
+	if (line < 1 || line > lines) return;
+	if (level<0) return;
+	find_line(line)->level = level;
+}
+
+int Fl_Icon_Browser::indent(int line) {
+	if (line < 1 || line > lines) return 0;
+	return find_line(line)->level;
+}
+
+void Fl_Icon_Browser::collapse(void* l) {
+fprintf(stderr, "collapse(l)\n");
+	FL_BLINE* ll = (FL_BLINE*)l;
+	FL_BLINE* p = ll->next;
+	while (p && p->level > ll->level) {
+		if (!(p->flags & NOTDISPLAYED)) {
+			full_height_ -= item_height(p);
+			p->flags |= NOTDISPLAYED;
+		}
+		p = p->next;
+	}
+}
+
+void Fl_Icon_Browser::expand(void* l) {
+fprintf(stderr, "expand(l)\n");
+	FL_BLINE* ll = (FL_BLINE*)l;
+	FL_BLINE* p = ll->prev;
+	// if invisible, expand parent
+	if (ll->flags & NOTDISPLAYED) {
+		while (p && p->level != ll->level-1)
+			p = p->prev;
+		if (p) expand(p); // if not found, do nothing
+	}
+	p = ll->next;
+	while (p && p->level > ll->level) {
+		// expand only the level below!
+		if ((p->flags & NOTDISPLAYED) && (p->level==ll->level+1)) {
+			p->flags &= ~NOTDISPLAYED;
+			full_height_ += item_height(p);
+		}
+		p = p->next;
+	}
+}
+
+
+void Fl_Icon_Browser::collapse(int line) {
+	if (line < 1 || line > lines) return;
+	collapse(find_line(line));
+	redraw_lines();
+}
+
+void Fl_Icon_Browser::expand(int line) {
+	if (line < 1 || line > lines) return;
+	expand(find_line(line));
+	redraw();
+}
+
+void Fl_Icon_Browser::collapse_all() {
+	FL_BLINE* l = first;
+	if (!l) return;
+	do {
+		collapse(l);
+	} while (l=l->next);
+	redraw_lines();
+}
+
+void Fl_Icon_Browser::expand_all() {
+	FL_BLINE* l = first;
+	if (!l) return;
+	do {
+		collapse(l);
+	} while (l=l->next);
+	redraw();
+}
+
+void Fl_Icon_Browser::toggle_collapse(int line) {
+	if (line < 1 || line > lines) return;
+	toggle_collapse(find_line(line));
+	redraw();
+}
+
+void Fl_Icon_Browser::toggle_collapse(void* lp) {
+	FL_BLINE* l = (FL_BLINE*)lp;
+	if (!l->next || l->next->level <= l->level) return;
+
+	bool invisibles=false;
+	FL_BLINE* p = l->next;
+	do {
+		// expand only one level below!
+		if ((p->flags & NOTDISPLAYED) && (p->level==l->level+1))
+			invisibles=true;
+	} while (p=p->next);
+
+	if (invisibles)
+		expand(l);
+	else
+		collapse(l);
+}
+
+int Fl_Icon_Browser::handle(int e) {
+	if (e==FL_PUSH) {
+		FL_BLINE* l = first;
+		int itemy=y()-position();
+		while (l) {
+			itemy+=item_height(l);
+			if (itemy>Fl::event_y()) break;
+			l = l->next;
+		}
+		if (l && (l->level > 0) && (Fl::event_x()>x()+(l->level-1)*TREE_GLYPH_WIDTH) && (Fl::event_x()<x()+l->level*TREE_GLYPH_WIDTH)) {
+			toggle_collapse(l);
+			redraw();
+			Fl::event_is_click(0); // prevent the next click from becoming callback
+			return 1;
+		}
+	}
+	return Fl_Browser_::handle(e);
+}
+
 
 
 //

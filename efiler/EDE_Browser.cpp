@@ -214,21 +214,28 @@ static void scroll_cb(Fl_Widget* w, void*) {
 EDE_Browser::EDE_Browser(int X,int Y,int W,int H,const char *L) : Fl_Icon_Browser(X,Y,W,H),
 	  totalwidth_(0), column_header_(0), sort_column(0), sort_type(NO_SORT), sort_direction(false) {
 
-
-	heading = new Heading(X,Y,W,buttonheight);
-	heading->end();
-	heading->hide();
-	heading->parent(this); // for callback
-
-	hscrollbar = new Fl_Scrollbar(X, Y+H-Fl::scrollbar_size(), W-Fl::scrollbar_size(), Fl::scrollbar_size());
-	hscrollbar->type(FL_HORIZONTAL);
-	hscrollbar->hide();
-	hscrollbar->parent(this); // for callback
-	hscrollbar->callback(scroll_cb);
+	Fl_Group* thegroup = new Fl_Group(X,Y,W,H);
+	thegroup->begin();
+		heading = new Heading(0,0,W,buttonheight);
+ 		heading->box(FL_FLAT_BOX); // draw heading background
+		heading->align(FL_ALIGN_CLIP);
+		heading->end();
+		heading->hide();
+		heading->parent(this); // for callback
+	
+		hscrollbar = new Fl_Scrollbar(1, H-Fl::scrollbar_size()-2, W-Fl::scrollbar_size()-3, Fl::scrollbar_size()); // take account for edges
+		hscrollbar->type(FL_HORIZONTAL);
+		hscrollbar->hide();
+		hscrollbar->parent(this); // for callback
+		hscrollbar->callback(scroll_cb);
+	thegroup->end();
+	thegroup->add(this);
 
 	has_scrollbar(VERTICAL);
 
 	resizable(0);
+	thegroup->resizable(this);
+	thegroup->align(FL_ALIGN_CLIP);
 
 	// EDE_Browser is always a multiple-selection browser 
 	type(FL_MULTI_BROWSER);
@@ -341,6 +348,7 @@ const int* EDE_Browser::column_widths() const {
 
 // Subclassed handle() for keyboard searching
 int EDE_Browser::handle(int e) {
+	if (e==FL_FOCUS) { fprintf(stderr, "EB::focus\n"); }
 	if (e==FL_KEYBOARD && Fl::event_state()==0) {
 		// when user presses a key, jump to row starting with that character
 		int k=Fl::event_key();
@@ -374,6 +382,12 @@ int EDE_Browser::handle(int e) {
 				do_callback();
 //			}
 		}
+
+		if (k == FL_Tab) {
+fprintf (stderr, "TAB\n");
+			
+//			Fl_Icon_Browser::handle(FL_UNFOCUS); return 1;
+		}
 	}
 	return Fl_Icon_Browser::handle(e);
 }
@@ -388,13 +402,20 @@ void EDE_Browser::resize(int X, int Y, int W, int H) {
 		H += fsbs;
 	} else {
 		// show scrollbar
-		hscrollbar->resize(X, Y+H-fsbs, W-fsbs, fsbs);
 		hscrollbar->value(hscrollbar->value(), W, 0, totalwidth_);
 		if (!hscrollbar->visible()) {
+			hscrollbar->resize(X+1, Y+H-fsbs-2, W-fsbs-3, fsbs);
 			hscrollbar->show();
 			H -= fsbs;
+		} else {
+			hscrollbar->resize(X+1, Y+H-2, W-fsbs-3, fsbs);
+			hscrollbar->redraw();
 		}
 	}
+
+	heading->resize(X, Y-buttonheight, W, buttonheight);
+//	else
+//		heading->position(X, Y);
 	Fl_Icon_Browser::resize(X,Y,W,H);
 }
 
@@ -440,9 +461,15 @@ int EDE_Browser::Heading::handle(int event) {
 	// Event coordinates
 	int evx = Fl::event_x();
 	int evy = Fl::event_y();
-	
+
+	if (event==FL_FOCUS) return 0; // this is a focusless widget!	
+// 	if (event==FL_FOCUS && Fl::event_key()==FL_Tab) {
+// 		parent()->take_focus(); // heading shouldn't take focus
+// 		return 1;
+// 	}
+
 	switch (event) {
-	
+
 		case FL_MOVE:
 		case FL_ENTER:
 		case FL_PUSH: {
