@@ -167,7 +167,8 @@ private:
 			void** items;
 			int size, capacity;
 		public:
-			Bucket() : size(0), capacity(1000), items((void**)malloc(sizeof(void*)*1000)) {
+			Bucket() : size(0), capacity(1000) {
+				items = (void**)malloc(sizeof(void*)*capacity);
 				for (int i=0; i<capacity; i++) items[i]=0;
 			}
 			~Bucket() { empty(); free(items); }
@@ -204,7 +205,6 @@ public:
 		column_widths(cw);
 		column_char('\t');
 		column_header("Name\tType\tSize\tDate\tPermissions");
-		textsize(12); // FIXME: hack for font size
 		const SortType st[]={ALPHA_CASE_SORT, ALPHA_CASE_SORT, FILE_SIZE_SORT, DATE_SORT, ALPHA_SORT, NO_SORT};
 		column_sort_types(st);
 		when(FL_WHEN_ENTER_KEY_ALWAYS);
@@ -214,7 +214,6 @@ public:
 		editbox_ = new EditBox(0, 0, 0, 0);
 		editbox_->box(FL_BORDER_BOX);
 		editbox_->parent(this);
-		editbox_->textsize(12); // FIXME: hack for font size
 		editbox_->hide();
 
 		rename_callback_ = 0;

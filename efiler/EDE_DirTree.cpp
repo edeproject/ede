@@ -316,12 +316,12 @@ bool DirTree::set_current(const char* path) {
 // to the given path
 // If parent is given, only entries below it will be scanned
 int DirTree::find_best_match(const char* path, int parent) {
-	int bestlen=0;
+	uint bestlen=0;
 	int bestindex=-1;
 	for (int i=parent; i<=size(); i++) {
 		if ((i!=parent) && (indent(i)<=indent(parent))) break;
 		char* d = (char*)data(i);
-		int len = strlen(d);
+		uint len = strlen(d);
 		if ((len>bestlen) && (strncmp((char*)path, d, len)==0)) {
 			bestlen=len;
 			bestindex=i;

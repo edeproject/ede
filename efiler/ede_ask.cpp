@@ -72,7 +72,7 @@ int ede_ask(const char*fmt, ...) {
 	w->box(FL_NO_BOX);
 
 	va_start(ap,fmt);
-	int c=fl_ask(fmt);
+	int c=fl_choice(fmt, fl_yes, fl_no, 0);
 	va_end(ap);
 	return c;
 }

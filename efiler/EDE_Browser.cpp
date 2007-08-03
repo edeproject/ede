@@ -52,6 +52,8 @@ bool EDE_Browser::sortfn(char*s1,char*s2,SortType type) {
 		return false;
 	  case FILE_SIZE_SORT:
 		return (sizetof(s1)>sizetof(s2));
+	  default:
+		return false; // NO_SORT
 	}
 }
 
@@ -127,9 +129,9 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 	int col=0;
 	if (sort_type != NO_SORT) {
 		bool found=false;
-		while (delim=strchr(h, colchar)) {
+		while ((delim=strchr(h, colchar))) {
 			if (col==sort_column) {
-				for (int i=0; i<=strlen(delim); i++) delim[i-SYMLEN+1]=delim[i];
+				for (uint i=0; i<=strlen(delim); i++) delim[i-SYMLEN+1]=delim[i];
 				found=true;
 				break;
 			}
@@ -153,7 +155,7 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 
 		// Find column
 		bool found=false;
-		while (delim=strchr(h, colchar)) {
+		while ((delim=strchr(h, colchar))) {
 			if (col==column) {
 				*delim='\0';
 				snprintf(newheader,hlen+SYMLEN,"%s%s\t%s",column_header_,sym,delim+1);
@@ -181,7 +183,7 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 			char *tmp = strdup(text(i));
 			char *l = tmp;
 			int col=0;
-			while (delim=strchr(l, Fl_Icon_Browser::column_char())) {
+			while ((delim=strchr(l, Fl_Icon_Browser::column_char()))) {
 				*delim = '\0';
 				if (col==column) break;
 				l=delim+1;
@@ -475,9 +477,9 @@ int EDE_Browser::Heading::handle(int event) {
 		case FL_ENTER:
 		case FL_PUSH: {
 			int mindx = 100;
-			int mindy = 100;
-			int oldx = 0;
-			int oldy = 0;
+//			int mindy = 100;
+//			int oldx = 0;
+//			int oldy = 0;
 			
 			Fl_Widget*const* a = array();
 			

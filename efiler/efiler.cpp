@@ -473,7 +473,7 @@ fprintf (stderr, "location_input_cb %d\n",Fl::event());
 
 		const char* loc = location_input->value(); // shortcut
 		if (strlen(loc)<1 || loc[strlen(loc)-1]=='/') return;
-		int pos = location_input->position();
+		uint pos = location_input->position();
 		if (pos!=strlen(loc)) return; // cursor in the middle
 		int mark = location_input->mark();
 

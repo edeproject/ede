@@ -811,7 +811,7 @@ void Fl_Icon_Browser::collapse_all() {
 	if (!l) return;
 	do {
 		collapse(l);
-	} while (l=l->next);
+	} while ((l=l->next));
 	redraw_lines();
 }
 
@@ -820,7 +820,7 @@ void Fl_Icon_Browser::expand_all() {
 	if (!l) return;
 	do {
 		collapse(l);
-	} while (l=l->next);
+	} while ((l=l->next));
 	redraw();
 }
 
@@ -841,7 +841,7 @@ void Fl_Icon_Browser::toggle_collapse(void* lp) {
 		if (p->level <=l->level) break;
 		if ((p->flags & NOTDISPLAYED) && (p->level==l->level+1))
 			invisibles=true;
-	} while (p=p->next);
+	} while ((p=p->next));
 
 	if (invisibles)
 		expand(l);
