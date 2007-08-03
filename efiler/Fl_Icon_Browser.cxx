@@ -838,6 +838,7 @@ void Fl_Icon_Browser::toggle_collapse(void* lp) {
 	FL_BLINE* p = l->next;
 	do {
 		// expand only one level below!
+		if (p->level <=l->level) break;
 		if ((p->flags & NOTDISPLAYED) && (p->level==l->level+1))
 			invisibles=true;
 	} while (p=p->next);
