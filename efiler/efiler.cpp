@@ -17,6 +17,11 @@
 #include <sys/time.h> // timer in cb_open
 #include <sys/resource.h> // for core dumps
 
+// for application icon:
+#include <X11/xpm.h>
+#include <FL/x.H> 
+#include "efiler.xpm"
+
 
 #include <Fl/Fl.H>
 #include <Fl/Fl_Double_Window.H>
@@ -666,7 +671,13 @@ fl_message_font(FL_HELVETICA, 12);
 	win->end();
 	win->resizable(tile);
 //	win->resizable(view);
-//	win->icon(Icon::get("folder",Icon::TINY));
+
+	fl_open_display();
+	Pixmap p, mask;
+	
+	XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), efiler_xpm, &p, &mask, NULL);
+	win->icon((char*)p);
+
 	win->show(argc,argv);
 	view->take_focus();
 
