@@ -412,8 +412,10 @@ fprintf (stderr, "value: %s\n", value.c_str());
 			edelib::String selected_items;
 			for (int i=1; i<=size(); i++)
 				if (selected(i)==1) {
-					if (selected_items != "") selected_items += "\n";
+//					if (selected_items != "") selected_items += "\r\n";
+					selected_items += "file://";
 					selected_items += (char*)data(i);
+					selected_items += "\r\n";
 				}
 			Fl::copy(selected_items.c_str(),selected_items.length(),0);
 			Fl::dnd();
@@ -426,12 +428,13 @@ fprintf (stderr, "value: %s\n", value.c_str());
 			if (Fl::event_y()<y() || Fl::event_y()>y()+h()) return 1; 
 				// ^^ this can be a source of crashes in Fl::dnd()
 
-fprintf(stderr, "FL_DND_RELEASE\n");
+fprintf(stderr, "FL_DND_RELEASE '%s'\n", Fl::event_text());
 			// Sometimes drag is accidental
 			if (abs(Fl::event_x()-dragx)>10 || abs(Fl::event_y()-dragy)>10) {
 				dndrelease=true;
 				Fl::paste(*this,0);
 			}
+			return 1;
 		}
 		if (e==FL_PASTE) {
 fprintf(stderr, "FL_PASTE\n");

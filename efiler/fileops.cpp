@@ -103,12 +103,13 @@ void do_cut_copy(bool m_copy) {
 				return;
 			}
 			char* p = (char*)view->path(i);
-			while (strlen(buf)+strlen(p) >= bufsize) {
+			while (strlen(buf)+strlen(p)+8 >= bufsize) {
 				bufsize+=10000;
 				buf = (char*)realloc(buf,sizeof(char)*bufsize);
 			}
-			if (buf[0] != '\0') strncat(buf, "\n", 1);
+			strncat(buf, "file://", 7);
 			strncat(buf,p,strlen(p));
+			strncat(buf, "\r\n", 1);
 			if (operation == CUT) view->gray(i);
 			nselected++;
 		}
@@ -429,10 +430,12 @@ fprintf (stderr, "PASTE from '%s', to '%s', type=%d\n",(char*)Fl::event_text(),t
 		tmp2 = strchr(tmp,'\n');
 		int len=tmp2-tmp;
 		if (!tmp2) len=strlen(tmp);
+		if (len<2) { tmp=tmp2+1; count--; continue; }
 		from[k] = (char*)malloc(sizeof(char) * (len+2));
 		strncpy(from[k],tmp,len);
 		from[k][len]='\0';
-		// Paste from file managers with a vfs
+		if (from[k][len-1] == '\r') { len--; from[k][len]='\0'; }
+		// We accept both URIs (beginning with file://) and plain filename
 		if (strncmp(from[k],"file://",7)==0)
 			for (int i=0; i<=len-7; i++) 
 				from[k][i]=from[k][i+7];

@@ -1,4 +1,3 @@
-- Fix dnd (and if possible copy&paste) with other popular file managers
 - Add dnd to directory tree
 - Add notify support from edelib
 - Add support for fd.o Trash protocol
