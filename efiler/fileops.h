@@ -37,4 +37,3 @@ extern Fl_Window* win;
 extern Fl_Box* statusbar;
 extern char current_dir[];
 extern void loaddir(const char*);
-extern bool is_on_same_fs(const char*, const char*); // should be moved to another library
