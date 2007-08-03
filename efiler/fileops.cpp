@@ -3,7 +3,7 @@
  *
  * EFiler - EDE File Manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2006 EDE Authors.
+ * Copyright (c) 2000-2007 EDE Authors.
  *
  * This program is licenced under terms of the
  * GNU General Public Licence version 2 or newer.
@@ -35,6 +35,7 @@
 
 #include "EDE_FileView.h"
 #include "Util.h"
+#include "ede_ask.h" // replacement for fl_ask
 
 
 Fl_Progress* cut_copy_progress;
@@ -141,8 +142,7 @@ bool my_copy(const char* src, const char* dest) {
 
 		int c = -1;
 		if (!overwrite_all && !skip_all) {
-			// here was choice_alert
-			c = fl_choice(tsprintf(_("File already exists: %s. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"), 0); // asterisk (*) means default
+			c = ede_choice_alert(tsprintf(_("File already exists: %s. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"), 0); // asterisk (*) means default
 		}
 		if (c==1) overwrite_all=true;
 		if (c==3) skip_all=true;
@@ -171,15 +171,19 @@ bool my_copy(const char* src, const char* dest) {
 		if (mkdir (dest, buf.st_mode)==0)
 			return true; // success
 			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot create directory %s (%d)"),dest,strerror(errno)), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Cannot create directory %s (%d)"),dest,strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 
-	/* Sorry, edelib funcs just don't cut it....
+	/* We don't use edelib funcs because we need to: 
+	   * know if file is creatable (e.g. if user has write permissions in target directory),
+	   * detect errors WHILE copying (e.g. disk is full)
+	   * update interface while copying
+	   * set permissions after finish
 
 	if ( !edelib::file_readable(src) ) {
 			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot read file %s"),src), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Cannot read file %s"),src), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 
@@ -187,7 +191,7 @@ bool my_copy(const char* src, const char* dest) {
 /*	if ( !edelib::file_writeable(dest)  )
 	{
 			// here was choice_alert
-		int q = fl_choice(tsprintf(_("Cannot create file %s"),dest), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Cannot create file %s"),dest), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return true; else return false;
 	}
 
@@ -196,14 +200,14 @@ bool my_copy(const char* src, const char* dest) {
 		fl_alert(tsprintf(_("Error copying %s to %s"),src,dest)); */
 
 	if ( ( fold = fopen( src, "rb" ) ) == NULL ) {
-		int q = fl_choice(tsprintf(_("Cannot read file\n\t%s\n%s"), src, strerror(errno)), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Cannot read file\n\t%s\n%s"), src, strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 
 	if ( ( fnew = fopen( dest, "wb" ) ) == NULL  )
 	{
 		fclose ( fold );
-		int q = fl_choice(tsprintf(_("Cannot create file\n\t%s\n%s"), dest, strerror(errno)), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Cannot create file\n\t%s\n%s"), dest, strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 	
@@ -222,18 +226,23 @@ bool my_copy(const char* src, const char* dest) {
 	if (ferror(fold)) {
 		fclose(fold); // don't flush error buffer before time
 		fclose(fnew);
-		int q = fl_choice(tsprintf(_("Error while reading file\n\t%s\n%s"), src, strerror(errno)), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Error while reading file\n\t%s\n%s"), src, strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 	if (ferror(fnew)) {
 		fclose(fold); // don't flush error buffer before time
 		fclose(fnew);
-		int q = fl_choice(tsprintf(_("Error while writing file\n\t%s\n%s"), dest, strerror(errno)), _("&Stop"), _("&Continue"), 0);
+		int q = ede_choice_alert(tsprintf(_("Error while writing file\n\t%s\n%s"), dest, strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 0) return false; else return true;
 	}
 
 	fclose(fold);
 	fclose(fnew);
+
+	// attempt to preserve permissions - if it fails, we don't care
+	struct stat buf;
+	stat(src,&buf);
+	chmod (dest, buf.st_mode);
 
 	return true;
 }
@@ -303,18 +312,18 @@ void do_delete() {
 		// here was choice_alert
 	int c;
 	if (list_size==1 && my_isdir(files_list[0])) {
-		c = fl_choice(tsprintf(_("Are you sure that you want to delete directory\n\t%s\nincluding everything in it?"), files_list[0]), _("Do&n't delete"), _("&Delete"), 0);
+		c = ede_choice_alert(tsprintf(_("Are you sure that you want to delete directory\n\t%s\nincluding everything in it?"), files_list[0]), _("Do&n't delete"), _("&Delete"), 0);
 	} else if (list_size==1) {
-		c = fl_choice(tsprintf(_("Are you sure that you want to delete file %s ?"), my_filename_name(files_list[0])), _("Do&n't delete"), _("&Delete"), 0);
+		c = ede_choice_alert(tsprintf(_("Are you sure that you want to delete file %s ?"), my_filename_name(files_list[0])), _("Do&n't delete"), _("&Delete"), 0);
 	} else
-		c = fl_choice(tsprintf(_("Are you sure that you want to delete %d files and directories?"), list_size), _("Do&n't delete"), _("&Delete"), 0);
+		c = ede_choice_alert(tsprintf(_("Are you sure that you want to delete %d files and directories?"), list_size), _("Do&n't delete"), _("&Delete"), 0);
 
 	if (c==1) {
 		// first remove files...
 		for (int i=0; i<list_size; i++)
 			if (!my_isdir(files_list[i])) 
 				if (!edelib::file_remove(files_list[i]))
-					fl_alert(tsprintf(_("Couldn't delete file %s !\n%s"), fl_filename_name(files_list[i]), strerror(errno)));
+					ede_alert(tsprintf(_("Couldn't delete file %s !\n%s"), fl_filename_name(files_list[i]), strerror(errno)));
 
 		// ...then directories
 		// since expand_dirs() returns first dirs then files, we should go in oposite direction
@@ -323,7 +332,7 @@ void do_delete() {
 				// if (!edelib::file_remove(files_list[i]))
 				//   ^^ this apparently can't remove directories
 				if (remove(files_list[i])!=0)
-					fl_alert(tsprintf(_("Couldn't delete directory\n\t%s !\n%s"), files_list[i], strerror(errno)));
+					ede_alert(tsprintf(_("Couldn't delete directory\n\t%s !\n%s"), files_list[i], strerror(errno)));
 
 		// refresh directory listing - optimized
 		for (int i=1; i<=view->size(); i++)
@@ -349,10 +358,10 @@ void do_rename(const char* c) {
 	newname += c;
 	
 	if (edelib::file_exists(newname.c_str()))
-		fl_alert(tsprintf(_("Filename already in use: %s"), newname.c_str()));
+		ede_alert(tsprintf(_("Filename already in use: %s"), newname.c_str()));
 // For some reason, edelib::file_rename() always fails and returns false
 //	else if (!edelib::file_rename(oldname.c_str(),newname.c_str()))
-//		fl_alert(tsprintf(_("Rename %s to %s failed!"), oldname.c_str(), newname.c_str()));
+//		ede_alert(tsprintf(_("Rename %s to %s failed!"), oldname.c_str(), newname.c_str()));
 	else {
 		rename(oldname.c_str(),newname.c_str());
 
@@ -421,7 +430,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		// If this window is below others, try to get focus
 		win->take_focus();
 		if (strcmp(to,from[i])==0) {
-			//fl_alert(tsprintf(_("Can't copy directory\n\t%s\ninto itself."), to));
+			//ede_alert(tsprintf(_("Can't copy directory\n\t%s\ninto itself."), to));
 
 			// This happens accidentally, so statusbar is less annoying
 			statusbar->copy_label(tsprintf(_("Can't copy directory %s into itself."), my_filename_name(to)));
@@ -430,7 +439,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		if ((strncmp(to,from[i],strlen(to))==0)) {
 			char *k = strchr(from[i]+strlen(to), '/');
 			if (!k || *(k+1)=='\0') {
-				//fl_alert(tsprintf(_("File %s is already in directory\n\t%s"), from[i]+strlen(to), to));
+				//ede_alert(tsprintf(_("File %s is already in directory\n\t%s"), from[i]+strlen(to), to));
 				statusbar->copy_label(tsprintf(_("File %s is already in directory %s"), from[i]+strlen(to), to));
 				goto FINISH;
 			}
@@ -445,7 +454,6 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		Fl_Menu_Button* mb = new Fl_Menu_Button (Fl::event_x_root(),Fl::event_y_root(),0,0);
 		mb->box(FL_NO_BOX);
 		mb->type(Fl_Menu_Button::POPUP123);
-		mb->textsize(12); // hack for label size
 		mb->add(_("&Copy"),0,cb_dnd_copy);
 		mb->add(_("_&Move"),0,cb_dnd_cut);
 		mb->add(_("C&ancel"),0,0);
@@ -454,11 +462,11 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 
 		int c;
 		if (count==1 && my_isdir(from[0])) 
-			c = fl_choice(tsprintf(_("Copy or move directory\n\t%s\nto directory\n\t%s ?"), from[0], to), _("C&ancel"), _("&Copy"), _("&Move"));
+			c = ede_choice_alert(tsprintf(_("Copy or move directory\n\t%s\nto directory\n\t%s ?"), from[0], to), _("C&ancel"), _("&Copy"), _("&Move"));
 		else if (count==1)
-			c = fl_choice(tsprintf(_("Copy or move file %s to directory\n\t%s ?"), fl_filename_name(from[0]), to), _("C&ancel"), _("&Copy"), _("&Move"));
+			c = ede_choice_alert(tsprintf(_("Copy or move file %s to directory\n\t%s ?"), fl_filename_name(from[0]), to), _("C&ancel"), _("&Copy"), _("&Move"));
 		else
-			c = fl_choice(tsprintf(_("Copy or move file these %d files to directory\n\t%s ?"), count, to), _("C&ancel"), _("&Copy"), _("&Move"));
+			c = ede_choice_alert(tsprintf(_("Copy or move file these %d files to directory\n\t%s ?"), count, to), _("C&ancel"), _("&Copy"), _("&Move"));
 
 		if (c==0) goto FINISH;
 		if (c==1) operation=COPY; else operation=CUT;
@@ -480,7 +488,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 				int c = -1;
 				if (!overwrite_all && !skip_all) {
 					// here was choice_alert
-					c = fl_choice(tsprintf(_("File with name\n\t%s\nalready exists. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"));
+					c = ede_choice_alert(tsprintf(_("File with name\n\t%s\nalready exists. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"));
 				}
 				if (c==1) overwrite_all=true;
 				if (c==3) skip_all=true;
@@ -528,7 +536,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 
 		if (strcmp(srcdir,to)==0) {
 			// This should never happen cause we already checked it...
-			fl_alert(_("You cannot copy a file onto itself!"));
+			ede_alert(_("You cannot copy a file onto itself!"));
 			free(srcdir);
 			goto FINISH;
 		}
@@ -549,10 +557,6 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		stop_button->callback(stop_copying_cb,caption);
 		progress_window->end();
 		progress_window->show();
-
-		caption->labelsize(12); // hack for label size
-		stop_button->labelsize(12);
-
 
 		// Set ProgressBar range
 		cut_copy_progress->minimum(0);
@@ -599,7 +603,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 				int c = -1;
 				if (!overwrite_all && !skip_all) {
 					// here was choice_alert
-					c = fl_choice(tsprintf(_("File with name\n\t%s\nalready exists. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"));
+					c = ede_choice_alert(tsprintf(_("File with name\n\t%s\nalready exists. What to do?"), dest), _("&Overwrite"), _("Over&write all"), _("&Skip"), _("Skip &all"));
 				}
 				if (c==1) overwrite_all=true;
 				if (c==3) skip_all=true;

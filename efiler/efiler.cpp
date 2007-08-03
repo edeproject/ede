@@ -3,7 +3,7 @@
  *
  * EFiler - EDE File Manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2006 EDE Authors.
+ * Copyright (c) 2000-2007 EDE Authors.
  *
  * This program is licenced under terms of the
  * GNU General Public Licence version 2 or newer.
@@ -24,7 +24,6 @@
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
 #include <Fl/filename.H>
 #include <Fl/fl_ask.H>
-#include <Fl/fl_ask.H>
 #include <Fl/Fl_File_Input.H> // location bar
 
 #include <edelib/Nls.h>
@@ -36,6 +35,7 @@
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
+#include "ede_ask.h" // replacement for fl_ask
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
@@ -50,7 +50,6 @@ Fl_Tile* tile;
 Fl_Group* location_bar;
 Fl_File_Input* location_input;
 Fl_Menu_Button* context_menu;
-
 
 char current_dir[FL_PATH_MAX];
 bool showhidden;
@@ -74,6 +73,7 @@ const int statusbar_width = 400;
 int default_tree_width=150;
 
 
+
 /*-----------------------------------------------------------------
 	"Simple opener" - keep a list of openers in text file
 	This is just a temporary fix so that efiler works atm.
@@ -93,7 +93,7 @@ char *simpleopener(const char* mimetype) {
 	sopeners* p;
 	if (!openers) {
 		FILE* fp = fopen("openers.txt","r");
-		if (!fp) { fl_alert(_("File openers.txt not found")); return 0; }
+		if (!fp) { ede_alert(_("File openers.txt not found")); return 0; }
 		char buf[FL_PATH_MAX*2];
 		while (!feof(fp)) {
 			fgets((char*)&buf, FL_PATH_MAX*2, fp);
@@ -177,13 +177,9 @@ void loaddir(const char *path) {
 		*tmp='\0';
 	}
 
-	// Update directory tree
-	dirtree->set_current(current_dir);
-	location_input->value(current_dir);
-
 	// variables used later
 	int size=0;
-		dirent **files;
+	dirent **files;
 
 	// List all files in directory
 	if (ignorecase) 
@@ -192,11 +188,17 @@ void loaddir(const char *path) {
 		size = scandir(current_dir, &files, 0, versionsort);
 
 	if (size<1) { // there should always be . and ..
-		fl_alert(_("Permission denied!"));
+		ede_alert(_("Permission denied!"));
 		strncpy(current_dir,old_dir,strlen(current_dir));
 		semaphore=false;
 		return;
 	}
+
+	// Ok, now we know everything is fine...
+
+	// Update directory tree
+	dirtree->set_current(current_dir);
+	location_input->value(current_dir);
 
 	// set window label
 	// copy_label() is a method that calls strdup() and later free()
@@ -310,10 +312,10 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 
 
 /*-----------------------------------------------------------------
-	Main menu callbacks
+	Main menu and other callbacks
 -------------------------------------------------------------------*/
 
-// Open callback
+// This callback is called by doubleclicking on file list, by main and context menu
 void open_cb(Fl_Widget*w, void*data) {
 fprintf (stderr,"cb\n");
 	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu || w==context_menu) {
@@ -362,6 +364,9 @@ fprintf (stderr,"enter\n");
 	}
 } // open_cb
 
+
+
+// Main menu callbacks
 void location_cb(Fl_Widget*, void*) {
 	const char *dir = fl_dir_chooser(_("Choose location"),current_dir);
 	if (dir) loaddir(dir);
@@ -394,7 +399,6 @@ fprintf(stderr, "Show tree: %d %d\n", currentw, tree_width);
 
 void refresh_cb(Fl_Widget*, void*) { 
 	loaddir(current_dir); 
-	// TODO: reload directory tree as well-
 }
 
 void locationbar_cb(Fl_Widget*, void*) {
@@ -428,7 +432,8 @@ void case_cb(Fl_Widget*, void*) {
 
 void dirsfirst_cb(Fl_Widget*, void*) { dirsfirst=!dirsfirst; loaddir(current_dir); }
 
-// dummy callbacks
+
+// dummy callbacks - TODO
 void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void iconsview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
@@ -446,8 +451,82 @@ void tree_cb(Fl_Widget*, void*) {
 	}
 }
 
-// User entered a location
-void location_input_cb(Fl_Widget*, void*) { loaddir(location_input->value()); }
+
+// This callback handles location input: changing the directory, autocomplete 
+// and callbacks for shortcut buttons
+// location_input is set to FL_WHEN_CHANGED 
+void location_input_cb(Fl_Widget*, void*) {
+fprintf (stderr, "location_input_cb %d\n",Fl::event());
+	if (Fl::event_key() == FL_Enter || Fl::event()==FL_RELEASE) 
+		loaddir(location_input->value()); 
+
+	if (Fl::event()==FL_KEYDOWN && Fl::event_key()!=FL_BackSpace) {
+		// Pressing a key in Fl_Input will automatically replace selection with that key
+		// So there are really two possibilities:
+		//   1. Cursor is at the end, we add autocomplete stuff at cursor pos
+		//   2. Cursor is in the middle, we do nothing
+
+		const char* loc = location_input->value(); // shortcut
+		if (strlen(loc)<1 || loc[strlen(loc)-1]=='/') return;
+		int pos = location_input->position();
+		if (pos!=strlen(loc)) return; // cursor in the middle
+		int mark = location_input->mark();
+
+		// To avoid scandir, we will use view contents
+		// smart, eh? :)
+		if ((strlen(loc)>strlen(current_dir)) && (!strchr(loc+strlen(current_dir),'/'))) {
+			int i;
+			for (i=1; i<=view->size(); i++) {
+				const char* p = view->path(i);
+				if ((p[strlen(p)-1] == '/') && (strncmp(loc, p, strlen(loc))==0))
+					break;
+			}
+
+			if (i<=view->size()) {
+				location_input->replace(pos, mark, view->path(i)+pos);
+				location_input->position(pos);
+				location_input->mark(strlen(view->path(i)));
+			}
+			// else beep();  ??
+
+		} else {
+			// sigh, we need to scandir....
+			char* k;
+			if (!(k=strrchr(loc,'/'))) return;
+			char* updir = strdup(loc);
+			updir[k-loc+1] = '\0';
+
+			dirent **files;
+			int size = scandir(updir, &files, 0, versionsort);
+			if (size<1) { free(updir); return; }
+
+			int i;
+			char p[FL_PATH_MAX];
+			for (i=0; i<size; i++) {
+				snprintf (p,FL_PATH_MAX-1,"%s%s",updir,files[i]->d_name);
+
+				struct stat buf;
+				if (stat(p,&buf)) continue; // happens when user has traverse but not read privilege
+				if (S_ISDIR(buf.st_mode)) {
+					strcat(p,"/");
+					if (strncmp(loc, p, strlen(loc))==0)
+						break;
+				}
+				free(files[i]);
+			}
+			free(files); free(updir);
+			if (i<size) {
+				location_input->replace(pos, mark, p+pos);
+				location_input->position(pos);
+				location_input->mark(strlen(p));
+			}
+			// else beep();  ??
+		}
+	}
+}
+
+
+
 
 Fl_Menu_Item context_menu_definition[] = {
 	{_("&Open"),		0,	open_cb},
@@ -517,8 +596,27 @@ Fl_Menu_Item main_menu_definition[] = {
 
 int main (int argc, char **argv) {
 
+	// Parse command line - this must come first
+	int unknown=0;
+	Fl::args(argc,argv,unknown);
+	if (unknown==argc)
+		current_dir[0]='\0';
+	else {
+		if (strcmp(argv[unknown],"--help")==0) {
+			printf("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n");
+			printf("Usage:\n\tefiler [OPTIONS] [PATH]\n\n");
+			printf("%s\n",Fl::help);
+			return 1;
+		}
+		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
+	}
+
+
 fl_register_images();
 edelib::IconTheme::init("crystalsvg");
+
+FL_NORMAL_SIZE=12;
+fl_message_font(FL_HELVETICA, 12);
 
 
 	win = new Fl_Double_Window(default_window_width, default_window_height);
@@ -526,15 +624,13 @@ edelib::IconTheme::init("crystalsvg");
 	win->begin();
 		main_menu = new Fl_Menu_Bar(0,0,default_window_width,menubar_height);
 		main_menu->menu(main_menu_definition);
-		main_menu->textsize(12); // hack for label size
 
 		location_bar = new Fl_Group(0, menubar_height, default_window_width, location_bar_height);
 		location_bar->begin();
 			location_input = new Fl_File_Input(70, menubar_height+2, default_window_width-200, location_bar_height-5, _("Location:"));
-			location_input->labelsize(12); // hack for label size
-			location_input->textsize(12); // hack for label size
 			location_input->align(FL_ALIGN_LEFT);
 			location_input->callback(location_input_cb);
+			location_input->when(FL_WHEN_ENTER_KEY_CHANGED);
 		location_bar->end();
 		location_bar->box(FL_UP_BOX); // hack for label size
 		location_bar->resizable(location_input);
@@ -542,7 +638,6 @@ edelib::IconTheme::init("crystalsvg");
 		tile = new Fl_Tile(0, menubar_height+location_bar_height, default_window_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
 		tile->begin();
 			dirtree = new DirTree(0, menubar_height+location_bar_height, default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
-			dirtree->textsize(12); // hack for label size
 			dirtree->callback(tree_cb);
 
 			view = new FileDetailsView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
@@ -556,7 +651,6 @@ edelib::IconTheme::init("crystalsvg");
 		Fl_Group *sbgroup = new Fl_Group(0, default_window_height-statusbar_height, default_window_width, statusbar_height);
 			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);
 			statusbar->box(FL_DOWN_BOX);
-			statusbar->labelsize(12); // hack for label size
 			statusbar->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
 			statusbar->label(_("Ready."));
 
@@ -567,7 +661,6 @@ edelib::IconTheme::init("crystalsvg");
 		context_menu = new Fl_Menu_Button (0,0,0,0);
 		context_menu->type(Fl_Menu_Button::POPUP3);
 		context_menu->menu(context_menu_definition);
-		context_menu->textsize(12); // hack for label size
 		context_menu->box(FL_NO_BOX);
 
 	win->end();
@@ -578,17 +671,12 @@ edelib::IconTheme::init("crystalsvg");
 	view->take_focus();
 
 	// Yet another hack for label size....
-	fl_message_font(FL_HELVETICA, 12);
 
 	// TODO remember previous configuration
 	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
 	tree_width = default_tree_width;
 
 	dirtree->init();
-	if (argc==1) // No params
-		loaddir ("");
-	else 
-		loaddir (argv[1]);
-
+	loaddir(current_dir);
 	return Fl::run();
 }
