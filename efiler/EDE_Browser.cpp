@@ -176,7 +176,7 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 	// Start actually sorting
 	if (type != NO_SORT) {
 		// First create an array of strings in a given column
-		char* sorttext[size()+1]; // index starts from 1 for simplicity in mqsort
+		char** sorttext = (char**)malloc(sizeof(char*)*(size()+1)); // index starts from 1 for simplicity in mqsort
 		for (int i=1;i<=size();i++) {
 			char *tmp = strdup(text(i));
 			char *l = tmp;
@@ -196,6 +196,7 @@ void EDE_Browser::sort(int column, SortType type, bool reverse) {
 
 		// Free the allocated memory
 		for (int i=1; i<=size(); i++) free (sorttext[i]);
+		free(sorttext);
 	}
 }
 
