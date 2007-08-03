@@ -18,6 +18,7 @@
 #include "fileops.h"
 
 #include <sys/stat.h>
+#include <unistd.h> // for unlink()
 
 #include <Fl/Fl_Window.H>
 #include <Fl/Fl_Progress.H>
