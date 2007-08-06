@@ -24,10 +24,19 @@ struct EvokeClient {
 	edelib::String exec;      // program name/path to run
 };
 
-typedef edelib::list<EvokeClient>              ClientList;
-typedef edelib::list<EvokeClient>::iterator    ClientListIter;
+struct EvokeProcess {
+	edelib::String cmd;
+	pid_t pid;
+};
+
+typedef edelib::list<EvokeClient>           ClientList;
+typedef edelib::list<EvokeClient>::iterator ClientListIter;
+
 typedef edelib::list<edelib::String>           StringList;
 typedef edelib::list<edelib::String>::iterator StringListIter;
+
+typedef edelib::list<EvokeProcess>           ProcessList;
+typedef edelib::list<EvokeProcess>::iterator ProcessListIter;
 
 class Fl_Double_Window;
 
@@ -44,7 +53,8 @@ class EvokeService {
 		Atom _ede_spawn;
 		Atom _ede_evoke_quit;
 
-		ClientList clients;
+		ClientList  clients;
+		ProcessList processes;
 
 	public:
 		EvokeService();
@@ -67,6 +77,12 @@ class EvokeService {
 
 		void register_top(Fl_Double_Window* win) { top_win = win; }
 		void unregister_top(void) { top_win = NULL; }
+
+		void register_process(const char* cmd, pid_t pid);
+		void unregister_process(pid_t pid);
+		bool find_and_unregister_process(pid_t pid, EvokeProcess& pc);
+
+		void service_watcher(int pid, int signum);
 
 		void quit_x11(void);
 };

@@ -15,6 +15,7 @@
 #include "EvokeService.h"
 #include "Splash.h"
 #include "Spawn.h"
+#include "Crash.h"
 
 #include <edelib/File.h>
 #include <edelib/Config.h>
@@ -84,6 +85,10 @@ int get_string_property_value(Atom at, char* txt, int txt_len) {
 	return 1;
 }
 
+void service_watcher_cb(int pid, int signum) {
+	EvokeService::instance()->service_watcher(pid, signum);
+}
+
 EvokeService::EvokeService() : is_running(0), logfile(NULL), pidfile(NULL), lockfile(NULL) { 
 	top_win = NULL;
 }
@@ -101,6 +106,8 @@ EvokeService::~EvokeService() {
 		edelib::file_remove(pidfile);
 		free(pidfile);
 	}
+
+	processes.clear();
 }
 
 EvokeService* EvokeService::instance(void) {
@@ -243,6 +250,7 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 void EvokeService::init_autostart(void) {
 	edelib::String home = edelib::user_config_dir();
 	home += "/autostart/";
+	// TODO
 }
 
 void EvokeService::setup_atoms(Display* d) {
@@ -315,6 +323,77 @@ void EvokeService::quit_x11(void) {
 #endif
 }
 
+/*
+ * Monitor starting service and report if staring
+ * failed. Also if one of runned services crashed
+ * attach gdb on it pid and run backtrace.
+ */
+void EvokeService::service_watcher(int pid, int signum) {
+	//if(signum == 11) {
+	if(signum == 139) {
+		EvokeProcess pc;
+		if(find_and_unregister_process(pid, pc)) {
+			printf("%s crashed with core dump\n", pc.cmd.c_str());
+
+			CrashDialog cdialog;
+			cdialog.set_data(pc.cmd.c_str());
+			cdialog.run();
+			return;
+		}
+	} else if(signum == 32512) {
+		fl_alert("No such file");
+	}
+
+	unregister_process(pid);
+}
+
+void EvokeService::register_process(const char* cmd, pid_t pid) {
+	EvokeProcess pc;
+	pc.cmd = cmd;
+	pc.pid = pid;
+	printf("registering %s with %i\n", cmd, pid);
+	processes.push_back(pc);
+}
+
+void EvokeService::unregister_process(pid_t pid) {
+	if(processes.empty())
+		return;
+
+	ProcessListIter it = processes.begin();
+	ProcessListIter it_end = processes.end();
+
+	while(it != it_end) {
+		if((*it).pid == pid) {
+			printf("Found %s with pid %i, cleaning...\n", (*it).cmd.c_str(), pid);
+			processes.erase(it);
+			return;
+		}
+		++it;
+	}
+}
+
+bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
+	if(processes.empty())
+		return 0;
+
+	ProcessListIter it = processes.begin();
+	ProcessListIter it_end = processes.end();
+
+	while(it != it_end) {
+		if((*it).pid == pid) {
+			printf("Found %s with pid %i, cleaning...\n", (*it).cmd.c_str(), pid);
+			pc.cmd = (*it).cmd;
+			pc.pid = pid;
+
+			processes.erase(it);
+			return 1;
+		}
+		++it;
+	}
+
+	return 0;
+}
+
 int EvokeService::handle(const XEvent* ev) {
 	logfile->printf("Got event %i\n", ev->type);
 
@@ -333,16 +412,20 @@ int EvokeService::handle(const XEvent* ev) {
 	} else if(ev->type == PropertyNotify) {
 		if(ev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
-
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
 				logfile->printf("Got _EVOKE_SPAWN with %s. Starting client...\n", buff);
-				int r = spawn_program(buff);
+
+				pid_t child;
+				int r = spawn_program_with_core(buff, service_watcher_cb, &child);
 
 				if(r != 0)
 					fl_alert("Unable to start %s. Got code %i", buff, r);
-			} else
-				logfile->printf("Got _EVOKE_SPAWN with malformed data. Ignoring...\n");
+				else
+					register_process(buff, child);
 
+			} else {
+				logfile->printf("Got _EVOKE_SPAWN with malformed data. Ignoring...\n");
+			}
 			return 1;
 		}
 

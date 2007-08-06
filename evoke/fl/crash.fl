@@ -1,0 +1,28 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {open
+    xywh {354 160 380 130} type Double visible
+  } {
+    Fl_Box {} {
+      image {icons/core.xpm} xywh {10 10 70 75} labelsize 14
+    }
+    Fl_Box {} {
+      label {Program foo just crashed !!!
+
+You can inspect details about this crash by clicking on 'Show details' below} selected
+      xywh {85 10 285 75} align 148
+    }
+    Fl_Button {} {
+      label {&Close}
+      xywh {280 95 90 25}
+    }
+    Fl_Button {} {
+      label {@> Show details}
+      xywh {10 95 265 25} box FLAT_BOX align 20
+    }
+  }
+} 

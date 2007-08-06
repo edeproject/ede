@@ -10,9 +10,11 @@
 
 SubDir TOP evoke ;
 
-SOURCE = evoke.cpp EvokeService.cpp Spawn.cpp Splash.cpp Log.cpp Logout.cpp ;
+SOURCE = evoke.cpp EvokeService.cpp Spawn.cpp Splash.cpp Log.cpp Logout.cpp Crash.cpp ;
 
 EdeProgram evoke : $(SOURCE) ;
 FltkProgramBare test/evoke_test : test/evoke_test.cpp ;
 #TranslationStrings locale : $(SOURCE) ;
 EdeManual doc/evoke.txt ;
+
+#EdeProgram crash : Crash.cpp ;
