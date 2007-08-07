@@ -35,8 +35,16 @@ void sigchld_handler(int sig) {
 		errno = 0;
 		pid = waitpid(WAIT_ANY, &status, WNOHANG);
 
-		if(global_watch != 0)
+		if(global_watch != 0) {
+			if(WIFEXITED(status))
+				status = WEXITSTATUS(status);
+			else if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
+				status = SPAWN_CHILD_CRASHED;
+			else
+				status = SPAWN_CHILD_KILLED;
+
 			global_watch(pid, status);
+		}
 
 	} while(pid <= 0 && errno == EINTR);
 }
@@ -126,7 +134,7 @@ int spawn_program_with_core(const char* cmd, SignalWatch* wf, pid_t* child_pid_r
 	return ret;
 }
 
-int spawn_backtrace(const char* program, const char* core_path, const char* output, const char* script) {
+int spawn_backtrace(const char* program, const char* core, const char* output, const char* script) {
 	const char* gdb_script = "bt\nquit\n";
 	const int gdb_script_len = 8;
 
@@ -158,10 +166,8 @@ int spawn_backtrace(const char* program, const char* core_path, const char* outp
 		argv[3] = "-x";
 		argv[4] = (char*)script;
 		argv[5] = (char*)program;
-		argv[6] = (char*)core_path;
+		argv[6] = (char*)core;
 		argv[7] = 0;
-
-		//printf("%s %s %s %s %s %s %s\n", argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
 
 		execvp(argv[0], argv);
 		return -1;

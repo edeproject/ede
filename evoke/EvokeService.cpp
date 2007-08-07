@@ -32,6 +32,7 @@
 #include <unistd.h>    // 
 #include <stdlib.h>    // free
 #include <string.h>    // strdup, memset
+#include <errno.h>     // error codes
 
 void resolve_path(const edelib::String& imgdir, edelib::String& img, bool have_imgdir) {
 	if(img.empty())
@@ -329,9 +330,10 @@ void EvokeService::quit_x11(void) {
  * attach gdb on it pid and run backtrace.
  */
 void EvokeService::service_watcher(int pid, int signum) {
-	//if(signum == 11) {
-	if(signum == 139) {
+	printf("got %i\n", signum);
+	if(signum == SPAWN_CHILD_CRASHED) {
 		EvokeProcess pc;
+
 		if(find_and_unregister_process(pid, pc)) {
 			printf("%s crashed with core dump\n", pc.cmd.c_str());
 
@@ -340,11 +342,29 @@ void EvokeService::service_watcher(int pid, int signum) {
 			cdialog.run();
 			return;
 		}
-	} else if(signum == 32512) {
-		fl_alert("No such file");
+	} else if(signum == SPAWN_CHILD_KILLED) {
+		printf("child %i killed\n", pid);
+	} else {
+		printf("child %i exited with %i \n", pid, signum);
 	}
 
 	unregister_process(pid);
+}
+
+/*
+ * Execute program. It's return status
+ * will be reported via service_watcher()
+ */
+void EvokeService::run_program(const char* cmd) {
+	EASSERT(cmd != NULL);
+
+	pid_t child;
+	int r = spawn_program_with_core(cmd, service_watcher_cb, &child);
+
+	if(r != 0)
+		fl_alert("Unable to start %s. Got code %i", cmd, r);
+	else
+		register_process(cmd, child);
 }
 
 void EvokeService::register_process(const char* cmd, pid_t pid) {
@@ -414,15 +434,7 @@ int EvokeService::handle(const XEvent* ev) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
 				logfile->printf("Got _EVOKE_SPAWN with %s. Starting client...\n", buff);
-
-				pid_t child;
-				int r = spawn_program_with_core(buff, service_watcher_cb, &child);
-
-				if(r != 0)
-					fl_alert("Unable to start %s. Got code %i", buff, r);
-				else
-					register_process(buff, child);
-
+				run_program(buff);
 			} else {
 				logfile->printf("Got _EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
@@ -448,7 +460,7 @@ int EvokeService::handle(const XEvent* ev) {
 				int dh = DisplayHeight(fl_display, fl_screen);
 
 				printf("got %i\n", logout_dialog(dw, dh));
-				//quit_x11();
+				// quit_x11();
 			} else	
 				logfile->printf("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);
 			return 1;

@@ -16,7 +16,6 @@
 #include <FL/Fl.h>
 #include <FL/Fl_Pixmap.h>
 #include <edelib/Nls.h>
-#include <edelib/File.h>
 
 #include <stdio.h> // snprintf
 
@@ -47,6 +46,7 @@ CrashDialog::CrashDialog() : Fl_Window(DIALOG_W, DIALOG_H, _("World is going dow
 		icon_box->image(pix);
 
 		txt_box = new Fl_Box(85, 10, 285, 75);
+		txt_box->label(_("Program just crashed !!!\n\nYou can inspect details about this crash by clicking on 'Show backtrace' below"));
 		txt_box->align(FL_ALIGN_WRAP | FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
 
 		close = new Fl_Button(280, 95, 90, 25, _("&Close"));
@@ -90,25 +90,15 @@ void CrashDialog::show_details(void) {
 
 		if(!trace_loaded) {
 			trace_buff->remove(0, trace_buff->length());
-
-			// read core
 			spawn_backtrace(cmd.c_str(), "core", "/tmp/gdb_output", "/tmp/gdb_script");
-
 			trace_buff->appendfile("/tmp/gdb_output");
 			trace_loaded = 1;
-
-			// delete core
-			edelib::file_remove("core");
 		}
 	}
 }
 
 void CrashDialog::set_data(const char* command) {
 	cmd = command;
-
-	char txt[1024];
-	snprintf(txt, sizeof(txt), _("Program just crashed !!!\n\nYou can inspect details about this crash by clicking on 'Show backtrace' below"));
-	txt_box->copy_label(txt);
 	trace_loaded = 0;
 }
 
