@@ -95,6 +95,8 @@ private:
 	void mqsort(char *labels[], int beg, int end, SortType type); // my implementation of qsort
 	bool sortfn(char *,char*,SortType); // sort function, per type
 
+	Fl_Group* thegroup;
+
 public:
 	EDE_Browser(int X,int Y,int W,int H,const char *L=0);
 
@@ -192,6 +194,12 @@ public:
 			oldX=X;
 		}
 		Fl_Icon_Browser::hposition(X);
+	}
+
+	void hide() { 
+		heading->hide(); 
+		thegroup->hide(); /* group */
+		Fl_Widget::hide(); 
 	}
 };
 

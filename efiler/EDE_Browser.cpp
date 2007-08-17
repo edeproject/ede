@@ -217,7 +217,7 @@ static void scroll_cb(Fl_Widget* w, void*) {
 EDE_Browser::EDE_Browser(int X,int Y,int W,int H,const char *L) : Fl_Icon_Browser(X,Y,W,H),
 	  totalwidth_(0), column_header_(0), sort_column(0), sort_type(NO_SORT), sort_direction(false) {
 
-	Fl_Group* thegroup = new Fl_Group(X,Y,W,H);
+	thegroup = new Fl_Group(X,Y,W,H);
 	thegroup->begin();
 		heading = new Heading(0,0,W,buttonheight);
  		heading->box(FL_FLAT_BOX); // draw heading background
@@ -226,7 +226,7 @@ EDE_Browser::EDE_Browser(int X,int Y,int W,int H,const char *L) : Fl_Icon_Browse
 		heading->hide();
 		heading->parent(this); // for callback
 	
-		hscrollbar = new Fl_Scrollbar(1, H-Fl::scrollbar_size()-2, W-Fl::scrollbar_size()-3, Fl::scrollbar_size()); // take account for edges
+		hscrollbar = new Fl_Scrollbar(1, H-Fl::scrollbar_size(), W-Fl::scrollbar_size()-3, Fl::scrollbar_size()); // take account for edges
 		hscrollbar->type(FL_HORIZONTAL);
 		hscrollbar->hide();
 		hscrollbar->parent(this); // for callback
@@ -407,11 +407,11 @@ void EDE_Browser::resize(int X, int Y, int W, int H) {
 		// show scrollbar
 		hscrollbar->value(hscrollbar->value(), W, 0, totalwidth_);
 		if (!hscrollbar->visible()) {
-			hscrollbar->resize(X+1, Y+H-fsbs-2, W-fsbs-3, fsbs);
+			hscrollbar->resize(X+1, Y+H-fsbs, W-fsbs-3, fsbs);
 			hscrollbar->show();
 			H -= fsbs;
 		} else {
-			hscrollbar->resize(X+1, Y+H-2, W-fsbs-3, fsbs);
+			hscrollbar->resize(X+1, Y+H, W-fsbs-3, fsbs);
 			hscrollbar->redraw();
 		}
 	}
