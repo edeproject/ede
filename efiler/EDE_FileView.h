@@ -14,19 +14,32 @@
 #ifndef EDE_FileView_H
 #define EDE_FileView_H
 
-#include <Fl/Fl_Shared_Image.H>
-#include <Fl/Fl_Input.H>
+
+
+#define USE_FLU_WRAP_GROUP
+
+
+#include <FL/filename.H> // for FL_PATH_MAX
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Window.H>
 
 #include <edelib/String.h>
 #include <edelib/IconTheme.h>
+#include <edelib/Nls.h>
 
 #include "EDE_Browser.h"
 
-// This class provides the generic FileView class and two
-// derived classes called FileIconView and FileDetailsView.
-// These classes are interchangeable, so that application 
-// can just declare FileView* and use.
-// FileView is populated with FileItem's.
+#ifdef USE_FLU_WRAP_GROUP
+#  include "Flu_Wrap_Group.h"
+#else
+#  include <edelib/ExpandableGroup.h>
+#endif
+
+
 
 struct FileItem {
 	edelib::String name; // just the name
@@ -45,6 +58,625 @@ typedef void (rename_callback_type)(const char*);
 typedef void (paste_callback_type)(const char*);
 
 
+#define ICONW 70
+#define ICONH 80
+// Spacing to use between icons
+#define ICON_SPACING 5
+
+// How many pixels from selection edge will be ignored
+// (e.g. if selection laso only touches a widget with <5px, it will not be selected)
+#define SELECTION_EDGE 5
+
+#ifdef USE_FLU_WRAP_GROUP
+class FileIconView_ : public Flu_Wrap_Group {
+#else
+class FileIconView_ : public edelib::ExpandableGroup {
+#endif
+private:
+	// private vars for handling selection and focus
+	// because group doesn't do it
+	int focused;
+	int* m_selected;
+
+	rename_callback_type* rename_callback_;
+	paste_callback_type* paste_callback_;
+	Fl_Callback* context_callback_;
+
+	int select_x1,select_y1,select_x2,select_y2;
+
+	Fl_Button* find_button(edelib::String realpath) {
+		for (int i=0; i<children(); i++) {
+			Fl_Button* b = (Fl_Button*)child(i);
+			char *tmp = (char*)b->user_data();
+			if (realpath==tmp) return b;
+		}
+		return 0;
+	}
+public:
+#ifdef USE_FLU_WRAP_GROUP
+	FileIconView_(int X, int Y, int W, int H, char*label=0) : Flu_Wrap_Group(X,Y,W,H,label)
+#else
+	FileIconView_(int X, int Y, int W, int H, char*label=0) : edelib::ExpandableGroup(X,Y,W,H,label)
+#endif
+	{
+		end();
+		box(FL_DOWN_BOX);
+		color(FL_BACKGROUND2_COLOR);
+#ifdef USE_FLU_WRAP_GROUP
+		spacing(ICON_SPACING,ICON_SPACING);
+#endif
+
+		select_x1=select_y1=select_x2=select_y2=0;
+		focused=0;
+		m_selected = 0;
+
+		rename_callback_ = 0;
+		paste_callback_ = 0;
+		context_callback_ = 0;
+	}
+	void insert(int row, FileItem *item) {
+		// update list of selected[] items
+		if (!m_selected)
+			m_selected = (int*)malloc(sizeof(int)*(children()+1));
+		else
+			m_selected = (int*)realloc(m_selected,sizeof(int)*(children()+1));
+		m_selected[children()]=0;
+
+		Fl_Button* b = new Fl_Button(0,0,ICONW,ICONH);
+		b->box(FL_FLAT_BOX);
+		b->color(FL_BACKGROUND2_COLOR);
+		b->align(FL_ALIGN_INSIDE|FL_ALIGN_CENTER|FL_ALIGN_WRAP|FL_ALIGN_CLIP);
+
+		// Set the label
+		char buffer[FL_PATH_MAX];
+		uint j=0;
+		for (uint i=0; i<item->name.length(); i++,j++) {
+			buffer[j] = item->name[i];
+			buffer[j+1] = '\0';
+			if (buffer[j] == '@') { // escape @
+				buffer[++j] = '@';
+				buffer[j+1] = '\0';
+			}
+			b->copy_label(buffer);
+			int lw =0, lh = 0;
+			fl_measure(b->label(), lw, lh);
+			if (lw>ICONW) {
+				if (j==i+2) { // already added 2 newlines
+					buffer[j-2]='.';
+					buffer[j-1]='.';
+					buffer[j]='.';
+					buffer[j+1]='\0';
+					j+=2;
+					break; // for
+				} else { // add newline
+					buffer[j+1]=buffer[j];
+					buffer[j]='\n';
+					buffer[j+2]='\0';
+					j++;
+				}
+			}
+		}
+		while (j<=item->name.length()+2){ 
+			buffer[j++]='\n';
+			//buffer[j++]='L';
+		}
+		buffer[j]='\0';
+		b->copy_label(buffer);
+
+		// Tooltip text
+		edelib::String tooltip = _("Name: ")+item->name;
+		if (item->size != "") tooltip += _("\nSize: ")+item->size;
+		tooltip += _("\nType: ")+item->description+_("\nDate: ")+item->date+_("\nPermissions: ")+item->permissions;
+		b->tooltip(strdup(tooltip.c_str()));
+		b->user_data(strdup(item->realpath.c_str()));
+
+		// Set icon
+		edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_MEDIUM);
+		if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE);
+		b->image(Fl_Shared_Image::get(icon.c_str()));
+
+#ifdef USE_FLU_WRAP_GROUP
+		Flu_Wrap_Group::insert(*b,row);
+#else
+		edelib::ExpandableGroup::insert(*b,row);
+#endif
+		//insert(*b,row); -- why doesn't this work?
+		redraw();
+	}
+	void add(FileItem *item) { insert(children()+1, item); }
+
+	void remove(FileItem *item) {
+		Fl_Button* b = find_button(item->realpath);
+		if (b) {
+#ifdef USE_FLU_WRAP_GROUP
+			Flu_Wrap_Group::remove(*b); // note that FWG requires to dereference the pointer
+#else
+			edelib::ExpandableGroup::remove(b);
+#endif
+			//remove(b);
+			delete b;
+		}
+	}
+
+	void remove(int row) {
+		if (row<1 || row>children()) return;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+#ifdef USE_FLU_WRAP_GROUP
+		Flu_Wrap_Group::remove(*b); // note that FWG requires to dereference the pointer
+#else
+		edelib::ExpandableGroup::remove(b);
+#endif
+		//remove(b);
+		delete b;
+	}
+
+
+	void update(FileItem *item) {
+		Fl_Button* b = find_button(item->realpath);
+		if (!b) return;
+
+		// Tooltip text
+		edelib::String tooltip = _("Name: ")+item->name+_("\nSize: ")+item->size+_("\nType: ")+item->description+_("\nDate: ")+item->date+_("\nPermissions: ")+item->permissions;
+		b->tooltip(strdup(tooltip.c_str()));
+
+		// Set icon
+		edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_MEDIUM);
+		if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE);
+		b->image(Fl_Shared_Image::get(icon.c_str()));
+
+		b->redraw();
+	}
+
+	// This is needed because update() uses path to find item in list
+	void update_path(const char* oldpath,const char* newpath) {
+		Fl_Button* b = find_button(oldpath);
+		if (!b) return;
+		b->user_data(strdup(newpath));
+	}
+
+	// Set item to "disabled"
+	void gray(int row) { 
+		if (row<1 || row>children()) return;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+		// FIXME this also means that item can't be selected
+		b->deactivate();
+	}
+	// Set item to "enabled"
+	void ungray(int row) {
+		if (row<1 || row>children()) return;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+		b->activate();
+	}
+
+	// Setup callback that will be used when renaming and dnd
+	void rename_callback(rename_callback_type* cb) { rename_callback_ = cb; }
+	void paste_callback(paste_callback_type* cb) { paste_callback_ = cb; }
+	void context_callback(Fl_Callback* cb) { context_callback_ = cb; }
+
+	// Item real path (data value)
+	const char* path(int row) {
+		if (row<1 || row>children()) return 0;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+		return (const char*)b->user_data();
+	}
+
+	// Is item selected?
+	int selected(int row) { 
+		if (row<1 || row>children()) return 0;
+		int i=0;
+		while(m_selected[i]!=0)
+			if (m_selected[i++]==row) return 1;
+		return 0;
+	}
+
+	// Select item (if value=1) or unselect (if value=0)
+	void select(int row, int value) {
+		if (row<1 || row>children()) return;
+		if (!m_selected) return; // shouldn't happen
+		set_focus(row);
+		int i=0;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+		if (value) {
+			while (m_selected[i++]!=0);
+			m_selected[i]=row;
+
+			b->color(FL_SELECTION_COLOR);
+			b->labelcolor(fl_contrast(FL_FOREGROUND_COLOR,FL_SELECTION_COLOR));
+			b->redraw();
+		} else {
+			while (m_selected[i]!=0) {
+				if (m_selected[i]==row) {
+					int j=i;
+					while (m_selected[j]!=0) {
+						m_selected[j]=m_selected[j+1];
+						j++;
+					}
+					break;
+				}
+				i++;
+			}
+			
+			b->color(FL_BACKGROUND2_COLOR);
+			b->labelcolor(FL_FOREGROUND_COLOR);
+			b->redraw();
+		}
+	}
+
+	// Return nr. of widget that has keyboard focus
+	int get_focus() {
+/*#ifdef USE_FLU_WRAP_GROUP
+fprintf( stderr, "---- get_focus()=%d\n", focused);
+		return focused;
+#else*/
+		Fl_Widget* focus = Fl::focus();
+		int i = find(focus); // Fl_Group method
+		if (i<children()) return i+1;
+		else return 0;
+//#endif
+	}
+
+	// Scroll view until item becomes visible
+	void show_item(int row) {
+fprintf(stderr, "show_item(%d)\n", row);
+		if (row<1 || row>children()) return;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+
+#ifdef USE_FLU_WRAP_GROUP
+		// scroll_to() will scroll widget to the top of view
+		// I prefer that view is scrolled just enough so icon is visible
+		// FIXME: sometimes b->y() is so large that it wraps around and becomes positive
+		if (b->y()+b->h() > y()+h()) {
+			int scrollto = scrollbar.value() + (b->y()+b->h()-y()-h())+1;
+fprintf (stderr, "by: %d bh: %d y: %d h: %d sv: %d\n", b->y(), b->h(), y(), h(), scrollbar.value());
+			((Fl_Valuator*)&scrollbar)->value(scrollto);
+			redraw();
+			draw(); // we need to relayout the group so that b->y() value is updated for next call
+		}
+		if (b->y() < y())
+			scroll_to(b);
+#else
+		// Not tested and probably broken:
+		Fl_Scrollbar* s = get_scroll();
+		if (b->y() > s->value()+h()) {
+			// Widget is below current view
+			scrolly(b->y()+b->h()-h());
+		} else if (b->y() < s->value()) {
+			// Widget is above current view
+			scrolly(b->y());
+		}
+		// else { widget is visible, do nothing }
+#endif
+	}
+
+	// Set keyboard focus to given item
+	void set_focus(int row) {
+fprintf( stderr, "---- set_focus(%d)\n", row);
+		if (row<1 || row>children()) return;
+		Fl_Button* b = (Fl_Button*)child(row-1);
+		b->take_focus();
+		show_item(row);
+		focused=row;
+	}
+
+
+	// Overloaded handle() method, see inline comments for details
+	int handle(int e) {
+//fprintf (stderr, " -- FileIconView - Event %d\n",e);
+
+		// Fixes for focus management
+		// fltk provides focus management for members of Fl_Group, but it has minor problems:
+		//  - when pressing Alt+Tab, focused widget is forgotten
+		//  - if no widget is focused, arrow keys will navigate outside group
+		//  - Tab has same effect as right arrow
+
+		
+		if (Fl::focus()->inside(this)) { // is focus inside?
+			int k = Fl::event_key();
+//fprintf(stderr, "event: %d key: %d\n",e,k);
+			if (k==FL_Up || k==FL_Down || k==FL_Left || k==FL_Right) {
+				// Wrap around
+				// FL_KEYDOWN happens only if key is otherwise unhandled
+				if (e==FL_KEYDOWN) {
+					int x = get_focus()-1;
+					Fl_Widget* b = child(x);
+					Fl_Widget* b2;
+					if (k==FL_Up) b2=above(b);
+					if (k==FL_Down) b2=below(b);
+						// Bug in Flu_Wrap_Group - inconsistent behavior of below()
+						if (k==FL_Down && b2==b) b2=child(children()-1);
+					if (k==FL_Left) b2=left(b);
+					if (k==FL_Right) b2=next(b);
+					if (((k==FL_Up) || (k==FL_Left)) && x==0) 
+						b2=child(children()-1);
+					if (((k==FL_Down) || (k==FL_Right)) && x==children()-1) 
+						b2=child(0);
+					for (int i=0; i<children(); i++)
+						if (b2==child(i)) set_focus(i+1);
+					return 1;
+				}
+
+				// Remember focus for restoring later
+				if (e==FL_KEYUP || e==FL_KEYBOARD) {// Sometimes only one of these is triggered
+					focused = get_focus();
+					if (!focused) {
+						// Nothing is focused
+						if (k==FL_Up || k==FL_Left)
+							set_focus(children());
+						else
+							set_focus(1);
+					} else
+						show_item(focused); // scroll follows focus
+					return 1; // Don't let fltk navigate to another widget
+				}
+			}
+
+			// Tab key should always navigate outside group
+			if (e!=FL_NO_EVENT && e!=FL_KEYUP && k==FL_Tab) { // NO_EVENT happens before widget gets focus
+fprintf(stderr, "TAB %d - focused: (%s)\n",e,Fl::focus()->label());
+				// Because widgets can be *very* nested, we go straight
+				// to window()
+				Fl_Group* master=window();
+				Fl_Widget* jumpto=0;
+				int i=0;
+				while (jumpto==0 && master!=this) {
+					jumpto=master->child(i);
+fprintf (stderr, " -- (%s)\n", jumpto->label());
+					if (this->inside(jumpto) || !jumpto->visible())
+						jumpto=0;
+					i++;
+					if (i==master->children()) {
+						int j;
+						for (j=0; j<master->children(); j++)
+							if (master->child(j)->visible()) break;
+						if (j==master->children()) {// nothing is visible!?
+							master=(Fl_Group*)this;
+fprintf (stderr, "WTF\n");
+						}else{
+							master=(Fl_Group*)master->child(j);
+fprintf (stderr, " -> [%s]\n", master->label());
+}
+						i=0;
+					}
+					if (jumpto!=0 && !jumpto->take_focus())
+						jumpto=0; // widget refused focus, keep searching
+				}
+fprintf (stderr, "[X]\n");
+				// if this is the only widget, do nothing
+				return 1;
+			}
+		}
+		if (e==FL_FOCUS) {
+			// Restore focused widget after losing focus
+			if (focused) set_focus(focused);
+			return 1; 
+		}
+
+/*#ifdef USE_FLU_WRAP_GROUP
+		int k = Fl::event_key();
+//		if (e==FL_KEYBOARD) fprintf (stderr, "Key: %d", k);
+		if ((e==FL_KEYUP || e==FL_KEYBOARD) && (k==FL_Up || k==FL_Down || k==FL_Left || k==FL_Right)) {
+			Fl_Widget* nextw=0;
+			if (focused) {
+				Fl_Widget* currentw = child(focused-1);
+				switch(k) { // Flu_Wrap_Group methods:
+					case FL_Up:
+						nextw = above(currentw); break;
+					case FL_Down:
+						nextw = below(currentw); break;
+					case FL_Left:
+						nextw = left(currentw); break;
+					case FL_Right:
+						nextw = next(currentw); break;
+				}
+				// Flu_Wrap_Group bug: all methods will wrap around EXCEPT
+				// Flu_Wrap_Group::below() ?!
+				if (k==FL_Down && nextw==currentw)
+					nextw = child(0);
+			}
+fprintf (stderr, "Event k: %d focused: %d\n", k, focused);
+
+			if (focused && nextw)
+				for (int i=0; i<children(); i++) { 
+					if (child(i) == nextw) {
+fprintf (stderr, "Call %d\n", i);
+						set_focus(i+1);
+					}
+				}
+			else // No widget is selected, or it is first/last
+				switch(k) {
+					 // TODO: wrap around
+					case FL_Up:
+					case FL_Left:
+						set_focus(children()); break;
+					case FL_Down:
+					case FL_Right:
+						set_focus(1); break;
+				}
+			return 1;
+		}
+		if (e==FL_FOCUS) {
+			// Restore focused widget after losing focus
+			if (focused) set_focus(focused);
+			return 1; 
+		}
+#endif*/
+
+		// We accept mouse clicks
+		if (e==FL_PUSH && Fl::event_x()>x() && Fl::event_x() < x()+w()-Fl::scrollbar_size()) {
+			return 1;
+		}
+		// We accept focus (defaults to 0 with FL_GROUP)
+		if (e==FL_FOCUS) return 1;
+
+		// Do callback on enter key
+		// (because icons don't have callbacks)
+		if (e==FL_KEYBOARD && Fl::event_key()==FL_Enter) {
+			do_callback();
+			return 1;
+		}
+
+		// Drag to select (a.k.a. "laso") operation
+		// Draw a dashed line around icons
+		static bool laso=false;
+		if (e==FL_DRAG) {
+fprintf (stderr, "FL_DRAG! ");
+			if (!laso) {
+fprintf (stderr, "- begin.\n");
+				laso=true;
+				// Set coordinates for selection box (drawn in draw())
+				select_x1=select_x2=Fl::event_x();
+				select_y1=select_y2=Fl::event_y();
+			} else {
+fprintf (stderr, "- box (%d,%d,%d,%d).\n",select_x1,select_y1,select_x2,select_y2);
+				select_x2=Fl::event_x();
+				select_y2=Fl::event_y();
+				redraw();
+			}
+			return 1;
+		}
+
+		// Mouse button released
+		if (e==FL_RELEASE) {
+fprintf (stderr, "FL_RELEASE! ");
+			// Unselect everything unless Shift or Ctrl is held
+			if (!Fl::event_state(FL_SHIFT) && !Fl::event_state(FL_CTRL)) {
+				for (int i=0;i<children();i++) {
+					// We cannot use select(i+1,0) because that would mess with focus
+					Fl_Button* b = (Fl_Button*)child(i);
+					b->color(FL_BACKGROUND2_COLOR);
+					b->labelcolor(FL_FOREGROUND_COLOR);
+				}
+				redraw();
+				int i=0;
+				while (m_selected[i]!=0) m_selected[i++]=0;
+			}
+
+			// Stop laso operation
+			if (laso) {
+fprintf (stderr, "- stop drag.\n");
+				laso=false;
+
+				// Order coordinates
+				int tmp;
+				if (select_x1>select_x2) { tmp=select_x1; select_x1=select_x2; select_x2=tmp; }
+				if (select_y1>select_y2) { tmp=select_y1; select_y1=select_y2; select_y2=tmp; }
+
+				// Don't include the edges
+				select_x1 += SELECTION_EDGE;
+				select_y1 += SELECTION_EDGE;
+				select_x2 -= SELECTION_EDGE;
+				select_y2 -= SELECTION_EDGE;
+fprintf(stderr, "After fixing the box coords: (%d,%d,%d,%d)\n", select_x1, select_y1, select_x2, select_y2);
+
+				// Calculate which buttons were lasoed
+				int i;
+				for (i=0; i<children(); i++) {
+					Fl_Widget* w = child(i); // shortcuts
+					int wx2 = w->x()+w->w();
+					int wy2 = w->y()+w->h();
+					if (select_x2>w->x() && select_x1<wx2 && select_y2>w->y() && select_y1<wy2) {
+						select(i+1,1);
+fprintf (stderr, "Select widget: '%20s' (%d,%d,%d,%d)\n", w->label(), w->x(), w->y(), wx2, wy2);
+					}
+				}
+				// TODO: add code for Shift key
+
+				select_x1=select_x2=select_y1=select_y2=0;
+				redraw();
+
+			// Single click
+			} else {
+				// Find child that was clicked
+				int i;	
+				for (i=0; i<children(); i++)
+					if (Fl::event_inside(child(i))) {
+fprintf (stderr, "in child %d\n",i);
+						select(i+1,1);
+					}
+				// TODO: add code for Shift key
+
+				// Didn't click on icon
+				if (i==children()) {
+					this->take_focus(); // Remove focus from all buttons
+					focused=0;
+				}
+			}
+
+			// Right button - call context menu
+			if (Fl::event_button() == 3) {
+				Fl::event_is_click(0); // prevent doubleclicking with right button
+				if (context_callback_) context_callback_(this, (void*)path(get_focus()));
+			}
+
+			// Double-click operation
+			if (Fl::event_clicks()) {
+				do_callback();
+			}
+		}
+/*
+		// Check if it is drag
+		static bool clicked=false;
+		if (e==FL_PUSH) {
+fprintf (stderr, "FL_PUSH %d %d...\n",Fl::event_is_click(),Fl::event_clicks());
+			clicked=true;
+			return 1;
+		} else if (e != FL_DRAG && e != FL_NO_EVENT && clicked) {
+fprintf (stderr, "-- triggered click %d\n",e);
+			clicked=false;
+			// Unselect everything unless Shift or Alt is held
+			if (!Fl::event_key(FL_Shift_L) && !Fl::event_key(FL_Shift_R) && !Fl::event_key(FL_Shift_L)) 
+				for (int i=0; i<children(); i++)
+					select(i+1,0);
+
+			for (int i=0; i<children(); i++)
+				if (Fl::event_inside(child(i))) {
+fprintf (stderr, "in child %d\n",i);
+					select(i+1,1);
+					return 0;
+				}
+fprintf (stderr, "in no child\n");
+			// Didn't click on icon
+			take_focus(); // Remove focus from all buttons
+		}*/
+
+#ifdef USE_FLU_WRAP_GROUP
+		return Flu_Wrap_Group::handle(e);
+#else
+		return edelib::ExpandableGroup::handle(e);
+#endif
+
+	}
+
+	// Override draw() for selection box
+	void draw() {
+#ifdef USE_FLU_WRAP_GROUP
+		Flu_Wrap_Group::draw();
+#else
+		edelib::ExpandableGroup::draw();
+#endif
+		if (select_x1>0 && select_y1>0) {
+			fl_color(33);
+			fl_line_style(FL_DASH);
+			fl_line(select_x1,select_y1,select_x1,select_y2);
+			fl_line(select_x1,select_y2,select_x2,select_y2);
+			fl_line(select_x2,select_y2,select_x2,select_y1);
+			fl_line(select_x2,select_y1,select_x1,select_y1);
+			fl_line_style(0);
+		}
+	}
+
+	// Override clear so that we can empty selected & focused values
+	void clear() {
+		focused=0;
+		if (m_selected) free(m_selected);
+		m_selected = 0;
+#ifdef USE_FLU_WRAP_GROUP
+		Flu_Wrap_Group::clear();
+#else
+		edelib::ExpandableGroup::clear();
+#endif
+	}
+};
 
 
 class FileDetailsView_ : public EDE_Browser {
@@ -306,10 +938,14 @@ fprintf (stderr, "value: %s\n", value.c_str());
 		bucket.add(ntext);
 
 		// doesn't work
-		//Fl_Image* im = get_icon(row);
+		Fl_Image* im = get_icon(row)->copy();
+		//im->refresh();
 		//im->uncache(); // doesn't work
+		//im->color_average(FL_BACKGROUND_COLOR, 1.0);
+		//im->data(im->data(),im->count());
+		set_icon(row,im);
 
-		//redraw(); // OPTIMIZE
+		redraw(); // OPTIMIZE
 	}
 
 
@@ -484,12 +1120,14 @@ fprintf(stderr, "Call FileView::clear()\n");
 		bucket.empty();
 		EDE_Browser::clear();
 	}
+
+	int visible() { return Fl_Widget::visible(); }
 };
 
 
 
 
-class FileView : public Fl_Group {
+/*class FileView : public Fl_Group {
 public:
 	FileView(int X, int Y, int W, int H, char*label=0) : Fl_Group(X,Y,W,H,label) {}
 
@@ -548,7 +1186,85 @@ public:
 	const char* text(int i) { return browser->text(i); }
 	void text(int i, const char* c) { return browser->text(i,c); }
 	uchar column_char() { return browser->column_char(); }
+};*/
+
+enum FileViewType {
+	FILE_DETAILS_VIEW,
+	FILE_ICON_VIEW
 };
+
+
+class FileDetailsView : public Fl_Group {
+private:
+	FileDetailsView_* browser;
+	FileIconView_* icons;
+	FileViewType m_type;
+public:
+	FileDetailsView(int X, int Y, int W, int H, char*label=0) : Fl_Group(X,Y,W,H,label) {
+		browser = new FileDetailsView_(X,Y,W,H,label);
+		browser->end();
+//		browser->hide();
+		icons = new FileIconView_(X,Y,W,H,label);
+		icons->end();
+		end();
+
+		// Set default to FILE_DETAILS_VIEW
+		icons->hide(); 
+		m_type=FILE_DETAILS_VIEW;
+	}
+
+	void setType(FileViewType t) {
+		m_type=t;
+		if (t==FILE_DETAILS_VIEW) {
+			icons->hide(); 
+			//browser->show();
+		}
+		if (t==FILE_ICON_VIEW) {
+			//browser->hide(); 
+			icons->show(); 
+			//redraw();
+		}
+	}
+	FileViewType getType() {
+		return m_type;
+	}
+
+	// View methods
+	void insert(int row, FileItem *item) { browser->insert(row,item); icons->insert(row,item); }
+	void add(FileItem *item) { browser->add(item); icons->add(item); }
+	void remove(FileItem *item) { browser->remove(item); icons->remove(item); }
+	void update(FileItem *item) { browser->update(item); icons->update(item); }
+
+	void update_path(const char* oldpath,const char* newpath) { browser->update_path(oldpath,newpath); icons->update_path(oldpath,newpath); }
+
+	void gray(int row) { browser->gray(row); icons->gray(row); }
+	void ungray(int row) { browser->ungray(row); icons->ungray(row); }
+
+	void rename_callback(rename_callback_type* cb) { browser->rename_callback(cb); icons->rename_callback(cb); }
+	void paste_callback(paste_callback_type* cb) { browser->paste_callback(cb); icons->paste_callback(cb); }
+	void context_callback(Fl_Callback* cb) { browser->context_callback(cb); icons->context_callback(cb); }
+
+	// Browser methods
+	const char* path(int i) { if (m_type==FILE_DETAILS_VIEW) return (const char*)browser->data(i); else return icons->path(i); }
+	int size() { if (m_type==FILE_DETAILS_VIEW) return browser->size(); else return icons->children();}
+	int selected(int i) { if (m_type==FILE_DETAILS_VIEW) return browser->selected(i); else return icons->selected(i); }
+	void select(int i, int k) { browser->select(i,k); browser->middleline(i); icons->select(i,k); icons->show_item(i); }
+	int get_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->get_focus(); else return icons->get_focus(); }
+	void set_focus(int i) { browser->set_focus(i); icons->set_focus(i);}
+	void remove(int i) { browser->remove(i); icons->remove(i);}
+	void clear() { browser->clear(); icons->clear();}
+	void callback(Fl_Callback*cb) { browser->callback(cb); icons->callback(cb);}
+	int take_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->take_focus(); else return icons->take_focus(); }
+
+	// These methods are used by do_rename()
+	const char* text(int i) { return browser->text(i); }
+	void text(int i, const char* c) { return browser->text(i,c); }
+	uchar column_char() { return browser->column_char(); }
+
+	// Overloaded...
+	//int handle(int e) { if
+};
+
 
 
 #endif

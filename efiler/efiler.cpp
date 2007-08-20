@@ -28,7 +28,6 @@
 #include <Fl/Fl_Menu_Bar.H>
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
 #include <Fl/filename.H>
-#include <Fl/fl_ask.H>
 #include <Fl/Fl_File_Input.H> // location bar
 
 #include <edelib/Nls.h>
@@ -41,6 +40,7 @@
 #include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
 #include "ede_ask.h" // replacement for fl_ask
+//#include "Ask.h"
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
@@ -76,6 +76,62 @@ const int statusbar_height = 24;
 const int statusbar_width = 400;
 
 int default_tree_width=150;
+
+/*-----------------------------------------------------------------
+	Some improvements to Fl_File_Input, that should be added 
+	upstream:
+	* enable to set shortcut in label (STR 1770 for Fl_Input_)
+	* navigate using Ctrl+arrow (here we jump to dir. sep.)
+-------------------------------------------------------------------*/
+
+class My_File_Input : public Fl_File_Input {
+	int shortcut_;
+public:
+	My_File_Input(int X,int Y,int W,int H,const char *label=0) : Fl_File_Input(X,Y,W,H,label) {
+		set_flag(SHORTCUT_LABEL);
+		shortcut_ = 0;
+	}
+
+	int shortcut() const {return shortcut_;}
+	void shortcut(int s) {shortcut_ = s;}
+
+	int handle(int e) {
+		if (e==FL_SHORTCUT) {
+			if (!(shortcut() ? Fl::test_shortcut(shortcut()) : test_shortcut())) return 0;
+			if (Fl::visible_focus() && handle(FL_FOCUS)) Fl::focus(this);
+			return 1;
+		}
+		if (e==FL_KEYDOWN) {
+			if (Fl::event_state(FL_CTRL)) {
+				const char* v = value();
+				if (Fl::event_key()==FL_Left) {
+					for (uint i=position()-2; i>=0; i--)
+						if (v[i]=='/') {
+							if (Fl::event_state(FL_SHIFT))
+								position(i+1,mark()); 
+							else
+								position(i+1,i+1); 
+							break; 
+						}
+					return 1; // don't go out
+				}
+				if (Fl::event_key()==FL_Right) {
+					for (uint i=position()+1; i<strlen(v); i++)
+						if (v[i]=='/') { 
+							if (Fl::event_state(FL_SHIFT))
+								position(i+1,mark()); 
+							else
+								position(i+1,i+1); 
+							break; 
+						}
+					return 1; // don't go out
+				}
+			}
+		}
+		return Fl_File_Input::handle(e);
+	}
+};
+
 
 
 
@@ -151,6 +207,75 @@ int myversionsort(const void *a, const void *b) {
 	return k;
 }
 
+// Return a string describing permissions relative to the current user
+const char* permission_text(mode_t mode, uid_t uid, gid_t gid) {
+	static uid_t uuid = getuid();
+	static gid_t ugid = getgid();
+	// use geteuid() and getegid()? what's the difference?
+	if (S_ISDIR(mode)) {
+		// Directory
+		if (uid == uuid) { 
+			if (!(mode&S_IXUSR))
+				return _("Can't enter directory");
+			if (!(mode&S_IRUSR))
+				return _("Can't list directory");
+			if (!(mode&S_IWUSR))
+				return _("Can't add, delete, rename files"); // shorter description?
+			return _("Full permissions");
+		} else if (gid == ugid) {
+			if (!(mode&S_IXGRP))
+				return _("Can't enter directory");
+			if (!(mode&S_IRGRP))
+				return _("Can't list directory");
+			if (!(mode&S_IWGRP))
+				return _("Can't add, delete, rename files");
+			return _("Full permissions");
+		} else {
+			if (!(mode&S_IXOTH))
+				return _("Can't enter directory");
+			if (!(mode&S_IROTH))
+				return _("Can't list directory");
+			if (!(mode&S_IWOTH))
+				return _("Can't add, delete, rename files");
+			return _("Full permissions");
+		}
+	} else {
+		// Regular file (anything else should have similar permissions)
+		if (uid == uuid) {
+			if ((mode&S_IXUSR) && (mode&S_IRUSR) && (mode&S_IWUSR))
+				return _("Read, write, execute");
+			if ((mode&S_IRUSR) && (mode&S_IWUSR))
+				return _("Read, write");
+			if ((mode&S_IXUSR) && (mode&S_IRUSR))
+				return _("Read only, execute");
+			if ((mode&S_IRUSR))
+				return _("Read only");
+			// ignore weird permissions such as "write only"
+			return _("Not readable");
+		} else if (gid == ugid) {
+			if ((mode&S_IXGRP) && (mode&S_IRGRP) && (mode&S_IWGRP))
+				return _("Read, write, execute");
+			if ((mode&S_IRGRP) && (mode&S_IWGRP))
+				return _("Read, write");
+			if ((mode&S_IXGRP) && (mode&S_IRGRP))
+				return _("Read only, execute");
+			if ((mode&S_IRGRP))
+				return _("Read only");
+			return _("Not readable");
+		} else {
+			if ((mode&S_IXOTH) && (mode&S_IROTH) && (mode&S_IWOTH))
+				return _("Read, write, execute");
+			if ((mode&S_IROTH) && (mode&S_IWOTH))
+				return _("Read, write");
+			if ((mode&S_IXOTH) && (mode&S_IROTH))
+				return _("Read only, execute");
+			if ((mode&S_IROTH))
+				return _("Read only");
+			return _("Not readable");
+		}
+	}
+}
+
 void loaddir(const char *path) {
 	if (semaphore) return; // Prevent loaddir to interrupt previous loaddir - that can result in crash
 	semaphore=true;
@@ -159,21 +284,29 @@ void loaddir(const char *path) {
 	char old_dir[FL_PATH_MAX];
 	strncpy(old_dir,current_dir,strlen(current_dir)); // Restore olddir in case of error
 
+	// Sometimes path is just a pointer to current_dir
+	char* tmpath = strdup(path);
+
 	// Set current_dir
 	// fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
-		if (path[0] == '~') // Expand tilde
-			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),path+1);
-		else 
-			if (path!=current_dir) strcpy(current_dir,path);
-	} else
+		if (path[0] == '~') {// Expand tilde
+			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
+		} else if (path[0] != '/') { // Relative path
+			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("PWD"),tmpath);
+		} else {
+			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
+		}
+	} else {
 		strcpy(current_dir,getenv("HOME"));
+	}
+	free(tmpath);
 
 	// Trailing slash should always be there
 	if (current_dir[strlen(current_dir)-1] != '/') strcat(current_dir,"/");
 
 	// Compact dotdot (..)
-	if (char *tmp = strstr(current_dir,"/../")) {
+	while (char *tmp = strstr(current_dir,"/../")) {
 		char *tmp2 = tmp+4;
 		tmp--;
 		while (tmp != current_dir && *tmp != '/') tmp--;
@@ -182,11 +315,9 @@ void loaddir(const char *path) {
 		*tmp='\0';
 	}
 
-	// variables used later
+	// List all files in directory
 	int size=0;
 	dirent **files;
-
-	// List all files in directory
 	if (ignorecase) 
 		size = scandir(current_dir, &files, 0, myversionsort);
 	else
@@ -194,6 +325,7 @@ void loaddir(const char *path) {
 
 	if (size<1) { // there should always be . and ..
 		ede_alert(_("Permission denied!"));
+//		edelib::fl_alert(_("Permission denied!"));
 		strncpy(current_dir,old_dir,strlen(current_dir));
 		semaphore=false;
 		return;
@@ -238,7 +370,7 @@ fprintf(stderr, "Size: %d\n", size);
 		item->name = n;
 		item->realpath = fullpath;
 		item->date = nice_time(stat_buffer.st_mtime);
-		item->permissions = ""; // todo
+		item->permissions = permission_text(stat_buffer.st_mode,stat_buffer.st_uid,stat_buffer.st_gid);
 		if (strcmp(n,"..")==0) {
 			item->icon = "undo";
 			item->description = "Go up";
@@ -320,10 +452,12 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 	Main menu and other callbacks
 -------------------------------------------------------------------*/
 
-// This callback is called by doubleclicking on file list, by main and context menu
+// This callback is called by doubleclicking on file list, by main menu and context menu
 void open_cb(Fl_Widget*w, void*data) {
 fprintf (stderr,"cb\n");
+
 	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu || w==context_menu) {
+
 fprintf (stderr,"enter\n");
 //if (Fl::event_clicks()) fprintf(stderr, "clicks\n");
 //if (Fl::event_key()==FL_Enter) fprintf(stderr, "ekey\n");
@@ -343,7 +477,7 @@ fprintf (stderr,"enter\n");
 			return;
 		}
 
-		// Call opener
+		// Find opener
 		mime_resolver.set(path);
 		char* opener = simpleopener(mime_resolver.type().c_str());
 
@@ -360,7 +494,7 @@ fprintf (stderr,"enter\n");
 		if (opener) { 
 			int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 		} else
-			statusbar->copy_label(tsprintf(_("No program to open %s!"), fl_filename_name(view->path(view->get_focus()))));
+			statusbar->copy_label(tsprintf(_("No program to open %s!"), fl_filename_name(path)));
 
 	rlim->rlim_cur = old_rlimit;
 	setrlimit (RLIMIT_CORE, rlim);
@@ -372,14 +506,12 @@ fprintf (stderr,"enter\n");
 
 
 // Main menu callbacks
-void location_cb(Fl_Widget*, void*) {
-	const char *dir = fl_dir_chooser(_("Choose location"),current_dir);
-	if (dir) loaddir(dir);
+void new_cb(Fl_Widget*, void*) {
+	// FIXME: use program path 
+	edelib::run_program(tsprintf("efiler %s",current_dir),false); 
 }
 
-void new_cb(Fl_Widget*, void*) { edelib::run_program(tsprintf("efiler %s",current_dir),false); }
-
-void quit_cb(Fl_Widget*, void*) {exit(0);}
+void quit_cb(Fl_Widget*, void*) { win->hide(); }
 
 void cut_cb(Fl_Widget*, void*) { do_cut_copy(false); }
 void copy_cb(Fl_Widget*, void*) { do_cut_copy(true); }
@@ -391,14 +523,12 @@ void showtree_cb(Fl_Widget*, void*) {
 	showtree = !showtree;
 	if (!showtree) {
 		tree_width = dirtree->w();
-		tile->position(default_tree_width, 1, 1, 1); // NOTE!
+		tile->position(default_tree_width, 1, 1, 1); // NOTE this doesn't always work!
 fprintf(stderr, "Hide tree: %d\n", tree_width);
-//		showtree->clear();
 	} else {
 		int currentw = dirtree->w();
 		tile->position(currentw, 1, tree_width, 1);
 fprintf(stderr, "Show tree: %d %d\n", currentw, tree_width);
-//		showtree->set();
 	}
 }
 
@@ -412,11 +542,14 @@ void locationbar_cb(Fl_Widget*, void*) {
 		location_bar->show();
 		location_bar->resize(0, menubar_height, win->w(), location_bar_height);
 		tile->resize(0, menubar_height+location_bar_height, win->w(), win->h()-menubar_height-location_bar_height-statusbar_height);
+//		win->resizable(tile); // win keeps old tile size...
 		win->redraw();
 	} else {
 		location_bar->hide();
 //		location_bar->resize(0, menubar_height, win->w(), 0);
 		tile->resize(0, menubar_height, win->w(), win->h()-menubar_height-statusbar_height);
+		win->redraw();
+		win->resizable(tile);
 		win->redraw();
 	}
 }
@@ -435,14 +568,25 @@ void case_cb(Fl_Widget*, void*) {
 	loaddir(current_dir); 
 }
 
-void dirsfirst_cb(Fl_Widget*, void*) { dirsfirst=!dirsfirst; loaddir(current_dir); }
+void dirsfirst_cb(Fl_Widget*, void*) { 
+	dirsfirst=!dirsfirst; 
+	loaddir(current_dir); 
+}
 
 
 // dummy callbacks - TODO
 void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
-void iconsview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
-void listview_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
+void iconsview_cb(Fl_Widget*, void*) { 
+//fprintf(stderr, "callback\n");
+view->setType(FILE_ICON_VIEW);
+loaddir(current_dir);
+}
+void listview_cb(Fl_Widget*, void*) { 
+//fprintf(stderr, "callback\n"); 
+view->setType(FILE_DETAILS_VIEW); 
+loaddir(current_dir);
+}
 void about_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void aboutede_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 
@@ -461,12 +605,12 @@ void tree_cb(Fl_Widget*, void*) {
 // and callbacks for shortcut buttons
 // location_input is set to FL_WHEN_CHANGED 
 void location_input_cb(Fl_Widget*, void*) {
-fprintf (stderr, "location_input_cb %d\n",Fl::event());
-	if (Fl::event_key() == FL_Enter || Fl::event()==FL_RELEASE) 
+	if (Fl::event_key() == FL_Enter || Fl::event()==FL_RELEASE)
+		// second event is click on button
 		loaddir(location_input->value()); 
 
-	if (Fl::event()==FL_KEYDOWN && Fl::event_key()!=FL_BackSpace) {
-		// Pressing a key in Fl_Input will automatically replace selection with that key
+	if (Fl::event()==FL_KEYDOWN && Fl::event_key()!=FL_BackSpace && Fl::event_key()!=FL_Delete) {
+		// Pressing a key in Fl_Input will automatically replace selection with that char
 		// So there are really two possibilities:
 		//   1. Cursor is at the end, we add autocomplete stuff at cursor pos
 		//   2. Cursor is in the middle, we do nothing
@@ -478,7 +622,6 @@ fprintf (stderr, "location_input_cb %d\n",Fl::event());
 		int mark = location_input->mark();
 
 		// To avoid scandir, we will use view contents
-		// smart, eh? :)
 		if ((strlen(loc)>strlen(current_dir)) && (!strchr(loc+strlen(current_dir),'/'))) {
 			int i;
 			for (i=1; i<=view->size(); i++) {
@@ -532,6 +675,8 @@ fprintf (stderr, "location_input_cb %d\n",Fl::event());
 
 
 
+// TODO: move this to view
+// every item should have own context menu defined
 
 Fl_Menu_Item context_menu_definition[] = {
 	{_("&Open"),		0,	open_cb},
@@ -546,7 +691,6 @@ Fl_Menu_Item context_menu_definition[] = {
 
 // Right click - show context menu
 void context_cb(Fl_Widget*, void*) {
-//	context_menu->position(Fl::event_x_root(),Fl::event_y_root());
 	context_menu->popup();
 	context_menu->value(-1);
 }
@@ -580,9 +724,9 @@ Fl_Menu_Item main_menu_definition[] = {
 		{_("&Detailed list"),	FL_F+8,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
 		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Location bar"),	FL_F+10,	locationbar_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
-		{_("&Show hidden"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER},
+		{_("&Hidden files"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER},
 		{_("&Refresh"),		FL_F+5,		refresh_cb},
-		{_("S&ort"),	0, 0, 0, FL_SUBMENU},
+		{_("&Sort"),	0, 0, 0, FL_SUBMENU},
 			{_("&Case sensitive"),	0,	case_cb,	0,	FL_MENU_TOGGLE},
 			{_("D&irectories first"), 0,	dirsfirst_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 			{0},
@@ -598,7 +742,7 @@ Fl_Menu_Item main_menu_definition[] = {
 
 
 // Main program
-
+extern int FL_NORMAL_SIZE;
 int main (int argc, char **argv) {
 
 	// Parse command line - this must come first
@@ -608,8 +752,8 @@ int main (int argc, char **argv) {
 		current_dir[0]='\0';
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
-			printf("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n");
-			printf("Usage:\n\tefiler [OPTIONS] [PATH]\n\n");
+			printf(_("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
+			printf(_("Usage:\n\tefiler [OPTIONS] [PATH]\n\n"));
 			printf("%s\n",Fl::help);
 			return 1;
 		}
@@ -624,6 +768,8 @@ FL_NORMAL_SIZE=12;
 fl_message_font(FL_HELVETICA, 12);
 
 
+	// Main GUI design
+
 	win = new Fl_Double_Window(default_window_width, default_window_height);
 //	win->color(FL_WHITE);
 	win->begin();
@@ -632,12 +778,12 @@ fl_message_font(FL_HELVETICA, 12);
 
 		location_bar = new Fl_Group(0, menubar_height, default_window_width, location_bar_height);
 		location_bar->begin();
-			location_input = new Fl_File_Input(70, menubar_height+2, default_window_width-200, location_bar_height-5, _("Location:"));
+			location_input = new My_File_Input(70, menubar_height+2, default_window_width-200, location_bar_height-5, _("L&ocation:"));
 			location_input->align(FL_ALIGN_LEFT);
 			location_input->callback(location_input_cb);
 			location_input->when(FL_WHEN_ENTER_KEY_CHANGED);
 		location_bar->end();
-		location_bar->box(FL_UP_BOX); // hack for label size
+		location_bar->box(FL_UP_BOX);
 		location_bar->resizable(location_input);
 
 		tile = new Fl_Tile(0, menubar_height+location_bar_height, default_window_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
@@ -647,7 +793,7 @@ fl_message_font(FL_HELVETICA, 12);
 
 			view = new FileDetailsView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
 			view->callback(open_cb);
-			// callback for renaming
+			// callbacks for file ops
 			view->rename_callback(do_rename);
 			view->paste_callback(do_paste);
 			view->context_callback(context_cb);
@@ -657,7 +803,7 @@ fl_message_font(FL_HELVETICA, 12);
 			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);
 			statusbar->box(FL_DOWN_BOX);
 			statusbar->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
-			statusbar->label(_("Ready."));
+			statusbar->label(_("EFiler is starting..."));
 
 			Fl_Box* filler = new Fl_Box(statusbar_width+2, default_window_height-statusbar_height+2, default_window_width-statusbar_width, statusbar_height-4);
 		sbgroup->end();
@@ -672,22 +818,22 @@ fl_message_font(FL_HELVETICA, 12);
 	win->resizable(tile);
 //	win->resizable(view);
 
+	// Set application (window manager) icon
+	// FIXME: due to fltk bug this icon doesn't have transparency
 	fl_open_display();
 	Pixmap p, mask;
-	
 	XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), efiler_xpm, &p, &mask, NULL);
 	win->icon((char*)p);
 
-	win->show(argc,argv);
-	view->take_focus();
-
-	// Yet another hack for label size....
 
 	// TODO remember previous configuration
 	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
 	tree_width = default_tree_width;
 
+	win->show(argc,argv);
+	view->take_focus();
 	dirtree->init();
 	loaddir(current_dir);
+
 	return Fl::run();
 }
