@@ -67,6 +67,10 @@ typedef void (paste_callback_type)(const char*);
 // (e.g. if selection laso only touches a widget with <5px, it will not be selected)
 #define SELECTION_EDGE 5
 
+// Sometimes I accidentaly "drag" an icon - don't want dnd to trigger
+#define MIN_DISTANCE_FOR_DND 10
+
+
 #ifdef USE_FLU_WRAP_GROUP
 class FileIconView_ : public Flu_Wrap_Group {
 #else
@@ -123,9 +127,9 @@ public:
 		m_selected[children()]=0;
 
 		Fl_Button* b = new Fl_Button(0,0,ICONW,ICONH);
-		b->box(FL_FLAT_BOX);
+		b->box(FL_RFLAT_BOX);
 		b->color(FL_BACKGROUND2_COLOR);
-		b->align(FL_ALIGN_INSIDE|FL_ALIGN_CENTER|FL_ALIGN_WRAP|FL_ALIGN_CLIP);
+		b->align(FL_ALIGN_INSIDE|FL_ALIGN_CENTER|FL_ALIGN_CLIP);
 
 		// Set the label
 		char buffer[FL_PATH_MAX];
@@ -278,7 +282,7 @@ public:
 		Fl_Button* b = (Fl_Button*)child(row-1);
 		if (value) {
 			while (m_selected[i++]!=0);
-			m_selected[i]=row;
+			m_selected[i-1]=row;
 
 			b->color(FL_SELECTION_COLOR);
 			b->labelcolor(fl_contrast(FL_FOREGROUND_COLOR,FL_SELECTION_COLOR));
@@ -368,13 +372,13 @@ fprintf( stderr, "---- set_focus(%d)\n", row);
 		//  - when pressing Alt+Tab, focused widget is forgotten
 		//  - if no widget is focused, arrow keys will navigate outside group
 		//  - Tab has same effect as right arrow
-
 		
 		if (Fl::focus()->inside(this)) { // is focus inside?
 			int k = Fl::event_key();
 //fprintf(stderr, "event: %d key: %d\n",e,k);
 			if (k==FL_Up || k==FL_Down || k==FL_Left || k==FL_Right) {
-				// Wrap around
+#ifdef USE_FLU_WRAP_GROUP
+				// Wrap around - FWG only (due to methods such as above())
 				// FL_KEYDOWN happens only if key is otherwise unhandled
 				if (e==FL_KEYDOWN) {
 					int x = get_focus()-1;
@@ -394,6 +398,7 @@ fprintf( stderr, "---- set_focus(%d)\n", row);
 						if (b2==child(i)) set_focus(i+1);
 					return 1;
 				}
+#endif
 
 				// Remember focus for restoring later
 				if (e==FL_KEYUP || e==FL_KEYBOARD) {// Sometimes only one of these is triggered
@@ -448,65 +453,14 @@ fprintf (stderr, "[X]\n");
 		if (e==FL_FOCUS) {
 			// Restore focused widget after losing focus
 			if (focused) set_focus(focused);
-			return 1; 
+			return 1; // We accept focus (this defaults to 0 with FL_GROUP)
 		}
 
-/*#ifdef USE_FLU_WRAP_GROUP
-		int k = Fl::event_key();
-//		if (e==FL_KEYBOARD) fprintf (stderr, "Key: %d", k);
-		if ((e==FL_KEYUP || e==FL_KEYBOARD) && (k==FL_Up || k==FL_Down || k==FL_Left || k==FL_Right)) {
-			Fl_Widget* nextw=0;
-			if (focused) {
-				Fl_Widget* currentw = child(focused-1);
-				switch(k) { // Flu_Wrap_Group methods:
-					case FL_Up:
-						nextw = above(currentw); break;
-					case FL_Down:
-						nextw = below(currentw); break;
-					case FL_Left:
-						nextw = left(currentw); break;
-					case FL_Right:
-						nextw = next(currentw); break;
-				}
-				// Flu_Wrap_Group bug: all methods will wrap around EXCEPT
-				// Flu_Wrap_Group::below() ?!
-				if (k==FL_Down && nextw==currentw)
-					nextw = child(0);
-			}
-fprintf (stderr, "Event k: %d focused: %d\n", k, focused);
-
-			if (focused && nextw)
-				for (int i=0; i<children(); i++) { 
-					if (child(i) == nextw) {
-fprintf (stderr, "Call %d\n", i);
-						set_focus(i+1);
-					}
-				}
-			else // No widget is selected, or it is first/last
-				switch(k) {
-					 // TODO: wrap around
-					case FL_Up:
-					case FL_Left:
-						set_focus(children()); break;
-					case FL_Down:
-					case FL_Right:
-						set_focus(1); break;
-				}
-			return 1;
-		}
-		if (e==FL_FOCUS) {
-			// Restore focused widget after losing focus
-			if (focused) set_focus(focused);
-			return 1; 
-		}
-#endif*/
 
 		// We accept mouse clicks
 		if (e==FL_PUSH && Fl::event_x()>x() && Fl::event_x() < x()+w()-Fl::scrollbar_size()) {
 			return 1;
 		}
-		// We accept focus (defaults to 0 with FL_GROUP)
-		if (e==FL_FOCUS) return 1;
 
 		// Do callback on enter key
 		// (because icons don't have callbacks)
@@ -515,18 +469,72 @@ fprintf (stderr, "Call %d\n", i);
 			return 1;
 		}
 
-		// Drag to select (a.k.a. "laso") operation
-		// Draw a dashed line around icons
+		// Select using SPACE
+		if ((e==FL_KEYBOARD || e==FL_KEYUP) && Fl::event_key()==' ') {
+			if (selected(get_focus()))
+				select(get_focus(),0);
+			else
+				select(get_focus(),1);
+
+			return 1;
+		}
+
 		static bool laso=false;
+		static int dragx,dragy;
 		if (e==FL_DRAG) {
 fprintf (stderr, "FL_DRAG! ");
 			if (!laso) {
-fprintf (stderr, "- begin.\n");
-				laso=true;
-				// Set coordinates for selection box (drawn in draw())
-				select_x1=select_x2=Fl::event_x();
-				select_y1=select_y2=Fl::event_y();
-			} else {
+				// Drag inside child is dnd
+				int ex=Fl::event_x(); int ey=Fl::event_y();
+				int inside=-1;
+				for (int i=0; i<children(); i++) {
+					Fl_Button* b = (Fl_Button*)child(i);
+					if (ex>b->x()+SELECTION_EDGE && ex<b->x()+b->w()-SELECTION_EDGE && ey>b->y()+SELECTION_EDGE && ey<b->y()+b->h()-SELECTION_EDGE) { 
+						inside=i; break;
+					}
+				}
+				if (inside>=0) {
+					// If widget isn't selected, unselect everything else and select this
+					if (!selected(inside+1)) {
+						for (int i=0;i<children();i++) {
+							// We cannot use select(i+1,0) because that would mess with focus
+							Fl_Button* b = (Fl_Button*)child(i);
+							b->color(FL_BACKGROUND2_COLOR);
+							b->labelcolor(FL_FOREGROUND_COLOR);
+						}
+						int i=0;
+						while (m_selected[i]!=0) m_selected[i++]=0;
+						select(inside+1,1);
+						redraw(); // show changes in selection state
+					}
+	
+					// Construct dnd string and start dnd
+					edelib::String selected_items;
+					for (int i=1; i<=children(); i++)
+						if (selected(i)==1) {
+							selected_items += "file://";
+							selected_items += path(i);
+							selected_items += "\r\n";
+						}
+
+					// If paste_callback_ isn't set, that means we don't support dnd
+					if (paste_callback_) {
+						Fl::copy(selected_items.c_str(),selected_items.length(),0);
+						Fl::dnd();
+						dragx=ex; dragy=ey; // to test if its close
+					}
+					return 1;
+				} else {
+
+					// Drag to select (a.k.a. "laso") operation (outside widgets)
+					// Draw a dashed line around icons
+	fprintf (stderr, "- begin.\n");
+					laso=true;
+					// Set coordinates for selection box (drawn in draw())
+					select_x1=select_x2=Fl::event_x();
+					select_y1=select_y2=Fl::event_y();
+				}
+			} else { // if (!laso)
 fprintf (stderr, "- box (%d,%d,%d,%d).\n",select_x1,select_y1,select_x2,select_y2);
 				select_x2=Fl::event_x();
 				select_y2=Fl::event_y();
@@ -538,6 +546,7 @@ fprintf (stderr, "- box (%d,%d,%d,%d).\n",select_x1,select_y1,select_x2,select_y
 		// Mouse button released
 		if (e==FL_RELEASE) {
 fprintf (stderr, "FL_RELEASE! ");
+
 			// Unselect everything unless Shift or Ctrl is held
 			if (!Fl::event_state(FL_SHIFT) && !Fl::event_state(FL_CTRL)) {
 				for (int i=0;i<children();i++) {
@@ -579,7 +588,7 @@ fprintf(stderr, "After fixing the box coords: (%d,%d,%d,%d)\n", select_x1, selec
 fprintf (stderr, "Select widget: '%20s' (%d,%d,%d,%d)\n", w->label(), w->x(), w->y(), wx2, wy2);
 					}
 				}
-				// TODO: add code for Shift key
+				// Shift key has no meaning with laso
 
 				select_x1=select_x2=select_y1=select_y2=0;
 				redraw();
@@ -591,9 +600,14 @@ fprintf (stderr, "Select widget: '%20s' (%d,%d,%d,%d)\n", w->label(), w->x(), w-
 				for (i=0; i<children(); i++)
 					if (Fl::event_inside(child(i))) {
 fprintf (stderr, "in child %d\n",i);
+						// Shift key means "select everything in between"
+						if (Fl::event_state(FL_SHIFT)) {
+							int k = (get_focus()<i) ? 1 : -1;
+							for (int j=get_focus(); j!=i+1; j+=k)
+								select(j,1);
+						}
 						select(i+1,1);
 					}
-				// TODO: add code for Shift key
 
 				// Didn't click on icon
 				if (i==children()) {
@@ -613,31 +627,69 @@ fprintf (stderr, "in child %d\n",i);
 				do_callback();
 			}
 		}
-/*
-		// Check if it is drag
-		static bool clicked=false;
-		if (e==FL_PUSH) {
-fprintf (stderr, "FL_PUSH %d %d...\n",Fl::event_is_click(),Fl::event_clicks());
-			clicked=true;
-			return 1;
-		} else if (e != FL_DRAG && e != FL_NO_EVENT && clicked) {
-fprintf (stderr, "-- triggered click %d\n",e);
-			clicked=false;
-			// Unselect everything unless Shift or Alt is held
-			if (!Fl::event_key(FL_Shift_L) && !Fl::event_key(FL_Shift_R) && !Fl::event_key(FL_Shift_L)) 
-				for (int i=0; i<children(); i++)
-					select(i+1,0);
 
-			for (int i=0; i<children(); i++)
-				if (Fl::event_inside(child(i))) {
-fprintf (stderr, "in child %d\n",i);
-					select(i+1,1);
-					return 0;
+		// DnD support
+
+		// If paste_callback_ isn't set, that means we don't support dnd
+		if (paste_callback_) {
+if (e==FL_DND_ENTER) { fprintf(stderr, "FL_DND_ENTER\n"); }
+if (e==FL_DND_DRAG) { fprintf(stderr, "FL_DND_DRAG\n"); }
+if (e==FL_DND_RELEASE) { fprintf(stderr, "FL_DND_RELEASE\n"); }
+			// Let the window manager know that we accept dnd
+			if (e==FL_DND_ENTER||e==FL_DND_DRAG) return 1;
+	
+/*			// Scroll the view by dragging to border
+			if (e==FL_DND_LEAVE) {
+				if (Fl::event_y()<y())
+					position(position()-1);
+				if (Fl::event_y()>y()+h())
+					position(position()+1);
+				return 1;
+			}*/
+
+			static bool dndrelease=false;
+			if (e==FL_DND_RELEASE) {
+fprintf(stderr, "FL_DND_RELEASE '%s'\n", Fl::event_text());
+				if (Fl::event_y()<y() || Fl::event_y()>y()+h()) return 1; 
+					// ^^ without this, sometimes there is crash in Fl::dnd()
+
+				// Sometimes drag is accidental
+				if (abs(Fl::event_x()-dragx)>MIN_DISTANCE_FOR_DND || abs(Fl::event_y()-dragy)>MIN_DISTANCE_FOR_DND) {
+					dndrelease=true;
+					Fl::paste(*this,0);
 				}
-fprintf (stderr, "in no child\n");
-			// Didn't click on icon
-			take_focus(); // Remove focus from all buttons
-		}*/
+				return 1;
+			}
+
+			if (e==FL_PASTE) {
+fprintf(stderr, "FL_PASTE\n");
+				if (!Fl::event_text() || !Fl::event_length()) return 1;
+fprintf(stderr, "1 '%s' (%d)\n",Fl::event_text(),Fl::event_length());
+
+				// Paste comes from menu/keyboard
+				if (!dndrelease) {
+					paste_callback_(0);
+					return 1;
+				}
+				dndrelease=false;
+
+				// Where is the user dropping?
+				// It it's inside an item that is directory, try it
+				int ex=Fl::event_x(); int ey=Fl::event_y();
+				for (int i=0; i<children(); i++) {
+					Fl_Button* b = (Fl_Button*)child(i);
+					if (ex>b->x()+SELECTION_EDGE && ex<b->x()+b->w()-SELECTION_EDGE && ey>b->y()+SELECTION_EDGE && ey<b->y()+b->h()-SELECTION_EDGE) {
+						paste_callback_(path(i+1));
+						return 1;
+					}
+				}
+
+				// Nothing found... assume current directory
+				paste_callback_(0);
+				return 1;
+			}
+
+		}
 
 #ifdef USE_FLU_WRAP_GROUP
 		return Flu_Wrap_Group::handle(e);
@@ -672,6 +724,7 @@ fprintf (stderr, "in no child\n");
 		m_selected = 0;
 #ifdef USE_FLU_WRAP_GROUP
 		Flu_Wrap_Group::clear();
+		scroll_to_beginning(); // move scrollbar to top
 #else
 		edelib::ExpandableGroup::clear();
 #endif
@@ -1062,11 +1115,11 @@ fprintf (stderr, "value: %s\n", value.c_str());
 		static bool dndrelease=false;
 		if (e==FL_DND_RELEASE) {
 			if (Fl::event_y()<y() || Fl::event_y()>y()+h()) return 1; 
-				// ^^ this can be a source of crashes in Fl::dnd()
+				// ^^ without this, sometimes there is crash in Fl::dnd()
 
 fprintf(stderr, "FL_DND_RELEASE '%s'\n", Fl::event_text());
 			// Sometimes drag is accidental
-			if (abs(Fl::event_x()-dragx)>10 || abs(Fl::event_y()-dragy)>10) {
+			if (abs(Fl::event_x()-dragx)>MIN_DISTANCE_FOR_DND || abs(Fl::event_y()-dragy)>MIN_DISTANCE_FOR_DND) {
 				dndrelease=true;
 				Fl::paste(*this,0);
 			}
@@ -1213,21 +1266,26 @@ public:
 		m_type=FILE_DETAILS_VIEW;
 	}
 
-	void setType(FileViewType t) {
+	void type(FileViewType t) {
 		m_type=t;
 		if (t==FILE_DETAILS_VIEW) {
-			icons->hide(); 
-			//browser->show();
+			icons->hide();
+			browser->show();
+//			browser->resize(x(),y(),w(),h());
+//			browser->redraw(); 
+			Fl_Group::add(browser);
 		}
 		if (t==FILE_ICON_VIEW) {
-			//browser->hide(); 
+			browser->hide(); 
 			icons->show(); 
+			Fl_Group::add(icons);
+//			icons->show(); 
+//			icons->redraw(); 
 			//redraw();
 		}
+		redraw();
 	}
-	FileViewType getType() {
-		return m_type;
-	}
+	FileViewType type() { return m_type; }
 
 	// View methods
 	void insert(int row, FileItem *item) { browser->insert(row,item); icons->insert(row,item); }
@@ -1237,8 +1295,8 @@ public:
 
 	void update_path(const char* oldpath,const char* newpath) { browser->update_path(oldpath,newpath); icons->update_path(oldpath,newpath); }
 
-	void gray(int row) { browser->gray(row); icons->gray(row); }
-	void ungray(int row) { browser->ungray(row); icons->ungray(row); }
+	void gray(int row) { if (m_type==FILE_DETAILS_VIEW) browser->gray(row); else icons->gray(row); }
+	void ungray(int row) { if (m_type==FILE_DETAILS_VIEW) browser->ungray(row); else icons->ungray(row); }
 
 	void rename_callback(rename_callback_type* cb) { browser->rename_callback(cb); icons->rename_callback(cb); }
 	void paste_callback(paste_callback_type* cb) { browser->paste_callback(cb); icons->paste_callback(cb); }
@@ -1248,9 +1306,9 @@ public:
 	const char* path(int i) { if (m_type==FILE_DETAILS_VIEW) return (const char*)browser->data(i); else return icons->path(i); }
 	int size() { if (m_type==FILE_DETAILS_VIEW) return browser->size(); else return icons->children();}
 	int selected(int i) { if (m_type==FILE_DETAILS_VIEW) return browser->selected(i); else return icons->selected(i); }
-	void select(int i, int k) { browser->select(i,k); browser->middleline(i); icons->select(i,k); icons->show_item(i); }
+	void select(int i, int k) { if (m_type==FILE_DETAILS_VIEW) { browser->select(i,k); browser->middleline(i); } else { icons->select(i,k); icons->show_item(i); } }
 	int get_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->get_focus(); else return icons->get_focus(); }
-	void set_focus(int i) { browser->set_focus(i); icons->set_focus(i);}
+	void set_focus(int i) { if (m_type==FILE_DETAILS_VIEW) browser->set_focus(i); else icons->set_focus(i);}
 	void remove(int i) { browser->remove(i); icons->remove(i);}
 	void clear() { browser->clear(); icons->clear();}
 	void callback(Fl_Callback*cb) { browser->callback(cb); icons->callback(cb);}

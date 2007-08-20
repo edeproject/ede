@@ -1,0 +1,9 @@
+Known bugs:
+
+- If you execute cut, then drag&drop files from another window, cut operation 
+will be assumed.
+- Callback for tree view widget is erratic - it usually doesn't work on Enter 
+key and sometimes it is sufficient to press arrow up or down to enter a 
+directory.
+- In icon view, holding shift while clicking has the same effect as ctrl (i.e.
+adds just the focused widget to selection, not the ones in between)

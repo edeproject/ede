@@ -291,15 +291,19 @@ void loaddir(const char *path) {
 	// fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
 		if (path[0] == '~') {// Expand tilde
-			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
+			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
 		} else if (path[0] != '/') { // Relative path
-			snprintf(current_dir,PATH_MAX,"%s/%s",getenv("PWD"),tmpath);
+			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("PWD"),tmpath);
 		} else {
 			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
 		}
 	} else {
-		strcpy(current_dir,getenv("HOME"));
+		ede_alert(tsprintf(_("Directory not found: %s"),path));
+		free(tmpath);
+		semaphore=false;
+		return;
 	}
+	
 	free(tmpath);
 
 	// Trailing slash should always be there
@@ -579,12 +583,12 @@ void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list 
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void iconsview_cb(Fl_Widget*, void*) { 
 //fprintf(stderr, "callback\n");
-view->setType(FILE_ICON_VIEW);
+view->type(FILE_ICON_VIEW);
 loaddir(current_dir);
 }
 void listview_cb(Fl_Widget*, void*) { 
 //fprintf(stderr, "callback\n"); 
-view->setType(FILE_DETAILS_VIEW); 
+view->type(FILE_DETAILS_VIEW); 
 loaddir(current_dir);
 }
 void about_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
@@ -593,8 +597,8 @@ void aboutede_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 
 
 // Directory tree callback
-void tree_cb(Fl_Widget*, void*) { 
-	if (Fl::event_clicks() || Fl::event_key() == FL_Enter) {
+void tree_cb(Fl_Widget*, void*) {
+	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || Fl::event_key() == FL_KP_Enter) {
 		int selected = dirtree->get_focus();
 		loaddir((char*)dirtree->data(selected));
 	}
@@ -721,7 +725,7 @@ Fl_Menu_Item main_menu_definition[] = {
 
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
 		{_("&Icons"),		FL_F+8,		iconsview_cb,	0,	FL_MENU_RADIO}, // coming soon
-		{_("&Detailed list"),	FL_F+8,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
+		{_("&Detailed list"),	0,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
 		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Location bar"),	FL_F+10,	locationbar_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Hidden files"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER},
@@ -749,7 +753,7 @@ int main (int argc, char **argv) {
 	int unknown=0;
 	Fl::args(argc,argv,unknown);
 	if (unknown==argc)
-		current_dir[0]='\0';
+		snprintf(current_dir, FL_PATH_MAX, getenv("HOME"));
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
 			printf(_("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
@@ -789,6 +793,7 @@ fl_message_font(FL_HELVETICA, 12);
 		tile = new Fl_Tile(0, menubar_height+location_bar_height, default_window_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
 		tile->begin();
 			dirtree = new DirTree(0, menubar_height+location_bar_height, default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
+			dirtree->when(FL_WHEN_ENTER_KEY_ALWAYS|FL_WHEN_RELEASE_ALWAYS);
 			dirtree->callback(tree_cb);
 
 			view = new FileDetailsView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
@@ -833,6 +838,8 @@ fl_message_font(FL_HELVETICA, 12);
 	win->show(argc,argv);
 	view->take_focus();
 	dirtree->init();
+	dirtree->show_hidden(showhidden);
+	dirtree->ignore_case(ignorecase);
 	loaddir(current_dir);
 
 	return Fl::run();
