@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/time.h> // timer in cb_open
 #include <sys/resource.h> // for core dumps
+#include <unistd.h> // for getuid & getgid
 
 // for application icon:
 #include <X11/xpm.h>
@@ -290,7 +291,7 @@ void loaddir(const char *path) {
 	// Set current_dir
 	// fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
-		if (path[0] == '~') {// Expand tilde
+		if (path[0] == '~' && path[1] == '/') {// Expand tilde
 			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
 		} else if (path[0] != '/') { // Relative path
 			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("PWD"),tmpath);
@@ -758,7 +759,7 @@ int main (int argc, char **argv) {
 		if (strcmp(argv[unknown],"--help")==0) {
 			printf(_("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
 			printf(_("Usage:\n\tefiler [OPTIONS] [PATH]\n\n"));
-			printf("%s\n",Fl::help);
+			printf(_("Options:\n%s\n"),Fl::help);
 			return 1;
 		}
 		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
