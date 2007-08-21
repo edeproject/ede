@@ -74,19 +74,26 @@ void ControlWin::load_icons(void) {
 		return;
 	}
 
-	vector<String> spl;
+	list<String> spl;
+	list<String>::iterator it, it_end;
 	stringtok(spl, buff, ",");
-	char* sect;
 
+	if(spl.empty())
+		return;
+
+	const char* sect;
 	ControlIcon cicon;
-	for(unsigned int i = 0; i < spl.size(); i++) {
-		sect = (char*)spl[i].c_str();
-		str_trim(sect);
+	it = spl.begin();
+	it_end = spl.end();
+
+	for(; it != it_end; ++it) {
+		sect = (*it).c_str();
+		str_trim((char*)sect);
 
 		if(c.get(sect, "Name", buff, sizeof(buff)))
 			cicon.name = buff;
 		else {
-			EWARNING("No %s, skipping...\n", spl[i].c_str());
+			EWARNING("No %s, skipping...\n", sect);
 			continue;
 		}
 
@@ -96,12 +103,12 @@ void ControlWin::load_icons(void) {
 			cicon.exec = buff;
 		if(c.get(sect, "Icon", buff, sizeof(buff))) {
 			cicon.icon = buff;
-			EDEBUG("setting icon (%s): %s\n", spl[i].c_str(), cicon.icon.c_str());
+			EDEBUG("setting icon (%s): %s\n", sect, cicon.icon.c_str());
 		}
 
-		c.get(spl[i].c_str(), "IconPathAbsolute", cicon.abspath, false);
-		c.get(spl[i].c_str(), "Position", cicon.abspath, -1);
-
+		c.get(sect, "IconPathAbsolute", cicon.abspath, false);
+		c.get(sect, "Position", cicon.abspath, -1);
+	
 		iconlist.push_back(cicon);
 	}
 }
@@ -130,11 +137,14 @@ void ControlWin::init(void) {
 		tipbox->box(FL_FLAT_BOX);
 		tipbox->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
 
-		for(unsigned int i = 0; i < iconlist.size(); i++) {
-			ControlButton* b = new ControlButton(tipbox, iconlist[i].tip, 0, 0, 80, 100);
-			//String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_MEDIUM);
-			String iconpath = IconTheme::get(iconlist[i].icon.c_str(), ICON_SIZE_LARGE);
-			b->label(iconlist[i].name.c_str());
+		list<ControlIcon>::iterator it, it_end;
+		it = iconlist.begin();
+		it_end = iconlist.end();
+
+		for(; it != it_end; ++it) {
+			ControlButton* b = new ControlButton(tipbox, (*it).tip, 0, 0, 80, 100);
+			String iconpath = IconTheme::get((*it).icon.c_str(), ICON_SIZE_LARGE);
+			b->label((*it).name.c_str());
 
 			if(!iconpath.empty())
 				b->image(Fl_Shared_Image::get(iconpath.c_str()));

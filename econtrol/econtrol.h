@@ -38,7 +38,7 @@ class ControlWin : public Fl_Window {
 		Fl_Box* rbox;
 		Fl_Box* tipbox;
 
-		edelib::vector<ControlIcon> iconlist;
+		edelib::list<ControlIcon> iconlist;
 
 		void init(void);
 		void load_icons(void);
