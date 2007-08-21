@@ -1,3 +1,16 @@
+/*
+ * $Id$
+ *
+ * EImage - EDE Image Viewer
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2006-2007 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */
+
+
 #include <Fl/Fl.h>
 #include <Fl/Fl_Window.h>
 #include <Fl/Fl_Button.h>
