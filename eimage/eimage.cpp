@@ -11,10 +11,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 
 #define DEBUG 1
 
+// Can this be moved to Jamfile/configure?
+//#define USE_EDELIB
+
+
+#ifdef USE_EDELIB
+#include <edelib/Nls.h>
+#else
+#define _(stuff) stuff
+#endif
 
 
 // Supported image types
@@ -52,12 +62,12 @@ void prev_cb(Fl_Widget*,void*) { prevpic(); }
 void open_cb(Fl_Widget*,void*) {
 	// construct filename filter
 	char filter[FL_PATH_MAX];
-	snprintf(filter, FL_PATH_MAX, "Image files(*.{%s", supported[0]);
+	snprintf(filter, FL_PATH_MAX, "%s(*.{%s", _("Image files"), supported[0]); // splitted for easier localization
 	for (int i=1; supported[i]; i++)
 		snprintf(filter, FL_PATH_MAX, "%s,%s", filter, supported[i]);
 	snprintf(filter, FL_PATH_MAX, "%s})", filter);
 
-	const char* f = fl_file_chooser("Choose image or directory",filter,directory);
+	const char* f = fl_file_chooser(_("Choose image or directory"),filter,directory);
 	if (!f) return;
 
 	strncpy(filename,f,FL_PATH_MAX);
@@ -97,21 +107,21 @@ void exit_cb(Fl_Widget* b,void*) { exit(0); }
 
 // Main popup menu
 Fl_Menu_Item mainmenu[] = {
-	{"&Open",	FL_CTRL+'o',	open_cb},
-	{"&Manage",	0,      	manage_cb,	0, 	FL_MENU_DIVIDER},
+	{_("&Open"),		FL_CTRL+'o',	open_cb},
+	{_("&Manage"),		0,      	manage_cb,	0, 	FL_MENU_DIVIDER},
 
-	{"&Previous",	FL_Page_Up,	prev_cb},
-	{"&Next",	FL_Page_Down,	next_cb,	0, 	FL_MENU_DIVIDER},
+	{_("&Previous"),	FL_Page_Up,	prev_cb},
+	{_("&Next"),		FL_Page_Down,	next_cb,	0, 	FL_MENU_DIVIDER},
 
-	{"&Zoom in",	'+',    	zoomin_cb},
-	{"Zoom &out",	'-',    	zoomout_cb},
-	{"Zoom &auto",	FL_CTRL+'a',	zoomauto_cb},
-	{"&Restore",	'/',    	zoomrestore_cb,	0,	FL_MENU_DIVIDER},
+	{_("&Zoom in"),		'+',    	zoomin_cb},
+	{_("Zoom &out"),	'-',    	zoomout_cb},
+	{_("Zoom &auto"),	FL_CTRL+'a',	zoomauto_cb},
+	{_("&Restore"),		'/',    	zoomrestore_cb,	0,	FL_MENU_DIVIDER},
 
-	{"&Fullscreen",	FL_F+11,    	fullscreen_cb,	0,	FL_MENU_DIVIDER},
+	{_("&Fullscreen"),	FL_F+11,    	fullscreen_cb,	0,	FL_MENU_DIVIDER},
 
-	{"A&bout",	0,      	about_cb},
-	{"&Exit",	FL_Escape,    	exit_cb},
+	{_("A&bout"),		0,      	about_cb},
+	{_("&Exit"),		FL_Escape,    	exit_cb},
 	{0}
 };
 
@@ -134,6 +144,7 @@ public:
 		mb = new Fl_Menu_Button (0,0,0,0,"");
 		mb->type(Fl_Menu_Button::POPUP3);
 		mb->menu(0);
+		mb->box(FL_NO_BOX);
 	
 		end();
 		redraw();
@@ -191,7 +202,7 @@ public:
 // Directory changed, get new directory from filename
 void newdir() {
 	int p=0;
-	for (int i=0; i<strlen(filename); i++) 
+	for (uint i=0; i<strlen(filename); i++) 
 		if (filename[i] == '/') p=i;
 	// There must be at least one '/'
 	strncpy(directory, filename, p);
@@ -214,8 +225,8 @@ void loadimage() {
 	if (!im) {
 		if (DEBUG) fprintf(stderr, "Fl_Shared_Image::get() failed!\n");
 		s->image(0);
-		snprintf(tmp, FL_PATH_MAX, "Can't load image %s\n",filename);
-		s->label(strdup(tmp));
+		snprintf(tmp, FL_PATH_MAX, _("Can't load image %s\n"),filename);
+		s->copy_label(tmp);
 		s->redraw();
 		return;
 	}
@@ -232,8 +243,8 @@ void loadimage() {
 	}
 
 	// Resample image to new size
-	scaledw=realw*zoomfactor;
-	scaledh=realh*zoomfactor;
+	scaledw=int(realw*zoomfactor);
+	scaledh=int(realh*zoomfactor);
 
 	if (zoomfactor!=1) {
 		Fl_Image *temp = im->copy(scaledw,scaledh);
@@ -249,9 +260,9 @@ void loadimage() {
 
 	// set window title
 	if (zoomfactor==1)
-		snprintf(tmp,FL_PATH_MAX,"%s (%dx%d) - View picture",fl_filename_name(filename),realw,realh);
+		snprintf(tmp,FL_PATH_MAX, "%s (%dx%d) - %s", fl_filename_name(filename),realw,realh, _("View picture")); // splitted for easier localization
 	else
-		snprintf(tmp,FL_PATH_MAX,"%s (%dx%d) - zoom %1.1fx - View picture",fl_filename_name(filename),realw,realh,zoomfactor);
+		snprintf(tmp,FL_PATH_MAX, "%s (%dx%d) - %s %1.1fx - %s", fl_filename_name(filename),realw,realh,_("zoom"),zoomfactor, _("View picture"));
 	w->label(strdup(tmp));
 }
 
@@ -298,9 +309,9 @@ void prevnext(int direction) {
 		filename[0]=0;
 
 		if (direction)
-			s->label("This was the last picture.\nPress 'Next' again for first one.");
+			s->label(_("This was the last picture.\nPress 'Next' again for first one."));
 		else
-			s->label("This was the first picture.\nPress 'Previous' again for last one.");
+			s->label(_("This was the first picture.\nPress 'Previous' again for last one."));
 		s->redraw();
 		return;
 
@@ -324,12 +335,12 @@ void prevnext(int direction) {
 	if (im) { im->release(); im=0; }
 	s->image(0);
 	filename[0]=0;
-	snprintf(tmp,FL_PATH_MAX,"No pictures in directory %s",directory);
+	snprintf(tmp,FL_PATH_MAX, _("No pictures in directory %s"),directory);
 	s->label(strdup(tmp));
 	s->redraw();
 
 	// Window title
-	snprintf(tmp,FL_PATH_MAX,"View picture - nothing found in %s",directory);
+	snprintf(tmp,FL_PATH_MAX, _("View picture - nothing found in %s"),directory);
 	w->label(strdup(tmp));
 }
 
@@ -339,14 +350,50 @@ void prevpic() { prevnext(0); }
 
 
 int main (int argc, char **argv) {
-	filename[0]='\0'; directory[0]='\0'; zoomfactor=1; im=0;
+
+	// Parse command line - this must come first
+	int unknown=0;
+	Fl::args(argc,argv,unknown);
+	filename[0]='\0'; directory[0]='\0';
+	if (unknown==argc)
+		snprintf(directory, FL_PATH_MAX, getenv("HOME"));
+	else {
+		if (strcmp(argv[unknown],"--help")==0) {
+			printf(_("EImage - EDE Image Viewer\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
+			printf(_("Usage:\n\teimage [OPTIONS] [IMAGE_FILE]\n\n"));
+			printf(_("Available options:\n%s\n"),Fl::help);
+			return 1;
+		}
+
+		if (fl_filename_isdir(argv[unknown])) { // Param is directory
+			snprintf(directory, FL_PATH_MAX, argv[unknown]);
+			if (directory[0] == '~' && directory[1] == '/') // expand home dir
+				snprintf (directory, FL_PATH_MAX, "%s%s", getenv("HOME"), argv[unknown]+1);
+			else if (directory[0] != '/') // relative path
+				snprintf (directory, FL_PATH_MAX, "%s/%s", getenv("PWD"), argv[unknown]);
+
+		} else {
+			snprintf (filename, FL_PATH_MAX, argv[unknown]);
+			if (filename[0] == '~' && filename[1] == '/') // expand home dir
+				snprintf (filename, FL_PATH_MAX, "%s%s", getenv("HOME"), argv[unknown]+1);
+			else if (filename[0] != '/') // relative filename
+				snprintf (filename, FL_PATH_MAX, "%s/%s", getenv("PWD"), argv[unknown]);
+
+			newdir(); // rebuild char[] directory from filename
+		}
+	}
+
+	zoomfactor=1; im=0; // defaults
 	fl_register_images();
+
+	FL_NORMAL_SIZE=12;
+	fl_message_font(FL_HELVETICA, 12);
 
 
 	// Main window
 
-	w = new Fl_Window(200, 200, "View picture");
-	s = new ScrolledImage(0,0,200,200);
+	w = new Fl_Window(400, 200, _("View picture"));
+	s = new ScrolledImage(0,0,400,200);
 	s->color(33);
 	s->labelcolor(FL_WHITE);
 	s->setmenu(mainmenu);
@@ -355,43 +402,30 @@ int main (int argc, char **argv) {
 	w->align(FL_ALIGN_INSIDE|FL_ALIGN_CENTER);
 
 
-
-	// Analyze command line
-
-	if (argc==1) { // No params
-		strncpy (directory, getenv("HOME"), FL_PATH_MAX);
-		nextpic();
-
-	} else if (fl_filename_isdir(argv[1])) { // Param is directory
-		strncpy (directory, argv[1], FL_PATH_MAX);
-		nextpic();
-		argc--; argv++; // ignore this param and forward rest to fltk
-
-	} else { // Param is file
-		if (argv[1][0] == '~' && argv[1][1] == '/') // expand home dir
-			snprintf (filename, FL_PATH_MAX, "%s/%s", getenv("HOME"), argv[1]+2);
-		else if (argv[1][0] != '/') // relative filename
-			snprintf (filename, FL_PATH_MAX, "%s/%s", getenv("PWD"), argv[1]);
-		else // absolute filename
-			strncpy (filename, argv[1], FL_PATH_MAX);
-
-		struct stat last_stat;  // Does file exist?
-		if (stat(argv[0], &last_stat)!=0) {
-			char tmp[FL_PATH_MAX];
-			snprintf(tmp,FL_PATH_MAX,"File not found - %s",filename);
+	// Check that file exists and open
+	struct stat mstat;
+	char tmp[FL_PATH_MAX];
+	if (!filename[0]) { // Load directory
+		if (stat(directory, &mstat)!=0) {
+			snprintf(tmp,FL_PATH_MAX, _("Directory not found:\n%s"),directory);
 			s->label(tmp);
-		} else 
+		} else
+			nextpic();
+	} else {
+		if (stat(filename, &mstat)!=0) {
+			snprintf(tmp,FL_PATH_MAX, _("File not found:\n%s"),filename);
+			s->label(tmp);
+		} else
 			loadimage();
-
-		newdir(); // rebuild char[] directory
-		argc--; argv++; // ignore this param and forward rest to fltk
 	}
 
 	// Resize window to image size or screen
-	int W,H; 
-	if (im->w()>Fl::w()) W=Fl::w(); else W=im->w();
-	if (im->h()>Fl::h()) H=Fl::h(); else H=im->h();
-	w->resize(0,0,W,H);
+	int W,H;
+	if (im) { // skip if file not found
+		if (im->w()>Fl::w()) W=Fl::w(); else W=im->w();
+		if (im->h()>Fl::h()) H=Fl::h(); else H=im->h();
+		w->resize(0,0,W,H);
+	}
 	// Window manager should make sure that window is fully visible
 
 	w->show(argc,argv);
