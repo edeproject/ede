@@ -20,7 +20,7 @@
 
 class Splash : public Fl_Double_Window {
 	private:
-		const ClientList* clist;
+		ClientList* clist;
 		const edelib::String* bkg;
 		unsigned int counter;
 		bool no_splash;
@@ -39,7 +39,7 @@ class Splash : public Fl_Double_Window {
 		 * NOTE: clients() and set_background() uses address of passed data,
 		 * so make sure passed data does not destroys.
 		 */
-		void set_clients(const ClientList* cl) { clist = cl; }
+		void set_clients(ClientList* cl) { clist = cl; }
 		void set_background(const edelib::String* s) { bkg = s; }
 
 		const ClientList* get_clients(void) const { return clist; }
