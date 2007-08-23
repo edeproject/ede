@@ -32,7 +32,7 @@ void do_delete();
 void do_rename(const char*);
 
 
-extern FileDetailsView* view;
+extern FileView* view;
 extern Fl_Window* win;
 extern Fl_Box* statusbar;
 extern char current_dir[];

@@ -30,12 +30,14 @@
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
 #include <Fl/filename.H>
 #include <Fl/Fl_File_Input.H> // location bar
+#include <FL/Fl_Shared_Image.H> // for fl_register_images()
 
 #include <edelib/Nls.h>
 #include <edelib/MimeType.h>
 #include <edelib/String.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Run.h>
+#include <edelib/IconTheme.h> // for setting the icon theme
 
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
@@ -48,7 +50,7 @@
 
 
 Fl_Window* win;
-FileDetailsView* view;
+FileView* view;
 Fl_Menu_Bar* main_menu;
 Fl_Box* statusbar;
 DirTree* dirtree;
@@ -797,7 +799,7 @@ fl_message_font(FL_HELVETICA, 12);
 			dirtree->when(FL_WHEN_ENTER_KEY_ALWAYS|FL_WHEN_RELEASE_ALWAYS);
 			dirtree->callback(tree_cb);
 
-			view = new FileDetailsView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
+			view = new FileView(150, menubar_height+location_bar_height, default_window_width-default_tree_width, default_window_height-menubar_height-location_bar_height-statusbar_height);
 			view->callback(open_cb);
 			// callbacks for file ops
 			view->rename_callback(do_rename);
