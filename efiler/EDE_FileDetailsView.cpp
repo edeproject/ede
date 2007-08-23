@@ -16,6 +16,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl.H>
+#include <FL/filename.H> // used in update_path()
 
 #include <edelib/Nls.h>
 #include <edelib/IconTheme.h>
@@ -175,9 +176,11 @@ FileDetailsView::FileDetailsView(int X, int Y, int W, int H, char*label) : EDE_B
 // struct FileItem (defined in EDE_FileView.h)
 
 void FileDetailsView::insert(int row, FileItem *item) {
+	// edelib::String doesn't support adding plain char
+	char cc[2]; cc[0]=column_char(); cc[1]='\0';
+
 	// Construct browser line
-	edelib::String value;
-	value = item->name+"\t"+item->description+"\t"+item->size+"\t"+item->date+"\t"+item->permissions;
+	edelib::String value = item->name + cc + item->description + cc + item->size + cc + item->date + cc + item->permissions;
 	char* realpath = strdup(item->realpath.c_str());
 	EDE_Browser::insert(row, value.c_str(), realpath); // put realpath into data
 	bucket.add(realpath);
@@ -200,8 +203,11 @@ void FileDetailsView::update(FileItem *item) {
 	//  c) causes browser to lose focus, making it impossible to click on something while
 	//  directory is loading
 
-	edelib::String value;
-	value = item->name+"\t"+item->description+"\t"+item->size+"\t"+item->date+"\t"+item->permissions;
+	// edelib::String doesn't support adding plain char
+	char cc[2]; cc[0]=column_char(); cc[1]='\0';
+
+	// Construct browser line
+	edelib::String value = item->name + cc + item->description + cc + item->size + cc + item->date + cc + item->permissions;
 	char* realpath = strdup(item->realpath.c_str());
 	text(row, value.c_str());
 	data(row, realpath);
@@ -221,6 +227,12 @@ void FileDetailsView::update_path(const char* oldpath,const char* newpath) {
 	char* c = strdup(newpath);
 	data(row,c);
 	bucket.add(c);
+
+	// Update filename in list
+	char* oldline = strchr(text(row), column_char());
+	edelib::String line = fl_filename_name(newpath);
+	line += oldline;
+	text(row, line.c_str());
 }
 
 

@@ -146,11 +146,6 @@ public:
 	int get_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->get_focus(); else return icons->get_focus(); }
 	void set_focus(int i) { if (m_type==FILE_DETAILS_VIEW) browser->set_focus(i); else icons->set_focus(i);}
 	int take_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->take_focus(); else return icons->take_focus(); }
-
-	// These methods are used by do_rename() - should become obsoleted
-	const char* text(int i) { return browser->text(i); }
-	void text(int i, const char* c) { return browser->text(i,c); }
-	uchar column_char() { return browser->column_char(); }
 };
 
 

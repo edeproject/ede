@@ -355,15 +355,8 @@ void do_rename(const char* newname) {
 		ede_alert(tsprintf(_("Filename already in use: %s"), newname));
 	else if (!edelib::file_rename(oldpath,newpath))
 		ede_alert(tsprintf(_("Rename %s to %s failed!"), oldname, newname));
-	else {
-		// Insert new name into vline 
-		// FIXME text() methods shouldn't be exported by view!
-		edelib::String vline = view->text(focus);
-		vline = newname + vline.substr(vline.find(view->column_char(),0));
-		view->text(focus,vline.c_str());
-
+	else 
 		view->update_path(oldpath,newpath);
-	}
 }
 
 
@@ -392,6 +385,7 @@ void do_paste(const char* t) {
 		to = current_dir;
 
 fprintf (stderr, "PASTE from '%s', to '%s', type=%d\n",(char*)Fl::event_text(),to,operation);
+
 
 	if (!strchr(Fl::event_text(), '/'))
 		return; // User is pasting something that isn't files
@@ -474,6 +468,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		else
 			c = ede_choice_alert(tsprintf(_("Copy or move these %d files to directory\n\t%s ?"), count, to), _("C&ancel"), _("&Copy"), _("&Move"));
 
+fprintf(stderr, "Exited choice_alert\n");
 		if (c==0) goto FINISH;
 		if (c==1) operation=COPY; else operation=CUT;
 	}
