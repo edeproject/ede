@@ -16,6 +16,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl.H>
+#include <FL/Fl_Window.H> // for window() used in ctor
 #include <FL/filename.H> // used in update_path()
 
 #include <edelib/Nls.h>
@@ -69,6 +70,7 @@ void FileDetailsView::show_editbox(int row) {
 
 	// unselect the row with focus - it's prettier that way
 	select(row,0);
+	editbox_row=row;
 
 	// Copy filename to editbox
 	char* filename = strdup(text(row));
@@ -78,7 +80,6 @@ void FileDetailsView::show_editbox(int row) {
 	bucket.add(filename);
 
 	// make the row "invisible"
-	editbox_row=row;
 	char* ntext = (char*)malloc(sizeof(char)*(strlen(text(row))+8)); // add 7 places for format chars
 	strncpy(ntext+7, text(row), strlen(text(row)));
 	strncpy(ntext, "@C255@.", 7);
@@ -161,6 +162,7 @@ FileDetailsView::FileDetailsView(int X, int Y, int W, int H, char*label) : EDE_B
 	//first=0;
 
 	editbox_ = new EditBox(0, 0, 0, 0);
+	window()->add(editbox_); // this is required to make editbox visible
 	editbox_->box(FL_BORDER_BOX);
 	editbox_->parent(this);
 	editbox_->hide();
@@ -327,6 +329,8 @@ int FileDetailsView::handle(int e) {
 
 		// Click once on item that is already selected AND focused to rename it
 		if (e==FL_PUSH && !editbox_->visible() && Fl::event_clicks()==0 && Fl::event_button()==1) {
+			// allow to click for focusing
+			if (Fl::focus()!=this) return EDE_Browser::handle(e);
 
 			// we're only interested in the first column
 			// columns 2-5 are "safe haven" where user can click without renaming anything
@@ -352,8 +356,9 @@ int FileDetailsView::handle(int e) {
 			renaming=true; // On next event, we will check if it's doubleclick
 		}
 		
-		if (renaming && (e==FL_DRAG || e==FL_RELEASE || e==FL_MOVE) && Fl::event_is_click()==0) {
-			// Fl::event_is_click() will be >0 on doubleclick
+		if (renaming && (e==FL_RELEASE || e==FL_MOVE) && Fl::event_is_click()!=0  && Fl::event_clicks()==0) {
+			// Fl::event_is_click() will be ==0 on drag
+			// Fl::event_clicks() will be >0 on doubleclick
 			show_editbox(get_focus());
 			renaming=false;
 			// don't pass mouse event, otherwise item will become reselected which is a bit ugly
@@ -402,7 +407,7 @@ EDEBUG(DBG "DnD buffer: '%s'\n", selected_items.c_str());
 
 		static bool dndrelease=false; // so we know if paste is from dnd or not
 		if (e==FL_DND_RELEASE) {
-EDEBUG(DBG "FL_DND_RELEASE '%s'\n", Fl::event_text());
+EDEBUG(DBG "FL_DND_RELEASE (%d,%d)\n", Fl::event_x(), Fl::event_y());
 
 			// Sometimes drag is accidental
 			if (abs(Fl::event_x()-dragx)>MIN_DISTANCE_FOR_DND || abs(Fl::event_y()-dragy)>MIN_DISTANCE_FOR_DND) {

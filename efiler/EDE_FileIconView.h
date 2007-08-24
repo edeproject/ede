@@ -15,14 +15,12 @@
 #define EDE_FileIconView_H
 
 
-#include <FL/Fl_Button.H>
-
 #include <edelib/String.h>
 
 //#include "EDE_FileView.h"
 
 
-// uncomment this to use edelib::ExpandableGroup
+// comment this to use edelib::ExpandableGroup
 #define USE_FLU_WRAP_GROUP
 
 #ifdef USE_FLU_WRAP_GROUP
@@ -31,22 +29,6 @@
  #include <edelib/ExpandableGroup.h>
 #endif
 
-
-
-
-// Dimensions
-#define ICONW 70
-#define ICONH 80
-
-// Spacing to use between icons
-#define ICON_SPACING 5
-
-// Used to make edges of icons less sensitive to selection box, dnd and such
-// (e.g. if selection laso only touches a widget with <5px, it will not be selected)
-#define SELECTION_EDGE 5
-
-// Sometimes I accidentaly "drag" an icon - don't want dnd to trigger
-#define MIN_DISTANCE_FOR_DND 10
 
 
 #ifdef USE_FLU_WRAP_GROUP
@@ -69,15 +51,32 @@ private:
 	// selection box
 	int select_x1,select_y1,select_x2,select_y2;
 
-	// Find the Fl_Button corresponding to real path (encoded in user_data())
-	Fl_Button* find_button(edelib::String realpath) {
+	// Find the widget corresponding to real path (encoded in user_data())
+	Fl_Widget* find_icon(edelib::String realpath) {
 		for (int i=0; i<children(); i++) {
-			Fl_Button* b = (Fl_Button*)child(i);
-			char *tmp = (char*)b->user_data();
-			if (realpath==tmp) return b;
+			Fl_Widget* w = child(i);
+			char *tmp = (char*)w->user_data();
+			if (realpath==tmp) return w;
 		}
 		return 0;
 	}
+
+	// EditBox is displayed when renaming a file
+	// We subclass Fl_Input so we can handle keyboard events
+	class EditBox : public Fl_Input {
+	public:
+		EditBox(int x, int y, int w, int h, const char* label = 0) : Fl_Input(x,y,w,h,label)  {}
+		int handle (int e);
+	}* editbox_;
+	int editbox_row;
+
+	// show editbox at specified row and make the row "invisible" (bgcolor same as fgcolor)
+	void show_editbox(int row);
+	void hide_editbox();
+
+	// This is called to actually rename file (when user presses Enter in editbox)
+	void finish_rename();
+
 
 public:
 

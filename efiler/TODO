@@ -3,3 +3,5 @@
 - Add support for fd.o Trash protocol
 - Altnernate line color in browser (add to EDE_Browser)
 - Vertical lines delineating columns (add to EDE_Browser)
+- Nicer edit box for FileIconView (centered, wrapped, possibly multiline - see 
+Konqueror)

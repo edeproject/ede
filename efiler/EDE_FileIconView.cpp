@@ -18,6 +18,7 @@
 #include <FL/filename.H> // for FL_PATH_MAX
 #include <FL/fl_draw.H> // for fl_measure and drawing selection box
 #include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Window.H> // for window() used in ctor
 
 #include <edelib/Nls.h>
 #include <edelib/String.h>
@@ -27,6 +28,118 @@
 
 // debugging help
 #define DBG "FileIconView: "
+
+
+// Dimensions
+#define ICONW 70
+#define ICONH 80
+
+// Spacing to use between icons
+#define ICON_SPACING 5
+
+// Used to make edges of icons less sensitive to selection box, dnd and such
+// (e.g. if selection laso only touches a widget with <5px, it will not be selected)
+#define SELECTION_EDGE 5
+
+// Sometimes I accidentaly "drag" an icon - don't want dnd to trigger
+#define MIN_DISTANCE_FOR_DND 10
+
+// size of editbox
+#define EDITBOX_WIDTH (ICONW+50)
+
+
+// --------------------------------------
+//
+// 	File renaming stuff
+//
+// --------------------------------------
+
+
+// EditBox is displayed when renaming a file
+// We subclass Fl_Input so we can handle keyboard
+int FileIconView::EditBox::handle (int e) {
+EDEBUG(DBG " Editbox handle(%d)\n", e);
+	FileIconView* view = (FileIconView*)parent();
+	// in FIV we handle FL_KEYDOWN and FL_KEYUP - they shouldn't be sent!
+	if ((e==FL_KEYBOARD || e==FL_KEYDOWN || e==FL_KEYUP) && visible()) {
+		int k = Fl::event_key();
+		if (Fl::event_key()==FL_Enter && visible()) {
+			view->hide_editbox();
+			view->finish_rename();
+		} else if (k==FL_Up || k==FL_Down || k==FL_Page_Up || k==FL_Page_Down) {
+			view->hide_editbox();
+			return 0; // let the view scroll
+		} else if (k==FL_F+2 || k==FL_Escape)
+			view->hide_editbox();
+		else
+			Fl_Input::handle(e);
+		
+		return 1; // don't send keys to view
+	}
+
+	if (e==FL_MOUSEWHEEL && visible()) view->hide_editbox();
+	return Fl_Input::handle(e);
+}
+
+
+// show editbox at specified row and make the row "invisible" (bgcolor same as fgcolor)
+void FileIconView::show_editbox(int row) {
+	if (!rename_callback_) return;
+	if (row<1 || row>children()) return; // nothing selected
+
+	Fl_Widget* w = child(row-1);
+	const char* label = w->label();
+	if (label[0]=='.' && label[1]=='.' && label[2]=='\0') return; // can't rename "go up" button
+
+	// unselect the icon with focus - it's prettier that way
+	select(row,0);
+	editbox_row=row;
+
+	// Copy filename to editbox
+	char* path_ = strdup(path(row));
+	if (path_[strlen(path_)-1] == '/') path_[strlen(path_)-1]='\0';
+	const char* filename = fl_filename_name(path_);
+	editbox_->value(filename);
+	free(path_);
+
+	// make the label "invisible"
+	w->labelcolor(FL_BACKGROUND2_COLOR);
+
+	// calculate location for editbox
+	// "Magic constants" here are just nice spacing
+	int X=w->x() + (w->w()/2) - (EDITBOX_WIDTH/2);
+	if (X<x()) X=x();
+	int Y=w->y() + edelib::ICON_SIZE_MEDIUM + 5;
+	int W=EDITBOX_WIDTH;
+	int H=FL_NORMAL_SIZE + 4;
+EDEBUG(DBG"editbox (%d,%d,%d,%d) \n",X,Y,W,H);
+
+	editbox_->resize(X,Y,W,H);
+	editbox_->show();
+	editbox_->take_focus();
+	redraw();
+	w->redraw();
+	editbox_->redraw();
+}
+
+
+void FileIconView::hide_editbox() {
+EDEBUG(DBG "hide_editbox()\n");
+	editbox_->hide();
+
+	// Make the edited row visible again
+	Fl_Widget* w = child(editbox_row-1);
+	w->labelcolor(FL_FOREGROUND_COLOR);
+	w->redraw(); // label will be updated by rename_callback, if necessary
+}
+
+
+// This is called to actually rename file (when user presses Enter in editbox)
+void FileIconView::finish_rename() {
+EDEBUG(DBG "finish_rename()\n");
+	rename_callback_(editbox_->value());
+}
+
 
 
 // ctor
@@ -51,6 +164,12 @@ FileIconView::FileIconView(int X, int Y, int W, int H, char*label) : edelib::Exp
 	rename_callback_ = 0;
 	paste_callback_ = 0;
 	context_callback_ = 0;
+
+	editbox_ = new EditBox(0, 0, 0, 0);
+	window()->add(editbox_); // this is required to make editbox visible
+	editbox_->box(FL_BORDER_BOX);
+	editbox_->parent(this);
+	editbox_->hide();
 }
 
 
@@ -129,15 +248,15 @@ void FileIconView::insert(int row, FileItem *item) {
 }
 
 void FileIconView::remove(FileItem *item) {
-	Fl_Button* b = find_button(item->realpath);
-	if (b) {
+	Fl_Widget* w = find_icon(item->realpath);
+	if (w) {
 #ifdef USE_FLU_WRAP_GROUP
-		Flu_Wrap_Group::remove(*b); // note that FWG requires to dereference the pointer
+		Flu_Wrap_Group::remove(*w); // note that FWG requires to dereference the pointer
 #else
-		edelib::ExpandableGroup::remove(b);
+		edelib::ExpandableGroup::remove(w);
 #endif
-		//remove(b);
-		delete b;
+		//remove(w);
+		delete w;
 	}
 }
 
@@ -155,26 +274,63 @@ void FileIconView::remove(int row) {
 
 
 void FileIconView::update(FileItem *item) {
-	Fl_Button* b = find_button(item->realpath);
-	if (!b) return;
+	Fl_Widget* w = find_icon(item->realpath);
+	if (!w) return;
 
 	// Tooltip text
 	edelib::String tooltip = _("Name: ")+item->name+_("\nSize: ")+item->size+_("\nType: ")+item->description+_("\nDate: ")+item->date+_("\nPermissions: ")+item->permissions;
-	b->tooltip(strdup(tooltip.c_str()));
+	w->tooltip(strdup(tooltip.c_str()));
 
 	// Set icon
 	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_MEDIUM);
 	if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE);
-	b->image(Fl_Shared_Image::get(icon.c_str()));
+	w->image(Fl_Shared_Image::get(icon.c_str()));
 
-	b->redraw();
+	w->redraw();
 }
 
 // This method is needed because update() uses path to find item in list
 void FileIconView::update_path(const char* oldpath,const char* newpath) {
-	Fl_Button* b = find_button(oldpath);
-	if (!b) return;
-	b->user_data(strdup(newpath));
+	Fl_Widget* w = find_icon(oldpath);
+	if (!w) return;
+	w->user_data(strdup(newpath));
+
+	// Set the label
+	char buffer[FL_PATH_MAX];
+	const char* name = fl_filename_name(newpath);
+	uint j=0;
+	for (uint i=0; i<strlen(name); i++,j++) {
+		buffer[j] = name[i];
+		buffer[j+1] = '\0';
+		if (buffer[j] == '@') { // escape @
+			buffer[++j] = '@';
+			buffer[j+1] = '\0';
+		}
+		w->copy_label(buffer);
+		int lw =0, lh = 0;
+		fl_measure(w->label(), lw, lh);
+		if (lw>ICONW) {
+			if (j==i+2) { // already added 2 newlines
+				buffer[j-2]='.';
+				buffer[j-1]='.';
+				buffer[j]='.';
+				buffer[j+1]='\0';
+				j+=2;
+				break; // for
+			} else { // add newline
+				buffer[j+1]=buffer[j];
+				buffer[j]='\n';
+				buffer[j+2]='\0';
+				j++;
+			}
+		}
+	}
+	while (j<=strlen(name)+2){ 
+		buffer[j++]='\n';
+		//buffer[j++]='L';
+	}
+	buffer[j]='\0';
+	w->copy_label(buffer);
 }
 
 // Select item (if value==1) or unselect (if value==0)
@@ -219,30 +375,30 @@ EDEBUG(DBG"show_item(%d)\n", row);
 	Fl_Button* b = (Fl_Button*)child(row-1);
 
 #ifdef USE_FLU_WRAP_GROUP
-	// scroll_to() will scroll until icon is at the top of view
+	Fl_Scrollbar* s = &scrollbar;
+#else
+	Fl_Scrollbar* s = get_scroll();
+#endif
+
+	// Flu_Wrap_Group::scroll_to() will scroll until icon is at the top of view
 	// I prefer that view is scrolled just enough so icon is visible
 	// FIXME: sometimes b->y() is so large that it wraps around and becomes positive
-	if (b->y()+b->h() > y()+h()) {
-		int scrollto = scrollbar.value() + (b->y()+b->h()-y()-h())+1;
-EDEBUG(DBG"by: %d bh: %d y: %d h: %d sv: %d\n", b->y(), b->h(), y(), h(), scrollbar.value());
-		((Fl_Valuator*)&scrollbar)->value(scrollto);
+	int scrollto=0;
+	if (b->y()+b->h() > y()+h())
+		scrollto = s->value() + (b->y()+b->h()-y()-h())+1;
+	else if (b->y() < y())
+		scrollto = s->value() - (y()-b->y());
+
+	if (scrollto) {
+		EDEBUG(DBG"by: %d bh: %d y: %d h: %d sv: %d\n", b->y(), b->h(), y(), h(), s->value());
+#ifdef USE_FLU_WRAP_GROUP
+		((Fl_Valuator*)s)->value(scrollto);
 		redraw();
 		draw(); // we need to relayout the group so that b->y() value is updated for next call
-	}
-	if (b->y() < y())
-		scroll_to(b);
 #else
-	// ExpandableGroup scrolling - not tested and probably broken
-	Fl_Scrollbar* s = get_scroll();
-	if (b->y() > s->value()+h()) {
-		// Widget is below current view
-		scrolly(b->y()+b->h()-h());
-	} else if (b->y() < s->value()) {
-		// Widget is above current view
-		scrolly(b->y());
-	}
-	// else { widget is visible, do nothing }
+		scrolly(scrollto); // ExpandableGroup method
 #endif
+	}
 }
 
 
@@ -300,6 +456,54 @@ int FileIconView::handle(int e) {
 					if (b2==child(i)) set_focus(i+1);
 				return 1;
 			}
+#else
+			// edelib::ExpandableGroup - Full keyboard navigation
+			if (e==FL_KEYDOWN) {
+				int x = get_focus();
+
+				// Wrap around
+				if ((k==FL_Up || k==FL_Left) && x==1)
+					set_focus(children());
+				else if ((k==FL_Down || k==FL_Right) && x==children())
+					set_focus(1);
+
+				// Left/right use item ordering
+				else if (k==FL_Left)
+					set_focus(x-1);
+				else if (k==FL_Right)
+					set_focus(x+1);
+
+				// Use widget x() && y() to find item above/below
+				// This isn't very elegant, but with ExpandableGroup there is no other way...
+				else {
+					Fl_Widget* w = child(x-1);
+					Fl_Widget* w2 = 0;
+					int dest=0;
+					for (int i=0; i<children(); i++) {
+						Fl_Widget* t=child(i);
+						if (k==FL_Up && t->x()==w->x() && t->y()<w->y())
+							if (!w2 || w2->y()<t->y()) { 
+								w2=t;
+								dest=i+1;
+							}
+						if (k==FL_Down && t->x()==w->x() && t->y()>w->y())
+							if (!w2 || w2->y()>t->y()) {
+								w2=t;
+								dest=i+1;
+							}
+					}
+
+					if (w2) 
+						set_focus(dest);
+					else { // nothing found
+						if (k==FL_Up)
+							set_focus(1);
+						else
+							set_focus(children());
+					}
+				}
+				return 1;
+			}
 #endif
 
 			// Remember focus for restoring later
@@ -318,7 +522,7 @@ int FileIconView::handle(int e) {
 		}
 
 		// Tab key should always navigate outside group
-		// NOTE: This is code is ugly! I am ashamed...
+		// NOTE: This code is ugly! I am ashamed...
 		if (e!=FL_NO_EVENT && e!=FL_KEYUP && k==FL_Tab) { // FL_NO_EVENT happens a lot
 EDEBUG(DBG"TAB %d - focused: (%s)\n",e,Fl::focus()->label());
 			// Try to find another widget to give focus to.
@@ -363,6 +567,65 @@ EDEBUG(DBG"[X]\n");
 		if (focused) set_focus(focused);
 	}
 
+
+
+	/* ------------------------------
+		Rename support
+	--------------------------------- */
+
+	// If rename_callback_ isn't set, we don't support renaming
+	if (rename_callback_) {
+
+		// hide editbox when user clicks outside of it
+		if (e==FL_PUSH && editbox_->visible() && !Fl::event_inside(editbox_))
+			hide_editbox();
+		
+		// hide editbox when scrolling mouse
+		if (e==FL_MOUSEWHEEL && editbox_->visible())
+			hide_editbox(); 
+		
+		static bool renaming=false; 
+			// this variable is used because we want to select item on FL_PUSH, but
+			// actually start editing on FL_RELEASE (otherwise it would be impossible
+			// to doubleclick)
+
+		if (e==FL_PUSH) { renaming=false;
+EDEBUG(DBG"FL_PUSH\n");
+}
+
+		// Click once on item that is already selected AND focused to rename it
+		if (e==FL_PUSH && !editbox_->visible() && Fl::event_clicks()==0 && Fl::event_button()==1) {
+EDEBUG(DBG"start rename\n");
+			// allow to click for focusing
+			if (!Fl::focus()->inside(this)) return 1;
+
+			// Is click inside a label?
+			int clicked=0;
+			for (int i=0; i<children(); i++) {
+				Fl_Widget* w = child(i);
+				int X=Fl::event_x(); int Y=Fl::event_y();
+				if (X>w->x() && X<w->x()+w->w() && Y>w->y()+edelib::ICON_SIZE_MEDIUM && Y<w->y()+w->h())
+					{ clicked=i+1; break; }
+			}
+
+			// Is clicked item selected and focused?
+			if (clicked && get_focus()==clicked && selected(clicked)) {
+				renaming=true; // On next event, we will check if it's doubleclick
+			} // otherwise, let the event become select/focus event
+EDEBUG(DBG"clicked: %d \n",clicked);
+if (renaming) EDEBUG(DBG"renaming!\n");
+		}
+		
+		if (renaming && (e==FL_RELEASE || e==FL_MOVE) && Fl::event_is_click()!=0  && Fl::event_clicks()==0) {
+EDEBUG(DBG"stop rename\n");
+			// Fl::event_is_click() will be ==0 on drag
+			// Fl::event_clicks() will be >0 on doubleclick
+			show_editbox(get_focus());
+			renaming=false;
+			// don't pass mouse event, otherwise item will become reselected which is a bit ugly
+			return 1;
+		}
+	}
 
 
 	// ------------------------------------------------
