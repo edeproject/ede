@@ -399,9 +399,9 @@ int FileDetailsView::handle(int e) {
 					selected_items += "\r\n";
 				}
 EDEBUG(DBG "DnD buffer: '%s'\n", selected_items.c_str());
+			dragx = Fl::event_x(); dragy = Fl::event_y();
 			Fl::copy(selected_items.c_str(),selected_items.length(),0);
 			Fl::dnd();
-			dragx = Fl::event_x(); dragy = Fl::event_y();
 			return 1; // don't do the multiple selection thing from Fl_Browser
 		}
 

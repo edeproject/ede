@@ -5,7 +5,4 @@ will be assumed.
 - Callback for tree view widget is erratic - it usually doesn't work on Enter 
 key and sometimes it is sufficient to press arrow up or down to enter a 
 directory.
-- Pressing F2 doesn't start renaming the file
-- In icon view, holding shift while clicking has the same effect as ctrl (i.e.
-adds just the focused widget to selection, not the ones in between)
 - Icon view: sometimes files with @ in name aren't properly aligned

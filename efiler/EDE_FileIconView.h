@@ -195,6 +195,10 @@ public:
 		edelib::ExpandableGroup::clear();
 #endif
 	}
+
+	void start_rename() {
+		show_editbox(get_focus());
+	}
 };
 
 

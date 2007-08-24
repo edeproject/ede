@@ -69,7 +69,8 @@ EDEBUG(DBG " Editbox handle(%d)\n", e);
 		} else if (k==FL_Up || k==FL_Down || k==FL_Page_Up || k==FL_Page_Down) {
 			view->hide_editbox();
 			return 0; // let the view scroll
-		} else if (k==FL_F+2 || k==FL_Escape)
+		} else if (e==FL_KEYBOARD && (k==FL_F+2 || k==FL_Escape))
+			// FL_KEYUP will happen immediately after showing editbox
 			view->hide_editbox();
 		else
 			Fl_Input::handle(e);
@@ -703,9 +704,11 @@ EDEBUG(DBG"FL_DRAG! ");
 
 				// If paste_callback_ isn't set, that means we don't support dnd
 				if (paste_callback_) {
+EDEBUG(DBG"- dnd.\n");
+					dragx=ex; dragy=ey; // to test the min. distance
+					Fl::belowmouse(this); // without this, we will never get FL_DND_RELEASE!!!
 					Fl::copy(selected_items.c_str(),selected_items.length(),0);
 					Fl::dnd();
-					dragx=ex; dragy=ey; // to test if its close
 				}
 				return 1;
 
@@ -842,7 +845,7 @@ if (e==FL_DND_ENTER) { EDEBUG(DBG"FL_DND_ENTER\n"); }
 if (e==FL_DND_DRAG) { EDEBUG(DBG"FL_DND_DRAG\n"); }
 if (e==FL_DND_RELEASE) { EDEBUG(DBG"FL_DND_RELEASE\n"); }
 		// Let the window manager know that we accept dnd
-		if (e==FL_DND_ENTER||e==FL_DND_DRAG) return 1;
+		if (e==FL_DND_ENTER||e==FL_DND_DRAG||e==FL_DND_LEAVE) return 1;
 	
 /*		// Scroll the view by dragging to border
 		if (e==FL_DND_LEAVE) {

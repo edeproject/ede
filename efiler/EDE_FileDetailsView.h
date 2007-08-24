@@ -156,6 +156,8 @@ public:
 	// Aliases for better compatibility with other views
 	const char*path(int row) { return (const char*)data(row); }
 	void show_item(int row) { middleline(row); }
+
+	void start_rename() { show_editbox(get_focus()); }
 };
 
 

@@ -80,6 +80,39 @@ const int statusbar_width = 400;
 
 int default_tree_width=150;
 
+
+
+
+// Subclassed Fl_Window for switching views
+
+class EFiler_Window : public Fl_Double_Window {
+public:
+	EFiler_Window (int W, int H, const char* title=0) : Fl_Double_Window(W,H,title) {}
+	EFiler_Window (int X, int Y, int W, int H, const char* title=0) : 
+		Fl_Double_Window(X,Y,W,H,title) {}
+
+	int handle(int e) {
+		// Have F8 function as switch between active views
+		if (e == FL_KEYBOARD && Fl::event_key()==FL_F+8) {
+			if (view->type() == FILE_DETAILS_VIEW) {
+				view->type(FILE_ICON_VIEW);
+				// We do this juggling with tsprintf to avoid duplicate strings for localization
+				Fl_Menu_Item* i = (Fl_Menu_Item*) main_menu->find_item(tsprintf("%s/%s", _("&View"), _("&Icons")));
+				i->set();
+			} else {
+				view->type(FILE_DETAILS_VIEW);
+				Fl_Menu_Item* i = (Fl_Menu_Item*) main_menu->find_item(tsprintf("%s/%s", _("&View"), _("&Detailed list")));
+				i->set();
+			}
+			loaddir(current_dir);
+			return 1;
+		}
+		return Fl_Double_Window::handle(e);
+	}
+};
+
+
+
 /*-----------------------------------------------------------------
 	Some improvements to Fl_File_Input, that should be added 
 	upstream:
@@ -525,6 +558,9 @@ void copy_cb(Fl_Widget*, void*) { do_cut_copy(true); }
 void paste_cb(Fl_Widget*, void*) { Fl::paste(*view,1); } // view->handle() will call do_paste()
 void delete_cb(Fl_Widget*, void*) { do_delete(); }
 
+// Call view's rename functionality
+void viewrename_cb(Fl_Widget*, void*) { view->start_rename(); }
+
 
 void showtree_cb(Fl_Widget*, void*) {
 	showtree = !showtree;
@@ -584,16 +620,20 @@ void dirsfirst_cb(Fl_Widget*, void*) {
 // dummy callbacks - TODO
 void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
-void iconsview_cb(Fl_Widget*, void*) { 
-//fprintf(stderr, "callback\n");
-view->type(FILE_ICON_VIEW);
-loaddir(current_dir);
+void iconsview_cb(Fl_Widget*, void*) {
+	if (view->type() != FILE_ICON_VIEW) {  
+		view->type(FILE_ICON_VIEW);
+		loaddir(current_dir);
+	}
 }
 void listview_cb(Fl_Widget*, void*) { 
-//fprintf(stderr, "callback\n"); 
-view->type(FILE_DETAILS_VIEW); 
-loaddir(current_dir);
+	if (view->type() != FILE_DETAILS_VIEW) {
+		view->type(FILE_DETAILS_VIEW); 
+		loaddir(current_dir);
+	}
 }
+
+
 void about_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void aboutede_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 
@@ -721,13 +761,13 @@ Fl_Menu_Item main_menu_definition[] = {
 		{_("&Cut"),		FL_CTRL+'x',	cut_cb},
 		{_("C&opy"),		FL_CTRL+'c',	copy_cb},
 		{_("&Paste"),		FL_CTRL+'v',	paste_cb},
-		{_("&Rename"),		FL_F+2,		0}, // no callback - view handles this
+		{_("&Rename"),		FL_F+2,		viewrename_cb},
 		{_("&Delete"),		FL_Delete,	delete_cb,	0,	FL_MENU_DIVIDER},
 		{_("Pre&ferences"),	FL_CTRL+'p',	pref_cb},
 		{0},
 
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
-		{_("&Icons"),		FL_F+8,		iconsview_cb,	0,	FL_MENU_RADIO}, // coming soon
+		{_("&Icons"),		0,		iconsview_cb,	0,	FL_MENU_RADIO},
 		{_("&Detailed list"),	0,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
 		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Location bar"),	FL_F+10,	locationbar_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
@@ -776,8 +816,7 @@ fl_message_font(FL_HELVETICA, 12);
 
 
 	// Main GUI design
-
-	win = new Fl_Double_Window(default_window_width, default_window_height);
+	win = new EFiler_Window(default_window_width, default_window_height);
 //	win->color(FL_WHITE);
 	win->begin();
 		main_menu = new Fl_Menu_Bar(0,0,default_window_width,menubar_height);
@@ -838,6 +877,7 @@ fl_message_font(FL_HELVETICA, 12);
 	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
 	tree_width = default_tree_width;
 
+	Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Window docs
 	win->show(argc,argv);
 	view->take_focus();
 	dirtree->init();

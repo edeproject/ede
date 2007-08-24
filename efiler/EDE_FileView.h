@@ -146,6 +146,8 @@ public:
 	int get_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->get_focus(); else return icons->get_focus(); }
 	void set_focus(int i) { if (m_type==FILE_DETAILS_VIEW) browser->set_focus(i); else icons->set_focus(i);}
 	int take_focus() { if (m_type==FILE_DETAILS_VIEW) return browser->take_focus(); else return icons->take_focus(); }
+
+	void start_rename() { if (m_type==FILE_DETAILS_VIEW) return browser->start_rename(); else return icons->start_rename(); }
 };
 
 
