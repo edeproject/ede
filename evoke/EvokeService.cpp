@@ -16,6 +16,7 @@
 #include "Splash.h"
 #include "Spawn.h"
 #include "Crash.h"
+#include "Autostart.h"
 
 #include <edelib/File.h>
 #include <edelib/Config.h>
@@ -24,9 +25,8 @@
 #include <edelib/StrUtil.h>
 #include <edelib/Util.h>
 #include <edelib/Debug.h>
+#include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
-
-#include <FL/fl_ask.h>
 
 #include <sys/types.h> // getpid
 #include <unistd.h>    // 
@@ -46,6 +46,50 @@ void resolve_path(const edelib::String& imgdir, edelib::String& img, bool have_i
 		if(!edelib::file_exists(im)) {
 			// no file, send then empty
 			img.clear();
+		}
+	}
+}
+
+char* get_basename(const char* path) {
+	char* p = strrchr(path, '/');
+	if(p)
+		return (p + 1);
+
+	return (char*)path;
+}
+
+/*
+ * 'Remove' duplicate entries by looking at their basename
+ * (aka. filename, but ignoring directory path). Item is not actually removed from
+ * the list (will mess up list pointers, but this can be resolved), but data it points
+ * to is cleared, which is a sort of marker to caller to skip it. Dumb yes, but very simple.
+ *
+ * It will use brute force for lookup and 'removal' and (hopfully) it should not have 
+ * a large impact on startup since, afaik, no one keeps hundreds of files in autostart 
+ * directories (if keeps them, then that issue is not up to this program :-P).
+ *
+ * Alternative would be to sort items (by their basename) and apply consecutive unique on 
+ * them, but... is it worth ?
+ */
+void basename_unique(StringList& lst) {
+	if(lst.empty())
+		return;
+
+	StringListIter first, last, first1, last1;
+	first = lst.begin();
+	last  = lst.end();
+
+	if(first == last)
+		return;
+
+	const char* p1, *p2;
+	for(; first != last; ++first) {
+		for(first1 = lst.begin(), last1 = lst.end(); first1 != last1; ++first1) {
+			p1 = (*first).c_str();
+			p2 = (*first1).c_str();
+
+			if(first != first1 && strcmp(get_basename(p1), get_basename(p2)) == 0)
+				(*first1).clear();
 		}
 	}
 }
@@ -249,9 +293,75 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
  * TryExec is same as for .desktop spec.
  */
 void EvokeService::init_autostart(void) {
-	edelib::String home = edelib::user_config_dir();
-	home += "/autostart/";
-	// TODO
+	edelib::String adir = edelib::user_config_dir();
+	adir += "/autostart/";
+
+	StringList dfiles, sysdirs;
+	StringListIter it, it_end;
+
+	edelib::dir_list(adir.c_str(), dfiles, true);
+
+	edelib::system_config_dirs(sysdirs);
+	if(!sysdirs.empty()) {
+		for(it = sysdirs.begin(), it_end = sysdirs.end(); it != it_end; ++it) {
+			*it += "/autostart/";
+
+			// append content
+			edelib::dir_list((*it).c_str(), dfiles, true, false, false);
+		}
+	}
+
+	if(dfiles.empty())
+		return;
+
+	/*
+	 * Remove duplicates where first one seen have priority to be keept. 
+	 * This way is required by spec. 
+	 *
+	 * Also handle this case (noted in spec): 
+	 * if $XDG_CONFIG_HOME/autostart/foo.desktop and $XDG_CONFIG_DIRS/autostart/foo.desktop
+	 * exists, but $XDG_CONFIG_HOME/autostart/foo.desktop have 'Hidden = true',
+	 * $XDG_CONFIG_DIRS/autostart/foo.autostart is ignored too.
+	 *
+	 * Latter is implied via basename_unique().
+	 */
+	basename_unique(dfiles);
+
+	const char* name;
+	char buff[1024];
+	edelib::DesktopFile df;
+	edelib::String item_name;
+
+	AstartDialog dlg(dfiles.size());
+
+	for(it = dfiles.begin(), it_end = dfiles.end(); it != it_end; ++it) {
+		if((*it).empty())
+			continue;
+
+		name = (*it).c_str();
+		if(!edelib::str_ends(name, ".desktop"))
+			continue;
+
+		if(!df.load(name)) {
+			EVOKE_LOG("Can't load %s. Skipping...\n", name);
+			continue;
+		}
+
+ 		// If Hidden key is set true in .desktop file, file MUST be ignored.
+		if(df.hidden())
+			continue;
+
+		if(df.name(buff, sizeof(buff)))
+			item_name = buff;
+		else
+			item_name = name;
+
+		if(df.try_exec(buff, sizeof(buff)) || df.exec(buff, sizeof(buff)))
+			dlg.add_item(item_name, buff);
+	}
+
+	if(dlg.list_size() > 0)
+		dlg.run();
 }
 
 void EvokeService::setup_atoms(Display* d) {
@@ -263,7 +373,7 @@ void EvokeService::setup_atoms(Display* d) {
 }
 
 void EvokeService::quit_x11(void) {
-	int ret = fl_ask(_("Nice quitting is not implemented yet and this will forcefully kill\nall running applications. Make sure to save what needs to be saved.\nSo, would you like to continue ?"));
+	int ret = edelib::ask(_("Nice quitting is not implemented yet and this will forcefully kill\nall running applications. Make sure to save what needs to be saved.\nSo, would you like to continue ?"));
 	if(ret)
 		stop();
 #if 0
@@ -362,7 +472,7 @@ void EvokeService::run_program(const char* cmd) {
 	int r = spawn_program_with_core(cmd, service_watcher_cb, &child);
 
 	if(r != 0)
-		fl_alert("Unable to start %s. Got code %i", cmd, r);
+		edelib::alert("Unable to start %s. Got code %i", cmd, r);
 	else
 		register_process(cmd, child);
 }
