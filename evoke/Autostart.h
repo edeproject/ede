@@ -34,8 +34,8 @@ class AstartDialog : public Fl_Window {
 		Fl_Box* img;
 		Fl_Box* txt;
 		Fl_Check_Browser* cbrowser;
-		Fl_Button* run_sel;
-		Fl_Button* run_all;
+		Fl_Button* rsel;
+		Fl_Button* rall;
 		Fl_Button* cancel;
 
 	public:
@@ -45,6 +45,9 @@ class AstartDialog : public Fl_Window {
 		unsigned int list_size(void) { return curr; }
 		void add_item(const edelib::String& n, const edelib::String& e);
 		void run(void);
+
+		void run_all(void);
+		void run_selected(void);
 };
 
 #endif
