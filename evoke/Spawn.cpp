@@ -49,7 +49,7 @@ void sigchld_handler(int sig) {
 	} while(pid <= 0 && errno == EINTR);
 }
 
-int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret) {
+int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const char* ofile) {
 	if(!cmd)
 		return SPAWN_EMPTY;
 
@@ -84,14 +84,18 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret) {
 		 * The following is to avoid X locking when executing 
 		 * terminal based application that requires user input
 		 */
-		if((nulldev = open("/dev/null", O_RDWR)) == -1)
-			return SPAWN_FORK_FAILED;
+		if(ofile)
+			nulldev = open(ofile, O_WRONLY | O_TRUNC | O_CREAT, 0770);
+		else
+			nulldev = open("/dev/null", O_RDWR);
+
+		if(nulldev == -1)
+			return SPAWN_OPEN_FAILED;
 
 		/* TODO: redirect these to EvokeService log */
 		close(0); dup(nulldev);
 		close(1); dup(nulldev);
 		close(2); dup(nulldev);
-
 
 		if(execve(argv[0], argv, environ) == -1) {
 			close(nulldev);

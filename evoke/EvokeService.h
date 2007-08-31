@@ -79,7 +79,8 @@ class EvokeService {
 		void unregister_top(void) { top_win = NULL; }
 
 		void service_watcher(int pid, int signum);
-		void run_program(const char* cmd);
+		void run_program(const char* cmd, bool enable_vars = 1);
+		void heuristic_run_program(const char* cmd);
 		void register_process(const char* cmd, pid_t pid);
 		void unregister_process(pid_t pid);
 		bool find_and_unregister_process(pid_t pid, EvokeProcess& pc);

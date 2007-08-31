@@ -19,6 +19,7 @@
 #include "Autostart.h"
 
 #include <edelib/File.h>
+#include <edelib/Regex.h>
 #include <edelib/Config.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
@@ -465,16 +466,93 @@ void EvokeService::service_watcher(int pid, int signum) {
  * Execute program. It's return status
  * will be reported via service_watcher()
  */
-void EvokeService::run_program(const char* cmd) {
+void EvokeService::run_program(const char* cmd, bool enable_vars) {
 	EASSERT(cmd != NULL);
 
+	edelib::String scmd(cmd);
 	pid_t child;
-	int r = spawn_program_with_core(cmd, service_watcher_cb, &child);
+
+	if(enable_vars && scmd.length() > 6) {
+		if(scmd.substr(0, 6) == "$TERM ") {
+			char* term = getenv("TERM");
+			if(!term)
+				term = "xterm";
+
+			edelib::String tmp(term);
+			tmp += " -e ";
+			tmp += scmd.substr(6, scmd.length());
+
+			scmd = tmp;
+		}
+	}
+
+	int r = spawn_program_with_core(scmd.c_str(), service_watcher_cb, &child);
 
 	if(r != 0)
 		edelib::alert("Unable to start %s. Got code %i", cmd, r);
 	else
-		register_process(cmd, child);
+		register_process(scmd.c_str(), child);
+}
+
+void EvokeService::heuristic_run_program(const char* cmd) {
+	if(strncmp(cmd, "$TERM ", 6) == 0) {
+		run_program(cmd);
+		return;
+	}
+
+	edelib::String ldd = edelib::file_path("ldd");
+	if(ldd.empty()) {
+		run_program(cmd);
+		return;
+	}
+
+	ldd += " ";
+	ldd += edelib::file_path(cmd);
+
+	int r = spawn_program(ldd.c_str(), 0, 0, "/tmp/eshrun");
+	printf("%s\n", ldd.c_str());
+	if(r != 0) {
+		printf("spawn %i\n", r);
+		return;
+	}
+
+	sleep(1);
+
+	//edelib::File f;
+	FILE* f = fopen("/tmp/eshrun", "r");
+	if(!f) {
+		puts("File::open");
+		return;
+	} else {
+		puts("opened /tmp/eshrun");
+	}
+
+	edelib::Regex rx;
+	rx.compile("^\\s*libX11");
+	char buff[1024];
+	bool is_gui = 0;
+
+	while(fgets(buff, sizeof(buff)-1, f)) {
+		printf("checking %s\n", buff);
+
+		if(rx.match(buff)) {
+			printf("found libX11\n");
+			is_gui = 1;
+			//break;
+		}
+	}
+
+	fclose(f);
+
+	edelib::String fcmd;
+	if(!is_gui) {
+		fcmd = "$TERM ";
+		fcmd += cmd;
+	} else {
+		fcmd = cmd;
+	}
+
+	run_program(fcmd.c_str());
 }
 
 void EvokeService::register_process(const char* cmd, pid_t pid) {
@@ -545,6 +623,7 @@ int EvokeService::handle(const XEvent* ev) {
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
 				logfile->printf("Got _EVOKE_SPAWN with %s. Starting client...\n", buff);
 				run_program(buff);
+				//heuristic_run_program(buff);
 			} else {
 				logfile->printf("Got _EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
