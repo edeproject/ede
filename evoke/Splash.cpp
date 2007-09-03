@@ -16,6 +16,7 @@
 #include <edelib/Run.h>
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
+#include <edelib/Sound.h>
 
 #include <FL/Fl_Shared_Image.h>
 #include <FL/Fl.h>
@@ -170,6 +171,9 @@ void Splash::run(void) {
 	int sh = DisplayHeight(fl_display, fl_screen);
 	position(sw/2 - w()/2, sh/2 - h()/2);
 
+	if(sound && !sound->empty())
+		edelib::SoundSystem::init();
+
 	show();
 
 	Fl::add_timeout(TIMEOUT_START, runner_cb, this);
@@ -185,10 +189,16 @@ void Splash::run(void) {
 	// make sure MappingNotify keeps this window at the top
 	EvokeService::instance()->register_top(this);
 
+	if(edelib::SoundSystem::inited())
+		edelib::SoundSystem::play(sound->c_str(), 0);
+
 	while(shown())
 		Fl::wait();
 
 	EvokeService::instance()->unregister_top();
+
+	if(edelib::SoundSystem::inited())
+		edelib::SoundSystem::shutdown();
 }
 
 // called when splash option is on
@@ -203,6 +213,7 @@ bool Splash::next_client(void) {
 		counter = 0;
 		return false;
 	}
+
 
 	EASSERT(counter < clist->size() && "Internal error; 'counter' out of bounds");
 
@@ -221,32 +232,6 @@ bool Splash::next_client(void) {
 	++clist_it;
 	++counter;
 	return true;
-
-#if 0
-	/*
-	 * This was vector implementation; I'm leaving here
-	 * untill list is proven to be safe. If code is changed
-	 * back to vector, make sure to update rest code removing
-	 * iterators.
-	 */
-	if(counter >= clist->size()) {
-		counter = 0;
-		return false;
-	}
-	char buff[1024];
-	const char* msg = (*clist)[counter].message.c_str();
-	const char* cmd = (*clist)[counter].exec.c_str();
-	snprintf(buff, sizeof(buff), _("Starting %s..."), msg);
-
-	icons[counter]->show();
-	msgbox->copy_label(buff);
-	redraw();
-
-	if(!dry_run)
-		spawn_program(cmd);
-
-	counter++;
-#endif
 }
 
 // called when splash option is off
@@ -277,29 +262,4 @@ bool Splash::next_client_nosplash(void) {
 	++clist_it;
 	++counter;
 	return true;
-
-#if 0
-	/*
-	 * This was vector implementation; I'm leaving here
-	 * untill list is proven to be safe. If code is changed
-	 * back to vector, make sure to update rest code removing
-	 * iterators.
-	 */
-	if(counter >= clist->size()) {
-		counter = 0;
-		return false;
-	}
-
-	char buff[1024];
-	const char* msg = (*clist)[counter].message.c_str();
-	const char* cmd = (*clist)[counter].exec.c_str();
-	snprintf(buff, sizeof(buff), _("Starting %s..."), msg);
-
-	printf("%s\n", buff);
-
-	if(!dry_run)
-		spawn_program(cmd);
-
-	counter++;
-#endif
 }

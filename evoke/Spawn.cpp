@@ -138,7 +138,7 @@ int spawn_program_with_core(const char* cmd, SignalWatch* wf, pid_t* child_pid_r
 	return ret;
 }
 
-int spawn_backtrace(const char* program, const char* core, const char* output, const char* script) {
+int spawn_backtrace(const char* gdb_path, const char* program, const char* core, const char* output, const char* script) {
 	const char* gdb_script = "bt\nquit\n";
 	const int gdb_script_len = 8;
 
@@ -164,7 +164,7 @@ int spawn_backtrace(const char* program, const char* core, const char* output, c
 		close(ofd);
 
 		char* argv[8];
-		argv[0] = "gdb";
+		argv[0] = (char*)gdb_path;
 		argv[1] = "--quiet";
 		argv[2] = "--batch";
 		argv[3] = "-x";
@@ -184,178 +184,3 @@ int spawn_backtrace(const char* program, const char* core, const char* output, c
 	return 0;
 }
 
-#if 0
-int spawn_backtrace(int crash_pid, const char* output, const char* script) {
-	const char* gdb_script = "info threads\nthread apply all bt full\nquit\n";
-	const int gdb_script_len = 43;
-	//const char* gdb_script = "bt\nquit\n";
-	//const int gdb_script_len = 8;
-
-	pid_t parent_pid, child_pid;
-
-	//kill(crash_pid, SIGCONT);
-
-	char parent_pid_str[64];
-	parent_pid = crash_pid;
-	kill(parent_pid, SIGCONT);
-
-	//parent_pid = getpid();
-	sprintf(parent_pid_str, "%ld", (long)parent_pid);
-
-	// file with gdb commands
-	int sfd = open(script, O_WRONLY | O_TRUNC | O_CREAT, 0770);
-	if(sfd == -1)
-		return -1;
-	write(sfd, gdb_script, gdb_script_len);
-	close(sfd);
-
-	// output file with gdb backtrace
-	int ofd = open(output, O_WRONLY | O_TRUNC | O_CREAT, 0770);
-	if(ofd == -1)
-		return -1;
-
-	child_pid = fork();
-
-	if(child_pid == -1)
-		return -1;
-	else if(child_pid == 0) {
-		//dup2(ofd, 1);
-		close(ofd);
-
-		char* argv[8];
-		argv[0] = "gdb";
-		argv[1] = "--quiet";
-		argv[2] = "--batch";
-		argv[3] = "-x";
-		argv[4] = (char*)script;
-		argv[5] = "--pid";
-		argv[6] = parent_pid_str;
-		argv[7] = 0;
-
-		//argv[5] = "--pid";
-		//argv[6] = parent_pid_str;
-		//argv[7] = 0;
-
-		printf("%s %s %s %s %s %s %s\n", argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
-
-		execvp(argv[0], argv);
-		return -1;
-	} else {
-		/*
-		int status;
-		waitpid(child_pid, &status, 0);
-		*/
-	}
-
-	//unlink(script);
-	return 0;
-}
-
-#if 0
-int spawn_backtrace(const char* output, const char* script){
-	pid_t pid, parent_pid;
-	int ifd[2], ofd[2], efd[2];
-
-	const char* gdb_script = "info threads\nthread apply all by\nquit\n";
-	const int gdb_script_len = 38;
-
-	puts("xxxx");
-
-	// write script for gdb
-	int fds = open(script, O_WRONLY | O_CREAT | O_TRUNC, 0770);
-	if(fds == -1)
-		return -1;
-	write(fds, gdb_script, gdb_script_len);
-	close(fds);
-
-	puts("yyyyy");
-
-	errno = 0;
-	// open output for gdb trace
-	int fdo = open(output, O_WRONLY, O_CREAT | O_TRUNC, 0770);
-	if(fdo == -1) {
-		printf("can't open fdo(%s): %s\n", output, strerror(errno));
-		return -1;
-	}
-
-	parent_pid = getppid();
-	char parent_pid_str[64];
-	sprintf(parent_pid_str, "%d", parent_pid);
-
-	char* argv[8];
-	argv[0] = "gdb";
-	argv[1] = "--quiet";
-	argv[2] = "--batch";
-	argv[3] = "-x";
-	argv[4] = (char*)script;
-	argv[5] = "--pid";
-	argv[6] = parent_pid_str;
-	argv[7] = 0;
-	
-	puts("ayyyy");
-
-	if(pipe(ifd) == -1) {
-		printf("cant open ifd pipe: %s\n", strerror(errno));
-	}
-
-	if(pipe(ofd) == -1) {
-		printf("cant open ofd pipe: %s\n", strerror(errno));
-	}
-		
-	if(pipe(efd) == -1) {
-		printf("cant open efd pipe: %s\n", strerror(errno));
-	}
-
-	pid = fork();
-
-	if(pid == -1) {
-		close(ifd[0]); close(ifd[1]);
-		close(ofd[0]); close(ofd[1]);
-		close(efd[0]); close(efd[1]);
-		return -1;
-	} else if(pid == 0) {
-		// child
-		printf("gdb pid is %i\n", getpid());
-		printf("%s %s %s %s %s %s %s\n", argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
-
-		close(ifd[1]);
-		fclose(stdin);
-		dup(ifd[0]);
-
-		close(ofd[0]);
-		fclose(stdout);
-		dup(ofd[1]);
-
-		close(efd[0]);
-		fclose(stderr);
-		dup(efd[1]);
-
-		execvp(argv[0], (char**)argv);
-		return -1;
-	} else {
-		// parent
-		fclose(stdin);
-
-		close(ifd[0]);
-		close(ofd[1]);
-		close(efd[1]);
-
-		write(fdo, "The trace:\n", 11);
-
-		close(ifd[1]);
-		close(ofd[0]);
-		close(efd[0]);
-
-		close(fdo);
-
-		kill(pid, SIGKILL);
-
-		waitpid(pid, NULL, 0);
-		//_exit(0);
-	}
-
-	return 0;
-}
-#endif
-
-#endif

@@ -126,7 +126,7 @@ int get_string_property_value(Atom at, char* txt, int txt_len) {
 	}
 
 	strncpy(txt, vnames[0], txt_len);
-	txt[txt_len] = '\0';
+	txt[txt_len] = 0;
 	XFreeStringList(vnames);
 	return 1;
 }
@@ -224,6 +224,11 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	if(c.get("evoke", "Splash", buff, sizeof(buff)))
 		splashimg = buff;
 
+	edelib::String sound;
+	if(c.get("evoke", "Sound", buff, sizeof(buff)))
+		sound = buff;
+
+
 	// Startup key must exists
 	if(!c.get("evoke", "Startup", buff, sizeof(buff)))
 		return false;
@@ -269,6 +274,7 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	Splash sp(no_splash, dry_run);
 	sp.set_clients(&clients);
 	sp.set_background(&splashimg);
+	sp.set_sound(&sound);
 
 	sp.run();
 
@@ -494,6 +500,7 @@ void EvokeService::run_program(const char* cmd, bool enable_vars) {
 		register_process(scmd.c_str(), child);
 }
 
+#if 0
 void EvokeService::heuristic_run_program(const char* cmd) {
 	if(strncmp(cmd, "$TERM ", 6) == 0) {
 		run_program(cmd);
@@ -554,6 +561,7 @@ void EvokeService::heuristic_run_program(const char* cmd) {
 
 	run_program(fcmd.c_str());
 }
+#endif
 
 void EvokeService::register_process(const char* cmd, pid_t pid) {
 	EvokeProcess pc;

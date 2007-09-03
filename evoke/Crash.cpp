@@ -13,11 +13,13 @@
 #include "icons/core.xpm"
 #include "Crash.h"
 #include "Spawn.h"
+
 #include <FL/Fl.h>
 #include <FL/Fl_Pixmap.h>
-#include <edelib/Nls.h>
 
-#include <stdio.h> // snprintf
+#include <edelib/Nls.h>
+#include <edelib/File.h>
+#include <edelib/Directory.h>
 
 #define DIALOG_W 380
 #define DIALOG_H 130 
@@ -90,8 +92,50 @@ void CrashDialog::show_details(void) {
 
 		if(!trace_loaded) {
 			trace_buff->remove(0, trace_buff->length());
-			spawn_backtrace(cmd.c_str(), "core", "/tmp/gdb_output", "/tmp/gdb_script");
-			trace_buff->appendfile("/tmp/gdb_output");
+	
+			edelib::String gdb_path = edelib::file_path("gdb");
+			if(gdb_path.empty()) {
+				trace_buff->append(_("Unable to load gdb. Is it installed ?"));
+				trace_loaded = 0;
+				return;
+			}
+
+			// check if we can write in /tmp; if not, try with $HOME
+			edelib::String dir = "/tmp";
+			if(!edelib::dir_writeable(dir.c_str())) {
+				dir = edelib::dir_home();
+
+				if(!edelib::dir_writeable(dir.c_str())) {
+					trace_buff->append(_("Don't have permissions to write either to /tmp or $HOME"));
+					trace_loaded = 0;
+					return;
+				}
+			}
+
+			edelib::String gdb_output, gdb_script;
+			gdb_output = gdb_script = dir;
+			gdb_output += "/.gdb_output";
+			gdb_script += "/.gdb_script";
+			const char* core_file = "core";
+
+			if(spawn_backtrace(gdb_path.c_str(), cmd.c_str(), core_file, gdb_output.c_str(), gdb_script.c_str()) == -1) {
+				trace_buff->append(_("Unable to properly execute gdb"));
+				trace_loaded = 0;
+				return;
+			}
+
+			if(!edelib::file_exists(gdb_output.c_str())) {
+				trace_buff->append(_("Strange, can't find gdb output that I was just wrote to"));
+				trace_loaded = 0;
+				return;
+			}
+
+			trace_buff->appendfile(gdb_output.c_str());
+
+			edelib::file_remove(gdb_output.c_str());
+			edelib::file_remove(gdb_script.c_str());
+			edelib::file_remove(core_file);
+
 			trace_loaded = 1;
 		}
 	}
