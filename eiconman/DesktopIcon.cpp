@@ -19,10 +19,10 @@
 #include <FL/Fl_Shared_Image.h>
 #include <FL/Fl_Menu_Button.h>
 #include <FL/x.h>
-#include <FL/fl_ask.h>
 
 #include <edelib/Debug.h>
 #include <edelib/IconTheme.h>
+#include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 
 #define USE_SHAPE 1
@@ -63,7 +63,7 @@ void rename_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
 	EASSERT(di != NULL);
 
-	const char* new_name = fl_input(_("New name"), di->label());
+	const char* new_name = edelib::input(_("New name"), di->label());
 	if(!new_name)
 		return;
 	if(new_name[0] == '\0')
@@ -259,6 +259,10 @@ void DesktopIcon::rename(const char* str) {
 	label(settings->name.c_str());
 	update_label_size();
 	redraw();
+}
+
+const edelib::String& DesktopIcon::path(void) {
+	return settings->full_path;
 }
 
 void DesktopIcon::fast_redraw(void) {

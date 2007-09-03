@@ -13,6 +13,8 @@
 #ifndef __DESKTOPICON_H__
 #define __DESKTOPICON_H__
 
+#include <edelib/String.h>
+
 #include <FL/Fl_Widget.h>
 #include <FL/Fl_Window.h>
 #include <FL/Fl_Box.h>
@@ -77,6 +79,12 @@ class DesktopIcon : public Fl_Widget {
 		Fl_Image* icon_image(void) { return image(); }
 
 		void rename(const char* str);
+
+		/*
+		 * make sure this returns String since operator== is
+		 * further used, especially in Desktop
+		 */
+		const edelib::String& path(void);
 };
 
 class MovableIcon : public Fl_Window {

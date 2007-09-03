@@ -19,7 +19,7 @@
 
 #include <edelib/String.h>
 #include <edelib/Config.h>
-#include <edelib/Vector.h>
+#include <edelib/List.h>
 
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
@@ -78,7 +78,8 @@ class NotifyBox;
 
 class Fl_Menu_Button;
 
-typedef edelib::vector<DesktopIcon*>     DesktopIconList;
+typedef edelib::list<DesktopIcon*> DesktopIconList;
+typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
 
 #define DESKTOP_WINDOW Fl_Window
 
@@ -88,6 +89,7 @@ class Desktop : public DESKTOP_WINDOW {
 
 		int selection_x, selection_y;
 		bool moving;
+		bool do_dirwatch;
 
 		SelectionOverlay*  selbox;
 
@@ -103,10 +105,14 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void init_internals(void);
 
-		void load_icons(const char* path, edelib::Config& conf);
+		void load_icons(const char* path, edelib::Config* conf);
 		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);
+		bool add_icon_pathed(const char* path, edelib::Config* conf);
+		DesktopIcon* find_icon_pathed(const char* path);
+		bool remove_icon_pathed(const char* path);
+		bool update_icon_pathed(const char* path);
 
 		void unfocus_all(void);
 
@@ -145,6 +151,10 @@ class Desktop : public DESKTOP_WINDOW {
 		void notify_box(const char* msg, bool copy = false);
 		void notify_box_color(Fl_Color col);
 		void notify_desktop_changed(void);
+
+		void dir_watch(const char* dir, const char* changed, int flags);
+		void dir_watch_on(void) { do_dirwatch = true; }
+		void dir_watch_off(void) { do_dirwatch = false; }
 };
 
 #endif

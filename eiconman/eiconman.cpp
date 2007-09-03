@@ -21,6 +21,7 @@
 #include <edelib/File.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
+#include <edelib/DirWatch.h>
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
 #include <edelib/IconTheme.h>
@@ -33,6 +34,8 @@
 #include <FL/Fl_Shared_Image.h>
 #include <FL/Fl_Menu_Button.h>
 #include <FL/fl_ask.h>
+
+#include <unistd.h> // sleep
 
 #if 0
 #include <X11/extensions/Xdamage.h>
@@ -111,6 +114,10 @@ void restart_signal(int signum) {
 	EDEBUG(ESTRLOC ": Restarting (got signal %d)\n", signum);
 }
 
+void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
+	Desktop::instance()->dir_watch(dir, changed, flags);
+}
+
 int desktop_xmessage_handler(int event) { 
 #if 0
 	if(fl_xevent->type == xevent_base + XDamageNotify) {
@@ -158,6 +165,7 @@ int desktop_xmessage_handler(int event) {
 Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selection_x = selection_y = 0;
 	moving = false;
+	do_dirwatch = true;
 
 	selbox = new SelectionOverlay;
 	selbox->x = selbox->y = selbox->w = selbox->h = 0;
@@ -174,6 +182,8 @@ Desktop::~Desktop() {
 	delete dsett;
 	delete selbox;
 	delete notify;
+
+	edelib::DirWatch::shutdown();
 }
 
 void Desktop::init_internals(void) {
@@ -333,85 +343,148 @@ void Desktop::read_config(void) {
 		return;
 	}
 	dd += "/Desktop";
-	load_icons(dd.c_str(), conf);
+
+	/*
+	 * Setup watcher on ~/Desktop directory. All further events will
+	 * be reported to dir_watch()
+	 */
+	if(edelib::dir_exists(dd.c_str())) {
+		load_icons(dd.c_str(), &conf);
+
+		edelib::DirWatch::init();
+		edelib::DirWatch::callback(dir_watch_cb);
+
+		if(!edelib::DirWatch::add(dd.c_str(), 
+				edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
+
+			EWARNING(ESTRLOC ": Can't load %s; icons will not be loaded\n", dd.c_str());
+			edelib::DirWatch::shutdown();
+		}
+	}
 }
 
 void Desktop::save_config(void) {
 	// TODO
 }
 
-void Desktop::load_icons(const char* path, edelib::Config& conf) {
+void Desktop::load_icons(const char* path, edelib::Config* conf) {
 	EASSERT(path != NULL);
 
-	if(!edelib::dir_exists(path)) {
-		EDEBUG(ESTRLOC ": %s does not exists\n", path);
-		return;
-	}
-
-	edelib::vector<edelib::String> lst;
-
-	// list without full path, so we can use name as entry in config file
-	if(!dir_list(path, lst)) {
+	edelib::list<edelib::String> lst;
+	// list with full path; icon basename is extracted in add_icon_pathed()
+	if(!dir_list(path, lst, true)) {
 		EDEBUG(ESTRLOC ": Can't read %s\n", path);
 		return;
 	}
 
-	const char* name = NULL;
-	int icon_x = 0;
-	int icon_y = 0;
-	edelib::String full_path;
-	full_path.reserve(256);
+	edelib::list<edelib::String>::iterator it, it_end;
+	for(it = lst.begin(), it_end = lst.end(); it != it_end; ++it)
+		add_icon_pathed((*it).c_str(), conf);
+}
 
+bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
+	EASSERT(path != NULL);
+
+	IconSettings is;
 	bool can_add = false;
+	const char* base = get_basename(path);
 
-	edelib::MimeType mt;
-	
-	unsigned int sz = lst.size();
-	for(unsigned int i = 0; i < sz; i++) {
-		name = lst[i].c_str();
+	/*
+	 * see is possible .desktop file; icon, name fields are filled from read_desktop_file()
+	 *
+	 * FIXME: maybe the good thing is to use MimeType to check .desktop; 
+	 * extension does not have to be always present, or .desktop does not have to be
+	 * Desktop File at all
+	 */
+	if(edelib::str_ends(path, ".desktop")) {
+		if(read_desktop_file(path, is))
+			can_add = true;
+	} else {
+		edelib::MimeType mt;
 
-		full_path = path;
-		full_path += '/';
-		full_path += name;
+		// then try to figure out it's mime; if fails, ignore it
+		if(mt.set(path)) {
+			EDEBUG(ESTRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
+			is.icon = mt.icon_name();
+			// icon label path's basename
+			is.name = base;
+			is.type = ICON_FILE;
 
-		can_add = false;
-
-		IconSettings is;
-
-		// see is possible .desktop file, icon, name fields are filled from read_desktop_file()
-		if(edelib::str_ends(name, ".desktop")) {
-			if(read_desktop_file(full_path.c_str(), is))
-				can_add = true;
+			can_add = true;
 		} else {
-			// then try to figure out it's mime; if fails, ignore it
-			if(mt.set(full_path.c_str())) {
-				EDEBUG(ESTRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
-				is.icon = mt.icon_name();
-				// icon label is name of file
-				is.name = name;
-				is.type = ICON_FILE;
-
-				can_add = true;
-			} else {
-				EDEBUG(ESTRLOC ": Failed mime-type for %s, ignoring...\n", name);
-				can_add = false;
-			}
-		}
-
-		if(can_add) {
-			is.key_name = name;
-			// random_pos() is used if X/Y keys are not found
-			conf.get(name, "X", icon_x, random_pos(w() - 10));
-			conf.get(name, "Y", icon_y, random_pos(h() - 10));
-
-			EDEBUG(ESTRLOC ": %s found with: %i %i\n", name, icon_x, icon_y);
-			is.x = icon_x;
-			is.y = icon_y;
-
-			DesktopIcon* dic = new DesktopIcon(&gisett, &is, dsett->color);
-			add_icon(dic);
+			EDEBUG(ESTRLOC ": Failed mime-type for %s, ignoring...\n", path);
+			can_add = false;
 		}
 	}
+
+	if(can_add) {
+		/*
+		 * key_name is section in config file with icon X/Y values
+		 * FIXME: this should be named 'section_name'
+		 */
+		is.key_name = base;
+
+		// random_pos() is used if X/Y keys are not found
+		int icon_x = random_pos(w() - 10);
+		int icon_y = random_pos(w() - 10);
+
+		if(conf) {
+			conf->get(base, "X", icon_x, icon_x);
+			conf->get(base, "Y", icon_y, icon_y);
+		}
+
+		EDEBUG(ESTRLOC ": %s found with: %i %i\n", base, icon_x, icon_y);
+		is.x = icon_x;
+		is.y = icon_y;
+		is.full_path = path;
+
+		DesktopIcon* dic = new DesktopIcon(&gisett, &is, dsett->color);
+		add_icon(dic);
+	}
+
+	return can_add;
+}
+
+DesktopIcon* Desktop::find_icon_pathed(const char* path) {
+	EASSERT(path != NULL);
+
+	if(icons.empty())
+		return NULL;
+
+	DesktopIconListIter it, it_end;
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		if((*it)->path() == path)
+			return (*it);
+	}
+
+	return NULL;
+}
+
+bool Desktop::remove_icon_pathed(const char* path) {
+	EASSERT(path != NULL);
+
+	if(icons.empty())
+		return false;
+
+	DesktopIconListIter it, it_end;
+	bool found = false;
+
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		if((*it)->path() == path) {
+			found = true;
+			break;
+		}
+	}
+
+	if(found) {
+		DesktopIcon* ic = (*it);
+		icons.erase(it);
+		// Fl_Group::remove() does not delete child, just pops it out
+		remove(ic);
+		delete ic;
+	}
+
+	return found;
 }
 
 // read .desktop files
@@ -425,7 +498,7 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 
 	edelib::DesktopFile dconf;
 	if(!dconf.load(path)) {
-		EWARNING(ESTRLOC ": Can't read %s\n", path);
+		EWARNING(ESTRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
 		return false;
 	}
 
@@ -482,11 +555,12 @@ void Desktop::add_icon(DesktopIcon* ic) {
 }
 
 void Desktop::unfocus_all(void) { 
-	unsigned int sz = icons.size();
 	DesktopIcon* ic;
+	DesktopIconListIter it, it_end;
 
-	for(unsigned int i = 0; i < sz; i++) {
-		ic = icons[i];
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		ic = (*it);
+
 		if(ic->is_focused()) {
 			ic->do_unfocus();
 			ic->fast_redraw();
@@ -524,9 +598,13 @@ void Desktop::select_only(DesktopIcon* ic) {
 bool Desktop::in_selection(const DesktopIcon* ic) { 
 	EASSERT(ic != NULL);
 
-	unsigned int sz = selectionbuff.size();
-	for(unsigned int i = 0; i < sz; i++) {
-		if(ic == selectionbuff[i])
+	if(selectionbuff.empty())
+		return false;
+
+	DesktopIconListIter it, it_end;
+
+	for(it = selectionbuff.begin(), it_end = selectionbuff.end(); it != it_end; ++it) {
+		if((*it) == ic)
 			return true;
 	}
 
@@ -534,15 +612,16 @@ bool Desktop::in_selection(const DesktopIcon* ic) {
 }
 
 void Desktop::move_selection(int x, int y, bool apply) { 
-	unsigned int sz = selectionbuff.size();
-	if(sz == 0)
+	if(selectionbuff.empty())
 		return;
 
 	int prev_x, prev_y, tmp_x, tmp_y;
 	DesktopIcon* ic;
 
-	for(unsigned int i = 0; i < sz; i++) {
-		ic = selectionbuff[i];
+	DesktopIconListIter it, it_end;
+
+	for(it = selectionbuff.begin(), it_end = selectionbuff.end(); it != it_end; ++it) {
+		ic = (*it);
 
 		prev_x = ic->drag_icon_x();
 		prev_y = ic->drag_icon_y();
@@ -575,11 +654,11 @@ void Desktop::move_selection(int x, int y, bool apply) {
  * and bad things be hapened.
  */
 DesktopIcon* Desktop::below_mouse(int px, int py) {
-	unsigned int sz = icons.size();
-
 	DesktopIcon* ic = NULL;
-	for(unsigned int i = 0; i < sz; i++) {
-		ic = icons[i];
+	DesktopIconListIter it, it_end;
+	
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		ic = (*it);
 		if(ic->x() < px && ic->y() < py && px < (ic->x() + ic->h()) && py < (ic->y() + ic->h()))
 			return ic;
 	}
@@ -613,11 +692,11 @@ void Desktop::select_in_area(void) {
 	 * but selbox use relative (event_root). It will work as expected if desktop is at x=0 y=0.
 	 * This should be checked further.
 	 */
-	unsigned int sz = icons.size();
 	DesktopIcon* ic = NULL;
+	DesktopIconListIter it, it_end;
 
-	for(unsigned int i = 0; i < sz; i++) {
-		ic = icons[i];
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		ic = (*it);
 		EASSERT(ic != NULL && "Impossible to happen");
 
 		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
@@ -831,6 +910,53 @@ void Desktop::draw(void) {
 	clear_damage();
 }
 
+void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
+	if(!do_dirwatch || !changed || flags == edelib::DW_REPORT_NONE)
+		return;
+
+	/*
+	 * Check first we don't get any temporary files (starting with '.'
+	 * or ending with '~', like vim does when editing file). For now these
+	 * are only conditions, but I will probably add them more when issues occured.
+	 *
+	 * FIXME: use strcmp() family ?
+	 */
+	edelib::String tmp(changed);
+	if(tmp.empty() || tmp[0] == '.' || tmp[tmp.length()-1] == '~')
+		return;
+
+	sleep(1);
+
+	if(flags == edelib::DW_REPORT_CREATE) {
+		EDEBUG(ESTRLOC ": adding %s\n", changed);
+
+		if(find_icon_pathed(changed)) {
+			EDEBUG(ESTRLOC ": %s already registered; skipping...\n", changed);
+			return;
+		}
+
+		/*
+		 * Uh; looks like kernel report event faster than file is created
+		 * (in some cases). This can be bad for .desktop files when are copied
+		 * (eg. on my machine after 'cp Home.desktop foo.desktop', will fail
+		 * to load foo.desktop since it's content is not fully copied). 
+		 * Due that we stop for one sec (use usleep() ???)
+		 */
+		//sleep(1);
+
+		if(add_icon_pathed(changed, 0))
+			redraw();
+
+	} else if(flags == edelib::DW_REPORT_MODIFY) {
+		EDEBUG(ESTRLOC ": modified %s\n", changed);
+	} else if(flags == edelib::DW_REPORT_DELETE) {
+		EDEBUG(ESTRLOC ": deleted %s\n", changed);
+		if(remove_icon_pathed(changed))
+			redraw();
+	} else
+		EDEBUG(ESTRLOC ": %s changed with %i\n", changed, flags);
+}
+
 int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
@@ -958,9 +1084,10 @@ int Desktop::handle(int event) {
 				if(!selectionbuff.empty())
 					selectionbuff.clear();
 
-				for(unsigned int i = 0; i < icons.size(); i++) {
-					if(icons[i]->is_focused())
-						select(icons[i], false);
+				DesktopIconListIter it, it_end;
+				for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+					if((*it)->is_focused())
+						select((*it), false);
 				}
 
 				return 1;
@@ -976,7 +1103,7 @@ int Desktop::handle(int event) {
 			 * command for all selected icons ?
 			 */
 			if(selectionbuff.size() == 1 && !moving)
-				selectionbuff[0]->handle(FL_RELEASE);
+				(*selectionbuff.begin())->handle(FL_RELEASE);
 
 			moving = false;
 			return 1;
