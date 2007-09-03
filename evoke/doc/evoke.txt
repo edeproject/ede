@@ -3,3 +3,111 @@ Evoke documentation
 
 Evoke is EDE head service responsible for starting environment, running
 requested applications and shutting down environment respectively.
+
+It is usually started at EDE startup, placing in 'startede' script and
+will allow only one instance of itself to be running.
+
+Options
+-------
+
+-s, --startup::
+	Run in starup mode. Startup mode should be used when environment is
+	starting and it will read evoke.conf file looking for compontents to
+	be started.
+
+-n, --no-splash::
+	Do not display splash during startup. Only usefull if in startup mode
+	(given '-s' or '--startup').
+
+-d, --dry-run::
+	Only valid in startup or autostart mode. It will show what will be started,
+	but will not start anything. Usefull for testing.
+
+-a, --autostart::
+	Run in autostart mode. It will check 'autostart' directory and run .desktop
+	files from it. This will be done according to freedesktop.org autostart specification.
+
+-c, --config [FILE]::
+	Read [FILE] as config file. This file is only used in startup mode to read
+	components to be started.
+
+-p, --pid [FILE]::
+	Store session pid to [FILE].
+
+-l, --log [FILE]::
+	Log events to [FILE]. [FILE] can be 'stdout' or 'stderr' (literally) where logging
+	will be to standard output or standard error output.
+
+-h, --help::
+	This help.
+
+
+Details
+-------
+
+Evoke can be started with or without options. If started without options, it will do nothing
+until external application send request to start something or to quit (here 'quit' means
+to quit evoke, not some running application).
+
+As you can see from options, there are two 'modes' (if parameteres for them are given):
+
+  * autstart mode
+  * startup mode
+
+*Autostart mode* is used to run applications from 'autostart' directory. This directory is
+usually located at $HOME/.config/autostart or if not exists, in /etc/xdg/autostart. Of course,
+both directories can exists and evoke will run applications from both, but with one exception:
+if application with the same .desktop name exists in both (and is valid desktop file), it will
+be run only from prefered directory, which is $HOME/.config/autostart.
+
+If you want some application to be run at EDE startup (implying evoke is started with '-a' option),
+just copy it's .desktop file to autostart directory. Before that, make sure that .desktop file
+confirms to http://freedesktop.org specification for Desktop Files.
+
+On other hand if you want to disable running some application from autostart directory, you can
+simply delete that file, or set this:
+---------------
+Hidden = true
+---------------
+Make sure that 'Hidden' key is under '[Desktop Entry]' section.
+
+By default when you are using autostart mode, it will popup window with programs that are 'registered'
+for starting, from where you can choose either to start some of them, start all of them or to start
+nothing. This is intentionally; you definitely don't want some application to be started without
+your knowledge (not to say how this can be very insecure).
+
+*Startup mode* is meant to be used when EDE is starting, running each component (or program)
+from evoke.conf (or file specified with '-c' option). This configuration file must be in following form:
+--------------
+# [evoke] section must be present
+[evoke]
+  # Startup key is used to notify evoke what to start
+  # and program keys must be separated with comma (if multiple ones are given)
+  Startup = program1, program2, program3 
+
+  # ImagesDirectory is directory with icons used for splash screen
+  ImagesDirectory = /some/path/some_dir_name
+
+  # Splash is image used for splash screen (it will be searched in ImagesDirectory)
+  Splash = image.png
+
+# now comes each value from Startup key as separate key
+[program1]
+  # Icon is icon used in splash screen progress (searched in ImagesDirectory)
+  Icon = icon1.png
+
+  # Exec is program executable to be run
+  Exec = program1
+
+  # Description is used to describe what is starting
+  Description = my cool program
+
+[program2]
+  Icon = icon2.png
+  Exec = program2
+  Description = my cool second program
+
+...
+--------------
+
+  
