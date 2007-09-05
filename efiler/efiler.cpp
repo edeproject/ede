@@ -333,7 +333,7 @@ void loaddir(const char *path) {
 			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
 		}
 	} else {
-		edelib::alert(tsprintf(_("Directory not found: %s"),path));
+		edelib::alert(_("Directory not found: %s"),path);
 		free(tmpath);
 		semaphore=false;
 		return;
