@@ -38,12 +38,11 @@
 #include <edelib/StrUtil.h>
 #include <edelib/Run.h>
 #include <edelib/IconTheme.h> // for setting the icon theme
+#include <edelib/MessageBox.h>
 
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
-#include "ede_ask.h" // replacement for fl_ask
-//#include "Ask.h"
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
@@ -190,7 +189,7 @@ char *simpleopener(const char* mimetype) {
 	sopeners* p;
 	if (!openers) {
 		FILE* fp = fopen("openers.txt","r");
-		if (!fp) { ede_alert(_("File openers.txt not found")); return 0; }
+		if (!fp) { edelib::alert(_("File openers.txt not found")); return 0; }
 		char buf[FL_PATH_MAX*2];
 		while (!feof(fp)) {
 			fgets((char*)&buf, FL_PATH_MAX*2, fp);
@@ -334,7 +333,7 @@ void loaddir(const char *path) {
 			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
 		}
 	} else {
-		ede_alert(tsprintf(_("Directory not found: %s"),path));
+		edelib::alert(tsprintf(_("Directory not found: %s"),path));
 		free(tmpath);
 		semaphore=false;
 		return;
@@ -364,7 +363,7 @@ void loaddir(const char *path) {
 		size = scandir(current_dir, &files, 0, versionsort);
 
 	if (size<1) { // there should always be . and ..
-		ede_alert(_("Permission denied!"));
+		edelib::alert(_("Permission denied!"));
 //		edelib::fl_alert(_("Permission denied!"));
 		strncpy(current_dir,old_dir,strlen(current_dir));
 		semaphore=false;
@@ -384,7 +383,6 @@ void loaddir(const char *path) {
 
 	view->clear();
 
-fprintf(stderr, "Size: %d\n", size);
 	FileItem **item_list = new FileItem*[size];
 	int fsize=0;
 
@@ -463,7 +461,6 @@ fprintf(stderr, "Size: %d\n", size);
 			if (desc!="" || icon!="") {
 				if (desc != "") item_list[i]->description = desc;
 				if (icon != "") item_list[i]->icon = icon;
-fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 				view->update(item_list[i]);
 			}
 			Fl::check();
@@ -494,11 +491,9 @@ fprintf (stderr, "ICON: %s !!!!!\n", icon.c_str());
 
 // This callback is called by doubleclicking on file list, by main menu and context menu
 void open_cb(Fl_Widget*w, void*data) {
-fprintf (stderr,"cb\n");
 
 	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu || w==context_menu) {
 
-fprintf (stderr,"enter\n");
 //if (Fl::event_clicks()) fprintf(stderr, "clicks\n");
 //if (Fl::event_key()==FL_Enter) fprintf(stderr, "ekey\n");
 		static timeval tm = {0,0};
@@ -509,7 +504,6 @@ fprintf (stderr,"enter\n");
 		if (view->get_focus()==0) return; // This can happen while efiler is loading
 
 		char* path = (char*)view->path(view->get_focus());
-		fprintf(stderr, "Path: %s (ev %d)\n",path,Fl::event());
 
 		if (stat(path,&stat_buffer)) return; // error
 		if (S_ISDIR(stat_buffer.st_mode)) {  // directory
@@ -567,11 +561,9 @@ void showtree_cb(Fl_Widget*, void*) {
 	if (!showtree) {
 		tree_width = dirtree->w();
 		tile->position(default_tree_width, 1, 1, 1); // NOTE this doesn't always work!
-fprintf(stderr, "Hide tree: %d\n", tree_width);
 	} else {
 		int currentw = dirtree->w();
 		tile->position(currentw, 1, tree_width, 1);
-fprintf(stderr, "Show tree: %d %d\n", currentw, tree_width);
 	}
 }
 
@@ -814,6 +806,9 @@ edelib::IconTheme::init("crystalsvg");
 FL_NORMAL_SIZE=12;
 fl_message_font(FL_HELVETICA, 12);
 
+// Required by the new edelib::MessageBox class
+edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_QUESTION, MSGBOX_ICON_QUESTION, MSGBOX_ICON_PASSWORD);
+
 
 	// Main GUI design
 	win = new EFiler_Window(default_window_width, default_window_height);
@@ -877,7 +872,7 @@ fl_message_font(FL_HELVETICA, 12);
 	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
 	tree_width = default_tree_width;
 
-	Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Window docs
+	Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Double_Window docs
 	win->show(argc,argv);
 	view->take_focus();
 	dirtree->init();

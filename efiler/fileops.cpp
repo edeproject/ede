@@ -31,11 +31,11 @@
 #include <edelib/String.h>
 #include <edelib/StrUtil.h>
 #include <edelib/MimeType.h>
+#include <edelib/MessageBox.h>
 
 
 #include "EDE_FileView.h"
 #include "Util.h"
-#include "ede_ask.h" // replacement for fl_ask
 #include "filesystem.h" // is_on_same_fs()
 
 
@@ -48,6 +48,36 @@ enum OperationType_ { // Stop idiotic warnings from gcc
 	COPY,
 	ASK 
 } operation = ASK;
+
+
+
+// ----------------------------------------------
+//    Our choice alert (fl_choice with alert icon)
+//    based on edelib::MessageBox
+// ----------------------------------------------
+
+#include <stdarg.h>
+
+int ede_choice_alert(const char*fmt,const char *b0,const char *b1,const char *b2,...) {
+	static char internal_buff[1024];
+
+	va_list ap;
+	va_start(ap, b2);
+	vsnprintf(internal_buff, 1024, fmt, ap);
+	va_end(ap);
+
+	edelib::MessageBox mb;
+	mb.set_text(internal_buff);
+	mb.add_button(b0);
+	mb.add_button(b1);
+	mb.add_button(b2);
+
+	mb.set_theme_icon(MSGBOX_ICON_WARNING); // specified in edelib/MessageBox.h
+
+	mb.set_modal();
+	return mb.run();
+}
+
 
 
 // ----------------------------------------------
@@ -225,7 +255,7 @@ bool my_copy(const char* src, const char* dest) {
 		}
 
 		if (stop_now) {
-			ede_alert(tsprintf(_("Copying interrupted!\nFile %s is only half-copied and probably broken."), my_filename_name(dest)));
+			edelib::alert(tsprintf(_("Copying interrupted!\nFile %s is only half-copied and probably broken."), my_filename_name(dest)));
 			break; 
 		}
 	}
@@ -320,14 +350,14 @@ void do_delete() {
 		for (int i=0; i<list_size; i++)
 			if (!my_isdir(files_list[i])) 
 				if (!edelib::file_remove(files_list[i]))
-					ede_alert(tsprintf(_("Couldn't delete file\n\t%s\n%s"), files_list[i], strerror(errno)));
+					edelib::alert(tsprintf(_("Couldn't delete file\n\t%s\n%s"), files_list[i], strerror(errno)));
 
 		// ...then directories
 		// since expand_dirs() returns first dirs then files, we should go in oposite direction
 		for (int i=list_size-1; i>=0; i--)
 			if (my_isdir(files_list[i])) 
 				if (!edelib::dir_remove(files_list[i]))
-					ede_alert(tsprintf(_("Couldn't delete directory\n\t%s\n%s"), files_list[i], strerror(errno)));
+					edelib::alert(tsprintf(_("Couldn't delete directory\n\t%s\n%s"), files_list[i], strerror(errno)));
 
 		// refresh directory listing - optimized
 		for (int i=1; i<=view->size(); i++)
@@ -352,9 +382,9 @@ void do_rename(const char* newname) {
 	snprintf(newpath, FL_PATH_MAX-1, "%s%s", current_dir, newname);
 	
 	if (edelib::file_exists(newpath))
-		ede_alert(tsprintf(_("Filename already in use: %s"), newname));
+		edelib::alert(tsprintf(_("Filename already in use: %s"), newname));
 	else if (!edelib::file_rename(oldpath,newpath))
-		ede_alert(tsprintf(_("Rename %s to %s failed!"), oldname, newname));
+		edelib::alert(tsprintf(_("Rename %s to %s failed!"), oldname, newname));
 	else 
 		view->update_path(oldpath,newpath);
 }
@@ -481,7 +511,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 	char *srcdir = strdup(my_filename_dir(from[0]));
 	if (strcmp(srcdir,to)==0) {
 		// This should never happen cause we already checked it...
-		ede_alert(_("You cannot copy a file onto itself!"));
+		edelib::alert(_("You cannot copy a file onto itself!"));
 		free(srcdir);
 		goto FINISH;
 	}
