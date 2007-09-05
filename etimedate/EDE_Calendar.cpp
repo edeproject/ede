@@ -1,471 +1,459 @@
-/***************************************************************************
-                          Fl_Calendar.cpp  -  description
-                             -------------------
-    begin                : Sun Aug 18 2002
-    copyright            : (C) 2002 by Alexey Parshin
-    email                : alexeyp@m7.tts-sf.com
- ***************************************************************************/
+/*
+ * $Id$
+ *
+ * Application for setting system date, time and local timezone
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2007 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-//
-// Ported to FLTK2 by Vedran Ljubovic <vljubovic@smartnet.ba>, 2005.
+
+// This is the Calendar widget class inspired by the Calendar originally
+// developed by Alexey Parshin for SPTK and later imported into efltk.
+
+
 
 #include "EDE_Calendar.h"
 
-// For NLS stuff
-//#include "../core/fl_internal.h"
-#include <string.h>
-#include <stdlib.h>
+
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
+
+#include <edelib/Nls.h>
+
 #include <stdio.h>
-#include <fltk/events.h>
-#include <fltk/Rectangle.h>
-#include <fltk/draw.h>
-#include <fltk/events.h>
-
-#include "../edelib2/NLS.h"
-
-using namespace fltk;
+#include <stdlib.h>
+#include <string.h>
 
 
-
-
-// FIXME: dont do static
-static EDE_Calendar* thecalendar;
-
+// TODO: replace this with a simple loop when operator++ is implemented in edelib::Date
+long date_distance(edelib::Date da1, edelib::Date da2) {
+	if (da1 > da2) {
+		edelib::Date tmp = da2;
+		da2=da1;
+		da1=tmp;
+	}
+	int d1=da1.day(), m1=da1.month(), y1=da1.year(), d2=da2.day(), m2=da2.month(), y2=da2.year();
+	long result=0;
+	
+	while (d1!=d2 || m1!=m2 || y1!=y2) {
+		result++;
+		d1++;
+		if (!da1.is_valid(y1,m1,d1)) {
+			d1=1;
+			m1++;
+			if (m1>12) {
+				m1=1;
+				y1++;
+			}
+		}
+	}
+	return result;
+}
 
 
 
 // Constants
 
-static const char *weekDayLabels[7] = {
-    "Su","Mo","Tu","We","Th","Fr","Sa"
-};
-
-static const char *monthDayLabels[31] = {
-    "1","2","3","4","5","6","7","8","9","10",
-    "11","12","13","14","15","16","17","18","19","20",
-    "21","22","23","24","25","26","27","28","29","30",
-    "31"
-};
-
 static const char *switchLabels[4] = {
-    "@-1<<","@-1<","@-1>","@-1>>"
+	"@-1<<","@-1<","@-1>","@-1>>"
 };
 
 static const int monthChanges[4] = {
-    -12,-1,1,12
+	-12,-1,1,12
 };
 
 // TODO: read this from locale
 const bool weekStartsOnMonday = false;
 
 
-// Callback function for day buttons
 
-void EDE_Calendar::cbDayButtonClicked(Widget *button, void *param) {
-	if (event_clicks() == 1 || event_key() == ReturnKey) {
-// NOTE: this used to read:
-//   button->parent->dayButtonChanged...
-// but it didn't work! FIXME
-		thecalendar->dayButtonChanged((unsigned)param);
-	} else {
-		thecalendar->dayButtonClicked((unsigned)param);
+// Callback function for fwd / back buttons
+
+void EDE_Calendar::cbSwitchButtonClicked(Fl_Widget *button, long month_change) {
+	EDE_Calendar* thecalendar = (EDE_Calendar*)button->parent();
+	edelib::Date d = thecalendar->active_date();
+	int year = d.year();
+	int month = d.month()+month_change;
+	int day = d.day();
+
+	// Fix month
+	while (month<1) { year--; month+=12; }
+	while (month>12) { year++; month-=12; }
+
+	// Switch to closest valid day
+	while (day>27 && !d.is_valid(year, month, day)) day--;
+
+	if (d.is_valid(year, month, day)) {
+		d.set(year, month, day);
+		thecalendar->active_date(d);
 	}
 }
 
-// Callback function for switch buttons
 
-void EDE_Calendar::cbSwitchButtonClicked(Widget *button, void *param) {
-	thecalendar->switchButtonClicked((int)param);
-}
-
-
-// Real callback functions:
-
-void EDE_Calendar::dayButtonClicked(unsigned cday) {
-    if (cday < 1 || cday > 31) return;
-    short year, month, day;
-    m_activeDate.decode_date(&year,&month,&day);
-    Fl_Date_Time::encode_date((double&)m_activeDate,year,month,cday);
-    redraw();
-//    do_callback();     // callback only on changing "today" date
-}
-
-void EDE_Calendar::dayButtonChanged(unsigned cday) {
-    if (cday < 1 || cday > 31) return;
-    short year, month, day;
-    m_todayDate.decode_date(&year,&month,&day);
-    m_activeDate.decode_date(&year,&month,&day);
-    Fl_Date_Time::encode_date((double&)m_todayDate,year,month,cday);
-    redraw();
-    do_callback();
-}
-
-void EDE_Calendar::switchButtonClicked(int monthChange) {
-    short year, month, day;
-    m_activeDate.decode_date(&year,&month,&day);
-    month += monthChange;
-    if (month < 1) {
-        month += 12;
-        year--;
-    }
-    if (month > 12) {
-        month -= 12;
-        year++;
-    }
-//    Fl_Date_Time newDate(year,month,day);
-//    date(newDate);
-    Fl_Date_Time::encode_date((double&)m_activeDate,year,month,day);
-    redraw();
-//    do_callback();
-}
-
-
-// This is stuff for NamedStyle - still needed?
-
-static void revert(Style* s) {
-    s->color_ = GRAY75;
-    s->buttoncolor_ = GRAY75;
-    s->box_ = FLAT_BOX;
-    s->buttonbox_ = THIN_UP_BOX;
-    s->textfont_ = HELVETICA_BOLD;
-}
-
-static NamedStyle style("Calendar", revert, &EDE_Calendar::default_style);
-NamedStyle* EDE_Calendar::default_style = &::style;
-
-
-// Constructor
+// ctor
 
 EDE_Calendar::EDE_Calendar(int x,int y,int w,int h,const char *lbl)
-: Group(2,2,w-2,h-2,lbl) {
-    thecalendar = this;
-    m_globalx = x; m_globaly = y;
-    
-    style(default_style);
-    unsigned i;
-    
-    // Header box
-    m_headerBox = new Group(x,y,w,32);
-    m_monthNameBox = new InvisibleBox(x,y,w,16);
-    m_monthNameBox->box(NO_BOX);
+: Fl_Group(x,y,w,h,lbl) {
+	unsigned int  i;
+	
+	// Calendar contents, correct size and position is set by layout()
+	
+	// Header box
+	m_monthNameBox = new Fl_Box(x,y,w,16);
+	m_monthNameBox->box(FL_NO_BOX);
+	
+	// Weekday headers
+	for (i = 0; i < 7; i++) {
+ 		m_dayNameBoxes[i] = new Fl_Box(x+i*16,y+16,16,16);
+		m_dayNameBoxes[i]->box(FL_FLAT_BOX);
+		m_dayNameBoxes[i]->color(fl_color_average(color(), FL_GREEN, 0.8));
+		
+		// get first two letters of day name
+		edelib::Date d;
+		d.set(1900,1,7+i); // 1.1.1900 was Monday
+		char tmp[3];
+		snprintf(tmp,3,"%s", d.day_name());
+		m_dayNameBoxes[i]->copy_label(tmp);
+	}
+	
+	// Fillers (parts of calendar without day buttons)
+	for (int i=0; i<3; i++) {
+		m_filler[i] = new Fl_Box(x,y,16,16);
+		m_filler[i]->box(FL_FLAT_BOX);
+		m_filler[i]->color(fl_color_average(color(), FL_BLACK, 0.95)); // very mild grayish
+	}
 
-    // NLS stuff - FIXME this can't work because gettext needs literals inside _()
-    for (i=0; i<7;i++) weekDayLabels[i]=_(weekDayLabels[i]);
-
-    // Weekday headers
-    for (i = 0; i < 7; i++) {
-        m_dayNameBoxes[i] = new InvisibleBox(x+i*16,y+16,16,16,weekDayLabels[i]);
-    }
-    m_headerBox->end();
-
-    // Day buttons, correct positions are set by resize()
-    m_buttonBox = new Group(x,y+32,w,64);
-    m_buttonBox->box(FLAT_BOX);
-    for (i = 0; i < 31; i++) {
-        Button *btn = new Button(0,0,16,16,monthDayLabels[i]);
-        m_dayButtons[i] = btn;
-        btn->callback(EDE_Calendar::cbDayButtonClicked, (void *)(i+1));
-    }
-    m_buttonBox->end();
-
-    // Switch buttons, correct positions are set by resize()
-    for (i = 0; i < 4; i++) {
-        m_switchButtons[i] = new Button(x,y,16,16,switchLabels[i]);
-        m_switchButtons[i]->callback(EDE_Calendar::cbSwitchButtonClicked, (void *)monthChanges[i]);
-        m_switchButtons[i]->labeltype(SYMBOL_LABEL);
-    }
-
-    end();
-    date(Fl_Date_Time::Now());
-}
-
-/*
-// New style ctor
-Fl_Calendar::Fl_Calendar(const char* l,int layout_size,Align layout_al,int label_w)
-: Group (l,layout_size,layout_al,label_w) 
-{
-    
-    ctor_init(0,0,w(),h());
-}*/
-
-void EDE_Calendar::layout() {
-    int xx = m_globalx, yy = m_globaly;	// in FLTK2 positions are absolute, not relative
-    int ww = w(), hh = h();
-    Rectangle* rect = new Rectangle(xx,yy,ww,hh);
-    box()->inset(*rect);
-    unsigned i;
-
-    // one daybox = boxh*boxw is unit of size
-    int boxh = hh / 10;
-    int boxw = ww / 7;
-    
-    // rounding dimensions to a whole number of boxes
-    ww = boxw * 7;
-    hh = hh / boxh * boxh;	// why not boxh * 10 ?
-
-    // center horizontally inside this space
-    xx = xx + (w()-ww)/2+1;
-    
-//    if(xx<box()->dx()) xx=box()->dx();	//TODO: dx() is no longer available
-
-    // resize header
-    m_headerBox->resize(xx, yy, ww, boxh*2+2);
-    m_monthNameBox->resize(xx, yy, ww, boxh); // month name is actually larger
-
-    // resize column titles (Su, Mo, Tu...)
-    for (i=0; i < 7; i++) {
-        m_dayNameBoxes[i]->resize(boxw*i + xx, boxh + yy+2, boxw, boxh); // why +2 ?
-    }
-
-    // compute the month start date
-    short year, month, day;
-    if ((double)m_todayDate < 1) m_todayDate = Fl_Date_Time::Now();
-    if ((double)m_activeDate < 1) m_activeDate = m_todayDate;
-    m_activeDate.decode_date(&year,&month,&day);
-    Fl_Date_Time    monthDate(year,month,1);
-    
-    // create month name label
-    char yearstr[4];
-    snprintf(yearstr,4,"%d",year);
-    strncpy(m_headerLabel, monthDate.month_name(), 13);
-    strcat(m_headerLabel, ", ");
-    strcat(m_headerLabel, yearstr);
-    m_monthNameBox->label(m_headerLabel);
-
-    // resize day buttons
-    int topOffset = boxh*2 + yy+2;
-    m_buttonBox->resize(xx, topOffset, boxw*7, boxh*6);	// background
-
-    int dayOffset   = monthDate.day_of_week()-1;
-    int daysInMonth = monthDate.days_in_month();
-    for (i = 0; i < 31; i++) {
-        Button *btn = m_dayButtons[i];
-        btn->resize(dayOffset*boxw + xx, topOffset, boxw, boxh); // 32 = header; bh = daynameboxes
-        if ((int)i < daysInMonth) {
-            dayOffset++;
-            if (dayOffset > 6) {
-                dayOffset = 0;
-                topOffset += boxh;
-            }
-            btn->show();
-        }
-        else  btn->hide();
-    }
-
-    int sby = m_buttonBox->y() + m_buttonBox->h();
-    for (i = 0; i < 2; i++)
-        m_switchButtons[i]->resize(i*boxw + xx, sby, boxw, boxh);
-
-    int x1 = ww - boxw * 2;
-    for (i = 2; i < 4; i++) {
-        m_switchButtons[i]->resize((i-2)*boxw + x1 + xx, sby, boxw, boxh);
-    }
-
-   //Clear layout flags
-    Widget::layout();
-}
-
-void EDE_Calendar::draw() {
-    // Note - Fl_Calendar has fixed colors because themes could make it ugly or unreadable
-    // TODO: Improve this!
-
-//    Color btn_color = color_average(buttoncolor(), WHITE, .4f);
-    //Color btn_color_hl = color_average(buttoncolor(), GRAY75, .5f);
-    
-    //Color btn_color = lerp(buttoncolor(), WHITE, .4f);
-    Color btn_color = fltk::color(255,255,204);	// light yellowish grey a la paper - don't remove fltk:: !
-    Color btn_color_hl = WHITE;
-    Color label_color = BLACK;
-    Color day_color = lerp(BLUE, GRAY85, .8f);
-    Color day_color_wknd = lerp(BLUE, WHITE, .9f);	// light reddish gray
-
-    unsigned i;
-
-    short year, month, day;
-    m_activeDate.decode_date(&year,&month,&day);
-    short activeindex = day-1;
-    short tyear, tmonth, tday;
-    m_todayDate.decode_date(&tyear,&tmonth,&tday);
-    short todayindex = tday-1;
-    if (tyear != year || tmonth != month) todayindex=-1;
-    
-    
-    for (i = 0; i < 31; i++) {
-        Button *btn = m_dayButtons[i];
-        btn->box(THIN_UP_BOX);
-        //btn->focusbox(DOTTED_FRAME);
-        btn->color(btn_color);
-//        btn->highlight_color(btn_color_hov);
-        btn->labelfont(labelfont());
-        btn->labelcolor(label_color);
-        btn->labelsize(labelsize());
-        if((int)i==activeindex) {
-            btn->box(FLAT_BOX);
-            btn->color(btn_color_hl);
-        }
-        if((int)i==todayindex) {
-            //btn->box(BORDER_FRAME);
-	    // TODO: why is this rectangle drawn behind button?
-//	    setcolor((Color)RED);
-//	    drawline(btn->x(),btn->y(),btn->x(),btn->y()+btn->h());
-//	    drawline(btn->x(),btn->y()+btn->h(),btn->x()+btn->w(),btn->y()+btn->h());
-//	    drawline(btn->x()+btn->w(),btn->y()+btn->h(),btn->x()+btn->w(),btn->y());
-//	    drawline(btn->x()+btn->w(),btn->y(),btn->x(),btn->y());
-	    
-	    btn->focusbox(BORDER_FRAME);
-	    // How do I make a red frame? apparently not possible
-//            btn->textcolor(RED);
-            focus(btn);
-        }
-    }
-
-    for (i = 0; i < 4; i++) {
-        m_switchButtons[i]->box(FLAT_BOX);
-        m_switchButtons[i]->color(WHITE);
-        m_switchButtons[i]->labelcolor(BLACK);
-        m_switchButtons[i]->highlight_color(GRAY75);
-        m_switchButtons[i]->labelsize(labelsize());
-    }
-
-    for (i=0; i < 7; i++) {
-        m_dayNameBoxes[i]->box(buttonbox());
-        m_dayNameBoxes[i]->color(day_color);
-        m_dayNameBoxes[i]->labelcolor(label_color);
-        m_dayNameBoxes[i]->labelsize(labelsize());
-        if(i==0 || i==6)       
-            m_dayNameBoxes[i]->color(day_color_wknd);
-//            m_dayNameBoxes[i]->labelcolor(RED);
-    }
-
-    m_monthNameBox->labelfont(textfont());
-    m_monthNameBox->labelsize(textsize());
-    m_monthNameBox->labelcolor(textcolor());
-
-//    m_buttonBox->color(darker(buttoncolor()));
-    m_buttonBox->color(lerp(buttoncolor(),BLACK,.67f));
-
-    Group::draw();
-}
-
-void EDE_Calendar::measure(int& ww,int& hh) const {
-    ww = (w() / 7) * 7;
-    hh = (h() / 10) * 10;
-}
-
-void EDE_Calendar::date(Fl_Date_Time dt) {
-    m_todayDate = dt;
-    m_activeDate = dt;
-    
-    short year, month, day;
-    m_todayDate.decode_date(&year,&month,&day);
-    focus(m_dayButtons[day-1]);
-
-    relayout();
-    redraw();
-}
-
-Fl_Date_Time EDE_Calendar::date() const {
-    short year, month, day;
-    m_todayDate.decode_date(&year,&month,&day);
-    return Fl_Date_Time(year, month, day);
-}
-
-//------------------------------------------------------------------------------------------------------
-
-/* Fl_Popup_Calendar - we lack Fl_Popup_Window to make this work... maybe later
-
-static void popup_revert(Style* s)
-{
-    s->color = GRAY75;
-    s->buttoncolor = GRAY75;
-    s->box = BORDER_BOX;
-    s->buttonbox = THIN_UP_BOX;
-    s->font = HELVETICA_BOLD;
-}
-
-static NamedStyle popup_style("Popup_Calendar", popup_revert, &Fl_Popup_Calendar::default_style);
-NamedStyle* Fl_Popup_Calendar::default_style = &::popup_style;
-
-void cb_clicked(Widget *w, void *d) {
-    Window *win = w->window();
-    if(win) {
-        win->set_value();
-        win->hide();
-    }
-    Fl::exit_modal(); //Just in case :)
-}
-
-Fl_Popup_Calendar::Fl_Popup_Calendar(Widget *dateControl)
-    : Fl_Popup_Window(150,150,"Calendar")
-{
-    style(default_style);
-    m_dateControl = dateControl;
-    m_calendar = new Fl_Calendar(0,0,w(),h());
-    m_calendar->callback(cb_clicked);
-    m_calendar->box(NO_BOX);
-    m_calendar->copy_style(style());
-
-    end();
-}
-
-void Fl_Popup_Calendar::draw()
-{
-    m_calendar->copy_style(style());
-    Fl_Popup_Window::draw();
-}
-
-void Fl_Popup_Calendar::layout() {
-    m_calendar->resize(box()->dx(),box()->dy(),w()-box()->dw(),h()-box()->dh());
-    m_calendar->layout();
-    Fl_Popup_Window::layout();
-}
-
-bool Fl_Popup_Calendar::popup() {
-    if (m_dateControl) {
-        int width = m_dateControl->w();
-        if (width < 175) width = 175;
-        int X=0, Y=0;
-        for(Widget* w = m_dateControl; w; w = w->parent()) {
-            X += w->x();
-            Y += w->y();
-        }
-        int height = 160;
-        m_calendar->size(width,height);
-        m_calendar->measure(width,height);
-
-        resize(X, Y+m_dateControl->h()-1, width+box()->dw(), height+box()->dh());
-    }
-    return Fl_Popup_Window::show_popup();
-}
-
-bool Fl_Popup_Calendar::popup(Widget *dateControl, int X, int Y, int W, int H) {
-    if(dateControl) {
-        int width = (W>0) ? W : dateControl->w();
-        if (width < 175) width = 175;
-        int height = (H>0) ? H : 175;
-        if (height < 175) height = 175;
-        for(Widget* w = m_dateControl; w; w = w->parent()) {
-            X += w->x();
-            Y += w->y();
-        }
-        resize(X, Y, width, height);
-    }
-    return Fl_Popup_Window::show_popup();
+	// Day buttons
+	for (i = 0; i < 31; i++) {
+		m_dayButtons[i] = new Fl_Box(0,0,16,16);
+		char tmp[3];
+		snprintf(tmp,3, "%d", (i+1));
+		m_dayButtons[i]->copy_label(tmp);
+	}
+	
+	// Switch buttons
+	for (i = 0; i < 4; i++) {
+		Fl_Repeat_Button* o;
+		m_switchButtons[i] = o = new Fl_Repeat_Button(x,y,16,16,switchLabels[i]);
+		o->callback(EDE_Calendar::cbSwitchButtonClicked, (long)monthChanges[i]);
+		o->labelcolor(fl_darker(FL_BACKGROUND_COLOR));
+		o->selection_color(fl_lighter(FL_BACKGROUND_COLOR));
+	}
+	
+	end();
+	
+	reset(); // this will eventually call layout()
 }
 
 
-int Fl_Popup_Calendar::handle(int event) {
-    int rc = Fl_Popup_Window::handle(event);
+// Number of rows and columns
 
-    if (rc) return rc;
+#define CAL_ROWS 9
+#define CAL_COLS 7
 
-    return m_calendar->handle(event);
-}*/
+
+// Calculate positions and sizes of various boxes and buttons
+// NOTE: This method is costly! Avoid calling it unless calendar is actually resized
+void EDE_Calendar::layout(int X, int Y, int W, int H) {
+	unsigned int i;
+	
+	// Leave some room for edges
+	int x_ = X+2;
+	int y_ = Y+2;
+	int w_ = W-4;
+	int h_ = H-4;
+	
+	// Precalculate button grid
+	// By doing this we try to avoid floating point math while 
+	// having coords without holes that add up to a desired width
+	int bx[CAL_COLS], bw[CAL_COLS], by[CAL_ROWS], bh[CAL_ROWS];
+	bx[0] = x_; by[0] = y_;
+	for (i=1; i<CAL_COLS; i++) {
+		bx[i] = x_ + (w_*i)/CAL_COLS;
+		bw[i-1] = bx[i]-bx[i-1];
+	}
+	bw[CAL_COLS-1] = x_ + w_ - bx[CAL_COLS-1];
+	for (i=1; i<CAL_ROWS; i++) {
+		by[i] = y_ + (h_*i)/CAL_ROWS;
+		bh[i-1] = by[i]-by[i-1];
+	}
+	bh[CAL_ROWS-1] = y_ + h_ - by[CAL_ROWS-1];
+	
+	
+	// Title
+	m_monthNameBox->resize( x_,y_,w_, bh[0] );
+	
+	// Labels
+	for (i=0; i<7; i++) 
+		m_dayNameBoxes[i]->resize( bx[i], by[1], bw[i], bh[1] );
+	
+	// Find first day of week
+	edelib::Date d=active_date_;
+	d.set(d.year(), d.month(), 1);
+	uint day_of_week = d.day_of_week()-1;
+	
+	// First filler
+	if (day_of_week>0) {
+		int k=0;
+		for (i=0; i<day_of_week; i++) k += bw[i];
+		m_filler[0]->resize( x_, by[2], k, bh[2] );
+	}
+	
+	// Days
+	int row=2;
+	for (i=0; i<d.days_in_month(); i++) {
+		m_dayButtons[i]->resize( bx[day_of_week], by[row], bw[day_of_week], bh[row] );
+		day_of_week++;
+		if (day_of_week==7) { day_of_week=0; row++; }
+	}
+
+	// Second filler
+	if (day_of_week<6) {
+		int k=0;
+		for (i=day_of_week; i<7; i++) k += bw[i];
+		m_filler[1]->resize( bx[day_of_week], by[row], k, bh[row] );
+	}
+		
+	// Third filler
+	if (row<7)
+		m_filler[2]->resize( x_, by[7], w_, bh[7] );
+	
+	// Switch buttons
+	m_switchButtons[0]->resize ( x_, by[8], bw[0], bh[8] );
+	m_switchButtons[1]->resize ( bx[1], by[8], bw[1], bh[8] );
+	m_switchButtons[2]->resize ( bx[5], by[8], bw[5], bh[8] );
+	m_switchButtons[3]->resize ( bx[6], by[8], bw[6], bh[8] );
+}
+
+
+
+// Overloaded resize (used to call layout) 
+
+void EDE_Calendar::resize(int X, int Y, int W, int H) {
+	// avoid unnecessary resizing
+	static int oldw=0, oldh=0;
+	if (W==oldw && H==oldh) return Fl_Group::resize(X,Y,W,H);
+	oldw=W; oldh=H;
+	
+	layout(X,Y,W,H);
+	Fl_Widget::resize(X,Y,W,H); // avoid Fl_Group resizing because we already resized everything
+}
+
+
+
+
+// Set visual appearance & colors of day buttons and tooltip
+
+void EDE_Calendar::update_calendar() {
+	unsigned int i;
+	
+	// Find first day of week
+	edelib::Date d=active_date_;
+	d.set(d.year(), d.month(), 1);
+	int day_of_week = d.day_of_week()-1;
+	
+	// Show/hide first filler
+	if (day_of_week>0)
+		m_filler[0]->show();
+	else
+		m_filler[0]->hide();
+	
+	// Days
+	int row=2;
+	for (i=0; i<d.days_in_month(); i++) {
+		Fl_Box* btn = m_dayButtons[i]; // shortcut
+		btn->show();
+		
+		// Set button color
+		Fl_Color daycolor = color(); // base color is the color of calendar
+
+		if (day_of_week==0) // Special color for sunday
+			daycolor = fl_color_average(daycolor, FL_BLUE, 0.8);
+		
+		if (i==(uint)today_date_.day()-1 && d.month()==today_date_.month() && d.year()==today_date_.year()) 
+			btn->color(fl_color_average(daycolor, FL_RED, 0.5)); // today
+		else if (i==(uint)active_date_.day()-1)
+			btn->color(fl_lighter(daycolor));
+		else
+			btn->color(daycolor);
+		
+		// Set downbox for active day
+		if (i==(uint)active_date_.day()-1)
+			btn->box(FL_DOWN_BOX);
+		else
+			btn->box(FL_FLAT_BOX);
+
+		day_of_week++;
+		if (day_of_week==7) { day_of_week=0; row++; }
+	}
+	
+	// Hide remaining buttons
+	for (i=d.days_in_month(); i<31; i++)
+		m_dayButtons[i]->hide();
+	
+	// Show/hide second filler
+	if (day_of_week<6)
+		m_filler[1]->show();
+	else
+		m_filler[1]->hide();
+		
+	// Show/hide third filler
+	if (row<7)
+		m_filler[2]->show();
+	else
+		m_filler[2]->hide();
+	
+	// Set title
+	static char title[30]; // No month name should be larger than 24 chars, even when localized
+			// and we can't show it anyway cause the box is too small
+	snprintf (title, 30, "%s, %d", d.month_name(), d.year());
+	m_monthNameBox->copy_label(title);
+	
+	
+	// Calculate tooltip (distance between today and active date)
+	static char tooltip_str[1024];
+	tooltip_str[0] = '\0';
+	
+	if (today_date_ != active_date_) {
+		long dist = date_distance(today_date_, active_date_);
+		long weeks = dist/7;
+		int wdays = dist%7;
+		int months=0;
+		int mdays=0;
+		int years=0;
+		int ymonths=0;
+		
+		// Find lower date, first part of tooltip
+		edelib::Date d1,d2;
+		if (today_date_ < active_date_) {
+			d1=today_date_;
+			d2=active_date_;
+			snprintf(tooltip_str, 1023, _("In %ld days"), dist);
+		} else {
+			d2=today_date_;
+			d1=active_date_;
+			snprintf(tooltip_str, 1023, _("%ld days ago"), dist);
+		}
+		
+		// If necessary, calculate distance in m/d and y/m/d format
+		if (dist>30) {
+			months = d2.month() - d1.month() + (d2.year() - d1.year())*12; 
+			mdays = d2.day() - d1.day();
+			if (mdays<1) {
+				mdays += d2.days_in_month();
+				months--;
+			}
+		}
+		if (months>11) {
+			years = months/12;
+			ymonths = months%12;
+		}
+	
+		// Append those strings using snprintf
+		if (weeks) {
+			char* tmp = strdup(tooltip_str);
+			snprintf(tooltip_str, 1023, _("%s\n%ld weeks and %d days"), tmp, weeks, wdays);
+			free(tmp);
+		}
+		
+		if (months) {
+			char* tmp = strdup(tooltip_str);
+			snprintf(tooltip_str, 1023, _("%s\n%d months and %d days"), tmp, months, mdays);
+			free(tmp);
+		}
+		
+		if (years) {
+			char* tmp = strdup(tooltip_str);
+			snprintf(tooltip_str, 1023, _("%s\n%d years, %d months and %d days"), tmp, years, ymonths, mdays);
+			free(tmp);
+		}
+	}
+	
+	tooltip(tooltip_str);
+	
+	layout(x(),y(),w(),h()); // relayout buttons if neccessary
+	redraw();
+}
+
+
+int EDE_Calendar::handle(int e) {
+	// Forward events to switch buttons
+	for (int i=0; i<4; i++)
+		if (Fl::event_inside(m_switchButtons[i])) return m_switchButtons[i]->handle(e);
+
+	// Accept focus
+	if (e==FL_FOCUS) return 1;
+
+	if (e==FL_PUSH || e==FL_ENTER) return 1;
+	
+	// Click on date to set active, doubleclick to set as today
+	if (e==FL_RELEASE) {
+		for (int i=0; i<31; i++)
+			if (Fl::event_inside(m_dayButtons[i])) {
+				edelib::Date d = active_date_;
+				d.set(d.year(), d.month(), i+1);
+				if (Fl::event_clicks() == 1)
+					today_date(d);
+				else
+					active_date(d);
+				return 1;
+			}
+		take_focus();
+
+	} else if (e==FL_KEYBOARD) {
+		int k=Fl::event_key();
+
+		// arrow navigation
+		if (k==FL_Up || k==FL_Down || k==FL_Left || k==FL_Right) {
+			edelib::Date ad = active_date_;
+			int d = ad.day();
+			int m = ad.month();
+			int y = ad.year();
+			
+			if (k==FL_Up) d -= 7;
+			else if (k==FL_Down) d += 7;
+			else if (k==FL_Left) d--;
+			else if (k==FL_Right) d++;
+			
+			if (d < 1) {
+				m--;
+				if (m<1) {
+					y--;
+					m+=12;
+				}
+				d += ad.days_in_month(y,m);
+			}
+			if (d > ad.days_in_month(y,m)) {
+				d -= ad.days_in_month(y,m);
+				m++;
+				if (m>12) {
+					y++;
+					m-=12;
+				}
+			}
+			ad.set(y,m,d);
+			active_date(ad);
+			return 1;
+		}
+		
+		// Return to today with Home
+		if (k==FL_Home) {
+			active_date(today_date());
+			return 1;
+		}
+		
+		// Set active day as today with Space
+		if (k==' ') {
+			today_date(active_date());
+			return 1;
+		}
+
+		// Allow moving focus with Tab key
+		if (k==FL_Tab) return Fl_Group::handle(e);
+	}
+	return Fl_Group::handle(e);
+}

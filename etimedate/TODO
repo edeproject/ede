@@ -1,17 +1,14 @@
 TODO with etimedate:
 * calendar
-- review methods and add new, for better future usability
-- create new doxygen documentation
-- add ability to calculate difference between selected date and today
+- Add text box for direct date entry
+- Make month and year display into Fl_Choice
+- Display number of week (within current year) somewhere... (probably in 
+tooltip)
+
 * clock
 - redesign clock - use bitmaps for background and possibly hands
-- add seconds to input and buttons
-- use Date_Time class
-- remove unnecessary methods, add new ones
-- merge two boxes?
 - make hands movable with mouse
+
 * timezones
 - add city coordinates (find in evolution / kde), draw current zone on map
 - make map sensitive / hotspots on city coordinates
-* Date_Time class
-- new class

@@ -10,7 +10,8 @@
 
 SubDir TOP etimedate ;
 
-SOURCE = etimedate.cpp TimeBox.cpp EDE_Calendar.cpp Fl_Date_Time.cpp ;
+SOURCE = etimedate.cpp EDE_Calendar.cpp ;
 
-MakeProgram etimedate : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
+EdeProgram etimedate : $(SOURCE) ;
+
+TranslationStrings locale : $(SOURCE) ;

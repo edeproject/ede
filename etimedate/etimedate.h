@@ -14,16 +14,31 @@
 #ifndef etimedate_h
 #define etimedate_h
 
-#include "../edelib2/NLS.h"
-#include <fltk/Window.h>
-#include <fltk/Group.h>
-#include <fltk/Button.h>
-#include <fltk/TabGroup.h>
-#include <fltk/InvisibleBox.h>
-#include <fltk/InputBrowser.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Tabs.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Clock.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Input_Choice.H>
 
 #include "EDE_Calendar.h"
-//#include <fltk/Clock.h>
-#include "TimeBox.h"
+#include "Fl_Time_Input.h"
+
+//#define Fl_Time_Input Fl_Input
+
+
+extern EDE_Calendar *calendar;
+extern Fl_Time_Input *timeBox;
+extern Fl_Choice *timeFormat;
+extern Fl_Choice *timeZonesList;
+extern Fl_Menu_Item menu_timeFormat[];
+extern Fl_Button *applyButton;
+extern Fl_Input_Choice* serverList;
+extern Fl_Clock_Output* clk;
+
 
 #endif
