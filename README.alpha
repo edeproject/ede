@@ -10,19 +10,29 @@ before or during 2.0alpha release.
 Build requirements
 ------------------
 
-EDE 2.0 is using fltk2 toolkit which is not officially released yet. Lately 
-fltk2 has been pretty stable, so you should be able to use any reasonably
-fresh SVN snapshot from www.fltk.org. Nevertheless, we will (soon) keep our own "fork" 
-called fltk-copy which is basically the last SVN snapshot that EDE is known 
-to work with. If there are any patches required for proper EDE functioning, 
-you should find them in fltk-copy tree. Further instructions will be in 
-fltk-copy/README.ede
+EDE 2.0 is using fltk1 toolkit from www.fltk.org. At the time of this writing, 
+last released version was 1.1.7 and 1.1.8 was coming really soon. We 
+recommend using the latest daily snapshot - they are extremely stable and 
+that's what we use internally - although 1.1.7 should work too.
+
+Nevertheless, we will (soon) keep our own "fork" called fltk-copy which is 
+basically the last SVN snapshot of fltk that EDE is known to work with. If 
+there are any patches required for proper EDE functioning, you should find 
+them in fltk-copy/patches/ tree. Further instructions will be in 
+fltk-copy/README.EDE
+
+Since fltk lacks many things needed for developing a full *nix desktop 
+environment, we have developed a small add-on library called edelib. This 
+library is also required for compiling EDE2. It should be released together 
+with EDE. We *strongly* recommend that you use matching versions of ede and 
+edelib (e.g. released at the same time) or that you do SVN checkout at the 
+same time.
 
 Make sure you have efltk installed, because some packages still requires it.
 
-Also you will need Jam utility. Jam is make replacement and removes a lot of it's
-limitations. Current source can be built either via jam or make, but note that make
-builds will be soon removed. 
+Also you will need Jam utility. Jam is a make replacement and removes a lot 
+of its limitations. Current EDE source can be built either via jam or make, 
+but note that make builds will be soon removed. 
 
 Jam can be downloaded from our repository.
 
@@ -31,40 +41,47 @@ Compiling
 ---------
 
 At the moment, certain modules in EDE do not compile! In order to build and install
-EDE do the following:
+EDE do the following steps:
 
-1. run ./prepare
+1. 	./prepare
 
-2. (old method, soon will be removed)
-	./configure [OPTIONS] (we suggest using --enable-debug)
-	cd edelib2; make; cd ..
+2.	./configure [OPTIONS] (we suggest using --enable-debug)
 
-  Then go into directories of individual modules and compile them. Type
+3. (old method, soon will be removed)
+ 
+  Go into directories of individual modules and compile them. Type
 	cd $MODULE; make; make install; cd ..
 
+  Since developers don't use make anymore, this method could get broken 
+occasionally.
+
 3. (new method, default)
-	./configure [OPTIONS] (we suggest using --enable-debug)
+
 	jam
 
-  Installation is not finished yet.
+  "jam install" is not finished yet. You can use various programs from 
+their work directories, or copy them into e.g. /usr/bin
 
 
-Stuff that doesn't compile
---------------------------
+Stuff that isn't updated (requires efltk)
+-----------------------------------------
 
 - edewm
-- eiconman
 - eworkpanel
-We are in the process of rewriting these modules from scratch. Please use edewm,
-eiconman and eworkpanel from EDE 1.x (it should work without major problems).
+We are in the process of rewriting these modules from scratch. Please use edewm
+and eworkpanel from EDE 1.x (it should work without major problems).
 
 - efinder
-It will be ported to fltk2 as soon as we finish efiler (see below) cause we 
+It will be ported to fltk1 as soon as we finish efiler (see below) cause we 
 would like to use same widgets for displaying file list.
 
 - emenueditor
 It will either be completely rewritten or removed, because EDE 2 will use XDG menus
 (FreeDesktop.org).
+
+- e*conf
+Many of the control center applets will be dropped or replaced with something 
+else. epanelconf obviously depends on eworkpanel which is not yet finished.
 
 
 New modules in EDE 2.0
@@ -75,11 +92,14 @@ Command line utility for displaying dialogs (useful for scripting). It is very
 UNFINISHED.
 
 - efiler
-Small file manager. Currently you can only view files but not copy/rename/delete 
-etc. 
+Simple and lightweight file manager. Currently it's fully functional, but we 
+plan some more features.
 
 - eimage
-Small image viewer. It should be fully usable but still some bugs present.
+Small image viewer. Likewise, functional but a few features will be added.
+
+- ecalc
+Scientific calculator.
 
 
 Contributors wanted
@@ -88,14 +108,14 @@ Contributors wanted
 We would very appreciate help from contributors willing to take any of following 
 tasks:
 
-  - Complete edialog and become its maintainer
-  - Port efinder to fltk2/edelib2 and become its maintainer
+  - Port efinder to fltk/edelib and become its maintainer
   - Write new enotepad using editor from fltk/test (I believe this is easier than
-porting old enotepad to fltk2/edelib2) and become its maintainer
+porting old enotepad from efltk to fltk) and become its maintainer
   - Propose new designs for econtrol and eworkpanel (that are realistic to implement
 with fltk, ofcourse :)
-  - Find any old ede application, port to fltk2/edelib2 and become its maintainer
-  - Find useful fltk2 apps on www.fltk.org and see if they can be ede-ified
+  - Find any old ede application, port to fltk/edelib and become its maintainer
+  - Find useful fltk apps on www.fltk.org and see if they can be ede-ified
 
-Also, EDE code is sparkled with comments starting with TODO and FIXME - please see 
-what of that you can do. EDE coding standards and EDE HIG documents are being prepared.
+Also, EDE code is sparkled with comments starting with TODO and FIXME - 
+please see what of that you can do (just type e.g. "grep TODO . -R"). EDE 
+coding standards and EDE HIG documents are being prepared.
