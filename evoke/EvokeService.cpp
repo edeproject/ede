@@ -35,18 +35,18 @@
 #include <string.h>    // strdup, memset
 #include <errno.h>     // error codes
 
-void resolve_path(const edelib::String& imgdir, edelib::String& img, bool have_imgdir) {
-	if(img.empty())
+void resolve_path(const edelib::String& datadir, edelib::String& item, bool have_datadir) {
+	if(item.empty())
 		return;
 
-	const char* im = img.c_str();
+	const char* i = item.c_str();
 
-	if(!edelib::file_exists(im) && have_imgdir) {
-		img = edelib::build_filename("/", imgdir.c_str(), im);
-		im = img.c_str();
-		if(!edelib::file_exists(im)) {
+	if(!edelib::file_exists(i) && have_datadir) {
+		item = edelib::build_filename("/", datadir.c_str(), i);
+		i = item.c_str();
+		if(!edelib::file_exists(i)) {
 			// no file, send then empty
-			img.clear();
+			item.clear();
 		}
 	}
 }
@@ -206,18 +206,18 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 		return false;
 
 	char buff[1024];
-	bool have_imgdir = false;
+	bool have_datadir = false;
 
-	c.get("evoke", "ImagesDirectory", buff, sizeof(buff));
+	c.get("evoke", "DataDirectory", buff, sizeof(buff));
 
 	// no evoke section
 	if(c.error() == edelib::CONF_ERR_SECTION)
 		return false;
 
-	edelib::String imgdir;
+	edelib::String datadir;
 	if(c.error() == edelib::CONF_SUCCESS) {
-		imgdir = buff;
-		have_imgdir = true;
+		datadir = buff;
+		have_datadir = true;
 	}
 
 	edelib::String splashimg;
@@ -227,7 +227,6 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	edelib::String sound;
 	if(c.get("evoke", "Sound", buff, sizeof(buff)))
 		sound = buff;
-
 
 	// Startup key must exists
 	if(!c.get("evoke", "Startup", buff, sizeof(buff)))
@@ -267,9 +266,12 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	 * Now, before data is send to Splash, resolve directories
 	 * since Splash expects that.
 	 */
-	resolve_path(imgdir, splashimg, have_imgdir);
-	for(ClientListIter it = clients.begin(); it != clients.end(); ++it)
-		resolve_path(imgdir, (*it).icon, have_imgdir);
+	resolve_path(datadir, splashimg, have_datadir);
+	resolve_path(datadir, sound, have_datadir);
+
+	ClientListIter it, it_end;
+	for(it = clients.begin(), it_end = clients.end(); it != it_end; ++it)
+		resolve_path(datadir, (*it).icon, have_datadir);
 
 	Splash sp(no_splash, dry_run);
 	sp.set_clients(&clients);
@@ -299,9 +301,11 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
  * contains environment name, MUST not be started/not started.
  * TryExec is same as for .desktop spec.
  */
-void EvokeService::init_autostart(void) {
+void EvokeService::init_autostart(bool safe) {
+	const char* autostart_dirname = "/autostart/";
+
 	edelib::String adir = edelib::user_config_dir();
-	adir += "/autostart/";
+	adir += autostart_dirname;
 
 	StringList dfiles, sysdirs;
 	StringListIter it, it_end;
@@ -311,8 +315,7 @@ void EvokeService::init_autostart(void) {
 	edelib::system_config_dirs(sysdirs);
 	if(!sysdirs.empty()) {
 		for(it = sysdirs.begin(), it_end = sysdirs.end(); it != it_end; ++it) {
-			*it += "/autostart/";
-
+			*it += autostart_dirname;
 			// append content
 			edelib::dir_list((*it).c_str(), dfiles, true, false, false);
 		}
@@ -339,7 +342,7 @@ void EvokeService::init_autostart(void) {
 	edelib::DesktopFile df;
 	edelib::String item_name;
 
-	AstartDialog dlg(dfiles.size());
+	AstartDialog dlg(dfiles.size(), safe);
 
 	for(it = dfiles.begin(), it_end = dfiles.end(); it != it_end; ++it) {
 		if((*it).empty())
@@ -629,11 +632,11 @@ int EvokeService::handle(const XEvent* ev) {
 		if(ev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
-				logfile->printf("Got _EVOKE_SPAWN with %s. Starting client...\n", buff);
+				logfile->printf("Got _EDE_EVOKE_SPAWN with %s. Starting client...\n", buff);
 				run_program(buff);
 				//heuristic_run_program(buff);
 			} else {
-				logfile->printf("Got _EVOKE_SPAWN with malformed data. Ignoring...\n");
+				logfile->printf("Got _EDE_EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
 			return 1;
 		}

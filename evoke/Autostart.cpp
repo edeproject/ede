@@ -35,11 +35,14 @@ void run_all_cb(Fl_Widget*, void* w) {
 	win->run_all();
 }
 
-AstartDialog::AstartDialog(unsigned int sz) : Fl_Window(370, 305, _("Autostart warning")), 
-	curr(0), lst_sz(sz), lst(0) {
+AstartDialog::AstartDialog(unsigned int sz, bool do_show) : Fl_Window(370, 305, _("Autostart warning")), 
+	curr(0), lst_sz(sz), show_dialog(do_show), lst(0) {
 
 	if(lst_sz)
 		lst = new AstartItem[lst_sz];
+
+	if(!show_dialog)
+		return;
 
 	begin();
 		img = new Fl_Box(10, 10, 65, 60);
@@ -77,6 +80,11 @@ void AstartDialog::add_item(const edelib::String& n, const edelib::String& e) {
 }
 
 void AstartDialog::run(void) {
+	if(!show_dialog) {
+		run_all();
+		return;
+	}
+
 	for(unsigned int i = 0; i < curr; i++)
 		cbrowser->add(lst[i].name.c_str());
 
@@ -88,6 +96,9 @@ void AstartDialog::run(void) {
 }
 
 void AstartDialog::run_selected(void) {
+	if(!show_dialog)
+		return;
+
 	int it = cbrowser->nchecked();
 	if(!it)
 		return;

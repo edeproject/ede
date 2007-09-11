@@ -27,6 +27,10 @@ Options
 	Run in autostart mode. It will check 'autostart' directory and run .desktop
 	files from it. This will be done according to freedesktop.org autostart specification.
 
+-u, --autostart-safe::
+	Same as '-a' or '--autostart' option, but display dialog with items that should
+	be run.
+
 -c, --config [FILE]::
 	Read [FILE] as config file. This file is only used in startup mode to read
 	components to be started.
@@ -71,13 +75,16 @@ Hidden = true
 ---------------
 Make sure that 'Hidden' key is under '[Desktop Entry]' section.
 
-By default when you are using autostart mode, it will popup window with programs that are 'registered'
-for starting, from where you can choose either to start some of them, start all of them or to start
-nothing. This is intentionally; you definitely don't want some application to be started without
-your knowledge (not to say how this can be very insecure).
+Autostart mode can be run in two ways: safe and unsafe. Safe way ('-u' or '--autostart-safe') will
+popup window with programs that are 'registered' for starting, from where you can choose either to 
+start some of them, start all of them or to start nothing. On other hand, unsafe way ('-a' or '--autostart')
+will simply run all 'registered' items without any questioning (should I say that this can be very insecure).
+
+These options are intentionally provided so you can choose startup policy depending on your security
+options.
 
 *Startup mode* is meant to be used when EDE is starting, running each component (or program)
-from evoke.conf (or file specified with '-c' option). This configuration file must be in following form:
+from evoke.conf (or file specified with '-c' option). This configuration file must be in the following form:
 --------------
 # [evoke] section must be present
 [evoke]

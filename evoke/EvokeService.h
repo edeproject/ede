@@ -69,7 +69,7 @@ class EvokeService {
 		bool setup_pid(const char* file, const char* lock);
 		void setup_atoms(Display* d);
 		bool init_splash(const char* config, bool no_splash, bool dry_run);
-		void init_autostart(void);
+		void init_autostart(bool safe);
 
 		int handle(const XEvent* ev);
 

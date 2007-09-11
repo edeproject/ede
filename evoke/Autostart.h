@@ -29,6 +29,7 @@ class AstartDialog : public Fl_Window {
 	private:
 		unsigned int curr;
 		unsigned int lst_sz;
+		bool show_dialog;
 		AstartItem* lst;
 
 		Fl_Box* img;
@@ -39,7 +40,7 @@ class AstartDialog : public Fl_Window {
 		Fl_Button* cancel;
 
 	public:
-		AstartDialog(unsigned int sz);
+		AstartDialog(unsigned int sz, bool do_show);
 		~AstartDialog();
 
 		unsigned int list_size(void) { return curr; }
