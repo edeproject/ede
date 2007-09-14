@@ -447,12 +447,8 @@ void EvokeService::quit_x11(void) {
 }
 
 /*
- * Monitor starting service and report if staring
- * failed. Also if one of runned services crashed
- * attach gdb on it pid and run backtrace.
- *
- * FIXME: this function probably needs mutex locking; find_and_unregister_process()
- * and unregister_process() are good candidates for it
+ * Monitor starting service and report if staring failed. Also if one of 
+ * runned services crashed attach gdb on it pid and run backtrace.
  */
 void EvokeService::service_watcher(int pid, int signum) {
 	printf("got %i\n", signum);
@@ -471,9 +467,15 @@ void EvokeService::service_watcher(int pid, int signum) {
 			CrashDialog cdialog;
 			cdialog.set_data(pc.cmd.c_str());
 			cdialog.run();
-			return;
 		}
-	} else if(signum == SPAWN_CHILD_KILLED) {
+		return;
+	} 
+
+	mutex.lock();
+	unregister_process(pid);
+	mutex.unlock();
+	
+	if(signum == SPAWN_CHILD_KILLED) {
 		printf("child %i killed\n", pid);
 	} else if(signum == 127) {
 		edelib::alert(_("Program not found"));
@@ -482,10 +484,6 @@ void EvokeService::service_watcher(int pid, int signum) {
 	} else {
 		printf("child %i exited with %i\n", pid, signum);
 	}
-
-	mutex.lock();
-	unregister_process(pid);
-	mutex.unlock();
 }
 
 /*
