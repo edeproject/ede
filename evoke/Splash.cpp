@@ -197,8 +197,10 @@ void Splash::run(void) {
 
 	EvokeService::instance()->unregister_top();
 
-	if(edelib::SoundSystem::inited())
+	if(edelib::SoundSystem::inited()) {
+		edelib::SoundSystem::stop();
 		edelib::SoundSystem::shutdown();
+	}
 }
 
 // called when splash option is on

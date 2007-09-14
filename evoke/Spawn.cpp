@@ -33,9 +33,12 @@ void sigchld_handler(int sig) {
 	int pid, status;
 	do {
 		errno = 0;
+		//pid = waitpid(WAIT_ANY, &status, WNOHANG | WUNTRACED);
 		pid = waitpid(WAIT_ANY, &status, WNOHANG);
 
 		if(global_watch != 0) {
+			printf("==> sigchld_handler() got %i\n", status);
+
 			if(WIFEXITED(status))
 				status = WEXITSTATUS(status);
 			else if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
@@ -60,7 +63,6 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 		struct sigaction sa;
 		sa.sa_handler = sigchld_handler;
 		sa.sa_flags = SA_NOCLDSTOP;
-		//sa.sa_flags = SA_RESTART;
 		sigemptyset(&sa.sa_mask);
 		sigaction(SIGCHLD, &sa, (struct sigaction*)0);
 

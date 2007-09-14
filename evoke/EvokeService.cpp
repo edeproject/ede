@@ -29,6 +29,8 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 
+#include <FL/fl_ask.h>
+
 #include <sys/types.h> // getpid
 #include <unistd.h>    // 
 #include <stdlib.h>    // free
@@ -448,13 +450,22 @@ void EvokeService::quit_x11(void) {
  * Monitor starting service and report if staring
  * failed. Also if one of runned services crashed
  * attach gdb on it pid and run backtrace.
+ *
+ * FIXME: this function probably needs mutex locking; find_and_unregister_process()
+ * and unregister_process() are good candidates for it
  */
 void EvokeService::service_watcher(int pid, int signum) {
 	printf("got %i\n", signum);
+	Mutex mutex;
+
 	if(signum == SPAWN_CHILD_CRASHED) {
 		EvokeProcess pc;
 
-		if(find_and_unregister_process(pid, pc)) {
+		mutex.lock();
+		bool ret = find_and_unregister_process(pid, pc);
+		mutex.unlock();
+
+		if(ret) {
 			printf("%s crashed with core dump\n", pc.cmd.c_str());
 
 			CrashDialog cdialog;
@@ -464,11 +475,17 @@ void EvokeService::service_watcher(int pid, int signum) {
 		}
 	} else if(signum == SPAWN_CHILD_KILLED) {
 		printf("child %i killed\n", pid);
+	} else if(signum == 127) {
+		edelib::alert(_("Program not found"));
+	} else if(signum == 126) {
+		edelib::alert(_("Program not executable"));
 	} else {
-		printf("child %i exited with %i \n", pid, signum);
+		printf("child %i exited with %i\n", pid, signum);
 	}
 
+	mutex.lock();
 	unregister_process(pid);
+	mutex.unlock();
 }
 
 /*
@@ -499,8 +516,13 @@ void EvokeService::run_program(const char* cmd, bool enable_vars) {
 
 	if(r != 0)
 		edelib::alert("Unable to start %s. Got code %i", cmd, r);
-	else
+	else {
+		Mutex mutex;
+
+		mutex.lock();
 		register_process(scmd.c_str(), child);
+		mutex.unlock();
+	}
 }
 
 #if 0

@@ -18,6 +18,8 @@
 #include <edelib/String.h>
 #include <FL/x.h>
 
+#include <pthread.h>
+
 struct EvokeClient {
 	edelib::String desc;      // short program description (used in Starting... message)
 	edelib::String icon;      // icon for this client
@@ -89,5 +91,21 @@ class EvokeService {
 };
 
 #define EVOKE_LOG EvokeService::instance()->log()->printf
+
+/*
+ * FIXME: This should be probably declared somewhere outside
+ * or in edelib as separate class
+ */
+class Mutex {
+	private:
+		pthread_mutex_t mutex;
+		Mutex(const Mutex&);
+		Mutex& operator=(const Mutex&);
+	public:
+		Mutex() { pthread_mutex_init(&mutex, 0); }
+		~Mutex() { pthread_mutex_destroy(&mutex); }
+		void lock(void) { pthread_mutex_lock(&mutex); }
+		void unlock(void) { pthread_mutex_unlock(&mutex); }
+};
 
 #endif
