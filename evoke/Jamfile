@@ -10,6 +10,9 @@
 
 SubDir TOP evoke ;
 
+# use SIGHUP for now as default
+ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
+
 SOURCE = evoke.cpp EvokeService.cpp Spawn.cpp Splash.cpp Log.cpp Logout.cpp Crash.cpp Autostart.cpp ;
 
 LinkAgainst evoke : -lao -lvorbis -lvorbisfile -lmad ;

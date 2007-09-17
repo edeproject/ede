@@ -23,10 +23,10 @@
 #include <string.h> // memset
 
 static int logout_ret;
-static Fl_Double_Window*       win;
-static Fl_Round_Button* rb1;
-static Fl_Round_Button* rb2;
-static Fl_Round_Button* rb3;
+static Fl_Double_Window* win;
+static Fl_Round_Button*  rb1;
+static Fl_Round_Button*  rb2;
+static Fl_Round_Button*  rb3;
 
 unsigned char* take_x11_screenshot(unsigned char *p, int X, int Y, int w, int h, int alpha);
 unsigned char* make_darker(unsigned char *p, int X, int Y, int w, int h);

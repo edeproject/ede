@@ -133,6 +133,64 @@ int get_string_property_value(Atom at, char* txt, int txt_len) {
 	return 1;
 }
 
+/*
+ * This is re-implementation of XmuClientWindow() so I don't have to link code with libXmu. 
+ * XmuClientWindow() will return parent window of given window; this is used so we don't 
+ * send delete message to some button or else, but it's parent.
+ */
+Window mu_try_children(Display* dpy, Window win, Atom wm_state) {
+	Atom real;
+	Window root, parent;
+	Window* children = 0;
+	Window ret = 0;
+	unsigned int nchildren;
+	unsigned char* prop;
+	unsigned long n, extra;
+	int format;
+
+	if(!XQueryTree(dpy, win, &root, &parent, &children, &nchildren))
+		return 0;
+
+	for(unsigned int i = 0; (i < nchildren) && !ret; i++) {
+		prop = NULL;
+		XGetWindowProperty(dpy, children[i], wm_state, 0, 0, False, AnyPropertyType,
+				&real, &format, &n, &extra, (unsigned char**)&prop);
+		if(prop)
+			XFree(prop);
+		if(real)
+			ret = children[i];
+	}
+
+	for(unsigned int i = 0; (i < nchildren) && !ret; i++)
+		ret = mu_try_children(dpy, win, wm_state);
+
+	if(children)
+		XFree(children);
+	return ret;
+}
+
+Window mu_client_window(Display* dpy, Window win, Atom wm_state) {
+	Atom real;
+	int format;
+	unsigned long n, extra;
+	unsigned char* prop;
+	int status = XGetWindowProperty(dpy, win, wm_state, 0, 0, False, AnyPropertyType,
+			&real, &format, &n, &extra, (unsigned char**)&prop);
+	if(prop)
+		XFree(prop);
+
+	if(status != Success)
+		return win;
+
+	if(real)
+		return win;
+
+	Window w = mu_try_children(dpy, win, wm_state);
+	if(!w) w = win;
+
+	return w;
+}
+
 void service_watcher_cb(int pid, int signum) {
 	EvokeService::instance()->service_watcher(pid, signum);
 }
@@ -385,20 +443,6 @@ void EvokeService::setup_atoms(Display* d) {
 }
 
 void EvokeService::quit_x11(void) {
-	int ret = edelib::ask(_("Nice quitting is not implemented yet and this will forcefully kill\nall running applications. Make sure to save what needs to be saved.\nSo, would you like to continue ?"));
-	if(ret)
-		stop();
-#if 0
-	/*
-	 * This code is working, but not as I would like to see.
-	 * It will (mostly) call XKillClient() for _every_ window
-	 * (including i.e. buttons in some app), and that is not
-	 * nice way to say good bye. This must be implemented in
-	 * wm since it only knows what is actuall window and what not. 
-	 * For now quit_x11() will simply quit itself, quitting X11
-	 * session (if it holds it), which will in turn forcefully kill
-	 * all windows.
-	 */
 	Window dummy, *wins;
 	Window root = RootWindow(fl_display, fl_screen);
 	unsigned int n;
@@ -408,42 +452,55 @@ void EvokeService::quit_x11(void) {
 
 	Atom _wm_protocols     = XInternAtom(fl_display, "WM_PROTOCOLS", False);
 	Atom _wm_delete_window = XInternAtom(fl_display, "WM_DELETE_WINDOW", False);
-	Atom* protocols;
-	int np;
+	Atom _wm_state         = XInternAtom(fl_display, "WM_STATE", False);
+	XWindowAttributes attr;
 	XEvent ev;
-	bool have_quit = 0;
 
 	for(unsigned int i = 0; i < n; i++) {
-		if(wins[i] == root)
-			continue;
+		if(XGetWindowAttributes(fl_display, wins[i], &attr) && (attr.map_state == IsViewable))
+			wins[i] = mu_client_window(fl_display, wins[i], _wm_state);
+		else
+			wins[i] = 0;
+	}
 
-		have_quit = 0;
-		if(XGetWMProtocols(fl_display, wins[i], &protocols, &np)) {
-			for(int j = 0; j < np; j++) {
-				if(protocols[j] == _wm_delete_window) {
-					have_quit = 1;
-					break;
-				}
-			}
-		}
+	/*
+	 * Hm... probably we should first quit known processes started by us
+	 * then rest of the X familly
+	 */
+	for(unsigned int i = 0; i < n; i++) {
+		if(wins[i]) {
+			EVOKE_LOG("closing %i window\n", i);
 
-		if(have_quit) {
+			// FIXME: check WM_PROTOCOLS before sending WM_DELETE_WINDOW ???
 			memset(&ev, 0, sizeof(ev));
 			ev.xclient.type = ClientMessage;
 			ev.xclient.window = wins[i];
 			ev.xclient.message_type = _wm_protocols;
 			ev.xclient.format = 32;
 			ev.xclient.data.l[0] = (long)_wm_delete_window;
-			ev.xclient.data.l[1] = (long)fl_event_time;
+			ev.xclient.data.l[1] = CurrentTime;
 			XSendEvent(fl_display, wins[i], False, 0L, &ev);
-		} else {
+
+			EVOKE_LOG("%i window closed\n", i);
+		}
+	}
+
+	XSync(fl_display, False);
+	sleep(1);
+
+	// kill remaining windows
+	for(unsigned int i = 0; i < n; i++) {
+		if(wins[i]) { 
+			EVOKE_LOG("killing remaining %i window\n", i);
 			XKillClient(fl_display, wins[i]);
 		}
 	}
 
-	XFree((void*)wins);
+	XSync(fl_display, False);
+
+	XFree(wins);
+	EVOKE_LOG("now close myself\n");
 	stop();
-#endif
 }
 
 /*
@@ -456,9 +513,10 @@ void EvokeService::service_watcher(int pid, int signum) {
 
 	if(signum == SPAWN_CHILD_CRASHED) {
 		EvokeProcess pc;
+		bool ret;
 
 		mutex.lock();
-		bool ret = find_and_unregister_process(pid, pc);
+		ret = find_and_unregister_process(pid, pc);
 		mutex.unlock();
 
 		if(ret) {
@@ -678,9 +736,9 @@ int EvokeService::handle(const XEvent* ev) {
 
 				int dw = DisplayWidth(fl_display, fl_screen);
 				int dh = DisplayHeight(fl_display, fl_screen);
-
-				printf("got %i\n", logout_dialog(dw, dh));
-				// quit_x11();
+				// TODO: add XDM service permissions
+				printf("got %i\n", logout_dialog(dw, dh, 1, 1));
+				//quit_x11();
 			} else	
 				logfile->printf("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);
 			return 1;

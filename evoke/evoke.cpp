@@ -166,9 +166,20 @@ int main(int argc, char** argv) {
 
 	service->setup_atoms(fl_display);
 
-	signal(SIGINT, quit_signal);
+	signal(SIGINT,  quit_signal);
 	signal(SIGTERM, quit_signal);
 	signal(SIGKILL, quit_signal);
+	signal(SIGQUIT, quit_signal);
+
+#ifdef USE_SIGHUP
+	/*
+	 * This is mostly used when we get request to shutdown session and close/kill all windows.
+	 * If evoke is started from gui console (xterm, rxvt), closing that window we will get 
+	 * SIGHUP since terminal will disconnect all controlling processes. On other hand, if evoke
+	 * is started as session carrier (eg. run from xinitrc), this is not needed.
+	 */
+	signal(SIGHUP,  quit_signal);
+#endif
 
 	service->start();
 
