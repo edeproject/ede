@@ -14,10 +14,12 @@
 #define __EVOKESERVICE_H__
 
 #include "Log.h"
+#include "Xsm.h"
+
 #include <edelib/List.h>
 #include <edelib/String.h>
-#include <FL/x.h>
 
+#include <FL/x.h>
 #include <pthread.h>
 
 struct EvokeClient {
@@ -46,6 +48,7 @@ class EvokeService {
 	private:
 		bool  is_running;
 		Log*  logfile;
+		Xsm*  xsm;
 		char* pidfile;
 		char* lockfile;
 
@@ -72,6 +75,9 @@ class EvokeService {
 		void setup_atoms(Display* d);
 		bool init_splash(const char* config, bool no_splash, bool dry_run);
 		void init_autostart(bool safe);
+
+		void init_xsettings_manager(void);
+		void stop_xsettings_manager(void);
 
 		int handle(const XEvent* ev);
 

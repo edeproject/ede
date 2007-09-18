@@ -19,7 +19,7 @@
 #include "Autostart.h"
 
 #include <edelib/File.h>
-#include <edelib/Regex.h>
+//#include <edelib/Regex.h>
 #include <edelib/Config.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
@@ -195,13 +195,16 @@ void service_watcher_cb(int pid, int signum) {
 	EvokeService::instance()->service_watcher(pid, signum);
 }
 
-EvokeService::EvokeService() : is_running(0), logfile(NULL), pidfile(NULL), lockfile(NULL) { 
-	top_win = NULL;
+EvokeService::EvokeService() : 
+	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL), top_win(NULL) { 
 }
 
 EvokeService::~EvokeService() {
 	if(logfile)
 		delete logfile;
+
+	if(xsm)
+		delete xsm;
 
 	if(lockfile) {
 		edelib::file_remove(lockfile);
@@ -432,6 +435,30 @@ void EvokeService::init_autostart(bool safe) {
 
 	if(dlg.list_size() > 0)
 		dlg.run();
+}
+
+void EvokeService::init_xsettings_manager(void) {
+	xsm = new Xsm;
+
+	if(xsm->is_running()) {
+		int ret = edelib::ask(_("XSETTINGS manager already running on this screen. Would you like to replace it?"));
+		if(ret < 1) {
+			stop_xsettings_manager();
+			return;
+		} else
+			goto do_it;
+	}
+
+do_it:
+	if(!xsm->init()) {
+		edelib::alert(_("Unable to load XSETTINGS manager properly"));
+		stop_xsettings_manager();
+	}
+}
+
+void EvokeService::stop_xsettings_manager(void) {
+	delete xsm;
+	xsm = NULL;
 }
 
 void EvokeService::setup_atoms(Display* d) {
@@ -694,7 +721,10 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 int EvokeService::handle(const XEvent* ev) {
 	logfile->printf("Got event %i\n", ev->type);
 
-	if(ev->type == MapNotify) {
+	if(xsm && xsm->should_quit(ev)) {
+		stop_xsettings_manager();
+		return 1;
+	} else if(ev->type == MapNotify) {
 		if(top_win) {
 			// for splash to keep it at top (working in old edewm)
 			XRaiseWindow(fl_display, fl_xid(top_win));

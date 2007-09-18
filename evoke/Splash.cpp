@@ -26,7 +26,10 @@
 #define TIMEOUT_START    0.5  // timeout when splash is first time shown (also for first client)
 #define TIMEOUT_CONTINUE 2.0  // timeout between starting rest of the cliens
 
-extern int xmessage_handler(int e);
+
+int splash_xmessage_handler(int ev) {
+	return EvokeService::instance()->handle(fl_xevent);
+}
 
 /*
  * repeatedly call runner() untill all clients are 
@@ -184,7 +187,7 @@ void Splash::run(void) {
 	 * and redirect them to EvokeService::handle().
 	 */
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
-	Fl::add_handler(xmessage_handler);
+	Fl::add_handler(splash_xmessage_handler);
 
 	// make sure MappingNotify keeps this window at the top
 	EvokeService::instance()->register_top(this);

@@ -40,8 +40,12 @@ void quit_signal(int sig) {
 	EvokeService::instance()->stop();
 }
 
-int xmessage_handler(int e) {
-	return EvokeService::instance()->handle(fl_xevent);
+void xmessage_handler(int, void*) {
+	XEvent xev;
+	while(XEventsQueued(fl_display, QueuedAfterReading)) {
+		XNextEvent(fl_display, &xev);
+		EvokeService::instance()->handle((const XEvent*)&xev);
+	}
 }
 
 const char* next_param(int curr, char** argv, int argc) {
@@ -165,6 +169,7 @@ int main(int argc, char** argv) {
 	}
 
 	service->setup_atoms(fl_display);
+	service->init_xsettings_manager();
 
 	signal(SIGINT,  quit_signal);
 	signal(SIGTERM, quit_signal);
@@ -193,8 +198,11 @@ int main(int argc, char** argv) {
 	 * and pass expecting ones to xmessage_handler(). Other (non-fltk) solution would
 	 * be to manually pool events via select() and that code could be very messy.
 	 * So stick with the simplicity :)
+	 *
+	 * Also note that '1' parameter means POLLIN, and for the details see Fl_x.cxx
 	 */
-	Fl::add_handler(xmessage_handler);
+	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler);
+
 	while(service->running())
 		Fl::wait(FOREVER);
 
