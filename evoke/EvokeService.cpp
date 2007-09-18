@@ -55,7 +55,7 @@ void resolve_path(const edelib::String& datadir, edelib::String& item, bool have
 
 char* get_basename(const char* path) {
 	char* p = strrchr(path, '/');
-	if(p)
+	if(p) 
 		return (p + 1);
 
 	return (char*)path;
@@ -718,62 +718,74 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 	return 0;
 }
 
-int EvokeService::handle(const XEvent* ev) {
-	logfile->printf("Got event %i\n", ev->type);
+/*
+ * Main loop for processing got X events.
+ *
+ * Great care must be taken to route this events to fltk too (via fl_handle()), since 
+ * add_fd() (in evoke.cpp) will not do that. If events are not routed to fltk, popped 
+ * dialogs, especially from service_watcher() will not be correctly drawn and will hand 
+ * whole program.
+ *
+ * FIXME: any better way ?
+ */
+int EvokeService::handle(const XEvent* xev) {
+	EVOKE_LOG("Got event %i\n", xev->type);
 
-	if(xsm && xsm->should_quit(ev)) {
+	if(xsm && xsm->should_quit(xev)) {
+		EVOKE_LOG("XSETTINGS manager shutdown\n");
 		stop_xsettings_manager();
-		return 1;
-	} else if(ev->type == MapNotify) {
+		// return 1;
+	} else if(xev->type == MapNotify) {
 		if(top_win) {
 			// for splash to keep it at top (working in old edewm)
 			XRaiseWindow(fl_display, fl_xid(top_win));
-			return 1;
+			// return 1;
 		}
-	} else if(ev->type == ConfigureNotify) {
-	 	if(ev->xconfigure.event == DefaultRootWindow(fl_display) && top_win) {
+	} else if(xev->type == ConfigureNotify) {
+	 	if(xev->xconfigure.event == DefaultRootWindow(fl_display) && top_win) {
 			// splash too, but keep window under other wm's
 			XRaiseWindow(fl_display, fl_xid(top_win));
-			return 1;
+			// return 1;
 		}
-	} else if(ev->type == PropertyNotify) {
-		if(ev->xproperty.atom == _ede_spawn) {
+	} else if(xev->type == PropertyNotify) {
+		if(xev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
-				logfile->printf("Got _EDE_EVOKE_SPAWN with %s. Starting client...\n", buff);
+				EVOKE_LOG("Got _EDE_EVOKE_SPAWN with %s. Starting client...\n", buff);
 				run_program(buff);
-				//heuristic_run_program(buff);
 			} else {
-				logfile->printf("Got _EDE_EVOKE_SPAWN with malformed data. Ignoring...\n");
+				EVOKE_LOG("Got _EDE_EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
-			return 1;
+			// return 1;
 		}
 
-		if(ev->xproperty.atom == _ede_evoke_quit) {
+		if(xev->xproperty.atom == _ede_evoke_quit) {
 			int val = get_int_property_value(_ede_evoke_quit);
 			if(val == 1) {
-				logfile->printf("Got accepted _EDE_EVOKE_QUIT\n");
+				EVOKE_LOG("Got accepted _EDE_EVOKE_QUIT\n");
 				stop();
 			} else
-				logfile->printf("Got _EDE_EVOKE_QUIT with bad code (%i). Ignoring...\n", val);
-			return 1;
+				EVOKE_LOG("Got _EDE_EVOKE_QUIT with bad code (%i). Ignoring...\n", val);
+			// return 1;
 		}
 
-		if(ev->xproperty.atom == _ede_shutdown_all) {
+		if(xev->xproperty.atom == _ede_shutdown_all) {
 			int val = get_int_property_value(_ede_shutdown_all);
 			if(val == 1) {
-				logfile->printf("Got accepted _EDE_EVOKE_SHUTDOWN_ALL\n");
+				EVOKE_LOG("Got accepted _EDE_EVOKE_SHUTDOWN_ALL\n");
 
 				int dw = DisplayWidth(fl_display, fl_screen);
 				int dh = DisplayHeight(fl_display, fl_screen);
+
 				// TODO: add XDM service permissions
 				printf("got %i\n", logout_dialog(dw, dh, 1, 1));
 				//quit_x11();
 			} else	
-				logfile->printf("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);
-			return 1;
+				EVOKE_LOG("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);
+			// return 1;
 		}
 	}
 
-	return 0;
+	//return 0;
+	return fl_handle(*xev);
 }

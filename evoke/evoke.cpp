@@ -48,6 +48,11 @@ void xmessage_handler(int, void*) {
 	}
 }
 
+int xmessage_handler2(int e) {
+	return EvokeService::instance()->handle(fl_xevent);
+}
+
+
 const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
@@ -202,6 +207,7 @@ int main(int argc, char** argv) {
 	 * Also note that '1' parameter means POLLIN, and for the details see Fl_x.cxx
 	 */
 	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler);
+	//Fl::add_handler(xmessage_handler2);
 
 	while(service->running())
 		Fl::wait(FOREVER);

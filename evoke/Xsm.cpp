@@ -145,7 +145,6 @@ bool Xsm::should_quit(const XEvent* xev) {
 	if(xev->xany.window == data->window && 
 		xev->xany.type == SelectionClear &&
 		xev->xselectionclear.selection == data->selection_atom) {
-		puts("XXXXXXXXXXXXX");
 		return true;
 	}
 
