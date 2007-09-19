@@ -29,18 +29,25 @@
  * Author of referent implementation is Owen Taylor.
  */
 
-enum XsettingsType {
-	XS_TYPE_INT = 0,
-	XS_TYPE_COLOR,
-	XS_TYPE_STRING
-};
-
 struct XsmData;
 struct XsettingsSetting;
+struct XsettingsBuffer;
+
+/*
+ * Enum order must be exact on client side too, since via these values
+ * client will try to decode settings.
+ */
+enum XsettingsType {
+	XS_TYPE_INT = 0,
+	XS_TYPE_STRING,
+	XS_TYPE_COLOR
+};
 
 class Xsm {
 	private:
 		XsmData* data;
+		void set_setting(const XsettingsSetting* setting);
+		void delete_setting(XsettingsSetting* setting);
 
 	public:
 		Xsm();
@@ -48,6 +55,12 @@ class Xsm {
 		bool is_running(void);
 		bool init(void);
 		bool should_quit(const XEvent* xev);
+
+		void set_int(const char* name, int val);
+		void set_color(const char* name, 
+				unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha);
+		void set_string(const char* name, const char* str);
+		void notify(void);
 };
 
 #endif

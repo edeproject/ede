@@ -454,6 +454,16 @@ do_it:
 		edelib::alert(_("Unable to load XSETTINGS manager properly"));
 		stop_xsettings_manager();
 	}
+
+	if(!xsm) return;
+
+	/* testing code
+	 * FIXME: move this to outside client
+	 */
+	xsm->set_int("Net/DoubleClickTime", 234);
+	xsm->set_color("Net/Background/Normal", 34, 45, 23, 0);
+	xsm->set_string("Net/UserName", "John Foo");
+	xsm->notify();
 }
 
 void EvokeService::stop_xsettings_manager(void) {
