@@ -56,18 +56,15 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 	int nulldev = -1;
 	int status_ret = 0;
 
-	if(wf) {
-		struct sigaction sa;
-		sa.sa_handler = sigchld_handler;
-		sa.sa_flags = SA_NOCLDSTOP;
-		sigemptyset(&sa.sa_mask);
-		sigaction(SIGCHLD, &sa, (struct sigaction*)0);
+	struct sigaction sa;
+	sa.sa_handler = sigchld_handler;
+	sa.sa_flags = SA_NOCLDSTOP;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGCHLD, &sa, (struct sigaction*)0);
 
-		global_watch = wf;
-	}
+	global_watch = wf;
 
 	pid_t pid = fork();
-
 	if(pid == -1)
 		return SPAWN_FORK_FAILED;
 

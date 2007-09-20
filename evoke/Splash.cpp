@@ -26,11 +26,21 @@
 #define TIMEOUT_START    0.5  // timeout when splash is first time shown (also for first client)
 #define TIMEOUT_CONTINUE 2.0  // timeout between starting rest of the cliens
 
-#if 0
-int splash_xmessage_handler(int ev) {
-	return EvokeService::instance()->handle(fl_xevent);
+
+extern void service_watcher_cb(int pid, int signum);
+
+Fl_Double_Window* splash_win = 0;
+
+int splash_xmessage_handler(int e) {
+	if(fl_xevent->type == MapNotify || fl_xevent->type == ConfigureNotify) {
+		if(splash_win) {
+			XRaiseWindow(fl_display, fl_xid(splash_win));
+			return 1;
+		}
+	}
+
+	return 0;
 }
-#endif
 
 /*
  * repeatedly call runner() untill all clients are 
@@ -54,6 +64,7 @@ Splash::~Splash() {
 	EVOKE_LOG("Cleaning splash data\n");
 	// elements of icons cleans Fl_Group
 	delete [] icons;
+	Fl::remove_timeout(runner_cb);
 }
 
 
@@ -175,39 +186,36 @@ void Splash::run(void) {
 	int sh = DisplayHeight(fl_display, fl_screen);
 	position(sw/2 - w()/2, sh/2 - h()/2);
 
+	bool sound_loaded = false;
 	if(sound && !sound->empty())
-		edelib::SoundSystem::init();
+		sound_loaded = edelib::SoundSystem::init();
 
 	show();
 
 	Fl::add_timeout(TIMEOUT_START, runner_cb, this);
 
-	// FIXME: validate this again !
-#if 0
 	/*
-	 * Fl::wait() will block all events to EvokeService and it will not
-	 * be able to keep this window at the top. So we again select event inputs
-	 * and redirect them to EvokeService::handle().
+	 * Force keeping splash window at the top of all. To do this, we will listen
+	 * MappingNotify and ConfigureNotify events, and when they be triggered we will
+	 * raise splash window.
 	 */
-	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
-	Fl::add_handler(splash_xmessage_handler);
-#endif
+	splash_win = this;
 
-	// make sure MappingNotify keeps this window at the top
-	EvokeService::instance()->register_top(this);
+	//XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
+	//Fl::add_handler(splash_xmessage_handler);
 
-	if(edelib::SoundSystem::inited())
+	if(sound_loaded)
 		edelib::SoundSystem::play(sound->c_str(), 0);
 
 	while(shown())
 		Fl::wait();
 
-	EvokeService::instance()->unregister_top();
-
-	if(edelib::SoundSystem::inited()) {
+	if(sound_loaded) {
 		edelib::SoundSystem::stop();
 		edelib::SoundSystem::shutdown();
 	}
+
+	splash_win = 0;
 }
 
 // called when splash option is on
@@ -236,7 +244,8 @@ bool Splash::next_client(void) {
 	redraw();
 
 	if(!dry_run)
-		spawn_program(cmd);
+		spawn_program(cmd, service_watcher_cb);
+		//spawn_program(cmd);
 
 	++clist_it;
 	++counter;
@@ -266,7 +275,8 @@ bool Splash::next_client_nosplash(void) {
 	printf("%s\n", buff);
 
 	if(!dry_run)
-		spawn_program(cmd);
+		spawn_program(cmd, service_watcher_cb);
+		//spawn_program(cmd);
 
 	++clist_it;
 	++counter;

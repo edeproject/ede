@@ -52,8 +52,6 @@ class EvokeService {
 		char* pidfile;
 		char* lockfile;
 
-		Fl_Double_Window* top_win;
-
 		Atom _ede_shutdown_all;
 		Atom _ede_spawn;
 		Atom _ede_evoke_quit;
@@ -82,9 +80,6 @@ class EvokeService {
 		int handle(const XEvent* ev);
 
 		Log* log(void) { return logfile; }
-
-		void register_top(Fl_Double_Window* win) { top_win = win; }
-		void unregister_top(void) { top_win = NULL; }
 
 		void service_watcher(int pid, int signum);
 		void run_program(const char* cmd, bool enable_vars = 1);

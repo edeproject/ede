@@ -13,9 +13,17 @@ SubDir TOP evoke ;
 # use SIGHUP for now as default
 ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
 
-SOURCE = evoke.cpp EvokeService.cpp Xsm.cpp Spawn.cpp Splash.cpp Log.cpp Logout.cpp Crash.cpp Autostart.cpp ;
+SOURCE = evoke.cpp 
+		 EvokeService.cpp 
+		 Xsm.cpp 
+		 Spawn.cpp 
+		 Splash.cpp 
+		 Log.cpp 
+		 Logout.cpp 
+		 Crash.cpp 
+		 Autostart.cpp ;
 
-LinkAgainst evoke : -lao -lvorbis -lvorbisfile -lmad ;
+LinkAgainst evoke : -lao -lvorbis -lvorbisfile ;
 
 EdeProgram evoke : $(SOURCE) ;
 FltkProgramBare test/evoke_test : test/evoke_test.cpp ;

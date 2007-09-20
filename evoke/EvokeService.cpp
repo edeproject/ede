@@ -196,7 +196,7 @@ void service_watcher_cb(int pid, int signum) {
 }
 
 EvokeService::EvokeService() : 
-	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL), top_win(NULL) { 
+	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL) { 
 }
 
 EvokeService::~EvokeService() {
@@ -745,7 +745,10 @@ int EvokeService::handle(const XEvent* xev) {
 		EVOKE_LOG("XSETTINGS manager shutdown\n");
 		stop_xsettings_manager();
 		// return 1;
-	} else if(xev->type == MapNotify) {
+	}
+#if 0	
+	else if(xev->type == MapNotify) {
+		puts("=================");
 		if(top_win) {
 			// for splash to keep it at top (working in old edewm)
 			XRaiseWindow(fl_display, fl_xid(top_win));
@@ -757,7 +760,9 @@ int EvokeService::handle(const XEvent* xev) {
 			XRaiseWindow(fl_display, fl_xid(top_win));
 			// return 1;
 		}
-	} else if(xev->type == PropertyNotify) {
+	}
+#endif
+	else if(xev->type == PropertyNotify) {
 		if(xev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
