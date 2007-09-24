@@ -27,6 +27,7 @@
 #define SPAWN_EMPTY         2
 #define SPAWN_EXECVE_FAILED 3
 #define SPAWN_OPEN_FAILED   4
+#define SPAWN_PIPE_FAILED   5
 
 #define SPAWN_CHILD_CRASHED -2
 #define SPAWN_CHILD_KILLED  -3

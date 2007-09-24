@@ -191,9 +191,6 @@ void setting_store(const XsettingsSetting* setting, XsettingsBuffer* buffer) {
 	}
 }
 
-
-
-
 Xsm::Xsm() : data(NULL) { }
 
 Xsm::~Xsm() { 

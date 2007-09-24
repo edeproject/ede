@@ -146,6 +146,11 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	if(!service->setup_channels()) {
+		printf("Can't setup internal channels\n");
+		return 1;
+	}
+
 	EVOKE_LOG("= "APPNAME" started =\n");
 
 	if(!pid_file)

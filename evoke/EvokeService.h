@@ -33,14 +33,22 @@ struct EvokeProcess {
 	pid_t pid;
 };
 
-typedef edelib::list<EvokeClient>           ClientList;
+struct QueuedSignal {
+	pid_t pid;
+	int signum;
+};
+
+typedef edelib::list<EvokeClient> ClientList;
 typedef edelib::list<EvokeClient>::iterator ClientListIter;
 
-typedef edelib::list<edelib::String>           StringList;
+typedef edelib::list<edelib::String> StringList;
 typedef edelib::list<edelib::String>::iterator StringListIter;
 
-typedef edelib::list<EvokeProcess>           ProcessList;
+typedef edelib::list<EvokeProcess> ProcessList;
 typedef edelib::list<EvokeProcess>::iterator ProcessListIter;
+
+typedef edelib::list<QueuedSignal> SignalQueue;
+typedef edelib::list<QueuedSignal>::iterator SignalQueueIter;
 
 class Fl_Double_Window;
 
@@ -58,6 +66,10 @@ class EvokeService {
 
 		ClientList  clients;
 		ProcessList processes;
+		int quit_child_pid;
+		int quit_child_ret;
+		int wake_up_pipe[2];
+
 
 	public:
 		EvokeService();
@@ -68,6 +80,7 @@ class EvokeService {
 		void stop(void)    { is_running = false; }
 		bool running(void) { return is_running; }
 
+		bool setup_channels(void);
 		bool setup_logging(const char* file);
 		bool setup_pid(const char* file, const char* lock);
 		void setup_atoms(Display* d);
@@ -82,8 +95,9 @@ class EvokeService {
 		Log* log(void) { return logfile; }
 
 		void service_watcher(int pid, int signum);
+		void wake_up(int fd);
+
 		void run_program(const char* cmd, bool enable_vars = 1);
-		//void heuristic_run_program(const char* cmd);
 		void register_process(const char* cmd, pid_t pid);
 		void unregister_process(pid_t pid);
 		bool find_and_unregister_process(pid_t pid, EvokeProcess& pc);

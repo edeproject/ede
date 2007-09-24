@@ -26,14 +26,13 @@
 #include <sys/resource.h>   //
 
 extern char** environ;
-// FIXME: is this safe ??? (or to use somehow sig_atomic_t)
 SignalWatch* global_watch = 0;
 
 void sigchld_handler(int sig) {
 	int pid, status;
 	do {
 		errno = 0;
-		pid = waitpid(WAIT_ANY, &status, WNOHANG);
+		pid = waitpid(WAIT_ANY, &status, WNOHANG | WUNTRACED);
 
 		if(global_watch != 0) {
 			if(WIFEXITED(status))
@@ -56,11 +55,27 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 	int nulldev = -1;
 	int status_ret = 0;
 
+#if 0
 	struct sigaction sa;
+	sa.sa_handler = sigchld_handler;
+	sa.sa_flags = SA_NOCLDSTOP;
+	/*sa.sa_flags = SA_NOCLDWAIT;*/
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGCHLD, &sa, (struct sigaction*)0);
+#endif
+
+	struct sigaction sa;
+	sigset_t chld_mask, old_mask;
+
 	sa.sa_handler = sigchld_handler;
 	sa.sa_flags = SA_NOCLDSTOP;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGCHLD, &sa, (struct sigaction*)0);
+
+	// block SIGCHLD until we set up stuff
+	sigemptyset(&chld_mask);
+	sigaddset(&chld_mask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &chld_mask, &old_mask);
 
 	global_watch = wf;
 
@@ -69,7 +84,7 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 		return SPAWN_FORK_FAILED;
 
 	if(pid == 0) {
-		// this is child
+		// child
 		char* argv[4];
 		argv[0] = "/bin/sh";
 		argv[1] = "-c";
@@ -95,12 +110,12 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 
 		errno = 0;
 		if(execve(argv[0], argv, environ) == -1) {
-			close(nulldev);
 			// should not get here
 			return SPAWN_EXECVE_FAILED;
 		}
 	} 
 
+	// parent
 	if(nulldev != -1)
 		close(nulldev);
 	/*
@@ -110,6 +125,9 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 	 */
 	if(child_pid_ret)
 		*child_pid_ret = pid;
+
+	// unblock SIGCHLD
+	sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
 	return status_ret;
 }
@@ -138,6 +156,8 @@ int spawn_program_with_core(const char* cmd, SignalWatch* wf, pid_t* child_pid_r
 int spawn_backtrace(const char* gdb_path, const char* program, const char* core, const char* output, const char* script) {
 	const char* gdb_script = "bt\nquit\n";
 	const int gdb_script_len = 8;
+
+	//signal(SIGCHLD, SIG_DFL);
 
 	// file with gdb commands
 	int sfd = open(script, O_WRONLY | O_TRUNC | O_CREAT, 0770);

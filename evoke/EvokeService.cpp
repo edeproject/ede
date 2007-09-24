@@ -32,10 +32,13 @@
 #include <FL/fl_ask.h>
 
 #include <sys/types.h> // getpid
-#include <unistd.h>    // 
+#include <unistd.h>    // pipe
+#include <fcntl.h>     // fcntl
 #include <stdlib.h>    // free
 #include <string.h>    // strdup, memset
 #include <errno.h>     // error codes
+
+#include <signal.h>
 
 void resolve_path(const edelib::String& datadir, edelib::String& item, bool have_datadir) {
 	if(item.empty())
@@ -195,8 +198,15 @@ void service_watcher_cb(int pid, int signum) {
 	EvokeService::instance()->service_watcher(pid, signum);
 }
 
+void wake_up_cb(int fd, void* v) {
+	EvokeService::instance()->wake_up(fd);
+}
+
 EvokeService::EvokeService() : 
 	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL) { 
+
+	wake_up_pipe[0] = wake_up_pipe[1] = -1;
+	quit_child_pid = quit_child_ret = -1;
 }
 
 EvokeService::~EvokeService() {
@@ -217,11 +227,25 @@ EvokeService::~EvokeService() {
 	}
 
 	processes.clear();
+
+	if(wake_up_pipe[0] != -1)
+		close(wake_up_pipe[0]);
+	if(wake_up_pipe[1] != -1)
+		close(wake_up_pipe[1]);
 }
 
 EvokeService* EvokeService::instance(void) {
 	static EvokeService es;
 	return &es;
+}
+
+bool EvokeService::setup_channels(void) {
+	if(pipe(wake_up_pipe) != 0)
+		return false;
+
+	fcntl(wake_up_pipe[1], F_SETFL, fcntl(wake_up_pipe[1], F_GETFL) | O_NONBLOCK);
+	Fl::add_fd(wake_up_pipe[0], FL_READ, wake_up_cb);
+	return true;
 }
 
 bool EvokeService::setup_logging(const char* file) {
@@ -541,45 +565,87 @@ void EvokeService::quit_x11(void) {
 }
 
 /*
- * Monitor starting service and report if staring failed. Also if one of 
- * runned services crashed attach gdb on it pid and run backtrace.
+ * This is run each time when some of the managed childs quits.
+ * Instead directly running wake_up(), it will be notified wia
+ * wake_up_pipe[] channel, via add_fd() monitor.
+ *
+ * This workaround is due races.
  */
-void EvokeService::service_watcher(int pid, int signum) {
-	printf("got %i\n", signum);
+void EvokeService::service_watcher(int pid, int ret) {
+	puts("=== service_watcher() ===");
+	printf("got %i\n", ret);
+
 	Mutex mutex;
 
-	if(signum == SPAWN_CHILD_CRASHED) {
+	mutex.lock();
+	quit_child_ret = ret;
+	quit_child_pid = pid;
+	mutex.unlock();
+
+	if(write(wake_up_pipe[1], "c", 1) != 1)
+		puts("error write");
+}
+
+void EvokeService::wake_up(int fd) {
+	puts("=== wake_up() ===");
+
+	char c;
+	if(read(wake_up_pipe[0], &c, 1) != 1 || c != 'c') {
+		puts("unable to read from channel");
+		return;
+	}
+
+	Mutex mutex;
+
+	mutex.lock();
+	int child_ret = quit_child_ret;
+	int child_pid = quit_child_pid;
+	mutex.unlock();
+
+	//EASSERT(child_ret != -1 && child_pid != -1);
+
+	mutex.lock();
+	quit_child_ret = quit_child_pid = -1;
+	mutex.unlock();
+
+	if(child_ret == SPAWN_CHILD_CRASHED) {
 		EvokeProcess pc;
 		bool ret;
 
 		mutex.lock();
-		ret = find_and_unregister_process(pid, pc);
+		ret = find_and_unregister_process(child_pid, pc);
 		mutex.unlock();
 
 		if(ret) {
 			printf("%s crashed with core dump\n", pc.cmd.c_str());
-
 			CrashDialog cdialog;
 			cdialog.set_data(pc.cmd.c_str());
 			cdialog.run();
 		}
-		return;
-	} 
+	} else { 
 
-	mutex.lock();
-	unregister_process(pid);
-	mutex.unlock();
-	
-	if(signum == SPAWN_CHILD_KILLED) {
-		printf("child %i killed\n", pid);
-	} else if(signum == 127) {
-		edelib::alert(_("Program not found"));
-	} else if(signum == 126) {
-		edelib::alert(_("Program not executable"));
-	} else {
-		printf("child %i exited with %i\n", pid, signum);
+		mutex.lock();
+		unregister_process(child_pid);
+		mutex.unlock();
+
+		switch(child_ret) {
+			case SPAWN_CHILD_KILLED:
+				printf("child %i killed\n", child_pid);
+				break;
+			case 127:
+				edelib::alert(_("Program not found"));
+				break;
+			case 126:
+				edelib::alert(_("Program not executable"));
+				break;
+			default:
+				printf("child %i exited with %i\n", child_pid, child_ret);
+				break;
+		}
 	}
+
 }
+
 
 /*
  * Execute program. It's return status
