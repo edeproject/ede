@@ -39,15 +39,15 @@ rule EdeManual
 		# and grist to prevent collision
 		target = $(target:S=$(html_ext):G="$(target)-html") ;
 
-		Depends $(target) : $(source) ;
-		Depends all : $(target) ;
-		Depends doc : $(target) ;
+		LocalDepends $(target) : $(source) ;
+		LocalDepends all : $(target) ;
+		LocalDepends doc : $(target) ;
 
 		# set output to $(MANUALDIR) directory
 		MakeLocate $(target) : $(MANUALDIR) ;
 
 		AsciiDoc1 $(target) : $(source) ;
-		Clean clean : $(target) ;
+		LocalClean clean : $(target) ;
 	}
 
 	# copy images, if given
@@ -59,13 +59,13 @@ rule EdeManual
 
 			MkDir $(imgdir) ;
 
-			Depends $(target) : $(imgdir) ;
-			Depends $(target) : $(source) ;
-			Depends all : $(target) ;
-			Depends doc : $(target) ;
+			LocalDepends $(target) : $(imgdir) ;
+			LocalDepends $(target) : $(source) ;
+			LocalDepends all : $(target) ;
+			LocalDepends doc : $(target) ;
 
 			Copy $(target) : $(source) ;
-			Clean clean : $(target) ;
+			LocalClean clean : $(target) ;
 		}
 	}
 }

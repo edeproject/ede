@@ -37,7 +37,7 @@ rule SharedLibraryFromObjects
 		t = $(t:S=$(SUFSHAREDLIB)) ;
 	}
 
-	Depends lib : $(t) ;
+	LocalDepends lib : $(t) ;
 
 	# This is used if library already does not have a path
 	if ! $(t:D) {
@@ -47,10 +47,10 @@ rule SharedLibraryFromObjects
 	LINKLIBS on $(t) = -shared -Wl,-soname,\"$(t_only)\" [ on $(t) return $(LINKLIBS) ] ;
 
 	# Let target is dependant on source
-	Depends $(t) : $(s) ;
+	LocalDepends $(t) : $(s) ;
 
 	Link $(t) : $(s) ;
-	Clean clean : $(t) ;
+	LocalClean clean : $(t) ;
 }
 
 # SharedLibrary [libname] : [sources] ;
@@ -99,10 +99,10 @@ rule SharedLibraryVersioned
 			# from place where jam is called
 			LOCATE on $(symlink) = [ on $(target) return $(LOCATE) ] ;
 
-			Depends lib : $(symlink) ;
+			LocalDepends lib : $(symlink) ;
 
 			SymLink $(symlink) : $(target) ;
-			Clean clean : $(symlink) ;
+			LocalClean clean : $(symlink) ;
 		}
 	} else {
 		SharedLibrary $(1) : $(2) ;

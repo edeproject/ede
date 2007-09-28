@@ -22,7 +22,7 @@ rule MakeProgramPrivate
 
 	# so 'jam foo' works when 'foo' is final executable
 	if $(target) != $(<) {
-		Depends $(<) : $(target) ;
+		LocalDepends $(<) : $(target) ;
 		NotFile $(<) ;
 	}
 

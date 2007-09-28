@@ -31,11 +31,11 @@ rule MakeInstallPrivate
 
 	for i in $(s) {
 		t = $(i:BSR=$(dir):G=installed) ;
-		Depends $(t) : $(i) ;
-		Depends $(t) : $(dir) ;
+		LocalDepends $(t) : $(i) ;
+		LocalDepends $(t) : $(dir) ;
 
-		Depends install : $(t) ;
-		Clean uninstall : $(t) ;
+		LocalDepends install : $(t) ;
+		LocalClean uninstall : $(t) ;
 
 		Install1 $(t) : $(i) ;
 

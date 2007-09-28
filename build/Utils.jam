@@ -16,6 +16,14 @@
 #MKDIRS ?= "mkdir -p" ;
 #LINKCMD ?= "ln -s" ;
 
+# Compatibility with ftjam,PerforceJam,... 
+# Haiku jam have builtin LocalClean and LocalDepends
+if ! $(INVOCATION_SUBDIR_SET) {
+	rule LocalClean { Clean $(1) : $(2) ; }
+	rule LocalDepends { Depends $(1) : $(2) ; }
+}
+# Compatibility part ends
+
 # Fltk use .cxx extension for C++ files so it must
 # be registered. This rule is called by jam so final 
 # application must not use it.
@@ -82,7 +90,7 @@ rule SymLink
 		return ;
 	}
 
-	Depends $(<) : $(>) ;
+	LocalDepends $(<) : $(>) ;
 
 	if $(3) {
 		SYMLINKSRCPATH on $(<) = $(3) ;

@@ -44,17 +44,17 @@ rule TranslationStrings
 
 	MkDir $(locale_dir) ;
 	for i in $(source) {
-		Depends $(target) : $(i) ;
+		LocalDepends $(target) : $(i) ;
 	}	
 
-	Depends $(target) : $(locale_dir) ;
-	Depends potfile : $(target) ;
-	Depends translation : $(target) ;
-	Depends all : $(target) ;
+	LocalDepends $(target) : $(locale_dir) ;
+	LocalDepends potfile : $(target) ;
+	LocalDepends translation : $(target) ;
+	LocalDepends all : $(target) ;
 
 	XGettext $(target) : $(source) ;
 
-	Clean clean : $(target) ;
+	LocalClean clean : $(target) ;
 	CleandirSafe distclean : $(locale_dir) ;
 }
 
@@ -85,13 +85,13 @@ rule Translation
 		pofile = [ FFileName $(path) $(<) $(i) ] ;
 		mofile = [ FFileName $(path) $(<) $(i:S=$(moext)) ] ;
 
-		Depends $(mofile) : $(pofile) ;
-		Depends all : $(mofile) ;
-		Depends translation : $(mofile) ;
+		LocalDepends $(mofile) : $(pofile) ;
+		LocalDepends all : $(mofile) ;
+		LocalDepends translation : $(mofile) ;
 
 		MakeTranslation1 $(mofile) : $(pofile) ;
 
-		Clean clean : $(mofile) ;
+		LocalClean clean : $(mofile) ;
 	}
 }
 
