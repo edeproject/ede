@@ -27,5 +27,6 @@ LinkAgainst evoke : -lao -lvorbis -lvorbisfile ;
 
 EdeProgram evoke : $(SOURCE) ;
 FltkProgramBare test/evoke_test : test/evoke_test.cpp ;
+FltkProgramBare test/stress_test : test/stress_test.cpp ;
 #TranslationStrings locale : $(SOURCE) ;
 EdeManual doc/evoke.txt ;

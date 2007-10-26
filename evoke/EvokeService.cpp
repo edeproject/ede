@@ -213,8 +213,7 @@ EvokeService::~EvokeService() {
 	if(logfile)
 		delete logfile;
 
-	if(xsm)
-		delete xsm;
+	stop_xsettings_manager();
 
 	if(lockfile) {
 		edelib::file_remove(lockfile);
@@ -464,7 +463,7 @@ void EvokeService::init_autostart(bool safe) {
 void EvokeService::init_xsettings_manager(void) {
 	xsm = new Xsm;
 
-	if(xsm->is_running()) {
+	if(Xsm::manager_running(fl_display, fl_screen)) {
 		int ret = edelib::ask(_("XSETTINGS manager already running on this screen. Would you like to replace it?"));
 		if(ret < 1) {
 			stop_xsettings_manager();
@@ -474,23 +473,22 @@ void EvokeService::init_xsettings_manager(void) {
 	}
 
 do_it:
-	if(!xsm->init()) {
+	if(!xsm->init(fl_display, fl_screen)) {
 		edelib::alert(_("Unable to load XSETTINGS manager properly"));
 		stop_xsettings_manager();
 	}
 
 	if(!xsm) return;
 
-	/* testing code
-	 * FIXME: move this to outside client
-	 */
-	xsm->set_int("Net/DoubleClickTime", 234);
-	xsm->set_color("Net/Background/Normal", 34, 45, 23, 0);
-	xsm->set_string("Net/UserName", "John Foo");
-	xsm->notify();
+	if(xsm->load_serialized("ede-settings.xml"))
+		xsm->notify();
 }
 
 void EvokeService::stop_xsettings_manager(void) {
+	if(!xsm)
+		return;
+
+	xsm->save_serialized("ede-settings.xml");
 	delete xsm;
 	xsm = NULL;
 }
@@ -807,7 +805,7 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 int EvokeService::handle(const XEvent* xev) {
 	EVOKE_LOG("Got event %i\n", xev->type);
 
-	if(xsm && xsm->should_quit(xev)) {
+	if(xsm && xsm->should_terminate(xev)) {
 		EVOKE_LOG("XSETTINGS manager shutdown\n");
 		stop_xsettings_manager();
 		// return 1;

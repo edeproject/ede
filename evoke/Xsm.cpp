@@ -11,395 +11,162 @@
  */
 
 #include "Xsm.h"
-
 #include <edelib/Debug.h>
-#include <edelib/List.h>
+#include <edelib/TiXml.h>
+#include <edelib/File.h>
+#include <string.h>
+#include <limits.h>
 
-#include <FL/x.h>
-#include <X11/Xmd.h> // CARD16, CARD32
-
-#include <stdio.h>   // snprintf
-#include <stdlib.h>  // free
-#include <string.h>  // strdup, strcmp
-
-#define XSETTINGS_PAD(n, p) ((n + p - 1) & (~(p - 1)))
-
-typedef edelib::list<XsettingsSetting*> XsettingsList;
-typedef edelib::list<XsettingsSetting*>::iterator XsettingsListIter;
-
-struct XsmData {
-	Window window;
-	Atom manager_atom;
-	Atom selection_atom;
-	Atom xsettings_atom;
-	unsigned long serial;
-
-	XsettingsList list;
-};
-
-struct XsettingsBuffer {
-	unsigned char* content;
-	unsigned char* pos;
-	int len;
-};
-
-struct XsettingsColor {
-	unsigned char red, green, blue, alpha;
-};
-
-struct XsettingsSetting {
-	char* name;
-	XsettingsType type;
-
-	union {
-		int v_int;
-		char* v_string;
-		XsettingsColor v_color;
-	} data;
-
-	unsigned long last_change_serial;
-};
-
-struct TimeStampInfo {
-	Window window;
-	Atom timestamp_prop_atom;
-};
-
-// Bool (X type) is used since this function is going to XIfEvent()
-Bool timestamp_predicate(Display* dpy, XEvent* xev, XPointer arg) {
-	TimeStampInfo* info = (TimeStampInfo*)arg;
-
-	if(xev->type == PropertyNotify && 
-		xev->xproperty.window == info->window && 
-		xev->xproperty.atom == info->timestamp_prop_atom) {
-		return True;
-	}
-
-	return False;
+int ignore_xerrors(Display* display, XErrorEvent* xev) {
+	return True;
 }
 
-Time get_server_time(Display* dpy, Window win) {
-	unsigned char c = 'a';
-	TimeStampInfo info;
-	XEvent xev;
-
-	info.timestamp_prop_atom = XInternAtom(dpy, "_TIMESTAMP_PROP", False);
-	info.window = win;
-
-	XChangeProperty(dpy, win, info.timestamp_prop_atom, info.timestamp_prop_atom,
-			8, PropModeReplace, &c, 1);
-
-	XIfEvent(dpy, &xev, timestamp_predicate, (XPointer)&info);
-
-	return xev.xproperty.time;
-}
-
-char settings_byte_order(void) {
-	CARD32 myint = 0x01020304;
-	return (*(char*)&myint == 1) ? MSBFirst : LSBFirst;
-}
-
-bool settings_equal(const XsettingsSetting* s1, const XsettingsSetting* s2) {
-	EASSERT(s1 != NULL && s2 != NULL);
-
-	if(s1->type != s2->type)
-		return false;
-	if(strcmp(s1->name, s2->name) != 0)
-		return false;
-
-	switch(s1->type) {
-		case XS_TYPE_INT:
-			return s1->data.v_int == s2->data.v_int;
-		case XS_TYPE_COLOR:
-			return (s1->data.v_color.red == s2->data.v_color.red) && 
-				(s1->data.v_color.green == s2->data.v_color.green) &&
-				(s1->data.v_color.blue == s2->data.v_color.blue) &&
-				(s1->data.v_color.alpha == s2->data.v_color.alpha);
-		case XS_TYPE_STRING:
-			return (strcmp(s1->data.v_string, s2->data.v_string) == 0);
-		}
-
-	return false;
-}
-
-int setting_len(const XsettingsSetting* setting) {
-	int len = 8;  // type + pad + name-len + last-change-serial
-	len += XSETTINGS_PAD(strlen(setting->name), 4);
-
-	switch(setting->type) {
-		case XS_TYPE_INT:
-			len += 4;
-			break;
-		case XS_TYPE_COLOR:
-			len += 8;
-			break;
-		case XS_TYPE_STRING:
-			len += 4 + XSETTINGS_PAD(strlen(setting->data.v_string), 4);
-			break;
-	}
-
-	return len;
-}
-
-void setting_store(const XsettingsSetting* setting, XsettingsBuffer* buffer) {
-	int len, str_len;
-
-	*(buffer->pos++) = setting->type;
-	*(buffer->pos++) = 0;
-
-	str_len = strlen(setting->name);
-	*(CARD16*)(buffer->pos) = str_len;
-	buffer->pos += 2;
-
-	len = XSETTINGS_PAD(str_len, 4);
-	memcpy(buffer->pos, setting->name, str_len);
-	len -= str_len;
-	buffer->pos += str_len;
-
-	for(; len > 0; len--)
-		*(buffer->pos++) = 0;
-
-	*(CARD32*)(buffer->pos) = setting->last_change_serial;
-	buffer->pos += 4;
-
-	switch(setting->type) {
-		case XS_TYPE_INT:
-			*(CARD32*)(buffer->pos) = setting->data.v_int;
-			buffer->pos += 4;
-			break;
-		case XS_TYPE_COLOR:
-			*(CARD16*)(buffer->pos) = setting->data.v_color.red;
-			*(CARD16*)(buffer->pos + 2) = setting->data.v_color.green;
-			*(CARD16*)(buffer->pos + 4) = setting->data.v_color.blue;
-			*(CARD16*)(buffer->pos + 6) = setting->data.v_color.alpha;
-			buffer->pos += 8;
-			break;
-		case XS_TYPE_STRING:
-			str_len = strlen(setting->data.v_string);
-			*(CARD32*)(buffer->pos) = str_len;
-			buffer->pos += 4;
-
-			len = XSETTINGS_PAD(str_len, 4);
-			memcpy(buffer->pos, setting->data.v_string, str_len);
-			len -= str_len;
-			buffer->pos += str_len;
-
-			for(; len > 0; len--)
-				*(buffer->pos++) = 0;
-
-			break;
-	}
-}
-
-Xsm::Xsm() : data(NULL) { }
+Xsm::Xsm() { }
 
 Xsm::~Xsm() { 
-	if(data) {
-		XDestroyWindow(fl_display, data->window);
-		XsettingsList& lst = data->list;
+	EDEBUG("Xsm::~Xsm()\n"); 
+}
 
-		if(!lst.empty()) {
-			XsettingsListIter it = lst.begin(), it_end = lst.end();
-			for(; it != it_end; ++it)
-				delete_setting(*it);
+bool Xsm::load_serialized(const char* file) {
+	TiXmlDocument doc(file);
+	if(!doc.LoadFile())
+		return false;
 
-			lst.clear();
+	const char* name = NULL, *type = NULL;
+	const char* v_string = NULL;
+	int v_int = 0;
+	int v_red = 0, v_green = 0, v_blue = 0, v_alpha = 0;
+	int cmp = 0;
+
+	TiXmlNode* elem = doc.FirstChild("ede-settings");
+	if(!elem)
+		return false;
+
+	for(elem = elem->FirstChildElement(); elem; elem = elem->NextSibling()) {
+		if(strcmp(elem->Value(), "setting") != 0) {
+			EWARNING(ESTRLOC ": Got unknown child in 'ede-setting' %s\n", elem->Value());
+			continue;
 		}
 
-		delete data;
-	}
+		name = elem->ToElement()->Attribute("name");
+		if(!name) {
+			EWARNING(ESTRLOC ": Missing name key\n");
+			continue;
+		}
 
-	puts("Xsm::~Xsm()"); 
-}
+		type = elem->ToElement()->Attribute("type");
+		if(!type) {
+			EWARNING(ESTRLOC ": Missing type key\n");
+			continue;
+		}
 
-bool Xsm::is_running(void) {
-	char buff[256];
+		if(strcmp(type, "int") == 0)
+			cmp = 1;
+		else if(strcmp(type, "string") == 0)
+			cmp = 2;
+		else if(strcmp(type, "color") == 0)
+			cmp = 3;
+		else {
+			EWARNING(ESTRLOC ": Unknown type %s\n", type);
+			continue;
+		}
 
-	snprintf(buff, sizeof(buff)-1, "_XSETTINGS_S%d", fl_screen);
-	Atom selection = XInternAtom(fl_display, buff, False);
-
-	if(XGetSelectionOwner(fl_display, selection))
-		return true;
-	return false;
-}
-
-bool Xsm::init(void) {
-	char buff[256];
-
-	data = new XsmData;
-
-	snprintf(buff, sizeof(buff)-1, "_XSETTINGS_S%d", fl_screen);
-	data->selection_atom = XInternAtom(fl_display, buff, False);
-	data->xsettings_atom = XInternAtom(fl_display, "_XSETTINGS_SETTINGS", False);
-	data->manager_atom = XInternAtom(fl_display, "MANAGER", False);
-
-	data->serial = 0;
-
-	data->window = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 
-			0, 0, 10, 10, 0, WhitePixel(fl_display, fl_screen), WhitePixel(fl_display, fl_screen));
-
-	XSelectInput(fl_display, data->window, PropertyChangeMask);
-	Time timestamp = get_server_time(fl_display, data->window);
-
-	XSetSelectionOwner(fl_display, data->selection_atom, data->window, timestamp);
-
-	// check if we got ownership
-	if(XGetSelectionOwner(fl_display, data->selection_atom) == data->window) {
-		XClientMessageEvent xev;
-
-		xev.type = ClientMessage;
-		xev.window = RootWindow(fl_display, fl_screen);
-		xev.message_type = data->manager_atom;
-		xev.format = 32;
-		xev.data.l[0] = timestamp;
-		xev.data.l[1] = data->selection_atom;
-		xev.data.l[2] = data->window;
-		xev.data.l[3] = 0;   // manager specific data
-		xev.data.l[4] = 0;   // manager specific data
-
-		XSendEvent(fl_display, RootWindow(fl_display, fl_screen), False, StructureNotifyMask, (XEvent*)&xev);
-		return true;
-	}
-
-	return false;
-}
-
-bool Xsm::should_quit(const XEvent* xev) {
-	EASSERT(data != NULL);
-
-	if(xev->xany.window == data->window && 
-		xev->xany.type == SelectionClear &&
-		xev->xselectionclear.selection == data->selection_atom) {
-		return true;
-	}
-
-	return false;
-}
-
-void Xsm::set_setting(const XsettingsSetting* setting) {
-	EASSERT(data != NULL);
-
-	XsettingsList& lst = data->list;
-	XsettingsListIter it = lst.begin(), it_end = lst.end();
-
-	/*
-	 * Check if entry already exists. If setting with the same
-	 * name already exists, but with different values, that setting
-	 * will be completely replaced with new one.
-	 */
-	for(; it != it_end; ++it) {
-		if(strcmp((*it)->name, setting->name) == 0) {
-			if(settings_equal((*it), setting)) {
-				return;
-			} else {
-				delete_setting(*it);
-				lst.erase(it);
+		switch(cmp) {
+			case 1:
+				if(elem->ToElement()->QueryIntAttribute("value", &v_int) == TIXML_SUCCESS)
+					set(name, v_int);
+				else
+					EWARNING(ESTRLOC ": Unable to query integer value\n");
 				break;
-			}
+			case 2:
+				v_string = elem->ToElement()->Attribute("value");
+				if(v_string)
+					set(name, v_string);
+				break;
+			case 3:
+				if((elem->ToElement()->QueryIntAttribute("red", &v_red) == TIXML_SUCCESS) && 
+					(elem->ToElement()->QueryIntAttribute("green", &v_green) == TIXML_SUCCESS) &&
+					(elem->ToElement()->QueryIntAttribute("blue", &v_blue) == TIXML_SUCCESS) &&
+					(elem->ToElement()->QueryIntAttribute("alpha", &v_alpha) == TIXML_SUCCESS)) {
+					set(name, v_red, v_green, v_blue, v_alpha);
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
-	XsettingsSetting* new_setting = new XsettingsSetting;
-	new_setting->name = strdup(setting->name);
-	//new_setting->last_change_serial = setting->last_change_serial;
-	new_setting->type = setting->type;
+	return true;
+}
 
-	switch(new_setting->type) {
-		case XS_TYPE_INT:
-			new_setting->data.v_int = setting->data.v_int;
-			break;
-		case XS_TYPE_COLOR:
-			new_setting->data.v_color.red = setting->data.v_color.red;
-			new_setting->data.v_color.green = setting->data.v_color.green;
-			new_setting->data.v_color.blue = setting->data.v_color.blue;
-			new_setting->data.v_color.alpha = setting->data.v_color.alpha;
-			break;
-		case XS_TYPE_STRING:
-			new_setting->data.v_string = strdup(setting->data.v_string);
-			break;
+bool Xsm::save_serialized(const char* file) {
+	// FIXME: a lot of this code could be in edelib
+	Atom type;
+	int format;
+	unsigned long n_items, bytes_after;
+	unsigned char* data;
+	int result;
+	edelib::XSettingsList* settings = NULL, *iter = NULL;
+
+	int (*old_handler)(Display*, XErrorEvent*);
+
+	// possible ?
+	if(!manager_data->manager_win)
+		return false;
+
+	old_handler = XSetErrorHandler(ignore_xerrors);
+	result = XGetWindowProperty(manager_data->display, manager_data->manager_win, manager_data->xsettings_atom,
+			0, LONG_MAX, False, manager_data->xsettings_atom,
+			&type, &format, &n_items, &bytes_after, (unsigned char**)&data);
+
+	XSetErrorHandler(old_handler);
+	if(result == Success && type != None) {
+		if(type != manager_data->xsettings_atom)
+			EWARNING(ESTRLOC ": Invalid type for XSETTINGS property\n");
+		else if(format != 8)
+			EWARNING(ESTRLOC ": Invalid format for XSETTINGS property\n");
+		else
+			settings = edelib::xsettings_decode(data, n_items, NULL);
+		XFree(data);
 	}
 
-	new_setting->last_change_serial = data->serial;
-	lst.push_back(new_setting);
-}
+	if(!settings)
+		return false;
 
-void Xsm::delete_setting(XsettingsSetting* setting) {
-	if(!setting)
-		return;
-
-	if(setting->type == XS_TYPE_STRING)
-		free(setting->data.v_string);
-	free(setting->name);
-	delete setting;
-	setting = NULL;
-}
-
-
-void Xsm::set_int(const char* name, int val) {
-	XsettingsSetting setting;
-
-	setting.name = (char*)name;
-	setting.type = XS_TYPE_INT;
-	setting.data.v_int = val;
-
-	set_setting(&setting);
-}
-
-void Xsm::set_color(const char* name, unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
-	XsettingsSetting setting;
-
-	setting.name = (char*)name;
-	setting.type = XS_TYPE_COLOR;
-	setting.data.v_color.red = red;
-	setting.data.v_color.green = green;
-	setting.data.v_color.blue = blue;
-	setting.data.v_color.alpha = alpha;
-
-	set_setting(&setting);
-}
-
-void Xsm::set_string(const char* name, const char* str) {
-	XsettingsSetting setting;
-
-	setting.name = (char*)name;
-	setting.type = XS_TYPE_STRING;
-	setting.data.v_string = (char*)str;
-
-	set_setting(&setting);
-}
-
-void Xsm::notify(void) {
-	EASSERT(data != NULL);
-
-	int n_settings = 0;
-	XsettingsBuffer buff;
-
-	buff.len = 12;  // byte-order + pad + SERIAL + N_SETTINGS
-
-	XsettingsList& lst = data->list;
-	XsettingsListIter it = lst.begin(), it_end = lst.end();
-
-	for(; it != it_end; ++it) {
-		buff.len += setting_len(*it);
-		n_settings++;
+	edelib::File setting_file;
+	if(!setting_file.open(file, edelib::FIO_WRITE)) {
+		EWARNING(ESTRLOC ": Unable to write to %s\n", file);
+		edelib::xsettings_list_free(settings);
+		return false;
 	}
 
-	buff.content = new unsigned char[buff.len];
-	buff.pos = buff.content;
+	setting_file.printf("<? xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+	setting_file.printf("<ede-settings>\n");
 
-	*buff.pos = settings_byte_order();
+	iter = settings;
+	while(iter) {
+		setting_file.printf("\t<setting name=\"%s\" ", iter->setting->name);
+		switch(iter->setting->type) {
+			case edelib::XSETTINGS_TYPE_INT:
+				setting_file.printf("type=\"int\" value=\"%i\" />\n", iter->setting->data.v_int);
+				break;
+			case edelib::XSETTINGS_TYPE_STRING:
+				setting_file.printf("type=\"string\" value=\"%s\" />\n", iter->setting->data.v_string);
+				break;
+			case edelib::XSETTINGS_TYPE_COLOR:
+				setting_file.printf("type=\"color\" red=\"%i\" green=\"%i\" blue=\"%i\" alpha=\"%i\" />\n",
+						iter->setting->data.v_color.red,
+						iter->setting->data.v_color.green,
+						iter->setting->data.v_color.blue,
+						iter->setting->data.v_color.alpha);
+				break;
+		}
 
-	buff.pos += 4;
-	*(CARD32*)buff.pos = data->serial++;
-	buff.pos += 4;
-	*(CARD32*)buff.pos = n_settings;
-	buff.pos += 4;
+		iter = iter->next;
+	}
+	setting_file.printf("</ede-settings>\n");
 
-	for(it = lst.begin(); it != it_end; ++it)
-		setting_store(*it, &buff);
-
-	XChangeProperty(fl_display, data->window, data->xsettings_atom, data->xsettings_atom,
-			8, PropModeReplace, buff.content, buff.len);
-
-	delete [] buff.content;
+	setting_file.close();
+	edelib::xsettings_list_free(settings);
+	return true;
 }
