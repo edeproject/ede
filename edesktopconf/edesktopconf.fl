@@ -1,0 +1,104 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {
+    label {Desktop options} open
+    xywh {333 344 550 285} type Double visible
+  } {
+    Fl_Tabs {} {open
+      xywh {10 10 530 230} labelsize 14
+    } {
+      Fl_Group {} {
+        label Background open selected
+        xywh {20 30 510 200}
+      } {
+        Fl_Box {} {
+          xywh {85 196 100 15} box BORDER_BOX
+        }
+        Fl_Box {} {
+          xywh {30 43 210 158} box THIN_UP_BOX
+        }
+        Fl_Box {} {
+          xywh {43 53 184 138} box DOWN_BOX color 56
+          code0 {/* box size is intentionaly odd so preserve aspect ratio */}
+        }
+        Fl_Box {} {
+          xywh {60 206 145 14} box THIN_UP_BOX
+        }
+        Fl_Input {} {
+          label {Image:}
+          xywh {295 80 190 25}
+        }
+        Fl_Button {} {
+          label {...}
+          xywh {490 80 25 25}
+        }
+        Fl_Choice {} {
+          label {Mode:} open
+          xywh {295 116 220 24} down_box BORDER_BOX
+        } {}
+        Fl_Button {} {
+          label {Background color}
+          xywh {295 161 25 24} color 73 align 8
+        }
+        Fl_Check_Button {} {
+          label {Use wallpaper}
+          xywh {295 45 220 25} down_box DOWN_BOX
+        }
+      }
+      Fl_Group {} {
+        label Icons open
+        xywh {20 30 510 195} hide
+      } {
+        Fl_Button {} {
+          label {Background color}
+          xywh {30 51 25 24} color 73 align 8
+        }
+        Fl_Button {} {
+          label {Label color}
+          xywh {30 91 25 24} color 73 align 8
+        }
+        Fl_Check_Button {} {
+          label {Show background color}
+          xywh {260 50 220 25} down_box DOWN_BOX
+        }
+        Fl_Check_Button {} {
+          label {Show label}
+          xywh {260 90 220 25} down_box DOWN_BOX
+        }
+        Fl_Value_Slider {} {
+          label {Font size}
+          xywh {30 155 220 20} type {Horz Knob} align 5 step 0.01 textsize 12
+        }
+        Fl_Value_Slider {} {
+          label {Label width}
+          xywh {260 155 220 20} type {Horz Knob} align 5 step 0.01 textsize 12
+        }
+      }
+      Fl_Group {} {
+        label {Icons behaviour} open
+        xywh {20 30 510 195} labelsize 13 hide
+      } {
+        Fl_Check_Button {} {
+          label {Engage with just one click}
+          xywh {30 50 220 25} down_box DOWN_BOX
+        }
+      }
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {260 250 90 25}
+    }
+    Fl_Button {} {
+      label {&Apply}
+      xywh {355 250 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {450 250 90 25}
+    }
+  }
+} 
