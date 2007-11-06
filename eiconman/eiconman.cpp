@@ -5,17 +5,20 @@
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2000-2007 EDE Authors.
  *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
+ * This program is licensed under the terms of 
+ * the GNU General Public License version 2 or later.
  * See COPYING for details.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "eiconman.h"
 #include "DesktopIcon.h"
 #include "Utils.h"
 #include "Wallpaper.h"
 #include "NotifyBox.h"
-#include "Utf8.h"
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -25,6 +28,7 @@
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
 #include <edelib/IconTheme.h>
+#include <edelib/Run.h>
 #include <edelib/Nls.h>
 
 #include <FL/Fl.h>
@@ -36,22 +40,24 @@
 #include <FL/fl_ask.h>
 
 #include <unistd.h> // sleep
+#include <signal.h>
+#include <stdlib.h> // rand, srand
+#include <time.h>   // time
 
 #if 0
 #include <X11/extensions/Xdamage.h>
 #endif
 
-#include <signal.h>
-#include <stdlib.h> // rand, srand
-#include <time.h>   // time
-
-#define CONFIG_NAME  "eiconman.conf"
-
+#define EICONMAN_UID       0x10
+#define CONFIG_NAME        "eiconman.conf"
+#define ICONS_CONFIG_NAME  "eiconman-icons.conf"
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
 #define SELECTION_MULTI  (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
 
+#undef MIN
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
+#undef MAX
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
 /*
@@ -59,6 +65,9 @@
  * when new non-icon child is added to Desktop window.
  */
 #define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == dmenu))
+
+void background_conf_cb(Fl_Widget*, void*);
+void icons_conf_cb(Fl_Widget*, void*);
 
 Fl_Menu_Item desktop_menu[] = {
 	{_("    &New desktop item    "), 0, 0, 0, FL_SUBMENU},
@@ -74,8 +83,8 @@ Fl_Menu_Item desktop_menu[] = {
 		{0},
 	{_("    &Copy    "), 0, 0},
 	{_("    &Paste    "), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("    &Icons settings...    "), 0, 0},
-	{_("    &Background...    "), 0, 0},
+	{_("    &Icons settings...    "), 0, icons_conf_cb, 0},
+	{_("    &Background...    "), 0, background_conf_cb, 0},
 	{0}
 };
 
@@ -116,6 +125,19 @@ void restart_signal(int signum) {
 
 void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
 	Desktop::instance()->dir_watch(dir, changed, flags);
+}
+
+void settings_changed_cb(void* data) {
+	Desktop::instance()->read_config();
+	Desktop::instance()->redraw();
+}
+
+void background_conf_cb(Fl_Widget*, void*) {
+	Desktop::instance()->execute("../edesktopconf/edesktopconf");
+}
+
+void icons_conf_cb(Fl_Widget*, void*) {
+	Desktop::instance()->execute("../edesktopconf/edesktopconf --icons");
 }
 
 int desktop_xmessage_handler(int event) { 
@@ -167,6 +189,12 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	moving = false;
 	do_dirwatch = true;
 
+#ifdef USE_EDELIB_WINDOW
+	DESKTOP_WINDOW::init();
+	settings_uid(EICONMAN_UID);
+	settings_callback(settings_changed_cb);
+#endif
+
 	selbox = new SelectionOverlay;
 	selbox->x = selbox->y = selbox->w = selbox->h = 0;
 	selbox->show = false;
@@ -178,6 +206,8 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 
 Desktop::~Desktop() { 
 	EDEBUG("Desktop::~Desktop()\n");
+
+	save_icons();
 
 	delete dsett;
 	delete selbox;
@@ -200,15 +230,6 @@ void Desktop::init_internals(void) {
 		dmenu->menu(desktop_menu);
 
 		wallpaper = new Wallpaper(0, 0, w(), h());
-		wallpaper->set("/home/sanel/wallpapers/katebig.jpg");
-		//wallpaper->set_tiled("/home/sanel/wallpapers/katesmall.jpg");
-		//wallpaper->set_tiled("/home/sanelz/walls/katesmall.jpg");
-		//wallpaper->set_tiled("/home/sanelz/walls/kate.jpg");
-		//wallpaper->set("/home/sanelz/walls/katebig.jpg");
-		//wallpaper->hide();
-		//wallpaper->set("/home/sanelz/walls/katesmall.jpg");
-		//wallpaper->set("/home/sanelz/walls/nin/1024x768-04.jpg");
-		//wallpaper->set("/home/sanelz/walls/nin/1024x768-02.jpg");
 	end();
 
 	notify = new NotifyBox(w(), h());
@@ -216,12 +237,29 @@ void Desktop::init_internals(void) {
 
 	read_config();
 
+	/*
+	 * Now try to load icons, first looking inside ~/Desktop directory
+	 * FIXME: dir_exists() can't handle '~/desktop' ???
+	 */
+	edelib::String dd = edelib::dir_home();
+	if(dd.empty()) {
+		EWARNING(ESTRLOC ": can't read home directory; icons will not be loaded\n");
+		return;
+	}
+	dd += "/Desktop";
+
+	if(edelib::dir_exists(dd.c_str())) {
+		load_icons(dd.c_str());
+		install_watch(dd.c_str());
+	}
+
 	running = true;
 }
 
 void Desktop::init(void) {
 	if(Desktop::pinstance != NULL)
 		return;
+
 	Desktop::pinstance = new Desktop();
 	Desktop::pinstance->init_internals();
 }
@@ -303,7 +341,6 @@ void Desktop::read_config(void) {
 	int  default_wp_use   = false;
 	char wpath[256];
 
-	// read Desktop section
 	conf.get("Desktop", "Color", dsett->color, default_bg_color);
 
 	if(conf.error() != edelib::CONF_ERR_SECTION) {
@@ -320,7 +357,6 @@ void Desktop::read_config(void) {
 		dsett->wp_use = default_wp_use;
 	}
 
-	// read Icons section
 	conf.get("Icons", "Label Background", gisett.label_background, FL_BLUE);
 	conf.get("Icons", "Label Foreground", gisett.label_foreground, FL_WHITE);
 	conf.get("Icons", "Label Fontsize",   gisett.label_fontsize, 12);
@@ -330,56 +366,42 @@ void Desktop::read_config(void) {
 	conf.get("Icons", "OneClickExec",     gisett.one_click_exec, false);
 	conf.get("Icons", "AutoArrange",      gisett.auto_arrange, true);
 
-	/*
-	 * Now try to load icons, first looking inside ~/Desktop directory
-	 * then inside config since config could contain removed entries
-	 * from $HOME/Desktop
-	 *
-	 * FIXME: dir_exists() can't handle '~/Desktop' ???
-	 */
-	edelib::String dd = edelib::dir_home();
-	if(dd.empty()) {
-		EWARNING(ESTRLOC ": Can't read home directory; icons will not be loaded\n");
-		return;
-	}
-	dd += "/Desktop";
+	if(dsett->wp_use)
+		wallpaper->set(wpath);
+}
 
-	/*
-	 * Setup watcher on ~/Desktop directory. All further events will
-	 * be reported to dir_watch()
-	 */
-	if(edelib::dir_exists(dd.c_str())) {
-		load_icons(dd.c_str(), &conf);
+void Desktop::install_watch(const char* path) {
+	edelib::DirWatch::init();
+	edelib::DirWatch::callback(dir_watch_cb);
 
-		edelib::DirWatch::init();
-		edelib::DirWatch::callback(dir_watch_cb);
-
-		if(!edelib::DirWatch::add(dd.c_str(), 
+	if(!edelib::DirWatch::add(path,
 				edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
 
-			EWARNING(ESTRLOC ": Can't load %s; icons will not be loaded\n", dd.c_str());
-			edelib::DirWatch::shutdown();
-		}
+		EWARNING(ESTRLOC ": Can't setup watch on %s\n", path);
+		edelib::DirWatch::shutdown();
 	}
 }
 
-void Desktop::save_config(void) {
-	// TODO
-}
-
-void Desktop::load_icons(const char* path, edelib::Config* conf) {
+void Desktop::load_icons(const char* path) {
 	EASSERT(path != NULL);
+	edelib::Config conf, *conf_ptr = NULL;
 
-	edelib::list<edelib::String> lst;
+	if(!conf.load(ICONS_CONFIG_NAME))
+		EWARNING(ESTRLOC ": Can't load icons positions from %s, randomizing them...\n", ICONS_CONFIG_NAME);
+	else 
+		conf_ptr = &conf;
+
+	StringList lst;
+
 	// list with full path; icon basename is extracted in add_icon_pathed()
 	if(!dir_list(path, lst, true)) {
 		EDEBUG(ESTRLOC ": Can't read %s\n", path);
 		return;
 	}
 
-	edelib::list<edelib::String>::iterator it, it_end;
+	StringListIter it, it_end;
 	for(it = lst.begin(), it_end = lst.end(); it != it_end; ++it)
-		add_icon_pathed((*it).c_str(), conf);
+		add_icon_pathed((*it).c_str(), conf_ptr);
 }
 
 bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
@@ -443,6 +465,24 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
 	}
 
 	return can_add;
+}
+
+void Desktop::save_icons(void) {
+	edelib::Config conf;
+	char* icon_base;
+	DesktopIconListIter it = icons.begin(), it_end = icons.end();
+
+	for(; it != it_end; ++it) {
+		if((*it)->path().empty())
+			continue;
+
+		icon_base = get_basename((*it)->path().c_str());
+		conf.set(icon_base, "X", (*it)->x());
+		conf.set(icon_base, "Y", (*it)->y());
+	}
+
+	if(!conf.save(ICONS_CONFIG_NAME))
+		EWARNING(ESTRLOC ": Unable to store icons positions\n");
 }
 
 DesktopIcon* Desktop::find_icon_pathed(const char* path) {
@@ -742,6 +782,9 @@ void Desktop::notify_desktop_changed(void) {
 
 	char** names;
 	int ret = net_get_workspace_names(names);
+	if(!ret)
+		return;
+
 	if(num >= ret) {
 		XFreeStringList(names);
 		return;
@@ -758,21 +801,6 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 	if(src_len < 1)
 		return;
 
-#if 0
-	/*
-	 * Commented for now since is_utf16() does not works as expected;
-	 * on other hand, UTF-16 conversion is fine
-	 */
-	if(is_utf16((unsigned short*)src, src_len)) {
-		char* utf_src = new char[src_len * 5];
-		if(utf16_to_utf8_str((unsigned short*)src, src_len, utf_src)) {
-			utf_src[src_len] = '\0';
-			EDEBUG(ESTRLOC ":==========> %s|\n", utf_src);
-		}
-
-		delete [] utf_src;
-	}
-#endif
 	char* src_copy = new char[src_len + 1];
 	int real_len = 0;
 
@@ -957,6 +985,11 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 		EDEBUG(ESTRLOC ": %s changed with %i\n", changed, flags);
 }
 
+void Desktop::execute(const char* cmd) {
+	EASSERT(cmd != NULL);
+	edelib::run_program(cmd, false);
+}
+
 int Desktop::handle(int event) {
 	switch(event) {
 		case FL_FOCUS:
@@ -988,7 +1021,8 @@ int Desktop::handle(int event) {
 					selbox->x = Fl::event_x();
 					selbox->y = Fl::event_y();
 				} else if(Fl::event_button() == 3) {
-					dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
+					const Fl_Menu_Item* item = dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
+					dmenu->picked(item);
 				}
 
 				return 1;
@@ -1152,9 +1186,10 @@ int main() {
 	// a lot of preparing code depends on this
 	fl_open_display();
 
+#ifndef USE_EDELIB_WINDOW
 	fl_register_images();
-
 	edelib::IconTheme::init("edeneu");
+#endif
 
 	Desktop::init();
 	Desktop::instance()->show();
@@ -1172,7 +1207,8 @@ int main() {
 
 	Desktop::shutdown();
 
+#ifndef USE_EDELIB_WINDOW
 	edelib::IconTheme::shutdown();
-
+#endif
 	return 0;
 }

@@ -10,7 +10,10 @@
 
 SubDir TOP eiconman ;
 
-SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp Utf8.cpp ;
+ObjectC++Flags DesktopIcon.cpp : -DUSE_SHAPE ;
+ObjectC++Flags eiconman.cpp : -DUSE_EDELIB_WINDOW ;
+
+SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
 
 EdeProgram eiconman : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;

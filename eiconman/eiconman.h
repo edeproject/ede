@@ -13,8 +13,13 @@
 #ifndef __EICONMAN_H__
 #define __EICONMAN_H__
 
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Double_Window.h>
+#ifdef USE_EDELIB_WINDOW
+	#include <edelib/Window.h>
+#else
+	#include <FL/Fl_Window.h>
+	#include <FL/Fl_Double_Window.h>
+#endif
+
 #include <FL/Fl_Image.h>
 
 #include <edelib/String.h>
@@ -80,8 +85,14 @@ class Fl_Menu_Button;
 
 typedef edelib::list<DesktopIcon*> DesktopIconList;
 typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
+typedef edelib::list<edelib::String> StringList;
+typedef edelib::list<edelib::String>::iterator StringListIter;
 
-#define DESKTOP_WINDOW Fl_Window
+#ifdef USE_EDELIB_WINDOW
+	#define DESKTOP_WINDOW edelib::Window
+#else
+	#define DESKTOP_WINDOW Fl_Window
+#endif
 
 class Desktop : public DESKTOP_WINDOW {
 	private:
@@ -105,7 +116,9 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void init_internals(void);
 
-		void load_icons(const char* path, edelib::Config* conf);
+		void load_icons(const char* path);
+		void save_icons(void);
+		void install_watch(const char* path);
 		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);
@@ -141,7 +154,6 @@ class Desktop : public DESKTOP_WINDOW {
 		static Desktop* instance(void);
 
 		void read_config(void);
-		void save_config(void);
 
 		void update_workarea(void);
 		void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
@@ -155,6 +167,8 @@ class Desktop : public DESKTOP_WINDOW {
 		void dir_watch(const char* dir, const char* changed, int flags);
 		void dir_watch_on(void) { do_dirwatch = true; }
 		void dir_watch_off(void) { do_dirwatch = false; }
+
+		void execute(const char* cmd);
 };
 
 #endif

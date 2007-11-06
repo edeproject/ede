@@ -19,7 +19,7 @@
 
 /*
  * Class responsible for displaying images at background
- * their scaling (TODO), caching(TODO) and making coffee at spear time.
+ * their scaling (TODO), caching(TODO) and making coffee at the spear time.
  */
 class Wallpaper : public Fl_Box { 
 	private:

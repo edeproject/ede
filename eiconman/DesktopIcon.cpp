@@ -25,8 +25,6 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 
-#define USE_SHAPE 1
-
 #ifdef USE_SHAPE
 	#include <X11/extensions/shape.h>
 #endif
@@ -154,6 +152,7 @@ DesktopIcon::~DesktopIcon() {
 }
 
 void DesktopIcon::update_label_size(void) {
+	labelsize(globals->label_fontsize);
     lwidth = globals->label_maxwidth;
     lheight= 0;
 
