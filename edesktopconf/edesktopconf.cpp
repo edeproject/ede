@@ -10,10 +10,19 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <edelib/Nls.h>
 #include <edelib/Color.h>
 #include <edelib/Window.h>
+#include <edelib/Config.h>
 #include <edelib/Debug.h>
+#include <edelib/Util.h>
+#include <edelib/Directory.h>
+
+#include <string.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Tabs.H>
@@ -28,6 +37,9 @@
 #include <FL/Fl_File_Chooser.h>
 #include <FL/Fl_Shared_Image.h>
 #include <FL/Fl_Menu_Button.h>
+
+#define EICOMAN_UID 0x10
+#define EICOMAN_CONFIG "../eiconman/eiconman.conf"
 
 Fl_Menu_Item mode_menu[] = {
 	{_("Center"), 0, 0},
@@ -144,6 +156,7 @@ void wallpaper_use_cb(Fl_Widget*, void*) {
 }
 
 void apply_cb(Fl_Widget*, void* w) {
+#if 0
 	unsigned char r, g, b;
 	edelib::Window* win = (edelib::Window*)w;
 
@@ -168,15 +181,38 @@ void apply_cb(Fl_Widget*, void* w) {
 	win->pause_xsettings_callback();
 	win->xsettings()->manager_notify();
 	win->restore_xsettings_callback();
+#endif
+
+	edelib::Config conf;
+	conf.set("Desktop", "Color", (int)desk_background_color->color());
+	conf.set("Desktop", "WallpaperUse", desk_use_wallpaper->value());
+	conf.set("Desktop", "WallpaperMode", desk_background_mode->value());
+
+	if(desk_background->value())
+		conf.set("Desktop", "Wallpaper", desk_background->value());
+
+	conf.set("Icons", "Label Background", (int)icon_background_color->color());
+	conf.set("Icons", "Label Foreground", (int)icon_label_color->color());
+	conf.set("Icons", "Label Fontsize",   icon_font_size->value());
+	conf.set("Icons", "Label Maxwidth",   icon_label_width->value());
+	conf.set("Icons", "Label Transparent", icon_show_background_color->value());
+	conf.set("Icons", "Label Visible", icon_show_label->value());
+	conf.set("Icons", "OneClickExec", engage_with_one_click->value());
+
+	if(conf.save(EICOMAN_CONFIG))
+		edelib::Window::update_settings(EICOMAN_UID);
 }
 
-void okXX_cb(Fl_Widget*, void* w) {
+void ok_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	apply_cb(0, win);
-	//win->xsettings()->clear();
 	win->hide();
 }
 
+/*
+ * XSETTINGS getter. Left commented for future
+ */
+#if 0
 bool xsettings_cb(const char* name, edelib::XSettingsAction action, const edelib::XSettingsSetting* setting, void* data) {
 	if(strcmp(name, "EDE/Desktop/Background/Wallpaper") == 0) {
 		if(action == edelib::XSETTINGS_ACTION_DELETED || setting->type != edelib::XSETTINGS_TYPE_STRING)
@@ -259,15 +295,78 @@ bool xsettings_cb(const char* name, edelib::XSettingsAction action, const edelib
 
 	return false;
 }
+#endif
 
-int main() {
+void load_settings(void) {
+	int b_mode = 0;
+	bool d_wp_use = false;
+	int d_background_color = FL_BLUE;
+	int i_background_color = FL_BLUE;
+	int i_label_color = FL_WHITE;
+	int i_show_background_color = 0;
+	int i_show_label = 1;
+	int i_font_size = 12;
+	int i_label_width = 55;
+	bool one_click = false;
+
+	edelib::Config conf;
+	char wpath[256];
+	if(conf.load(EICOMAN_CONFIG)) {
+		conf.get("Desktop", "Color", d_background_color, d_background_color); 
+		conf.get("Desktop", "WallpaperUse", d_wp_use, d_wp_use);
+		conf.get("Desktop", "WallpaperMode", b_mode, b_mode);
+		if(conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath)))
+			set_wallpaper(wpath);
+		else
+			disable_wallpaper(true);
+
+		conf.get("Icons", "Label Background", i_background_color, i_background_color);
+		conf.get("Icons", "Label Foreground", i_label_color, i_label_color);
+		conf.get("Icons", "Label Fontsize",   i_font_size, i_font_size);
+		conf.get("Icons", "Label Maxwidth",   i_label_width, i_label_width);
+		conf.get("Icons", "Label Transparent",i_show_background_color, i_show_background_color);
+		conf.get("Icons", "Label Visible",    i_show_label, i_show_label);
+		conf.get("Icons", "OneClickExec",     one_click, one_click);
+	}
+
+
+	desk_background_color->color(d_background_color);
+	desk_background_mode->value(b_mode);
+	desk_use_wallpaper->value(d_wp_use);
+	if(!d_wp_use)
+		disable_wallpaper(true);
+
+	icon_background_color->color(i_background_color);
+	icon_label_color->color(i_label_color);
+	icon_show_background_color->value(i_show_background_color);
+	icon_show_label->value(i_show_label);
+	icon_font_size->value(i_font_size);
+	icon_label_width->value(i_label_width);
+	engage_with_one_click->value(one_click);
+}
+
+int main(int argc, char** argv) {
+	int show_group = 1;
+	if(argc > 1) {
+		if(strcmp(argv[1], "--desktop") == 0)
+			show_group = 1;
+		else if(strcmp(argv[1], "--icons") == 0)
+			show_group = 2;
+		else if(strcmp(argv[1], "--icons-behaviour") == 0)
+			show_group = 3;
+	}
+
 	edelib::Window* win = new edelib::Window(550, 285, _("Desktop options"));
-	win->xsettings_callback(xsettings_cb, NULL);
+	//win->xsettings_callback(xsettings_cb, NULL);
 
 	win->begin();
 		Fl_Tabs* tabs = new Fl_Tabs(10, 10, 530, 230);
 		tabs->begin();
+
 			Fl_Group* g1 = new Fl_Group(20, 30, 510, 200, _("Background"));
+			if(show_group != 1)
+				g1->hide();
+
 			g1->begin();
 				Fl_Box* b1 = new Fl_Box(85, 196, 100, 15);
 				b1->box(FL_BORDER_BOX);
@@ -304,7 +403,9 @@ int main() {
 			g1->end();
 
 			Fl_Group* g2 = new Fl_Group(20, 30, 510, 195, _("Icons"));
-			g2->hide();
+			if(show_group != 2)
+				g2->hide();
+
 			g2->begin();
 				icon_background_color = new Fl_Button(30, 51, 25, 24, _("Background color"));
 				icon_background_color->color(FL_BLUE);
@@ -336,7 +437,9 @@ int main() {
 			g2->end();
 
 			Fl_Group* g3 = new Fl_Group(20, 30, 510, 195, _("Icons behaviour"));
-			g3->hide();
+			if(show_group != 3)
+				g3->hide();
+
 			g3->begin();
 				engage_with_one_click = new Fl_Check_Button(30, 50, 220, 25, _("Engage with just one click"));
 				engage_with_one_click->down_box(FL_DOWN_BOX);
@@ -344,7 +447,7 @@ int main() {
 		tabs->end();
 
 		Fl_Button* ok = new Fl_Button(260, 250, 90, 25, _("&OK"));
-		ok->callback(okXX_cb, win);
+		ok->callback(ok_cb, win);
 		Fl_Button* apply = new Fl_Button(355, 250, 90, 25, _("&Apply"));
 		apply->callback(apply_cb, win);
 		Fl_Button* cancel = new Fl_Button(450, 250, 90, 25, _("&Cancel"));
@@ -352,6 +455,7 @@ int main() {
 	win->end();
 
 	win->init(edelib::WIN_INIT_IMAGES);
+	load_settings();
 	win->show();
 	return Fl::run();
 }
