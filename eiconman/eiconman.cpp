@@ -77,7 +77,6 @@ Fl_Menu_Item desktop_menu[] = {
 		{_("    &Link...    "), 0, 0},
 		{0},
 	{_("    &Arrange    "), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
-		{_("    &By name    "), 0, 0},
 		{_("    &Vertical line up    "), 0, 0},
 		{_("    &Horizontal line up   "), 0, 0},
 		{0},
