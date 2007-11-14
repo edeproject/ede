@@ -40,7 +40,7 @@
 		tmp |= (((int)b >> (-bshift)) & bmask);
 
 
-Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix) {
+Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_h) {
 	if(!img)
 		return 0;
 
@@ -258,12 +258,16 @@ Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix) {
 
 	/*
 	 * Creating another window as drawable is needed since fl_window (as drawable) can't be
-	 * used here (valid only in draw()).
+	 * used here (valid only in draw()). Drawable must be size as wallpaper area or clients who
+	 * query _XA_XROOTPMAP_ID will get BadWindow when goes out of drawable area (but not out of
+	 * wallpaper area).
+	 *
+	 * FIXME: drawable background should be the same color as wallpaper background
 	 */
-	Window drawable = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 0, 0, iw,
-              ih, 0, 0, BlackPixel(fl_display, fl_screen));
+	Window drawable = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 0, 0, wp_w,
+              wp_h, 0, 0, BlackPixel(fl_display, fl_screen));
 
-	pix = XCreatePixmap(fl_display, drawable, iw, ih, fl_visual->depth);
+	pix = XCreatePixmap(fl_display, drawable, wp_w, wp_h, fl_visual->depth);
 
 	/*
 	 * The same applies as above;
@@ -406,7 +410,7 @@ void Wallpaper::set_rootpmap(void) {
 		return;
 
 	XImage* rootpmap_image = 0;
-	rootpmap_pixmap = create_xpixmap(image(), rootpmap_image, rootpmap_pixmap);
+	rootpmap_pixmap = create_xpixmap(image(), rootpmap_image, rootpmap_pixmap, w(), h());
 
 	if(rootpmap_image) {
 		/* 
