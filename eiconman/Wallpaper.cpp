@@ -40,18 +40,9 @@
 		tmp |= (((int)b >> (-bshift)) & bmask);
 
 
-Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
+Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix) {
 	if(!img)
 		return 0;
-
-	if(xim) {
-		if(xim->data) {
-			delete [] xim->data;
-			xim->data = 0;
-		}
-		XDestroyImage(xim);
-		xim = 0;
-	}
 
 	if(pix)
 		XFreePixmap(fl_display, pix);
@@ -107,16 +98,7 @@ Pixmap create_xpixmap(Fl_Image* img, XImage* xim, Pixmap pix) {
 	else if(fl_visual->depth > 8)
 		bitmap_pad = 16;
 	else {
-		EWARNING(ESTRLOC ": Visual %i not supported\n", xim->bits_per_pixel);
-
-		if(xim) {
-			if(xim->data) {
-				delete [] xim->data;
-				xim->data = 0;
-			}
-			XDestroyImage(xim);
-			xim = 0;
-		}
+		EWARNING(ESTRLOC ": Visual %i not supported\n", fl_visual->depth);
 		return 0;
 	}
 
@@ -372,16 +354,10 @@ bool create_tile(Fl_Image* orig, Fl_RGB_Image*& copied, int X, int Y, int W, int
 }
 
 Wallpaper::Wallpaper(int X, int Y, int W, int H) : 
-	Fl_Box(X, Y, W, H, 0), rootpmap_image(NULL), rootpmap_pixmap(0), tiled(false) { 
+	Fl_Box(X, Y, W, H, 0), rootpmap_pixmap(0), tiled(false) { 
 }
 
 Wallpaper::~Wallpaper() { 
-	if(rootpmap_image) {
-		if(rootpmap_image->data)
-			delete [] rootpmap_image->data;
-		XDestroyImage(rootpmap_image);
-	}
-
 	if(rootpmap_pixmap)
 		XFreePixmap(fl_display, rootpmap_pixmap);
 }
@@ -429,7 +405,16 @@ void Wallpaper::set_rootpmap(void) {
 	if(!image())
 		return;
 
+	XImage* rootpmap_image = 0;
 	rootpmap_pixmap = create_xpixmap(image(), rootpmap_image, rootpmap_pixmap);
+
+	if(rootpmap_image) {
+		/* 
+		 * XDestroyImage function calls frees both the image structure and the 
+		 * data pointed to by the image structure.
+		 */
+		XDestroyImage(rootpmap_image);
+	}
 
 	if(!rootpmap_pixmap)
 		return;

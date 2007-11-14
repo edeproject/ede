@@ -23,7 +23,6 @@
  */
 class Wallpaper : public Fl_Box { 
 	private:
-		XImage*   rootpmap_image;
 		Pixmap    rootpmap_pixmap;
 		bool tiled;
 		void set_rootpmap(void);
