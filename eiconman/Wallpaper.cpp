@@ -21,6 +21,7 @@
 #include <FL/x.h>
 
 #include <string.h> // memcpy
+#include <stdlib.h> // malloc
 
 #define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
 	tmp = 0; \
@@ -115,7 +116,7 @@ Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_
 		msb = false;
 
 	unsigned int r, g, b, tmp;
-	unsigned char* dest = new unsigned char[iw * ih * id];
+	unsigned char* dest = (unsigned char*)malloc(sizeof(unsigned char) * iw * ih * id);
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)img->data()[0];
 
