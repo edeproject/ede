@@ -42,6 +42,7 @@ class DesktopIcon : public Fl_Widget {
 
 		Fl_Menu_Button* imenu;
 
+		void load_icon(int face);
 		void update_label_size(void);
 		void fix_position(int X, int Y);
 
@@ -85,6 +86,10 @@ class DesktopIcon : public Fl_Widget {
 		 * further used, especially in Desktop
 		 */
 		const edelib::String& path(void);
+
+		int icon_type(void);
+		void icon1(void);
+		void icon2(void);
 };
 
 class MovableIcon : public Fl_Window {

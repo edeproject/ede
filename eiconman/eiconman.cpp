@@ -29,6 +29,7 @@
 #include <edelib/StrUtil.h>
 #include <edelib/IconTheme.h>
 #include <edelib/Run.h>
+#include <edelib/Util.h>
 #include <edelib/Nls.h>
 
 #include <FL/Fl.h>
@@ -86,7 +87,6 @@ Fl_Menu_Item desktop_menu[] = {
 	{_("    &Background...    "), 0, background_conf_cb, 0},
 	{0}
 };
-
 
 #if 0
 XserverRegion xregion;
@@ -147,7 +147,7 @@ int desktop_xmessage_handler(int event) {
 		EDEBUG(ESTRLOC ": Damaged region %i %i %i %i on 0x%lx\n", xdev->area.x, xdev->area.y,
 				xdev->area.width, xdev->area.height, xdev->drawable);
 
-		//XDamageSubtract(fl_display, xdev->damage, None, None);
+		XDamageSubtract(fl_display, xdev->damage, None, None);
   		XFixesSetRegion(fl_display, xpart, &xdev->area, 1);
         XFixesUnionRegion(fl_display, xregion, xregion, xpart);
 	}
@@ -238,19 +238,43 @@ void Desktop::init_internals(void) {
 
 	/*
 	 * Now try to load icons, first looking inside ~/Desktop directory
-	 * FIXME: dir_exists() can't handle '~/desktop' ???
+	 * FIXME: dir_exists() can't handle '~/Desktop' ???
 	 */
-	edelib::String dd = edelib::dir_home();
-	if(dd.empty()) {
+	edelib::String desktop_path = edelib::dir_home();
+	if(desktop_path.empty()) {
 		EWARNING(ESTRLOC ": can't read home directory; icons will not be loaded\n");
 		return;
 	}
-	dd += "/Desktop";
+	desktop_path += "/Desktop";
 
-	if(edelib::dir_exists(dd.c_str())) {
-		load_icons(dd.c_str());
-		install_watch(dd.c_str());
+	// setup watcher on ~/Desktop and Trash directories
+	edelib::DirWatch::init();
+
+	if(edelib::dir_exists(desktop_path.c_str())) {
+		load_icons(desktop_path.c_str());
+
+		if(!edelib::DirWatch::add(desktop_path.c_str(), 
+					edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
+
+			EWARNING(ESTRLOC ": Unable to watch %s\n", desktop_path.c_str());
+		}
 	}
+
+	/*
+	 * For watching Trash, we will check Trash/files only with create/delete flags and
+	 * in callback will be checked if directory is empty (trash empty) or not (trash full).
+	 *
+	 * FIXME: at startup it should be checked is Trash empty and update icons for that
+	 */
+	trash_path = edelib::user_data_dir();
+	trash_path += "/Trash/files";
+
+	if(edelib::dir_exists(trash_path.c_str())) {
+		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))
+			EWARNING(ESTRLOC ": Unable to watch %s\n", trash_path.c_str());
+	}
+
+	edelib::DirWatch::callback(dir_watch_cb);
 
 	running = true;
 }
@@ -367,18 +391,6 @@ void Desktop::read_config(void) {
 
 	if(dsett->wp_use)
 		wallpaper->set(wpath);
-}
-
-void Desktop::install_watch(const char* path) {
-	edelib::DirWatch::init();
-	edelib::DirWatch::callback(dir_watch_cb);
-
-	if(!edelib::DirWatch::add(path,
-				edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
-
-		EWARNING(ESTRLOC ": Can't setup watch on %s\n", path);
-		edelib::DirWatch::shutdown();
-	}
 }
 
 void Desktop::load_icons(const char* path) {
@@ -940,6 +952,22 @@ void Desktop::draw(void) {
 void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	if(!do_dirwatch || !changed || flags == edelib::DW_REPORT_NONE)
 		return;
+
+	if(trash_path == dir) {
+		bool trash_dir_empty = edelib::dir_empty(trash_path.c_str());
+
+		DesktopIconListIter it, it_end;
+		for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+			if((*it)->icon_type() == ICON_TRASH) {
+				if(trash_dir_empty)
+					(*it)->icon1();
+				else
+					(*it)->icon2();
+			}
+		}
+
+		return;
+	}
 
 	/*
 	 * Check first we don't get any temporary files (starting with '.'

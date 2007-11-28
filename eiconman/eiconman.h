@@ -51,6 +51,9 @@ struct GlobalIconSettings {
 #define ICON_FILE    3     // real file
 #define ICON_SYMLINK 4     // symbolic link
 
+#define ICON_FACE_ONE 1    // use icon
+#define ICON_FACE_TWO 2    // use icon2
+
 /*
  * Settings representing related to icon on desktop. To complicate our lives
  * (and to, at least, simplify code) it can be: 
@@ -114,11 +117,12 @@ class Desktop : public DESKTOP_WINDOW {
 		DesktopIconList icons;
 		DesktopIconList selectionbuff;
 
+		edelib::String trash_path;
+
 		void init_internals(void);
 
 		void load_icons(const char* path);
 		void save_icons(void);
-		void install_watch(const char* path);
 		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);

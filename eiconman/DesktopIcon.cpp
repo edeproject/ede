@@ -89,6 +89,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	settings->name = is->name;
 	settings->cmd  = is->cmd;
 	settings->icon = is->icon;
+	settings->icon2 = is->icon2;
 	settings->type = is->type;
 	settings->key_name= is->key_name;
 	settings->full_path = is->full_path;
@@ -109,6 +110,9 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	else
 		imenu->menu(icon_menu);
 
+	load_icon(ICON_FACE_ONE);
+
+#if 0
 	if(!settings->icon.empty()) {
 		const char* nn = settings->icon.c_str();
 
@@ -130,6 +134,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 		} else
 			EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
 	}
+#endif
 
 	fix_position(x(), y());
 
@@ -149,6 +154,42 @@ DesktopIcon::~DesktopIcon() {
 		delete micon;
 
 	delete imenu;
+}
+
+void DesktopIcon::load_icon(int face) {
+	const char* ic = NULL;
+
+	if(face != ICON_FACE_TWO) {
+		if(!settings->icon.empty())
+			ic = settings->icon.c_str();
+	} else {
+		if(!settings->icon2.empty())
+			ic = settings->icon2.c_str();
+	}
+
+	if(!ic)
+		return;
+
+	edelib::String ipath = edelib::IconTheme::get(ic, edelib::ICON_SIZE_HUGE);
+	if(ipath.empty()) {
+		EDEBUG(ESTRLOC ": Got empty icon name ?!?\n");
+		return;
+	}
+
+	Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
+	if(!img) {
+		EDEBUG(ESTRLOC ": Unable to load %s\n", ipath.c_str());
+		return;
+	}
+
+	int img_w = img->w();
+	int img_h = img->h();
+
+	// resize box if icon is larger
+	if(img_w > ICONSIZE || img_h > ICONSIZE)
+		size(img_w + OFFSET_W, img_h + OFFSET_H);
+
+	image(img);
 }
 
 void DesktopIcon::update_label_size(void) {
@@ -262,6 +303,20 @@ void DesktopIcon::rename(const char* str) {
 
 const edelib::String& DesktopIcon::path(void) {
 	return settings->full_path;
+}
+
+int DesktopIcon::icon_type(void) {
+	return settings->type;
+}
+
+void DesktopIcon::icon1(void) {
+	load_icon(ICON_FACE_ONE);
+	fast_redraw();
+}
+
+void DesktopIcon::icon2(void) {
+	load_icon(ICON_FACE_TWO);
+	fast_redraw();
 }
 
 void DesktopIcon::fast_redraw(void) {

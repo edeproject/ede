@@ -15,7 +15,10 @@ ObjectC++Flags eiconman.cpp : -DUSE_EDELIB_WINDOW ;
 
 SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp NotifyBox.cpp ;
 
+# LinkAgainst eiconman : -lXfixes -lXdamage ;
+
 EdeProgram eiconman : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
+
 
 FltkProgramBare test/notify : test/notify.cpp : noinstall ;
