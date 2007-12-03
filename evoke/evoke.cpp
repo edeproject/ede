@@ -48,11 +48,6 @@ void xmessage_handler(int, void*) {
 	}
 }
 
-int xmessage_handler2(int e) {
-	return EvokeService::instance()->handle(fl_xevent);
-}
-
-
 const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
@@ -157,9 +152,9 @@ int main(int argc, char** argv) {
 		pid_file = DEFAULT_PID;
 
 	if(!service->setup_pid(pid_file, LOCK_FILE)) {
-		EVOKE_LOG("Either another "APPNAME" instance is running or can't create pid file. Please correct this\n");
-		EVOKE_LOG("Note: if program abnormaly crashed before, just remove '%s' and start it again\n", LOCK_FILE);
-		EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
+		printf("Either another "APPNAME" instance is running or can't create pid file. Please correct this\n");
+		printf("Note: if program abnormaly crashed before, just remove '%s' and start it again\n", LOCK_FILE);
+		printf("= "APPNAME" abrupted shutdown =\n");
 		return 1;
 	}
 
@@ -212,7 +207,6 @@ int main(int argc, char** argv) {
 	 * Also note that '1' parameter means POLLIN, and for the details see Fl_x.cxx
 	 */
 	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler);
-	//Fl::add_handler(xmessage_handler2);
 
 	while(service->running())
 		Fl::wait(FOREVER);

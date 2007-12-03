@@ -168,5 +168,6 @@ bool Xsm::save_serialized(const char* file) {
 
 	setting_file.close();
 	edelib::xsettings_list_free(settings);
+
 	return true;
 }

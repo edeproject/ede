@@ -66,10 +66,7 @@ class EvokeService {
 
 		ClientList  clients;
 		ProcessList processes;
-		int quit_child_pid;
-		int quit_child_ret;
 		int wake_up_pipe[2];
-
 
 	public:
 		EvokeService();
@@ -88,7 +85,7 @@ class EvokeService {
 		void init_autostart(bool safe);
 
 		void init_xsettings_manager(void);
-		void stop_xsettings_manager(void);
+		void stop_xsettings_manager(bool serialize);
 
 		int handle(const XEvent* ev);
 

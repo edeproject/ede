@@ -30,13 +30,6 @@
 extern void service_watcher_cb(int pid, int signum);
 Fl_Double_Window* splash_win = 0;
 
-class AutoSound {
-	public:
-		AutoSound()  { edelib::SoundSystem::init(); }
-		~AutoSound() { if(edelib::SoundSystem::inited()) edelib::SoundSystem::shutdown(); }
-		void play(const char* file) { if(edelib::SoundSystem::inited()) edelib::SoundSystem::play(file, 0); }
-};
-
 int splash_xmessage_handler(int e) {
 	if(fl_xevent->type == MapNotify || fl_xevent->type == ConfigureNotify) {
 		if(splash_win) {
@@ -192,15 +185,11 @@ void Splash::run(void) {
 	int sh = DisplayHeight(fl_display, fl_screen);
 	position(sw/2 - w()/2, sh/2 - h()/2);
 
-#if 0
 	bool sound_loaded = false;
 	if(sound && !sound->empty())
 		sound_loaded = edelib::SoundSystem::init();
-#endif
-	AutoSound sound_play;
 
 	show();
-
 	Fl::add_timeout(TIMEOUT_START, runner_cb, this);
 
 	/*
@@ -212,20 +201,17 @@ void Splash::run(void) {
 
 	//XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
 	//Fl::add_handler(splash_xmessage_handler);
-#if 0
+
 	if(sound_loaded)
 		edelib::SoundSystem::play(sound->c_str(), 0);
-#endif
-	sound_play.play(sound->c_str());
 
 	while(shown())
 		Fl::wait();
-#if 0
+
 	if(sound_loaded) {
 		edelib::SoundSystem::stop();
 		edelib::SoundSystem::shutdown();
 	}
-#endif
 
 	splash_win = 0;
 }

@@ -17,9 +17,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <errno.h>
 #include <stdio.h>
-
 #include <string.h>
 
 #include <sys/time.h>       // getrlimit, setrlimit

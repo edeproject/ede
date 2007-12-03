@@ -19,7 +19,6 @@
 #include "Autostart.h"
 
 #include <edelib/File.h>
-//#include <edelib/Regex.h>
 #include <edelib/Config.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
@@ -29,15 +28,12 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 
-#include <FL/fl_ask.h>
-
 #include <sys/types.h> // getpid
 #include <unistd.h>    // pipe
 #include <fcntl.h>     // fcntl
 #include <stdlib.h>    // free
 #include <string.h>    // strdup, memset
-#include <errno.h>     // error codes
-
+#include <errno.h>
 #include <signal.h>
 
 void resolve_path(const edelib::String& datadir, edelib::String& item, bool have_datadir) {
@@ -206,14 +202,14 @@ EvokeService::EvokeService() :
 	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL) { 
 
 	wake_up_pipe[0] = wake_up_pipe[1] = -1;
-	quit_child_pid = quit_child_ret = -1;
+	//quit_child_pid = quit_child_ret = -1;
 }
 
 EvokeService::~EvokeService() {
 	if(logfile)
 		delete logfile;
 
-	stop_xsettings_manager();
+	stop_xsettings_manager(true);
 
 	if(lockfile) {
 		edelib::file_remove(lockfile);
@@ -255,6 +251,7 @@ bool EvokeService::setup_logging(const char* file) {
 
 	if(!logfile->open(file)) {
 		delete logfile;
+		logfile = NULL;
 		return false;
 	}
 
@@ -393,8 +390,8 @@ void EvokeService::init_autostart(bool safe) {
 	edelib::String adir = edelib::user_config_dir();
 	adir += autostart_dirname;
 
-	StringList dfiles, sysdirs;
-	StringListIter it, it_end;
+	StringList dfiles, sysdirs, tmp;
+	StringListIter it, it_end, tmp_it, tmp_it_end;
 
 	edelib::dir_list(adir.c_str(), dfiles, true);
 
@@ -402,8 +399,15 @@ void EvokeService::init_autostart(bool safe) {
 	if(!sysdirs.empty()) {
 		for(it = sysdirs.begin(), it_end = sysdirs.end(); it != it_end; ++it) {
 			*it += autostart_dirname;
-			// append content
-			edelib::dir_list((*it).c_str(), dfiles, true, false, false);
+
+			/*
+			 * append content
+			 * FIXME: too much of copying. There should be some way to merge list items
+			 * probably via merge() member
+			 */
+			edelib::dir_list((*it).c_str(), tmp, true);
+			for(tmp_it = tmp.begin(), tmp_it_end = tmp.end(); tmp_it != tmp_it_end; ++tmp_it)
+				dfiles.push_back(*tmp_it);
 		}
 	}
 
@@ -466,7 +470,7 @@ void EvokeService::init_xsettings_manager(void) {
 	if(Xsm::manager_running(fl_display, fl_screen)) {
 		int ret = edelib::ask(_("XSETTINGS manager already running on this screen. Would you like to replace it?"));
 		if(ret < 1) {
-			stop_xsettings_manager();
+			stop_xsettings_manager(false);
 			return;
 		} else
 			goto do_it;
@@ -475,7 +479,7 @@ void EvokeService::init_xsettings_manager(void) {
 do_it:
 	if(!xsm->init(fl_display, fl_screen)) {
 		edelib::alert(_("Unable to load XSETTINGS manager properly"));
-		stop_xsettings_manager();
+		stop_xsettings_manager(false);
 	}
 
 	if(!xsm) return;
@@ -484,11 +488,13 @@ do_it:
 		xsm->notify();
 }
 
-void EvokeService::stop_xsettings_manager(void) {
+void EvokeService::stop_xsettings_manager(bool serialize) {
 	if(!xsm)
 		return;
 
-	xsm->save_serialized("ede-settings.xml");
+	if(serialize)
+		xsm->save_serialized("ede-settings.xml");
+
 	delete xsm;
 	xsm = NULL;
 }
@@ -566,45 +572,29 @@ void EvokeService::quit_x11(void) {
  * This is run each time when some of the managed childs quits.
  * Instead directly running wake_up(), it will be notified wia
  * wake_up_pipe[] channel, via add_fd() monitor.
- *
- * This workaround is due races.
  */
 void EvokeService::service_watcher(int pid, int ret) {
-	puts("=== service_watcher() ===");
-	printf("got %i\n", ret);
-
-	Mutex mutex;
-
-	mutex.lock();
-	quit_child_ret = ret;
-	quit_child_pid = pid;
-	mutex.unlock();
-
-	if(write(wake_up_pipe[1], "c", 1) != 1)
-		puts("error write");
+	write(wake_up_pipe[1], &pid, sizeof(int));
+	write(wake_up_pipe[1], &ret, sizeof(int));
 }
 
 void EvokeService::wake_up(int fd) {
 	puts("=== wake_up() ===");
 
-	char c;
-	if(read(wake_up_pipe[0], &c, 1) != 1 || c != 'c') {
+	int child_pid = -1;
+	// child can return anything so there is no default value
+	int child_ret;
+	if(read(wake_up_pipe[0], &child_pid, sizeof(int)) == -1 || child_pid == -1) {
+		puts("unable to read from channel");
+		return;
+	}
+
+	if(read(wake_up_pipe[0], &child_ret, sizeof(int)) == -1) {
 		puts("unable to read from channel");
 		return;
 	}
 
 	Mutex mutex;
-
-	mutex.lock();
-	int child_ret = quit_child_ret;
-	int child_pid = quit_child_pid;
-	mutex.unlock();
-
-	//EASSERT(child_ret != -1 && child_pid != -1);
-
-	mutex.lock();
-	quit_child_ret = quit_child_pid = -1;
-	mutex.unlock();
 
 	if(child_ret == SPAWN_CHILD_CRASHED) {
 		EvokeProcess pc;
@@ -621,7 +611,6 @@ void EvokeService::wake_up(int fd) {
 			cdialog.run();
 		}
 	} else { 
-
 		mutex.lock();
 		unregister_process(child_pid);
 		mutex.unlock();
@@ -641,9 +630,7 @@ void EvokeService::wake_up(int fd) {
 				break;
 		}
 	}
-
 }
-
 
 /*
  * Execute program. It's return status
@@ -681,69 +668,6 @@ void EvokeService::run_program(const char* cmd, bool enable_vars) {
 		mutex.unlock();
 	}
 }
-
-#if 0
-void EvokeService::heuristic_run_program(const char* cmd) {
-	if(strncmp(cmd, "$TERM ", 6) == 0) {
-		run_program(cmd);
-		return;
-	}
-
-	edelib::String ldd = edelib::file_path("ldd");
-	if(ldd.empty()) {
-		run_program(cmd);
-		return;
-	}
-
-	ldd += " ";
-	ldd += edelib::file_path(cmd);
-
-	int r = spawn_program(ldd.c_str(), 0, 0, "/tmp/eshrun");
-	printf("%s\n", ldd.c_str());
-	if(r != 0) {
-		printf("spawn %i\n", r);
-		return;
-	}
-
-	sleep(1);
-
-	//edelib::File f;
-	FILE* f = fopen("/tmp/eshrun", "r");
-	if(!f) {
-		puts("File::open");
-		return;
-	} else {
-		puts("opened /tmp/eshrun");
-	}
-
-	edelib::Regex rx;
-	rx.compile("^\\s*libX11");
-	char buff[1024];
-	bool is_gui = 0;
-
-	while(fgets(buff, sizeof(buff)-1, f)) {
-		printf("checking %s\n", buff);
-
-		if(rx.match(buff)) {
-			printf("found libX11\n");
-			is_gui = 1;
-			//break;
-		}
-	}
-
-	fclose(f);
-
-	edelib::String fcmd;
-	if(!is_gui) {
-		fcmd = "$TERM ";
-		fcmd += cmd;
-	} else {
-		fcmd = cmd;
-	}
-
-	run_program(fcmd.c_str());
-}
-#endif
 
 void EvokeService::register_process(const char* cmd, pid_t pid) {
 	EvokeProcess pc;
@@ -795,20 +719,17 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 /*
  * Main loop for processing got X events.
  *
- * Great care must be taken to route this events to fltk too (via fl_handle()), since 
+ * Great care must be taken to route this events to FLTK too (via fl_handle()), since 
  * add_fd() (in evoke.cpp) will not do that. If events are not routed to fltk, popped 
- * dialogs, especially from service_watcher() will not be correctly drawn and will hand 
+ * dialogs, especially from service_watcher() will not be correctly drawn and will hang 
  * whole program.
- *
- * FIXME: any better way ?
  */
 int EvokeService::handle(const XEvent* xev) {
 	EVOKE_LOG("Got event %i\n", xev->type);
 
 	if(xsm && xsm->should_terminate(xev)) {
 		EVOKE_LOG("XSETTINGS manager shutdown\n");
-		stop_xsettings_manager();
-		// return 1;
+		stop_xsettings_manager(true);
 	}
 #if 0	
 	else if(xev->type == MapNotify) {
@@ -835,7 +756,6 @@ int EvokeService::handle(const XEvent* xev) {
 			} else {
 				EVOKE_LOG("Got _EDE_EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
-			// return 1;
 		}
 
 		if(xev->xproperty.atom == _ede_evoke_quit) {
@@ -845,7 +765,6 @@ int EvokeService::handle(const XEvent* xev) {
 				stop();
 			} else
 				EVOKE_LOG("Got _EDE_EVOKE_QUIT with bad code (%i). Ignoring...\n", val);
-			// return 1;
 		}
 
 		if(xev->xproperty.atom == _ede_shutdown_all) {
@@ -861,10 +780,9 @@ int EvokeService::handle(const XEvent* xev) {
 				//quit_x11();
 			} else	
 				EVOKE_LOG("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);
-			// return 1;
 		}
 	}
 
-	//return 0;
+	// let FLTK handle the rest
 	return fl_handle(*xev);
 }
