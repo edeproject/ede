@@ -1,0 +1,73 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SVG_CONVERTOR = "rsvg" ;
+
+# SvgToPng [target-png] : [source-svg] : [width] : [height] ;
+rule SvgToPng
+{
+	if ! $(SVG_CONVERTOR) {
+		Echo "SVG_CONVERTOR not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	LocalDepends $(1) : $(2) ;
+	LocalDepends icons : $(1) ;
+	LocalDepends all : $(1) ;
+
+	PNG_WIDTH on $(1) = $(3) ;
+	PNG_HEIGHT on $(1) = $(4) ;
+
+	SvgToPng1 $(1) : $(2) ;
+
+	LocalClean clean : $(1) ;
+}
+
+# SvgToPngDirectory [directory-where-to-place] : [directory-where-is-source] : [icon-sizes] ;
+rule SvgToPngDirectory
+{
+	local icons source target png_ext ;
+
+	if ! $(SVG_CONVERTOR) {
+		Echo "SVG_CONVERTOR not defined; directory $(1) will not be built" ;
+		return ;
+	}
+
+	png_ext = ".png" ;
+	icons = [ Wildcard $(2) : *.svg ] ;
+
+	for i in $(icons) {
+		# before source and target are further used
+		# grist must be calculated uniquely or jam will be confused
+		# e.g. if we want foo.svg to be placed in 32/foo.png and 16/foo.png 
+		# with different sizes, without unique grist, jam will construct only
+		# 32/foo.png since it is bound to source; to skip this, source and
+		# target are gristed to directory name plus jam's SOURCE_GRIST
+		target = $(i:S=$(png_ext):G=$(SOURCE_GRIST)-$(1)) ;
+		source = $(i:G=$(SOURCE_GRIST)-$(2)) ;
+
+		# where to look for source
+		SEARCH on $(source) = [ FDirName $(SUBDIR) $(2) ] ;
+
+		# where to place target; directory will be created if
+		# does not exists
+		MakeLocate $(target) : [ FDirName $(SUBDIR) $(1) ] ;
+
+		SvgToPng $(target) : $(source) : $(3) : $(3) ;
+	}
+}
+
+actions SvgToPng1
+{
+	$(SVG_CONVERTOR) -w $(PNG_WIDTH) -h $(PNG_HEIGHT) -f png "$(>)" "$(<)"
+}
+
+NotFile icons ;
+Always icons ;

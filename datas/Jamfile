@@ -20,3 +20,8 @@ InstallEdeIcons icons-48 : $(ICONS48) ;
 
 InstallEdeConfigFiles  $(CONFS) ;
 InstallEdeDesktopFiles $(PLINKS) ;
+
+# For building icon themes
+if $(BUILD_ICON_THEMES) = 1 {
+	SubInclude TOP datas icon-themes ;
+}

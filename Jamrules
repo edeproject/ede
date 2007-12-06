@@ -35,7 +35,7 @@ EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
 
 # fltk libraries path
 FLTKINCLUDE      ?= -I/usr/local/include ;
-FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 ;
+FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 -lXpm ;
 FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lX11 ;
 
 # backward; efltk libraries path
@@ -59,6 +59,9 @@ include $(TOP)/build/Program.jam ;
 include $(TOP)/build/Translation.jam ;
 include $(TOP)/build/Install.jam ;
 include $(TOP)/build/Doc.jam ;
+include $(TOP)/build/Svg.jam ;
+
+BUILD_ICON_THEMES ?= ;
 
 actions quietly Help 
 {
@@ -73,7 +76,10 @@ actions quietly Help
 	echo "   jam  doc           build documentation"
 	echo "   jam  help          this help"
 	echo ""
+	echo "   jam -sBUILD_ICON_THEMES=1 build icon themes (not built by default)"
+	echo ""
 }
+
 Help help ;
 NotFile help ;
 Always help ;

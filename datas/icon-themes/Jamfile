@@ -1,0 +1,26 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP datas icon-themes ;
+
+# Icon theme conversion code
+# jam don't like nested loops so every subdirectory is specified
+ICON_SIZES = 16 22 32 48 64 128 ;
+
+for size in $(ICON_SIZES) {
+	SvgToPngDirectory [ FDirName edeneu $(size) actions ] : [ FDirName edeneu scalable actions ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) apps ]  : [ FDirName edeneu scalable apps ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) categories ] : [ FDirName edeneu scalable categories ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) devices ] : [ FDirName edeneu scalable devices ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) emblems ] : [ FDirName edeneu scalable emblems ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) mimetypes ] : [ FDirName edeneu scalable mimetypes ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) places ] : [ FDirName edeneu scalable places ] : $(size) ;
+	SvgToPngDirectory [ FDirName edeneu $(size) status ] : [ FDirName edeneu scalable status ] : $(size) ;
+}

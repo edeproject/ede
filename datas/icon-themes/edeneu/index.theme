@@ -1,0 +1,201 @@
+#
+# Generated with mkindextheme. Edit what needs to be edited.
+#
+
+[Icon Theme]
+  Name = EdeNeu
+  Comment = Icon theme based on Dropline Neu!
+
+  Directories = 128x128/apps,128x128/devices,128x128/mimetypes,128x128/emblems,128x128/actions,128x128/places,128x128/status,128x128/categories,16x16/apps,16x16/devices,16x16/mimetypes,16x16/emblems,16x16/actions,16x16/places,16x16/status,16x16/categories,22x22/apps,22x22/devices,22x22/mimetypes,22x22/emblems,22x22/actions,22x22/places,22x22/status,22x22/categories,32x32/apps,32x32/devices,32x32/mimetypes,32x32/emblems,32x32/actions,32x32/places,32x32/status,32x32/categories,48x48/apps,48x48/devices,48x48/mimetypes,48x48/emblems,48x48/actions,48x48/places,48x48/status,48x48/categories,64x64/apps,64x64/devices,64x64/mimetypes,64x64/emblems,64x64/actions,64x64/places,64x64/status,64x64/categories
+
+[128x128/apps]
+  Size = 128
+  Context = Applications
+
+[128x128/devices]
+  Size = 128
+  Context = Devices
+
+[128x128/mimetypes]
+  Size = 128
+  Context = MimeTypes
+
+[128x128/emblems]
+  Size = 128
+  Context = Emblems
+
+[128x128/actions]
+  Size = 128
+  Context = Actions
+
+[128x128/places]
+  Size = 128
+  Context = Places
+
+[128x128/status]
+  Size = 128
+  Context = Status
+
+[128x128/categories]
+  Size = 128
+  Context = Categories
+
+[16x16/apps]
+  Size = 16
+  Context = Applications
+
+[16x16/devices]
+  Size = 16
+  Context = Devices
+
+[16x16/mimetypes]
+  Size = 16
+  Context = MimeTypes
+
+[16x16/emblems]
+  Size = 16
+  Context = Emblems
+
+[16x16/actions]
+  Size = 16
+  Context = Actions
+
+[16x16/places]
+  Size = 16
+  Context = Places
+
+[16x16/status]
+  Size = 16
+  Context = Status
+
+[16x16/categories]
+  Size = 16
+  Context = Categories
+
+[22x22/apps]
+  Size = 22
+  Context = Applications
+
+[22x22/devices]
+  Size = 22
+  Context = Devices
+
+[22x22/mimetypes]
+  Size = 22
+  Context = MimeTypes
+
+[22x22/emblems]
+  Size = 22
+  Context = Emblems
+
+[22x22/actions]
+  Size = 22
+  Context = Actions
+
+[22x22/places]
+  Size = 22
+  Context = Places
+
+[22x22/status]
+  Size = 22
+  Context = Status
+
+[22x22/categories]
+  Size = 22
+  Context = Categories
+
+[32x32/apps]
+  Size = 32
+  Context = Applications
+
+[32x32/devices]
+  Size = 32
+  Context = Devices
+
+[32x32/mimetypes]
+  Size = 32
+  Context = MimeTypes
+
+[32x32/emblems]
+  Size = 32
+  Context = Emblems
+
+[32x32/actions]
+  Size = 32
+  Context = Actions
+
+[32x32/places]
+  Size = 32
+  Context = Places
+
+[32x32/status]
+  Size = 32
+  Context = Status
+
+[32x32/categories]
+  Size = 32
+  Context = Categories
+
+[48x48/apps]
+  Size = 48
+  Context = Applications
+
+[48x48/devices]
+  Size = 48
+  Context = Devices
+
+[48x48/mimetypes]
+  Size = 48
+  Context = MimeTypes
+
+[48x48/emblems]
+  Size = 48
+  Context = Emblems
+
+[48x48/actions]
+  Size = 48
+  Context = Actions
+
+[48x48/places]
+  Size = 48
+  Context = Places
+
+[48x48/status]
+  Size = 48
+  Context = Status
+
+[48x48/categories]
+  Size = 48
+  Context = Categories
+
+[64x64/apps]
+  Size = 64
+  Context = Applications
+
+[64x64/devices]
+  Size = 64
+  Context = Devices
+
+[64x64/mimetypes]
+  Size = 64
+  Context = MimeTypes
+
+[64x64/emblems]
+  Size = 64
+  Context = Emblems
+
+[64x64/actions]
+  Size = 64
+  Context = Actions
+
+[64x64/places]
+  Size = 64
+  Context = Places
+
+[64x64/status]
+  Size = 64
+  Context = Status
+
+[64x64/categories]
+  Size = 64
+  Context = Categories
