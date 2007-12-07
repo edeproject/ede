@@ -62,6 +62,9 @@ rule SvgToPngDirectory
 
 		SvgToPng $(target) : $(source) : $(3) : $(3) ;
 	}
+
+	# let 'jam clean' removes created directory
+	CleandirSafe clean : [ FDirName $(SUBDIR) $(1) ] ;
 }
 
 actions SvgToPng1

@@ -10,17 +10,48 @@
 
 SubDir TOP datas icon-themes ;
 
-# Icon theme conversion code
-# jam don't like nested loops so every subdirectory is specified
-ICON_SIZES = 16 22 32 48 64 128 ;
+# ConvertIconTheme [icon-theme-name] : [icon-sizes] : [icon-categories] ;
+# Mass conversion of scalable (.svg) icon theme to .png one. Make sure directory
+# that will be converted contains 'scalable' directory with .svg icons
+rule ConvertIconTheme 
+{
+	local size category ;
+	for size in $(2) {
+		for category in $(3) {
+			SvgToPngDirectory [ FDirName $(1) $(size) $(category) ] : [ FDirName $(1) scalable $(category) ] : $(size) ;
+		}
 
-for size in $(ICON_SIZES) {
-	SvgToPngDirectory [ FDirName edeneu $(size) actions ] : [ FDirName edeneu scalable actions ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) apps ]  : [ FDirName edeneu scalable apps ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) categories ] : [ FDirName edeneu scalable categories ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) devices ] : [ FDirName edeneu scalable devices ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) emblems ] : [ FDirName edeneu scalable emblems ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) mimetypes ] : [ FDirName edeneu scalable mimetypes ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) places ] : [ FDirName edeneu scalable places ] : $(size) ;
-	SvgToPngDirectory [ FDirName edeneu $(size) status ] : [ FDirName edeneu scalable status ] : $(size) ;
+		# let 'jam clean' removes created directories since SvgToPngDirectory will remove
+		# only deepest, e.g. '16/actions' will be removed only 'actions'; here '16' will be removed too
+		CleandirSafe clean : [ FDirName $(1) $(size) ] ;
+	}
 }
+
+# InstallIconTheme [icon-theme-name] : [icon-sizes] : [icon-categories] ;
+# Installs icon theme
+rule InstallIconTheme
+{
+	local size category icon_list directory ;
+
+	for size in $(2) {
+		for category in $(3) {
+			directory = [ FDirName $(1) $(size) $(category) ] ;
+			icon_list = [ Wildcard $(directory) : *.png : $(directory) ] ;
+			InstallEdeIcons $(directory) : $(icon_list) ;
+		}
+	}
+
+	# install index.theme
+	InstallData [ FDirName $(EDEICONDIR) $(1) ] : [ FFileName $(1) index.theme ] ;
+}
+
+ICON_SIZES = 16 22 32 48 64 128 ;
+ICON_CATEGORIES = actions apps categories devices emblems mimetypes places status ;
+
+# only convert them when jam -sBUILD_ICON_THEMES=1 is given
+# this will reduce jam's startup time
+if $(BUILD_ICON_THEMES) = 1 {
+	ConvertIconTheme "edeneu" : $(ICON_SIZES) : $(ICON_CATEGORIES) ;
+}
+
+InstallIconTheme "edeneu" : $(ICON_SIZES) : $(ICON_CATEGORIES) ;
