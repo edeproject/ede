@@ -154,7 +154,7 @@ public:
 	
 		b = new Fl_Box(w/2,h/2,0,0);
 
-		mb = new Fl_Menu_Button (0,0,0,0,"");
+		mb = new Fl_Menu_Button (0,0,0,0);
 		mb->type(Fl_Menu_Button::POPUP3);
 		mb->menu(0);
 		mb->box(FL_NO_BOX);
