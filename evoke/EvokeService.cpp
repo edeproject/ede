@@ -199,7 +199,7 @@ void wake_up_cb(int fd, void* v) {
 }
 
 EvokeService::EvokeService() : 
-	is_running(0), logfile(NULL), xsm(NULL), pidfile(NULL), lockfile(NULL) { 
+	is_running(0), logfile(NULL), xsm(NULL), composite(NULL), pidfile(NULL), lockfile(NULL) { 
 
 	wake_up_pipe[0] = wake_up_pipe[1] = -1;
 	//quit_child_pid = quit_child_ret = -1;
@@ -208,6 +208,8 @@ EvokeService::EvokeService() :
 EvokeService::~EvokeService() {
 	if(logfile)
 		delete logfile;
+
+	delete composite;
 
 	stop_xsettings_manager(true);
 
@@ -499,6 +501,15 @@ void EvokeService::stop_xsettings_manager(bool serialize) {
 	xsm = NULL;
 }
 
+void EvokeService::init_composite(void) {
+	composite = new Composite();
+
+	if(!composite->init()) {
+		delete composite;
+		composite = NULL;
+	}
+}
+
 void EvokeService::setup_atoms(Display* d) {
 	// with them must be send '1' or property will be ignored (except _EDE_EVOKE_SPAWN)
 	_ede_shutdown_all    = XInternAtom(d, "_EDE_EVOKE_SHUTDOWN_ALL", False);
@@ -731,6 +742,10 @@ int EvokeService::handle(const XEvent* xev) {
 		EVOKE_LOG("XSETTINGS manager shutdown\n");
 		stop_xsettings_manager(true);
 	}
+
+	if(composite)
+		composite->handle_xevents(xev);
+
 #if 0	
 	else if(xev->type == MapNotify) {
 		puts("=================");

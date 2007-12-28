@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
 
 	service->setup_atoms(fl_display);
 	service->init_xsettings_manager();
+	service->init_composite();
 
 	signal(SIGINT,  quit_signal);
 	signal(SIGTERM, quit_signal);
@@ -193,7 +194,13 @@ int main(int argc, char** argv) {
 
 	service->start();
 
+#if 0
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | SubstructureNotifyMask | ClientMessage);
+#endif
+
+	// composite engine included too
+	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), 
+			SubstructureNotifyMask | ExposureMask | StructureNotifyMask | PropertyChangeMask | ClientMessage);
 
 	/*
 	 * Register event listener and run in infinite loop. Loop will be

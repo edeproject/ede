@@ -15,6 +15,7 @@
 
 #include "Log.h"
 #include "Xsm.h"
+#include "Composite.h"
 
 #include <edelib/List.h>
 #include <edelib/String.h>
@@ -57,6 +58,7 @@ class EvokeService {
 		bool  is_running;
 		Log*  logfile;
 		Xsm*  xsm;
+		Composite* composite;
 		char* pidfile;
 		char* lockfile;
 
@@ -86,6 +88,8 @@ class EvokeService {
 
 		void init_xsettings_manager(void);
 		void stop_xsettings_manager(bool serialize);
+
+		void init_composite(void);
 
 		int handle(const XEvent* ev);
 

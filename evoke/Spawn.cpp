@@ -125,7 +125,7 @@ int spawn_program(const char* cmd, SignalWatch wf, pid_t* child_pid_ret, const c
 	 */
 	if(child_pid_ret)
 		*child_pid_ret = pid;
-
+	
 	// unblock SIGCHLD
 	sigprocmask(SIG_SETMASK, &old_mask, NULL);
 

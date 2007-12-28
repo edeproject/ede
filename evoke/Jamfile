@@ -15,6 +15,8 @@ ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
 
 SOURCE = evoke.cpp 
 		 EvokeService.cpp 
+		 Composite.cpp
+		 ClassHack.c
 		 Xsm.cpp 
 		 Spawn.cpp 
 		 Splash.cpp 
@@ -23,11 +25,12 @@ SOURCE = evoke.cpp
 		 Crash.cpp 
 		 Autostart.cpp ;
 
-LinkAgainst evoke : -lao -lvorbis -lvorbisfile ;
+LinkAgainst evoke : -lXcomposite -lXdamage -lXfixes -lXrender -lao -lvorbis -lvorbisfile ;
 #LinkAgainst evoke : -lpthread ;
 
 EdeProgram evoke : $(SOURCE) ;
 FltkProgramBare test/evoke_test : test/evoke_test.cpp ;
 FltkProgramBare test/stress_test : test/stress_test.cpp ;
+FltkProgramBare test/opacity_test : test/opacity_test.cpp ;
 #TranslationStrings locale : $(SOURCE) ;
 EdeManual doc/evoke.txt ;

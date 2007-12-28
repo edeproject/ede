@@ -241,9 +241,10 @@ bool Splash::next_client(void) {
 	msgbox->copy_label(buff);
 	redraw();
 
-	if(!dry_run)
+	if(!dry_run) {
 		spawn_program(cmd, service_watcher_cb);
 		//spawn_program(cmd);
+	}
 
 	++clist_it;
 	++counter;
