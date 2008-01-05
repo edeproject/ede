@@ -16,6 +16,7 @@ Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 # SubInclude goes after local rules
 SubInclude TOP econtrol ;
 SubInclude TOP ecalc ;
+SubInclude TOP ecrasher ;
 SubInclude TOP edewm ;
 SubInclude TOP eiconman ;
 SubInclude TOP evoke ;
