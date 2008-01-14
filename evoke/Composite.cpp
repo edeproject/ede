@@ -1155,14 +1155,11 @@ void Composite::paint_all(XserverRegion region) {
 #endif
 			set_ignore(NextRequest(fl_display));
 
-#if 0
 			XRenderComposite(fl_display, PictOpOver, win->picture, win->picture_alpha, rootBuffer,
 					0, 0, 0, 0,
 					x, y, wid, hei);
-#endif
 
-			//////////////////////////////////////////
-
+#if 0
 			XRenderComposite(fl_display, PictOpOver, win->picture, win->picture_alpha, rootBuffer,
 					10, 0, 
 					0, 0,
@@ -1178,8 +1175,7 @@ void Composite::paint_all(XserverRegion region) {
 					0, 0, 
 					0, 0, 
 					x, y, 10, hei);
-
-			//////////////////////////////////////////
+#endif
 	
 		}
 
