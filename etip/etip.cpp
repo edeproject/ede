@@ -20,8 +20,12 @@
 
 #include <edelib/Nls.h>
 #include <edelib/Config.h>
+#include <edelib/DesktopFile.h>
 #include <edelib/File.h>
 #include <edelib/StrUtil.h>
+#include <edelib/Util.h>
+#include <edelib/MessageBox.h>
+#include <edelib/Directory.h>
 
 #include <stdlib.h>
 #include <time.h>
@@ -49,20 +53,6 @@ const char* title_tips[TITLE_TIPS_NUM] = {
 	_("Boring \"Did you know ?\"")
 };
 
-void preformat_tip(edelib::String& str) {
-	unsigned int sz = str.length();
-	unsigned int j;
-
-	for(unsigned int i = 0; i < sz; i++) {
-		if(str[i] == '\n') {
-			j = i;
-			j++;
-			if(j < sz && str[j] != '\n')
-				str[i] = ' ';
-		}
-	}
-}
-
 const char* random_title(const char** lst, unsigned int max) {
 	unsigned int val = rand() % max;
 	return lst[val];
@@ -73,37 +63,6 @@ const char* random_fortune(void) {
 	curr_tip = val;
 	fortune_get(ffile, val, fstring);
 	return fstring.c_str();
-}
-
-void close_cb(Fl_Widget*, void*) {
-	win->hide();
-}
-
-void next_cb(Fl_Widget*, void*) {
-	if(!ffile)
-		return;
-
-	curr_tip++;
-	if(curr_tip >= (int)fortune_num_items(ffile))
-		curr_tip = 0;
-
-	fortune_get(ffile, curr_tip, fstring);
-	//preformat_tip(fstring);
-	tip_box->label(fstring.c_str());
-}
-
-void prev_cb(Fl_Widget*, void*) {
-	if(!ffile)
-		return;
-
-	curr_tip--;
-	if(curr_tip < 0) {
-		curr_tip = fortune_num_items(ffile);
-		curr_tip--;
-	}
-
-	fortune_get(ffile, curr_tip, fstring);
-	tip_box->label(fstring.c_str());
 }
 
 FortuneFile* load_fortune_file(void) {
@@ -126,6 +85,105 @@ FortuneFile* load_fortune_file(void) {
 		return NULL;
 
 	return fortune_open(path, dat.c_str());
+}
+
+bool create_directory_if_needed(const edelib::String& path) {
+	if(!edelib::dir_exists(path.c_str()) && !edelib::dir_create(path.c_str())) {
+		edelib::alert(_("I'm not able to create %s. This error is probably since the path is too long or I don't have permission to do so"));
+		return false;
+	}
+
+	return true;
+}
+
+/* 
+ * Save/create etip.desktop inside autostart directory.
+ * Autostart resides in ~/.config/autostart and directory does not
+ * exists, it will be created (only /autostart/, not full path).
+ *
+ * TODO: edelib should have some dir_create function that should
+ * create full path
+ *
+ * Saving/creating inside /etc/xdg/autostart is not done since 
+ * ~/.config/autostart is prefered (see autostart specs) and all 
+ * application will be looked there first.
+ */
+void write_autostart_stuff(void) {
+	edelib::String path = edelib::user_config_dir();
+
+	if(!create_directory_if_needed(path))
+		return;
+
+	// now try with autostart part
+	path += "/autostart";
+	if(!create_directory_if_needed(path))
+		return;
+
+	// now see if etip.desktop exists, and update it if do
+	path += "/etip.desktop";
+	edelib::DesktopFile conf;
+
+	bool show_at_startup = check_button->value();
+
+	// Hm... looks like a bug in edelib. If failed, Config should still be usable
+	if(!conf.load(path.c_str()))
+		conf.clear();
+
+	// always write these values so someone does not try to play with us
+	conf.set_type(edelib::DESK_FILE_TYPE_APPLICATION);
+	conf.set_hidden(show_at_startup);
+	conf.set_name("Etip");
+	conf.set_exec("etip");
+
+	if(conf.save(path.c_str()) == false)
+		edelib::alert(_("I'm not able to save %s. Probably I don't have enough permissions to do that ?"), path.c_str());
+}
+
+void read_autostart_stuff(void) {
+	edelib::String path = edelib::user_config_dir();
+	path += "/autostart/etip.desktop";
+
+	edelib::DesktopFile conf;
+	if(!conf.load(path.c_str())) {
+		check_button->value(0);
+		return;
+	}
+
+	if(conf.hidden())
+		check_button->value(1);
+	else
+		check_button->value(0);
+}
+
+void close_cb(Fl_Widget*, void*) {
+	win->hide();
+	write_autostart_stuff();
+}
+
+void next_cb(Fl_Widget*, void*) {
+	if(!ffile)
+		return;
+
+	curr_tip++;
+	if(curr_tip >= (int)fortune_num_items(ffile))
+		curr_tip = 0;
+
+	fortune_get(ffile, curr_tip, fstring);
+	tip_box->label(fstring.c_str());
+}
+
+void prev_cb(Fl_Widget*, void*) {
+	if(!ffile)
+		return;
+
+	curr_tip--;
+	if(curr_tip < 0) {
+		curr_tip = fortune_num_items(ffile);
+		curr_tip--;
+	}
+
+	fortune_get(ffile, curr_tip, fstring);
+	tip_box->label(fstring.c_str());
 }
 
 int main(int argc, char **argv) {
@@ -160,6 +218,8 @@ int main(int argc, char **argv) {
 
 		check_button = new Fl_Check_Button(10, 224, 225, 25, _("Show tips on startup"));
 		check_button->down_box(FL_DOWN_BOX);
+
+		read_autostart_stuff();
 
 		Fl_Button* prev_button = new Fl_Button(240, 224, 90, 25, _("&Previous"));
 		prev_button->callback(prev_cb);
