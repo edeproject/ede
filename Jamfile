@@ -24,6 +24,7 @@ SubInclude TOP efiler ;
 SubInclude TOP eiconman ;
 SubInclude TOP eimage ;
 SubInclude TOP etimedate ;
+SubInclude TOP etip ;
 SubInclude TOP evoke ;
 SubInclude TOP docs ;
 SubInclude TOP datas ;
