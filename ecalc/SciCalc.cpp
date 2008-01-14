@@ -520,7 +520,7 @@ void SciCalc::cb_but_quit(Fl_Button* o, void* v) {
 /********/
 
 SciCalc::SciCalc() {
-  { win = new Fl_Double_Window(181, 262, "flCalc");
+  { win = new Fl_Double_Window(181, 262, "ecalc");
     win->user_data((void*)(this));
     { leddisplay = new Fl_Box(5, 3, 172, 24, "0 ");
       leddisplay->box(FL_DOWN_BOX);

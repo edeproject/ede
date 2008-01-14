@@ -70,7 +70,7 @@ class SciCalc {open
   Function {SciCalc()} {open
   } {
     Fl_Window win {
-      label flCalc open
+      label ecalc open
       private xywh {528 286 181 262} type Double visible
     } {
       Fl_Box leddisplay {
