@@ -1,0 +1,16 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2008 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP eabout ;
+
+SOURCE = eabout.cpp ;
+
+EdeProgram eabout : $(SOURCE) ;
+TranslationStrings  locale : $(SOURCE) ;

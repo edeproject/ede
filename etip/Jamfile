@@ -10,5 +10,31 @@
 
 SubDir TOP etip ;
 
-MakeProgram etip : etip.cpp ;
-ExtractStrings locale : etip.cpp ;
+SOURCE = Fortune.cpp etip.cpp ;
+
+EdeProgram etip : $(SOURCE) ;
+TranslationStrings  locale : $(SOURCE) ;
+EdeManual doc/etip.txt : doc/etip.jpg ;
+
+ProgramBare etip-compiler : etip-compiler.c ;
+
+# this rule is for compiling fortune files
+rule FortuneCompile
+{
+	Depends $(<) : etip-compiler ;
+	Depends $(<) : $(>) ;
+	Depends all : $(<) ;
+
+	SEARCH on $(>) = $(SUBDIR) ;
+	MakeLocate $(<) : $(SUBDIR) ;
+
+	FortuneCompile1 $(<) : $(>) ;
+	Clean clean : $(<) ;
+}
+
+actions FortuneCompile1
+{
+	$(TOP)/etip/etip-compiler "$(>)" "$(<)"
+}
+
+FortuneCompile tips/ede.dat      : tips/ede ;

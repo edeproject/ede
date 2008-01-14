@@ -1,0 +1,43 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {
+    label {EDE Tips And Tricks} open
+    xywh {299 206 535 260} type Double visible
+  } {
+    Fl_Check_Button {} {
+      label {Show tips on startup} selected
+      xywh {10 224 225 25} down_box DOWN_BOX labelsize 13
+    }
+    Fl_Button {} {
+      label {&Previous}
+      xywh {240 224 90 25}
+    }
+    Fl_Button {} {
+      label {&Next}
+      xywh {335 224 90 25}
+    }
+    Fl_Button {} {
+      label {&Close}
+      xywh {435 224 90 25}
+    }
+    Fl_Group {} {open
+      xywh {10 10 515 205} box DOWN_BOX color 7
+    } {
+      Fl_Box {} {
+        image {../icons/hint.xpm} xywh {11 13 121 201} labelsize 14
+      }
+      Fl_Box {} {
+        label {Some tips...}
+        xywh {155 23 355 25} labelfont 1 align 212
+      }
+      Fl_Box {} {
+        label {If you cannot access the titlebar, you can still move a window on the screen by holding the Alt key, clicking anywhere into the window and "dragging" it with the mouse.}
+        xywh {155 60 355 140} align 213
+      }
+    }
+  }
+} 

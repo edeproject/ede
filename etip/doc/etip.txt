@@ -1,0 +1,8 @@
+Etip documentation
+===================
+
+Etip is 'Tip of the Day' program which will show tips about EDE usage.
+It is also capable to show forutune-like tips, reading forutune files.
+
+image:images/etip.jpg[Etip]
+  

@@ -136,3 +136,19 @@ rule FltkProgramBare
 		InstallEdeProgram $(1) ;
 	}
 }
+
+# ProgramBare [target] : [sources] : [noinstall] ;
+# Creates programs that will be linked only with standard library (no FLTK and X11 libraries).
+# This rule is usefull for creating command line programs that should be installed at the same
+# place where other EDE programs are installed.
+rule ProgramBare
+{
+	MakeProgramPrivate $(1) : $(2) 
+		: $(STDLIB) 
+		: $(GLOBALFLAGS) ;
+
+	# install it where ede binaries resides
+	if $(3) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
+}

@@ -1,136 +1,185 @@
 /*
  * $Id: etip.cpp 1664 2006-06-14 00:21:44Z karijes $
  *
+ * Etip, show some tips!
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2006 EDE Authors.
+ * Copyright (c) 2008 EDE Authors.
  *
- * This program is licenced under terms of the 
- * GNU General Public Licence version 2 or newer.
- * See COPYING for details.
+ * This program is licensed under the terms of the 
+ * GNU General Public License version 2 or newer.
+ * See COPYING for the details.
  */
 
-#include <fltk/Window.h>
-#include <fltk/Button.h>
-#include <fltk/CheckButton.h>
-#include <fltk/InvisibleBox.h>
-#include <fltk/xpmImage.h>
-#include <fltk/run.h>
+#include <FL/Fl.h>
+#include <FL/Fl_Window.h>
+#include <FL/Fl_Check_Button.h>
+#include <FL/Fl_Button.h>
+#include <FL/Fl_Group.h>
+#include <FL/Fl_Box.h>
+#include <FL/Fl_Pixmap.h>
+
+#include <edelib/Nls.h>
+#include <edelib/Config.h>
+#include <edelib/File.h>
+#include <edelib/StrUtil.h>
 
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "icons/hint.xpm"
+#include "Fortune.h"
 
-// TODO: should be replaced with NLS from edelib
-#define _(s) s
+static Fl_Pixmap image_hint(hint_xpm);
 
-#define TIPS_NUM 7
-#define TITLE_TIPS_NUM 9
+Fl_Window* win;
+Fl_Check_Button* check_button;
+Fl_Box* title_box;
+Fl_Box* tip_box;
+int curr_tip = 0;
 
-using namespace fltk;
+FortuneFile* ffile = 0;
+edelib::String fstring;
 
-unsigned int curr_tip = 0;
-const char* tiplist[TIPS_NUM] = 
-{
-_("To start any application is simple. Press on the button with your user name, go\
- to the Programs menu, select category and click on the wished program."),
-
-_("To exit the EDE, press button with your user name and then Logout."),
-
-_("To lock the computer, press button with your user name and then choose Lock."),
-
-_("To setup things on the computer, press button with your user name, Panel menu and then the Control panel."),
-
-_("To add a program that is not in the Programs menu, click on the button with your user,\
- Panel menu, and then Menu editor."),
-
-_("Notice that this is still development version, so please send your bug reports or\
- comments on EDE forum, EDE bug reporting system (on project's page), or check mails of current\
- maintainers located in AUTHORS file."),
-
-_("You can download latest release on http://sourceforge.net/projects/ede.")
+#define TITLE_TIPS_NUM 4
+const char* title_tips[TITLE_TIPS_NUM] = {
+	_("Did you know ?"),
+	_("Tip of the Day"),
+	_("A tip..."),
+	_("Boring \"Did you know ?\"")
 };
 
-const char* title_tips[TITLE_TIPS_NUM] =
-{
-_("Boring \"Did you know...\""),
-_("How about this..."),
-_("Smart idea..."),
-_("Really smart idea..."),
-_("Really really smart idea..."),
-_("Uf..."),
-_("Something new..."),
-_("Or maybe this..."),
-_("...")
-};
+void preformat_tip(edelib::String& str) {
+	unsigned int sz = str.length();
+	unsigned int j;
 
-const char* random_txt(const char** lst, unsigned int max)
-{
+	for(unsigned int i = 0; i < sz; i++) {
+		if(str[i] == '\n') {
+			j = i;
+			j++;
+			if(j < sz && str[j] != '\n')
+				str[i] = ' ';
+		}
+	}
+}
+
+const char* random_title(const char** lst, unsigned int max) {
 	unsigned int val = rand() % max;
-	curr_tip = val;
 	return lst[val];
 }
 
-void close_cb(Widget*, void* w)
-{
-	Window* win = (Window*)w;
+const char* random_fortune(void) {
+	unsigned int val = rand() % (fortune_num_items(ffile) - 1);
+	curr_tip = val;
+	fortune_get(ffile, val, fstring);
+	return fstring.c_str();
+}
+
+void close_cb(Fl_Widget*, void*) {
 	win->hide();
 }
 
-void next_cb(Widget*, void* tb)
-{
-	InvisibleBox* tipbox = (InvisibleBox*)tb;
+void next_cb(Fl_Widget*, void*) {
+	if(!ffile)
+		return;
+
 	curr_tip++;
-	if(curr_tip >= TIPS_NUM)
+	if(curr_tip >= (int)fortune_num_items(ffile))
 		curr_tip = 0;
-	tipbox->label(tiplist[curr_tip]);	
-	tipbox->redraw_label();
+
+	fortune_get(ffile, curr_tip, fstring);
+	//preformat_tip(fstring);
+	tip_box->label(fstring.c_str());
 }
 
-void prev_cb(Widget*, void* tb)
-{
-	InvisibleBox* tipbox = (InvisibleBox*)tb;
-	if(curr_tip == 0)
-		curr_tip = TIPS_NUM - 1;
-	else
+void prev_cb(Fl_Widget*, void*) {
+	if(!ffile)
+		return;
+
+	curr_tip--;
+	if(curr_tip < 0) {
+		curr_tip = fortune_num_items(ffile);
 		curr_tip--;
-	tipbox->label(tiplist[curr_tip]);	
-	tipbox->redraw_label();
+	}
+
+	fortune_get(ffile, curr_tip, fstring);
+	tip_box->label(fstring.c_str());
 }
 
-int main(int argc, char** argv)
-{
-	srand(time(NULL));
+FortuneFile* load_fortune_file(void) {
+	edelib::Config conf;
+	if(!conf.load("etip.conf"))
+		return NULL;
 
-	Window* win = new Window(460, 200, _("Tips..."));
+	char path[1024];
+	if(!conf.get("etip", "Path", path, sizeof(path)))
+		return NULL;
+
+	// check if file exists and at the same place we have .dat file
+	if(!edelib::file_exists(path))
+		return NULL;
+
+	edelib::String dat = path;
+	dat += ".dat";
+
+	if(!edelib::file_exists(dat.c_str()))
+		return NULL;
+
+	return fortune_open(path, dat.c_str());
+}
+
+int main(int argc, char **argv) {
+	ffile = load_fortune_file();
+
+	// initialize random number only if we loaded tips
+	if(ffile)
+		srand(time(0));
+
+	win = new Fl_Window(535, 260, _("EDE Tips"));
 	win->begin();
+		Fl_Group* main_group = new Fl_Group(10, 10, 515, 205);
+		main_group->box(FL_DOWN_BOX);
+		main_group->color(FL_BACKGROUND2_COLOR);
+		main_group->begin();
+			Fl_Box* image_box = new Fl_Box(11, 13, 121, 201);
+			image_box->image(image_hint);
 
-	InvisibleBox* img = new InvisibleBox(10, 10, 70, 65);
-	xpmImage pix(hint_xpm);
-	img->image(pix);
-	img->box(FLAT_BOX);
+			title_box = new Fl_Box(155, 23, 355, 25, random_title(title_tips, TITLE_TIPS_NUM));
+			title_box->labelfont(FL_HELVETICA_BOLD);
+			title_box->align(196|FL_ALIGN_INSIDE);
 
-	InvisibleBox* title = new InvisibleBox(85, 15, 365, 25, random_txt(title_tips, TITLE_TIPS_NUM));
-	title->box(fltk::FLAT_BOX);
-	title->labelfont(fltk::HELVETICA_BOLD);
-	title->align(fltk::ALIGN_LEFT|fltk::ALIGN_INSIDE);
+      		tip_box = new Fl_Box(155, 60, 355, 140);
+			tip_box->align(197|FL_ALIGN_INSIDE);
 
-	InvisibleBox* tiptxt = new InvisibleBox(85, 45, 365, 110, random_txt(tiplist, TIPS_NUM));
-	tiptxt->box(fltk::FLAT_BOX);
-	tiptxt->align(fltk::ALIGN_TOP|fltk::ALIGN_LEFT|fltk::ALIGN_INSIDE|fltk::ALIGN_WRAP);
+			if(!ffile)
+				tip_box->label(_("I'm unable to correctly load tip files. Please check what went wrong"));
+			else
+				tip_box->label(random_fortune());
 
-    new fltk::CheckButton(10, 165, 155, 25, _("Do not bother me"));
+		main_group->end();
 
-    Button* prev = new Button(170, 165, 90, 25, _("@< Previous"));
-	prev->callback(prev_cb, tiptxt);
-    Button* next = new Button(265, 165, 90, 25, _("Next @>"));
-	next->callback(next_cb, tiptxt);
+		check_button = new Fl_Check_Button(10, 224, 225, 25, _("Show tips on startup"));
+		check_button->down_box(FL_DOWN_BOX);
 
-    Button* close = new Button(360, 165, 90, 25, _("&Close"));
-	close->callback(close_cb, win);
+		Fl_Button* prev_button = new Fl_Button(240, 224, 90, 25, _("&Previous"));
+		prev_button->callback(prev_cb);
+
+		Fl_Button* next_button = new Fl_Button(335, 224, 90, 25, _("&Next"));
+		next_button->callback(next_cb);
+
+		Fl_Button* close_button = new Fl_Button(435, 224, 90, 25, _("&Close"));
+		close_button->callback(close_cb);
+
+		// check_button somehow steal focus
+		close_button->take_focus();
+
 	win->end();
+	win->show(argc, argv);
 
-	win->set_modal();
-	win->show();
-	return run();
+	Fl::run();
+
+	if(ffile)
+		fortune_close(ffile);
+
+	return 0;
 }
