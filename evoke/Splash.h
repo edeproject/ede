@@ -49,7 +49,10 @@ class Splash : public Fl_Double_Window {
 		bool next_client_nosplash(void);
 
 		void run(void);
-		//virtual void show(void);
+
+#if EDEWM_HAVE_NET_SPLASH
+		virtual void show(void);
+#endif
 };
 
 #endif

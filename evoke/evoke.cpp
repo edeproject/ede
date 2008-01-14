@@ -3,7 +3,7 @@
  *
  * Evoke, head honcho of everything
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2007-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -24,7 +24,6 @@
 
 #define FOREVER       1e20
 #define CONFIG_FILE   "evoke.conf"
-#define APPNAME       "evoke"
 #define DEFAULT_PID   "/tmp/evoke.pid"
 /*
  * Used to assure unique instance, even if is given another 
@@ -48,6 +47,14 @@ void xmessage_handler(int, void*) {
 	}
 }
 
+int xmessage_handler2(int) {
+	return EvokeService::instance()->handle(fl_xevent);
+}
+
+int composite_handler(int ev) {
+	return EvokeService::instance()->composite_handle(fl_xevent);
+}
+
 const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
@@ -58,7 +65,7 @@ const char* next_param(int curr, char** argv, int argc) {
 }
 
 void help(void) {
-	puts("Usage: "APPNAME" [OPTIONS]");
+	puts("Usage: evoke [OPTIONS]");
 	puts("EDE startup manager responsible for starting, quitting and tracking");
 	puts("various pieces of desktop environment and external programs.");
 	puts("...and to popup a nice window when something crashes...\n");
@@ -125,7 +132,7 @@ int main(int argc, char** argv) {
 			else if(CHECK_ARGV(a, "-u", "--autostart-safe"))
 				do_autostart_safe = 1;
 			else {
-				printf("Unknown parameter '%s'. Run '"APPNAME" -h' for options\n", a);
+				printf("Unknown parameter '%s'. Run 'evoke -h' for options\n", a);
 				return 1;
 			}
 		}
@@ -134,6 +141,7 @@ int main(int argc, char** argv) {
 	// make sure X11 is running before rest of code is called
 	fl_open_display();
 
+	// initialize main service object
 	EvokeService* service = EvokeService::instance();
 
 	if(!service->setup_logging(log_file)) {
@@ -146,15 +154,15 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	EVOKE_LOG("= "APPNAME" started =\n");
+	EVOKE_LOG("= evoke started =\n");
 
 	if(!pid_file)
 		pid_file = DEFAULT_PID;
 
 	if(!service->setup_pid(pid_file, LOCK_FILE)) {
-		printf("Either another "APPNAME" instance is running or can't create pid file. Please correct this\n");
+		printf("Either another evoke instance is running or can't create pid file. Please correct this\n");
 		printf("Note: if program abnormaly crashed before, just remove '%s' and start it again\n", LOCK_FILE);
-		printf("= "APPNAME" abrupted shutdown =\n");
+		printf("= evoke abrupted shutdown =\n");
 		return 1;
 	}
 
@@ -164,17 +172,26 @@ int main(int argc, char** argv) {
 	if(do_startup) {
 		if(!service->init_splash(config_file, no_splash, do_dryrun)) {
 			EVOKE_LOG("Unable to read correctly %s. Please check it is correct config file\n", config_file);
-			EVOKE_LOG("= "APPNAME" abrupted shutdown =\n");
+			EVOKE_LOG("= evoke abrupted shutdown =\n");
 			return 1;
 		}
 	}
 
-	if(do_autostart || do_autostart_safe) {
-		service->init_autostart(do_autostart_safe);
-	}
-
 	service->setup_atoms(fl_display);
 	service->init_xsettings_manager();
+
+	/*
+	 * Run autostart code after XSETTINGS manager since some Gtk apps (mozilla) will eats a lot
+	 * of cpu during runtime settings changes
+	 */
+	if(do_autostart || do_autostart_safe)
+		service->init_autostart(do_autostart_safe);
+
+	/*
+	 * Let composite manager be run the latest. Running autostart after it will not deliver
+	 * X events to possible shown autostart window, and I'm not sure why. Probably due event
+	 * throttle from XDamage ?
+	 */
 	service->init_composite();
 
 	signal(SIGINT,  quit_signal);
@@ -192,12 +209,9 @@ int main(int argc, char** argv) {
 	signal(SIGHUP,  quit_signal);
 #endif
 
-	service->start();
-
 #if 0
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | SubstructureNotifyMask | ClientMessage);
 #endif
-
 	// composite engine included too
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), 
 			SubstructureNotifyMask | ExposureMask | StructureNotifyMask | PropertyChangeMask | ClientMessage);
@@ -206,18 +220,63 @@ int main(int argc, char** argv) {
 	 * Register event listener and run in infinite loop. Loop will be
 	 * interrupted from one of the received signals.
 	 *
-	 * I choose to use fltk for this since wait() will nicely pool events
+	 * I choose to use fltk for this since wait() will nicely poll events
 	 * and pass expecting ones to xmessage_handler(). Other (non-fltk) solution would
 	 * be to manually pool events via select() and that code could be very messy.
 	 * So stick with the simplicity :)
 	 *
-	 * Also note that '1' parameter means POLLIN, and for the details see Fl_x.cxx
+	 * Also note that '1' in add_fd (when USE_FLTK_LOOP_EMULATION is defined) parameter 
+	 * means POLLIN, and for the details see Fl_x.cxx
+	 *
+	 * Let me explaint what these USE_FLTK_LOOP_EMULATION parts means. It was introduced
+	 * since FLTK eats up SelectionClear event and so other parts (evoke specific atoms, splash etc.)
+	 * could be used and tested. FLTK does not have event handler that could be registered
+	 * _before_ it process events, but only add_handler() which will be called _after_ FLTK process
+	 * all events and where will be reported ones that FLTK does not understainds or for those
+	 * windows it already don't know.
 	 */
+#ifdef USE_FLTK_LOOP_EMULATION
 	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler);
+	Fl::add_handler(composite_handler);
+#else
+	/*
+	 * NOTE: composite_handler() is not needed since it will be included
+	 * within xmessage_handler2() call
+	 */
+	Fl::add_handler(xmessage_handler2);
+#endif
 
-	while(service->running())
+	service->start();
+
+	while(service->running()) {
+#ifdef USE_FLTK_LOOP_EMULATION
+		/*
+	 	 * Seems that when XQLength() is not used, damage events will not be correctly
+	 	 * send to xmessage_handler() and composite will wrongly draw the screen.
+	 	 */
+		if(XQLength(fl_display)) {
+			xmessage_handler(0, 0);
+			continue;
+		}
+#else
+		/*
+		 * FLTK will not report SelectionClear needed for XSETTINGS manager
+		 * so we must catch it first before FLTK discards it (if we can :P)
+		 * This can be missed greatly due a large number of XDamage events
+		 * and using this method is not quite safe.
+		 */
+		if(fl_xevent && fl_xevent->type == SelectionClear)
+			service->handle(fl_xevent);
+#endif
+
 		Fl::wait(FOREVER);
 
-	EVOKE_LOG("= "APPNAME" nice shutdown =\n");
+#ifndef USE_FLTK_LOOP_EMULATION
+		if(fl_xevent && fl_xevent->type == SelectionClear)
+			service->handle(fl_xevent);
+#endif
+	}
+
+	EVOKE_LOG("= evoke nice shutdown =\n");
 	return 0;
 }

@@ -52,9 +52,10 @@ class Composite {
 		Composite();
 		~Composite();
 		bool init(void);
-		void handle_xevents(const XEvent* xev);
+		int handle_xevents(const XEvent* xev);
 
 		void paint_all(XserverRegion region);
+		void update_screen(void);
 };
 
 #endif

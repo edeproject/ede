@@ -78,6 +78,8 @@ void AstartDialog::add_item(const edelib::String& n, const edelib::String& e) {
 
 	lst[curr++] = it;
 }
+#include <stdio.h>
+#include <unistd.h>
 
 void AstartDialog::run(void) {
 	if(!show_dialog) {
@@ -91,8 +93,10 @@ void AstartDialog::run(void) {
 	if(!shown())
 		show();
 
-	while(shown())
+	while(shown()) {
+		//puts("WAIT WAIT");
 		Fl::wait();
+	}
 }
 
 void AstartDialog::run_selected(void) {

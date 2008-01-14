@@ -12,6 +12,10 @@ SubDir TOP evoke ;
 
 # use SIGHUP for now as default
 ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
+# relay on FLTK loop emulation for now
+ObjectC++Flags EvokeService.cpp evoke.cpp : -DUSE_FLTK_LOOP_EMULATION ;
+# for smooth repainting
+#ObjectC++Flags Composite.cpp : -DUSE_CHECK ;
 
 SOURCE = evoke.cpp 
 		 EvokeService.cpp 
@@ -32,5 +36,6 @@ EdeProgram evoke : $(SOURCE) ;
 FltkProgramBare test/evoke_test : test/evoke_test.cpp ;
 FltkProgramBare test/stress_test : test/stress_test.cpp ;
 FltkProgramBare test/opacity_test : test/opacity_test.cpp ;
+
 #TranslationStrings locale : $(SOURCE) ;
 EdeManual doc/evoke.txt ;

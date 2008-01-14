@@ -110,17 +110,32 @@ double shadowOpacity = .75;
 
 bool hasNamePixmap = true;
 
-Composite* global_composite;
+#define DO_BETTER_REPAINT 1
 
 void idle_cb(void* c) {
 	Composite* comp = (Composite*)c;
 
+#ifdef DO_BETTER_REPAINT
+	if(allDamage != None) {
+		comp->paint_all(allDamage);
+
+		XFixesDestroyRegion(fl_display, allDamage);
+		allDamage = None;
+		clipChanged = false;
+	}
+#else
 	comp->paint_all(allDamage);
 
-	allDamage = None;
-	clipChanged = false;
+	if(allDamage != None) {
+		XFixesDestroyRegion(fl_display, allDamage);
+		allDamage = None;
+		clipChanged = false;
+	}
+#endif
 
+#ifndef USE_CHECK
 	Fl::repeat_timeout(REFRESH_TIMEOUT, idle_cb, c);
+#endif
 }
 
 int xerror_handler(Display* display, XErrorEvent* xev) {
@@ -170,8 +185,8 @@ int xerror_handler(Display* display, XErrorEvent* xev) {
 			break;
 	}
 	
-	EDEBUG(ESTRLOC ": (%s) : error %i request %i minor %i serial %i\n", 
-			(name ? name : "unknown"), xev->error_code, xev->request_code, xev->minor_code, xev->serial);
+	//EDEBUG(ESTRLOC ": (%s) : error %i request %i minor %i serial %i\n", 
+	//		(name ? name : "unknown"), xev->error_code, xev->request_code, xev->minor_code, xev->serial);
 
 #if 0
 	char buff[128];
@@ -218,11 +233,11 @@ unsigned int get_opacity_property(CWindow* win, unsigned int dflt) {
 		// TODO: replace memcpy call
 		memcpy(&p, data, sizeof(unsigned int));
 		XFree(data);
-		EDEBUG(":) Opacity for %i = %i\n", win->id, p);
+	//	EDEBUG(":) Opacity for %i = %i\n", win->id, p);
 		return p;
 	}
 
-	EDEBUG("Opacity for %i = %i\n", win->id, dflt);
+	//EDEBUG("Opacity for %i = %i\n", win->id, dflt);
 
 	return dflt;
 }
@@ -230,14 +245,6 @@ unsigned int get_opacity_property(CWindow* win, unsigned int dflt) {
 double get_opacity_percent(CWindow* win, double dflt) {
 	unsigned int opacity = get_opacity_property(win, (unsigned int)(OPAQUE * dflt));
 	return opacity * 1.0 / OPAQUE;
-}
-
-const char* get_window_label(Window win) {
-	XTextProperty tp;
-	if(XGetWMName(fl_display, win, &tp) != 0)
-		return (const char*)tp.value;
-	else
-		return "(none)";
 }
 
 Atom get_window_type_property(Window win) {
@@ -270,7 +277,7 @@ Atom determine_window_type(Window win) {
 	Window* children = NULL;
 	unsigned int nchildren;
 	
-	if(!XQueryTree(fl_display, win, &root_return, &parent_return, &children, &nchildren)) {
+	if(XQueryTree(fl_display, win, &root_return, &parent_return, &children, &nchildren) != 0) {
 		if(children)
 			XFree(children);
 		return _XA_NET_WM_WINDOW_TYPE_NORMAL;
@@ -288,7 +295,7 @@ Atom determine_window_type(Window win) {
 }
 
 void add_damage(XserverRegion damage) {
-	if(allDamage) {
+	if(allDamage != None) {
 		XFixesUnionRegion(fl_display, allDamage, allDamage, damage);
 		XFixesDestroyRegion(fl_display, damage);
 	} else 
@@ -429,12 +436,22 @@ Composite::Composite() : manual_redirect(true) {
 
 Composite::~Composite() {
 	EDEBUG("Composite::~Composite()\n");
+#ifdef USE_CHECK
+	Fl::remove_check(idle_cb);
+#else
+	Fl::remove_timeout(idle_cb);
+#endif
+
+	// TODO: this part should call finish_destroy_window()
+	CWindowListIter it = window_list.begin(), it_end = window_list.end();
+	while(it != it_end) {
+		delete *it;
+		++it;
+	}
 }
 
 bool Composite::init(void) {
 	another_is_running = false;
-
-	global_composite = this;
 
 	// set error handler first
 	XSetErrorHandler(xerror_handler);
@@ -528,8 +545,21 @@ bool Composite::init(void) {
 	 * since window_list will be empty
 	 */
 	if(manual_redirect) {
-		paint_all(None); // XXX: probably not needed since will be called in idle_cb()
+		paint_all(None);
+		/*
+		 * Using add_check() instead add_timeout() makes difference in redrawing
+		 * since add_check() callback function will be called before FLTK flushes
+		 * the display which makes it very suitable for smooth redrawing.
+		 *
+		 * On other hand, using add_timeout() will trigger timer each REFRESH_TIMEOUT
+		 * no matter for pending events (especially XDamageNotifyEvent) and due that 
+		 * timeout we can miss some XDamage events, yielding little bit non-smooth redrawing.
+		 */
+#ifdef USE_CHECK
+		Fl::add_check(idle_cb, this);
+#else
 		Fl::add_timeout(REFRESH_TIMEOUT, idle_cb, this);
+#endif
 	}
 
 	return true;
@@ -557,7 +587,7 @@ void Composite::add_window(Window id, Window previous) {
 		new_win->damage = None;
 	} else {
 		new_win->damage_sequence = NextRequest(fl_display);
-		new_win->damage = XDamageCreate(fl_display, id, XDamageReportNonEmpty);
+		new_win->damage = XDamageCreate(fl_display, new_win->id, XDamageReportNonEmpty);
 	}
 
 	new_win->picture_alpha = None;
@@ -565,10 +595,10 @@ void Composite::add_window(Window id, Window previous) {
 	new_win->border_size = None;
 	new_win->extents = None;
 	new_win->shadow = None;
-	new_win->shadow_dx = None;
-	new_win->shadow_dy = None;
-	new_win->shadow_w = None;
-	new_win->shadow_h = None;
+	new_win->shadow_dx = 0;
+	new_win->shadow_dy = 0;
+	new_win->shadow_w = 0;
+	new_win->shadow_h = 0;
 	new_win->opacity = get_opacity_property(new_win, OPAQUE);
 	new_win->border_clip = None;
 
@@ -591,14 +621,15 @@ void Composite::map_window(Window id, unsigned long sequence, bool fade) {
 	win->attr.map_state = IsViewable;
 
 	// this needs to be here or we loose transparency messages
-	XSelectInput(fl_display, win->id, PropertyChangeMask);
+	//XSelectInput(fl_display, win->id, PropertyChangeMask);
+	XSelectInput(fl_display, win->id, PropertyChangeMask | win->attr.your_event_mask | StructureNotifyMask);
 	win->damaged = 0;
 
 	/* 
 	 * XXX: a hack, not present in xcompmgr due main event
 	 * loop changes
 	 */
-	repair_window(win);
+	//repair_window(win);
 
 	// TODO: fading support
 }
@@ -747,7 +778,12 @@ void Composite::restack_window(CWindow* win, Window new_above) {
 		old_above = None;
 	else {
 		++it; // get the next one
-		old_above = (*it)->id;
+
+		// check again
+		if(it == it_end)
+			old_above = None;
+		else
+			old_above = (*it)->id;
 	}
 
 	if(old_above != new_above) {
@@ -1008,9 +1044,9 @@ void Composite::paint_all(XserverRegion region) {
 			if(win->pixmap)
 				draw = win->pixmap;
 #endif
-			XRenderPictureAttributes pa;
 			XRenderPictFormat* format = XRenderFindVisualFormat(fl_display, win->attr.visual);
 
+			XRenderPictureAttributes pa;
 			pa.subwindow_mode = IncludeInferiors;
 			win->picture = XRenderCreatePicture(fl_display, draw, format, CPSubwindowMode, &pa);
 		}
@@ -1105,7 +1141,6 @@ void Composite::paint_all(XserverRegion region) {
 
 		// TODO: check this, xcompmgr have the same code for WIN_MODE_TRANS and WIN_MODE_ARGB
 		if(win->mode == WIN_MODE_TRANS || win->mode == WIN_MODE_ARGB) {
-			EDEBUG("!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			int x, y, wid, hei;
 #if HAVE_NAME_WINDOW_PIXMAP
 			x = win->attr.x;
@@ -1119,9 +1154,33 @@ void Composite::paint_all(XserverRegion region) {
 			hei = win->attr.height;
 #endif
 			set_ignore(NextRequest(fl_display));
+
+#if 0
 			XRenderComposite(fl_display, PictOpOver, win->picture, win->picture_alpha, rootBuffer,
 					0, 0, 0, 0,
 					x, y, wid, hei);
+#endif
+
+			//////////////////////////////////////////
+
+			XRenderComposite(fl_display, PictOpOver, win->picture, win->picture_alpha, rootBuffer,
+					10, 0, 
+					0, 0,
+					x+10, y, wid-10, 100);
+
+			// solid
+			XRenderComposite(fl_display, PictOpSrc, win->picture, None, rootBuffer,
+					10, 100, 
+					0, 0, 
+					x+10, y+100, wid-10, hei-100);
+
+			XRenderComposite(fl_display, PictOpSrc, win->picture, None, rootBuffer,
+					0, 0, 
+					0, 0, 
+					x, y, 10, hei);
+
+			//////////////////////////////////////////
+	
 		}
 
 		// XXX: a lot of errors here ?
@@ -1150,18 +1209,25 @@ void Composite::damage_window(XDamageNotifyEvent* de) {
 	CWindow* win = find_window(de->drawable);
 	if(!win)
 		return;
+#if 0
+	// XXX: addon
+	while(XPending(fl_display)) {
+		XEvent ev;
+		if(XPeekEvent(fl_display, &ev) && ev.type == (damage_event + XDamageNotify) && ev.xany.window == win->id) {
+			XNextEvent(fl_display, &ev);
+			repair_window(win);
+			EDEBUG("XXXXXXXXXXXXX\n");
+			continue;
+		}
 
+		break;
+	}
+#endif
 	repair_window(win);
 }
 
 void Composite::repair_window(CWindow* win) {
 	XserverRegion parts;
-
-	EDEBUG("Repairing %i (%i) (area: x:%i y:%i w:%i h:%i)\n", win->id, win->damaged, 
-			win->attr.x,
-			win->attr.y,
-			win->attr.width,
-			win->attr.height);
 
 	if(!win->damaged) {
 		parts = window_extents(win);
@@ -1238,9 +1304,17 @@ void Composite::finish_destroy_window(Window id, bool gone) {
 	}
 }
 
-void Composite::handle_xevents(const XEvent* xev) {
+void Composite::update_screen(void) {
+	if(allDamage != None) {
+		paint_all(allDamage);
+		allDamage = None;
+		clipChanged = false;
+	}
+}
+
+int Composite::handle_xevents(const XEvent* xev) {
 	if(another_is_running || !manual_redirect)
-		return;
+		return 0;
 
 	switch(xev->type) {
 		case CreateNotify:
@@ -1280,10 +1354,13 @@ void Composite::handle_xevents(const XEvent* xev) {
 			property_notify(&xev->xproperty);
 			break;
 		default:
-			if(xev->type == damage_event + XDamageNotify) {
-				EDEBUG("---------> %i <---------\n", damage_event);
+			if(xev->type == (damage_event + XDamageNotify)) {
+				//EDEBUG("---------> %i <---------\n", damage_event + XDamageNotify);
 				damage_window((XDamageNotifyEvent*)xev);
+				return 0;
 			}
 			break;
 	}
+
+	return 1;
 }

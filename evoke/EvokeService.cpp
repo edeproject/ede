@@ -202,7 +202,6 @@ EvokeService::EvokeService() :
 	is_running(0), logfile(NULL), xsm(NULL), composite(NULL), pidfile(NULL), lockfile(NULL) { 
 
 	wake_up_pipe[0] = wake_up_pipe[1] = -1;
-	//quit_child_pid = quit_child_ret = -1;
 }
 
 EvokeService::~EvokeService() {
@@ -589,6 +588,7 @@ void EvokeService::service_watcher(int pid, int ret) {
 	write(wake_up_pipe[1], &ret, sizeof(int));
 }
 
+#include <FL/fl_ask.h>
 void EvokeService::wake_up(int fd) {
 	puts("=== wake_up() ===");
 
@@ -632,6 +632,7 @@ void EvokeService::wake_up(int fd) {
 				break;
 			case 127:
 				edelib::alert(_("Program not found"));
+				//fl_alert(_("Program not found"));
 				break;
 			case 126:
 				edelib::alert(_("Program not executable"));
@@ -727,6 +728,12 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 	return 0;
 }
 
+int EvokeService::composite_handle(const XEvent* xev) {
+	if(composite)
+		return composite->handle_xevents(xev);
+	return 1;
+}
+
 /*
  * Main loop for processing got X events.
  *
@@ -736,33 +743,13 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
  * whole program.
  */
 int EvokeService::handle(const XEvent* xev) {
-	EVOKE_LOG("Got event %i\n", xev->type);
-
 	if(xsm && xsm->should_terminate(xev)) {
 		EVOKE_LOG("XSETTINGS manager shutdown\n");
 		stop_xsettings_manager(true);
+		return 1;
 	}
 
-	if(composite)
-		composite->handle_xevents(xev);
-
-#if 0	
-	else if(xev->type == MapNotify) {
-		puts("=================");
-		if(top_win) {
-			// for splash to keep it at top (working in old edewm)
-			XRaiseWindow(fl_display, fl_xid(top_win));
-			// return 1;
-		}
-	} else if(xev->type == ConfigureNotify) {
-	 	if(xev->xconfigure.event == DefaultRootWindow(fl_display) && top_win) {
-			// splash too, but keep window under other wm's
-			XRaiseWindow(fl_display, fl_xid(top_win));
-			// return 1;
-		}
-	}
-#endif
-	else if(xev->type == PropertyNotify) {
+	if(xev->type == PropertyNotify) {
 		if(xev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
@@ -798,6 +785,12 @@ int EvokeService::handle(const XEvent* xev) {
 		}
 	}
 
+#ifdef USE_FLTK_LOOP_EMULATION
 	// let FLTK handle the rest
-	return fl_handle(*xev);
+	fl_handle(*xev);
+	return 0;
+#else
+	// let composite manager do the rest
+	return composite_handle(xev);
+#endif
 }

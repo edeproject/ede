@@ -51,8 +51,6 @@ typedef edelib::list<EvokeProcess>::iterator ProcessListIter;
 typedef edelib::list<QueuedSignal> SignalQueue;
 typedef edelib::list<QueuedSignal>::iterator SignalQueueIter;
 
-class Fl_Double_Window;
-
 class EvokeService {
 	private:
 		bool  is_running;
@@ -92,6 +90,7 @@ class EvokeService {
 		void init_composite(void);
 
 		int handle(const XEvent* ev);
+		int composite_handle(const XEvent* ev);
 
 		Log* log(void) { return logfile; }
 
@@ -104,6 +103,8 @@ class EvokeService {
 		bool find_and_unregister_process(pid_t pid, EvokeProcess& pc);
 
 		void quit_x11(void);
+
+		//void update_screen(void);
 };
 
 #define EVOKE_LOG EvokeService::instance()->log()->printf

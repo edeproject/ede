@@ -16,7 +16,6 @@
 #include <edelib/Run.h>
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
-#include <edelib/Sound.h>
 
 #include <FL/Fl_Shared_Image.h>
 #include <FL/Fl.h>
@@ -26,20 +25,27 @@
 #define TIMEOUT_START    0.5  // timeout when splash is first time shown (also for first client)
 #define TIMEOUT_CONTINUE 2.0  // timeout between starting rest of the cliens
 
-
 extern void service_watcher_cb(int pid, int signum);
-Fl_Double_Window* splash_win = 0;
+
+#ifndef EDEWM_HAVE_NET_SPLASH
+Splash* global_splash = NULL;
 
 int splash_xmessage_handler(int e) {
-	if(fl_xevent->type == MapNotify || fl_xevent->type == ConfigureNotify) {
-		if(splash_win) {
-			XRaiseWindow(fl_display, fl_xid(splash_win));
+	if(fl_xevent->type == MapNotify) {
+		XRaiseWindow(fl_display, fl_xid(global_splash));
+		return 1;
+	}
+
+	if(fl_xevent->type == ConfigureNotify) {
+	 	if(fl_xevent->xconfigure.event == DefaultRootWindow(fl_display)) {
+			XRaiseWindow(fl_display, fl_xid(global_splash));
 			return 1;
 		}
 	}
 
 	return 0;
 }
+#endif
 
 /*
  * repeatedly call runner() untill all clients are 
@@ -67,8 +73,8 @@ Splash::~Splash() {
 }
 
 
-#if 0
 // after edewm got _NET_WM_WINDOW_TYPE_SPLASH support
+#if EDEWM_HAVE_NET_SPLASH
 void Splash::show(void) {
 	if(shown())
 		return;
@@ -185,35 +191,22 @@ void Splash::run(void) {
 	int sh = DisplayHeight(fl_display, fl_screen);
 	position(sw/2 - w()/2, sh/2 - h()/2);
 
-	bool sound_loaded = false;
-	if(sound && !sound->empty())
-		sound_loaded = edelib::SoundSystem::init();
-
 	show();
 	Fl::add_timeout(TIMEOUT_START, runner_cb, this);
 
-	/*
-	 * Force keeping splash window at the top of all. To do this, we will listen
-	 * MappingNotify and ConfigureNotify events, and when they be triggered we will
-	 * raise splash window.
-	 */
-	splash_win = this;
-
-	//XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
-	//Fl::add_handler(splash_xmessage_handler);
-
-	if(sound_loaded)
-		edelib::SoundSystem::play(sound->c_str(), 0);
-
+	// to keep splash at the top
+#ifndef HAVE_NET_SPLASH
+	global_splash = this;
+	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
+	Fl::add_handler(splash_xmessage_handler);
+#endif
+	
 	while(shown())
 		Fl::wait();
 
-	if(sound_loaded) {
-		edelib::SoundSystem::stop();
-		edelib::SoundSystem::shutdown();
-	}
-
-	splash_win = 0;
+#ifndef EDEWM_HAVE_NET_SPLASH
+	Fl::remove_handler(splash_xmessage_handler);
+#endif
 }
 
 // called when splash option is on
