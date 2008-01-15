@@ -192,6 +192,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	DESKTOP_WINDOW::init();
 	settings_uid(EICONMAN_UID);
 	settings_callback(settings_changed_cb);
+	//DESKTOP_WINDOW::single_buffer(true);
 #endif
 
 	selbox = new SelectionOverlay;
@@ -965,6 +966,8 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 					(*it)->icon2();
 			}
 		}
+
+		EDEBUG(ESTRLOC ": event on trash dir %s\n", dir);
 
 		return;
 	}

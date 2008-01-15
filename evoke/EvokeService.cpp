@@ -15,7 +15,6 @@
 #include "EvokeService.h"
 #include "Splash.h"
 #include "Spawn.h"
-#include "Crash.h"
 #include "Autostart.h"
 
 #include <edelib/File.h>
@@ -617,9 +616,6 @@ void EvokeService::wake_up(int fd) {
 
 		if(ret) {
 			printf("%s crashed with core dump\n", pc.cmd.c_str());
-			CrashDialog cdialog;
-			cdialog.set_data(pc.cmd.c_str());
-			cdialog.run();
 		}
 	} else { 
 		mutex.lock();

@@ -34,7 +34,7 @@ rule FortuneCompile
 
 actions FortuneCompile1
 {
-	$(TOP)/etip/etip-compiler "$(>)" "$(<)"
+	$(TOP)/etip/etip-compiler -s "$(>)" "$(<)"
 }
 
 FortuneCompile tips/ede.dat      : tips/ede ;

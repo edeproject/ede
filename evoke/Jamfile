@@ -26,10 +26,9 @@ SOURCE = evoke.cpp
 		 Splash.cpp 
 		 Log.cpp 
 		 Logout.cpp 
-		 Crash.cpp 
 		 Autostart.cpp ;
 
-LinkAgainst evoke : -lXcomposite -lXdamage -lXfixes -lXrender -lao -lvorbis -lvorbisfile ;
+LinkAgainst evoke : -lXcomposite -lXdamage -lXfixes -lXrender ;
 #LinkAgainst evoke : -lpthread ;
 
 EdeProgram evoke : $(SOURCE) ;

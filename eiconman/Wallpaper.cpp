@@ -375,8 +375,8 @@ bool Wallpaper::set(const char* path) {
 	Fl_Image* i = Fl_Shared_Image::get(path);
 	if(!i)
 		return false;
-	image(i);
 
+	image(i);
 	set_rootpmap();
 
 	return true;

@@ -487,8 +487,18 @@ void MovableIcon::show(void) {
 #ifdef USE_SHAPE
 	if(icon->icon_image()) {
 		mask = create_mask(icon->icon_image());
-		if(mask)
+		if(mask) {
 			XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
+
+			/*
+			 * now set transparency; composite manager should handle the rest (if running)
+			 * TODO: should this be declared as part of the class ?
+			 */
+			Atom opacity_atom = XInternAtom(fl_display, "_NET_WM_WINDOW_OPACITY", False);
+			unsigned int opacity = 0xc0000000;
+			XChangeProperty(fl_display, fl_xid(this), opacity_atom, XA_CARDINAL, 32, PropModeReplace,
+					(unsigned char*)&opacity, 1L);
+		}
 	}
 #endif
 }
