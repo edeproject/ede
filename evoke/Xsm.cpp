@@ -91,8 +91,9 @@ void Xsm::xresource_replace(void) {
 	// try to open ~/.Xdefaults; if failed, X Resource will not complain
 	edelib::String db_file = edelib::build_filename("/", home.c_str(), USER_XRESOURCE);
 
-	// initialize XResource
+	// initialize XResource manager
 	XrmInitialize();
+
 	// load XResource database
 	XrmDatabase db = XrmGetFileDatabase(db_file.c_str());
 
