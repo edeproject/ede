@@ -25,6 +25,7 @@
 
 - link:ecalc.html[Ecalc]
 - link:evoke.html[Evoke]
+- link:etip.html[Etip]
 
 *Development*
 
