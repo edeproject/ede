@@ -72,7 +72,7 @@ rule EdeManual
 
 actions AsciiDoc1
 {
-	$(ASCIIDOC) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0 alpha 1" -o $(<) $(>)
+	$(ASCIIDOC) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o $(<) $(>)
 }
 
 NotFile doc ;
