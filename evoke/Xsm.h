@@ -17,6 +17,7 @@
 
 /*
  * XSETTINGS manager with serialization capability.
+ * Also it will write/undo to xrdb (X Resource database).
  */
 class Xsm : public edelib::XSettingsManager {
 	public:
@@ -24,6 +25,11 @@ class Xsm : public edelib::XSettingsManager {
 		~Xsm();
 		bool load_serialized(const char* file);
 		bool save_serialized(const char* file);
+
+		// replace XResource values from one from XSETTINGS
+		void xresource_replace(void);
+		// undo old XResource values
+		void xresource_undo(void);
 };
 
 #endif
