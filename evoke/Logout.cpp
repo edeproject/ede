@@ -134,11 +134,25 @@ unsigned char* make_darker(unsigned char *p, int X, int Y, int w, int h) {
 	for(int j = 0; j < h; j++) {
 		for(int i = 0; i < w; i++) {
 			// red
-			if(*pdata > step) *pdata -= step; pdata++;
+			if(*pdata > step)
+				*pdata -= step;
+			else
+				*pdata = 0;
+			pdata++;
+
 			// green
-			if(*pdata > step) *pdata -= step; pdata++;
+			if(*pdata > step)
+				*pdata -= step;
+			else
+				*pdata = 0;
+			pdata++;
+
 			// blue
-			if(*pdata > step) *pdata -= step; pdata++;
+			if(*pdata > step)
+				*pdata -= step;
+			else
+				*pdata = 0;
+			pdata++;
 		}
 	}
 
