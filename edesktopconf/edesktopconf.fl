@@ -6,7 +6,7 @@ Function {} {open
 } {
   Fl_Window {} {
     label {Desktop options} open
-    xywh {333 344 550 285} type Double visible
+    xywh {394 295 550 285} type Double visible
   } {
     Fl_Tabs {} {open
       xywh {10 10 530 230} labelsize 14
@@ -70,12 +70,16 @@ Function {} {open
           xywh {260 90 220 25} down_box DOWN_BOX
         }
         Fl_Value_Slider {} {
-          label {Font size}
-          xywh {30 155 220 20} type {Horz Knob} align 5 step 0.01 textsize 12
-        }
-        Fl_Value_Slider {} {
           label {Label width}
-          xywh {260 155 220 20} type {Horz Knob} align 5 step 0.01 textsize 12
+          xywh {30 155 220 25} type {Horz Knob} align 5 step 0.01 textsize 12
+        }
+        Fl_Input {} {
+          label {Label font}
+          xywh {260 155 190 25} align 5
+        }
+        Fl_Button {} {
+          label {...}
+          xywh {455 155 25 25}
         }
       }
       Fl_Group {} {
