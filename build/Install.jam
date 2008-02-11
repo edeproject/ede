@@ -108,9 +108,46 @@ rule InstallEdeConfigFiles
 	InstallData $(EDECONFIGDIR) : $(<) ;
 }
 
+# InstallEdeMimeFiles [targets] ;
+# Installs XDG mime files and run update-mime-database
+rule InstallEdeMimeFiles
+{
+	# First check if we have 'update-mime-database' command
+	# TODO: this should be set globaly
+	local matches = [ Glob $(PATH) : update-mime-database ] ;
+
+	if ! $(matches) {
+		return ;
+	} else {
+		local update_cmd pakdir ;
+
+		update_cmd = $(matches[1]) ;
+
+		# Files must be instaled in $(EDEMIMEDIR)/packages or
+		# update-mime-database will not see it
+		pakdir = [ FDirName $(EDEMIMEDIR) packages ] ;
+		InstallData $(pakdir) : $(<) ;
+
+		MIME_UPDATE_DATABASE = $(update_cmd) ;
+
+		# Shut up jam warning
+		NotFile $(EDEMIMEDIR) ;
+
+		# Call update-mime-database after install/uninstall
+		# Just hoping this will be executed after files are copied/removed...
+		MimeUpdater install : $(EDEMIMEDIR) ;
+		MimeUpdater uninstall : $(EDEMIMEDIR) ;
+	}
+}
+
 actions Install1
 {
 	$(CP) "$(>)" "$(<)"
+}
+
+actions updated together MimeUpdater
+{
+	$(MIME_UPDATE_DATABASE) "$(>)"
 }
 
 NotFile install uninstall ;

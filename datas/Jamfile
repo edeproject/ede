@@ -21,4 +21,5 @@ InstallEdeIcons icons-48 : $(ICONS48) ;
 InstallEdeConfigFiles  $(CONFS) ;
 InstallEdeDesktopFiles $(PLINKS) ;
 
+SubInclude TOP datas mime-types ;
 SubInclude TOP datas icon-themes ;

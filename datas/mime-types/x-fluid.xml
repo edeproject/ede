@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-fluid">
+  <sub-class-of type="text/plain"/>
+    <comment>FLTK Fluid file</comment>
+     <magic priority="50">
+       <match type="string" value="# data file for the Fltk" offset="0"/>
+       <match type="string" value="version" offset="0"/>
+       <match type="string" value="header_name" offset="0"/>
+       <match type="string" value="code_name" offset="0"/>
+     </magic>
+     <glob pattern="*.fl"/>
+  </mime-type>
+</mime-info>
