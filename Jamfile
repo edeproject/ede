@@ -23,6 +23,7 @@ SubInclude TOP edewm ;
 SubInclude TOP efiler ;
 SubInclude TOP eiconman ;
 SubInclude TOP eimage ;
+SubInclude TOP elma ;
 SubInclude TOP etimedate ;
 SubInclude TOP etip ;
 SubInclude TOP evoke ;
