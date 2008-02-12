@@ -11,8 +11,16 @@
  */
 
 #include "Fortune.h"
+
 #include <netinet/in.h>
 #include <ctype.h>
+#include <stdio.h>
+
+struct FortuneFile {
+	FILE* str_file;
+	FILE* dat_file;
+	StrFile data;
+};
 
 FortuneFile* fortune_open(const char* str_path, const char* dat_path) {
 	FILE* sp = fopen(str_path, "r");

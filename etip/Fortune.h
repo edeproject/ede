@@ -13,7 +13,6 @@
 #ifndef __FORTUNE_H__
 #define __FORTUNE_H__
 
-#include <stdio.h>
 #include <edelib/String.h>
 
 /*
@@ -36,13 +35,7 @@ struct StrFile {
 	char stuff[4];             // long aligned space, stuff[0] is delimiter
 };
 
-struct FortuneFile {
-	FILE* str_file;
-	FILE* dat_file;
-	StrFile data;
-};
-
-// TODO: this should be a class
+struct FortuneFile;
 
 FortuneFile* fortune_open(const char* str_path, const char* dat_path);
 void         fortune_close(FortuneFile* f);
