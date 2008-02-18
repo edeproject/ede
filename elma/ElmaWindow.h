@@ -18,6 +18,7 @@
 class Background;
 class TextArea;
 class Fl_Box;
+struct ElmaTheme;
 
 class ElmaWindow : public Fl_Double_Window {
 	private:
@@ -27,6 +28,7 @@ class ElmaWindow : public Fl_Double_Window {
 		Fl_Box*     error_display;
 		Fl_Box*     info_display;
 		bool        deny_mode;
+		int         box_mode;
 
 		void validate_user(void);
 
@@ -37,7 +39,7 @@ class ElmaWindow : public Fl_Double_Window {
 		void allow_input(void);
 		void deny_input(void);
 
-		bool load_everything(void);
+		bool create_window(ElmaTheme* et);
 		virtual int handle(int event);
 };
 #endif

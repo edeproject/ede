@@ -10,7 +10,7 @@
 
 SubDir TOP elma ;
 
-SOURCE = Background.cpp NumLock.cpp ElmaWindow.cpp elma.cpp ;
+SOURCE = Background.cpp NumLock.cpp Theme.cpp ElmaService.cpp ElmaWindow.cpp elma.cpp ;
 
 EdeProgram elma : $(SOURCE) ;
 TranslationStrings  locale : $(SOURCE) ;

@@ -11,14 +11,21 @@
  */
 
 #include <stdio.h>
+
+#if 0
 #include <string.h>
 #include <FL/x.h>
 #include <FL/Fl.h>
 #include <edelib/String.h>
+#include <edelib/Config.h>
+
 #include "Background.h"
 #include "TextArea.h"
 #include "ElmaWindow.h"
 #include "NumLock.h"
+#endif
+
+#include "ElmaService.h"
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
@@ -29,6 +36,7 @@ void help(void) {
 	puts("Options:");
 	puts("  -h, --help            this help");
 	puts("  -c, --config [FILE]   use FILE as config file");
+	puts("  -d, --daemon          daemon mode");
 	puts("  -t, --test            test mode for theme preview (assume X server is running)\n");
 }
 
@@ -44,6 +52,7 @@ const char* next_param(int curr, char** argv, int argc) {
 int main(int argc, char** argv) {
 	const char* config_file = NULL;
 	bool test_mode = false;
+	bool daemon_mode = false;
 
 	if(argc > 1) {
 		const char* a;
@@ -59,6 +68,8 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 				i++;
+			} else if(CHECK_ARGV(a, "-d", "--daemon")) {
+				daemon_mode = true;
 			} else if(CHECK_ARGV(a, "-t", "--test")) {
 				test_mode = true;
 			} else {
@@ -68,24 +79,19 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	fl_open_display();
+	ElmaService* service = ElmaService::instance();
 
-	int dx, dy, dw, dh;
-	Fl::screen_xywh(dx, dy, dw, dh);
-
-	numlock_xkb_init(fl_display);
-
-	ElmaWindow* win = new ElmaWindow(dw, dh);
-	if(!win->load_everything()) {
-		delete win;
+	if(!service->load_config()) {
+		puts("Unable to load config file");
 		return 1;
 	}
 
-	win->clear_border();
-	win->show();
-	win->cursor(FL_CURSOR_NONE);
+	if(!service->load_theme()) {
+		puts("Unable to load theme file");
+		return 1;
+	}
 
-	numlock_off(fl_display);
+	service->display_window();
 
-	return Fl::run();
+	return 0;
 }

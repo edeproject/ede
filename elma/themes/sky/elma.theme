@@ -1,0 +1,50 @@
+#
+# sky theme
+#
+# Shows usage when username and password box have
+# different x/y positions and are given without labels.
+#
+# Blame Sanel for this...
+
+[theme]
+
+# background image
+background = background.jpg
+
+# panel image
+panel = panel.png
+panel_x = 347
+panel_y = 251
+
+# info box
+info_x = 10
+info_y = 10
+info_width = 484
+info_height = 28
+info_text = Welcome to EDE 2.0
+info_color = 12
+info_font_size = 12
+
+# username box
+username_x = 418
+username_y = 379
+username_width = 184
+username_height = 30
+username_color = 12
+username_font_size = 12
+
+# password box
+password_x = 418
+password_y = 431
+password_width = 184
+password_height = 30
+password_color = 12
+password_font_size = 12
+
+# error box
+error_x = 418
+error_y = 471
+error_width = 184
+error_height = 28
+error_font_size = 14
+error_color = 12

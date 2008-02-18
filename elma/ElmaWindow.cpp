@@ -19,6 +19,10 @@
 #include "ElmaWindow.h"
 #include "Background.h"
 #include "TextArea.h"
+#include "Theme.h"
+
+#define USER_AND_PASS_BOX_VISIBLE 1
+#define USER_OR_PASS_BOX_VISIBLE  2
 
 static void timeout_cb(void* e) {
 	ElmaWindow* win = (ElmaWindow*)e;
@@ -29,45 +33,66 @@ ElmaWindow::ElmaWindow(int W, int H) : Fl_Double_Window(0, 0, W, H),
 	bkg(0), user_in(0), pass_in(0), error_display(0), info_display(0) {
 
 	deny_mode = false;
+	box_mode = USER_AND_PASS_BOX_VISIBLE;
 }
 
 ElmaWindow::~ElmaWindow() {
 }
 
-bool ElmaWindow::load_everything(void) {
+bool ElmaWindow::create_window(ElmaTheme* et) {
+	EASSERT(et != NULL);
+
 	begin();
 		bkg = new Background(0, 0, w(), h());
-		if(!bkg->load_images("themes/default/background.jpg", "themes/default/panel.png"))
+		if(!bkg->load_images(et->background.c_str(), et->panel.c_str()))
 			return false;
 
-		//bkg->panel_pos(35, 189);
-		bkg->panel_pos(235, 489);
+		bkg->panel_pos(et->panel_x, et->panel_y);
 
-		//user_in = new TextArea(428, 351, 184, 28, "Username:  ");
-		user_in = new TextArea(240, 489, 184, 30, "Username:  ");
+		ThemeBox* tb;
+
+		tb = et->user;
+		user_in = new TextArea(tb->x, tb->y, tb->w, tb->h);
+		if(tb->label)
+			user_in->label(tb->label->c_str());
+
 		user_in->labelcolor(FL_WHITE);
 		user_in->textfont(FL_HELVETICA_BOLD);
-		user_in->textsize(14);
+		user_in->textsize(tb->font_size);
 
-		//pass_in = new TextArea(428, 351, 184, 28, "Password:  ");
-		pass_in = new TextArea(240, 489, 184, 30, "Password:  ");
+		tb = et->pass;
+		pass_in = new TextArea(tb->x, tb->y, tb->w, tb->h);
+		if(tb->label)
+			pass_in->label(tb->label->c_str());
+
+		pass_in->type(FL_SECRET_INPUT);
 		pass_in->labelcolor(FL_WHITE);
 		pass_in->textfont(FL_HELVETICA_BOLD);
-		pass_in->textsize(14);
-		pass_in->type(FL_SECRET_INPUT);
-		pass_in->hide();
+		pass_in->textsize(tb->font_size);
 
-		//error_display = new Fl_Box(418, 390, 184, 28);
-		error_display = new Fl_Box(240, 520, 184, 28);
+		/*
+		 * If username box and password box are at the same place, hide
+		 * password box. With this, password box will be shown when user
+		 * press enter on username box and reverse.
+		 */
+		if(pass_in->x() == user_in->x() && pass_in->y() == user_in->y()) {
+			box_mode = USER_OR_PASS_BOX_VISIBLE;
+			pass_in->hide();
+		}
+
+		tb = et->error;
+		error_display = new Fl_Box(tb->x, tb->y, tb->w, tb->h);
 		error_display->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 		error_display->labelcolor(FL_WHITE);
-		error_display->labelsize(14);
+		error_display->labelsize(tb->font_size);
 		error_display->hide();
 
-		info_display = new Fl_Box(10, 10, 184, 28);
+		tb = et->info;
+		info_display = new Fl_Box(tb->x, tb->y, tb->w, tb->h);
 		info_display->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 		info_display->labelcolor(FL_GRAY);
-		info_display->label("EDE version 2.0");
+		if(tb->label)
+			info_display->label(tb->label->c_str());
 	end();
 
 	return true;
@@ -114,16 +139,27 @@ int ElmaWindow::handle(int event) {
 			return 1;
 
 		if(Fl::event_key() == FL_Enter) {
-			if(user_in->visible()) {
-				user_in->hide();
-				pass_in->show();
-				// don't remember password
-				pass_in->value(0);
+			if(box_mode == USER_AND_PASS_BOX_VISIBLE) {
+				if(Fl::focus() == user_in)
+					Fl::focus(pass_in);
+				else {
+					validate_user();
+					// don't remember password
+					pass_in->value(0);
+					Fl::focus(user_in);
+				}
 			} else {
-				user_in->show();
-				pass_in->hide();
+				if(user_in->visible()) {
+					user_in->hide();
+					pass_in->show();
+					// don't remember password
+					pass_in->value(0);
+				} else {
+					user_in->show();
+					pass_in->hide();
 
-				validate_user();
+					validate_user();
+				}
 			}
 
 			return 1;

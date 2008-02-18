@@ -14,7 +14,6 @@
 #define __TEXTAREA_H__
 
 #include <FL/Fl_Input.h>
-
 #include <edelib/Debug.h>
 
 /*
@@ -38,6 +37,10 @@ class TextArea : public Fl_Input {
 
 			// not needed, parent will redraw us
 			if(event == FL_SHOW || event == FL_HIDE)
+				return 1;
+
+			// don't allow input when we are disabled
+			if(event == FL_KEYBOARD && !active())
 				return 1;
 
 			int ret = Fl_Input::handle(event);
