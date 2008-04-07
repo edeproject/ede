@@ -18,7 +18,6 @@
 #include "DesktopIcon.h"
 #include "Utils.h"
 #include "Wallpaper.h"
-#include "NotifyBox.h"
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -45,13 +44,12 @@
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
 
-#if 0
-#include <X11/extensions/Xdamage.h>
-#endif
-
 #define EICONMAN_UID       0x10
 #define CONFIG_NAME        "eiconman.conf"
 #define ICONS_CONFIG_NAME  "eiconman-icons.conf"
+
+#define EICONMAN_INTERFACE "org.equinoxproject.Eiconman"
+#define EICONMAN_OBJECT    "/org/equinoxproject/Eiconman"
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
 #define SELECTION_MULTI  (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
@@ -60,6 +58,7 @@
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #undef MAX
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
+
 
 /*
  * Which widgets Fl::belowmouse() should skip. This should be updated
@@ -87,13 +86,6 @@ Fl_Menu_Item desktop_menu[] = {
 	{_("    &Background...    "), 0, background_conf_cb, 0},
 	{0}
 };
-
-#if 0
-XserverRegion xregion;
-XserverRegion xpart;
-Damage        xdamage;
-int           xevent_base, xerror_base;
-#endif
 
 Desktop* Desktop::pinstance = NULL;
 bool running = false;
@@ -140,37 +132,9 @@ void icons_conf_cb(Fl_Widget*, void*) {
 }
 
 int desktop_xmessage_handler(int event) { 
-#if 0
-	if(fl_xevent->type == xevent_base + XDamageNotify) {
-		XDamageNotifyEvent* xdev = (XDamageNotifyEvent*)fl_xevent;
-
-		EDEBUG(ESTRLOC ": Damaged region %i %i %i %i on 0x%lx\n", xdev->area.x, xdev->area.y,
-				xdev->area.width, xdev->area.height, xdev->drawable);
-
-		XDamageSubtract(fl_display, xdev->damage, None, None);
-  		XFixesSetRegion(fl_display, xpart, &xdev->area, 1);
-        XFixesUnionRegion(fl_display, xregion, xregion, xpart);
-	}
-
-		XDamageSubtract(fl_display, xdamage, xregion, None);
-    	XFixesSetRegion(fl_display, xregion, 0, 0);
-#endif
-
 	if(fl_xevent->type == PropertyNotify) {
 		if(fl_xevent->xproperty.atom == _XA_NET_CURRENT_DESKTOP) {
 			Desktop::instance()->notify_desktop_changed();
-			return 1;
-		}
-
-		if(fl_xevent->xproperty.atom == _XA_EDE_DESKTOP_NOTIFY) {
-			char buff[256];
-			if(ede_get_desktop_notify(buff, 256) && buff[0] != '\0')
-				Desktop::instance()->notify_box(buff, true);
-			return 1;
-		}
-
-		if(fl_xevent->xproperty.atom == _XA_EDE_DESKTOP_NOTIFY_COLOR) {
-			Desktop::instance()->notify_box_color(ede_get_desktop_notify_color());
 			return 1;
 		}
 
@@ -211,7 +175,7 @@ Desktop::~Desktop() {
 
 	delete dsett;
 	delete selbox;
-	delete notify;
+	delete dbus;
 
 	edelib::DirWatch::shutdown();
 }
@@ -232,8 +196,14 @@ void Desktop::init_internals(void) {
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
 
-	notify = new NotifyBox(w(), h());
 	set_bg_color(dsett->color, false);
+
+	dbus = new edelib::EdbusConnection();
+	if(!dbus->connect(edelib::EDBUS_SESSION)) {
+		E_WARNING("Unable to connecto to session bus. Disabling dbus interface...\n");
+		delete dbus;
+		dbus = NULL;
+	}
 
 	read_config();
 
@@ -310,13 +280,6 @@ void Desktop::show(void) {
 	if(!shown()) {
 		Fl_X::make_xid(this);
 		net_make_me_desktop(this);
-#if 0
-		XDamageQueryExtension(fl_display, &xevent_base, &xerror_base);
-
-		xdamage = XDamageCreate(fl_display, fl_xid(this), XDamageReportBoundingBox);
-		xregion = XFixesCreateRegionFromWindow(fl_display, fl_xid(this), 0);
-		xpart   = XFixesCreateRegionFromWindow(fl_display, fl_xid(this), 0);
-#endif
 	}
 }
 
@@ -770,23 +733,6 @@ void Desktop::select_in_area(void) {
 	}
 }
 
-void Desktop::notify_box(const char* msg, bool copy) {
-	if(!msg)
-		return;
-
-	if(copy)
-		notify->copy_label(msg);
-	else	
-		notify->label(msg);
-
-	if(!notify->shown())
-		notify->show();
-}
-
-void Desktop::notify_box_color(Fl_Color col) {
-	notify->color(col);
-}
-
 void Desktop::notify_desktop_changed(void) {
 	int num = net_get_current_desktop();
 	if(num == -1)
@@ -802,7 +748,14 @@ void Desktop::notify_desktop_changed(void) {
 		return;
 	}
 
-	notify_box(names[num], true);
+	if(dbus) {
+		edelib::EdbusMessage msg;
+		// send org.equinoxproject.Eiconman.DesktopChanged(int32, string) signal
+		msg.create_signal(EICONMAN_OBJECT, EICONMAN_INTERFACE, "DesktopChanged");
+		msg << num << names[num];
+		dbus->send(msg);
+	}
+
 	XFreeStringList(names);
 }
 

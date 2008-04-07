@@ -25,9 +25,6 @@ Atom _XA_NET_CURRENT_DESKTOP = 0;
 Atom _XA_NET_DESKTOP_NAMES = 0;
 Atom _XA_XROOTPMAP_ID = 0;
 
-Atom _XA_EDE_DESKTOP_NOTIFY = 0;
-Atom _XA_EDE_DESKTOP_NOTIFY_COLOR = 0;
-
 int overlay_x = 0;
 int overlay_y = 0;
 int overlay_w = 0;
@@ -45,9 +42,6 @@ void init_atoms(void) {
 	_XA_NET_CURRENT_DESKTOP        = XInternAtom(fl_display, "_NET_CURRENT_DESKTOP", False);
 	_XA_NET_DESKTOP_NAMES          = XInternAtom(fl_display, "_NET_DESKTOP_NAMES", False);
 	_XA_XROOTPMAP_ID               = XInternAtom(fl_display, "_XROOTPMAP_ID", False);
-
-	_XA_EDE_DESKTOP_NOTIFY         = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY", False);
-	_XA_EDE_DESKTOP_NOTIFY_COLOR   = XInternAtom(fl_display, "_EDE_DESKTOP_NOTIFY_COLOR", False);
 }
 
 bool net_get_workarea(int& x, int& y, int& w, int &h) {
@@ -157,46 +151,6 @@ int net_get_workspace_names(char**& names) {
 
 	XFree(wnames.value);
 	return nsz;
-}
-
-bool ede_get_desktop_notify(char* txt, int txt_len) {
-	XTextProperty names;
-	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &names, _XA_EDE_DESKTOP_NOTIFY);
-	if(!names.nitems || !names.value)
-		return false;
-
-	char** vnames;
-	int nsz = 0;
-	if(!XTextPropertyToStringList(&names, &vnames, &nsz)) {
-		XFree(names.value);
-		return false;
-	}
-
-	strncpy(txt, vnames[0], txt_len);
-	txt[txt_len] = '\0';
-	XFreeStringList(vnames);
-	return true;
-}
-
-Fl_Color ede_get_desktop_notify_color(void) {
-	Atom real;
-	int format;
-	unsigned long n, extra;
-	unsigned char* prop;
-
-	int status = XGetWindowProperty(fl_display, RootWindow(fl_display, fl_screen), 
-			_XA_EDE_DESKTOP_NOTIFY_COLOR, 0L, 0x7fffffff, False, XA_CARDINAL, &real, &format, &n, &extra, 
-			(unsigned char**)&prop);
-
-	int color = FL_WHITE;
-
-	if(status != Success && !prop)
-		return (Fl_Color)color;
-
-	color = int(*(long*)prop);
-	XFree(prop);
-
-	return (Fl_Color)color;
 }
 
 #if 0

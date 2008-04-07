@@ -25,6 +25,7 @@
 #include <edelib/String.h>
 #include <edelib/Config.h>
 #include <edelib/List.h>
+#include <edelib/EdbusConnection.h>
 
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
@@ -82,7 +83,6 @@ struct SelectionOverlay {
 
 class Wallpaper;
 class DesktopIcon;
-class NotifyBox;
 
 class Fl_Menu_Button;
 
@@ -110,9 +110,9 @@ class Desktop : public DESKTOP_WINDOW {
 		GlobalIconSettings gisett;
 		DesktopSettings*   dsett;
 
-		Fl_Menu_Button* dmenu;
-		Wallpaper*      wallpaper;
-		NotifyBox*      notify;
+		Fl_Menu_Button*  dmenu;
+		Wallpaper*       wallpaper;
+		edelib::EdbusConnection* dbus;
 
 		DesktopIconList icons;
 		DesktopIconList selectionbuff;
@@ -164,8 +164,6 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void set_bg_color(int c, bool do_redraw = true);
 
-		void notify_box(const char* msg, bool copy = false);
-		void notify_box_color(Fl_Color col);
 		void notify_desktop_changed(void);
 
 		void dir_watch(const char* dir, const char* changed, int flags);
