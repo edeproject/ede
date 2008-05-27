@@ -187,7 +187,8 @@ void FileIconView::insert(int row, FileItem *item) {
 	m_selected[children()]=0;
 
 	Fl_Button* b = new Fl_Button(0,0,ICONW,ICONH);
-	b->box(FL_RFLAT_BOX);
+//	b->box(FL_RFLAT_BOX); // Rounded box - has bug with selection box
+	b->box(FL_FLAT_BOX);
 	b->color(FL_BACKGROUND2_COLOR);
 	b->align(FL_ALIGN_INSIDE|FL_ALIGN_CENTER|FL_ALIGN_CLIP);
 
@@ -663,6 +664,7 @@ EDEBUG(DBG"stop rename\n");
 	// "laso" a.k.a. selection box is common name for box used to select many widgets at once
 
 	static bool laso=false; // are we laso-ing?
+	static bool scrolling=false;
 	static int dragx,dragy; // to check for min dnd distance
 	if (e==FL_DRAG) {
 EDEBUG(DBG"FL_DRAG! ");
@@ -671,6 +673,21 @@ EDEBUG(DBG"FL_DRAG! ");
 		if (!laso) {
 			// Drag inside child is dnd
 			int ex=Fl::event_x(); int ey=Fl::event_y();
+#ifdef USE_FLU_WRAP_GROUP
+			if (scrollbar.visible() && (ex>x()+w()-scrollbar.w() || scrolling)) {
+EDEBUG(DBG"scrolling\n");
+				this->take_focus();
+				scrolling=true;
+				return scrollbar.handle(e);
+			}
+#else
+			if (get_scroll()->visible() && (ex>x()+w()-get_scroll()->w() || scrolling)) {
+EDEBUG(DBG"scrolling\n");
+				this->take_focus();
+				scrolling=true;
+				return get_scroll()->handle(e);
+			}
+#endif
 			int inside=0;
 			for (int i=0; i<children(); i++) {
 				Fl_Button* b = (Fl_Button*)child(i);
@@ -765,6 +782,11 @@ EDEBUG(DBG"FL_RELEASE! ");
 			while (m_selected[i]!=0) m_selected[i++]=0;
 		}
 
+		if (scrolling) {
+EDEBUG(DBG"- stop scrolling.\n");
+			scrolling=false;
+		}
+
 		// Stop laso operation
 		if (laso) {
 EDEBUG(DBG"- stop laso.\n");
@@ -788,6 +810,12 @@ EDEBUG(DBG"After fixing the box coords: (%d,%d,%d,%d)\n", select_x1, select_y1, 
 				Fl_Widget* w = child(i); // some shortcuts
 				int wx2 = w->x()+w->w();
 				int wy2 = w->y()+w->h();
+				// ignore the empty space below label -- equals number of \n's
+				const char* lbl=w->label();
+				for (int j=strlen(lbl)-2; j>0; j--) {
+					if (lbl[j]!='\n') break;
+					wy2 -= fl_size();
+				}
 				if (select_x2>w->x() && select_x1<wx2 && select_y2>w->y() && select_y1<wy2) {
 					select(i+1,1);
 EDEBUG(DBG"Select widget: '%20s' (%d,%d,%d,%d)\n", w->label(), w->x(), w->y(), wx2, wy2);
@@ -845,29 +873,19 @@ if (e==FL_DND_ENTER) { EDEBUG(DBG"FL_DND_ENTER\n"); }
 if (e==FL_DND_DRAG) { EDEBUG(DBG"FL_DND_DRAG\n"); }
 if (e==FL_DND_RELEASE) { EDEBUG(DBG"FL_DND_RELEASE\n"); }
 		// Let the window manager know that we accept dnd
-		if (e==FL_DND_ENTER||e==FL_DND_DRAG||e==FL_DND_LEAVE) return 1;
-	
-/*		// Scroll the view by dragging to border
-		if (e==FL_DND_LEAVE) {
-			if (Fl::event_y()<y())
-				position(position()-1);
-			if (Fl::event_y()>y()+h())
-				position(position()+1);
-			return 1;
-		}*/
+		if (e==FL_DND_ENTER||e==FL_DND_LEAVE||e==FL_DND_DRAG) return 1;
 
 		static bool dndrelease=false;
 		if (e==FL_DND_RELEASE) {
 EDEBUG(DBG"FL_DND_RELEASE '%s'\n", Fl::event_text());
 			// Sometimes drag is accidental
-			if (abs(Fl::event_x()-dragx)>MIN_DISTANCE_FOR_DND || abs(Fl::event_y()-dragy)>MIN_DISTANCE_FOR_DND) {
-				dndrelease=true;
-				Fl::paste(*this,0);
-			}
+			if (abs(Fl::event_x()-dragx)<MIN_DISTANCE_FOR_DND && abs(Fl::event_y()-dragy)<MIN_DISTANCE_FOR_DND)
+				return 0;
+				// return 1 would call Fl::paste(*belowmouse(),0) (see fl_dnd_x.cxx around line 168).
+				// In our case that could be catastrophic
 
-			return 0;
-			// return 1 would call Fl::paste(*belowmouse(),0) (see fl_dnd_x.cxx around line 168).
-			// In our case that could be catastrophic
+			dndrelease=true;
+			Fl::paste(*this,0);
 		}
 
 		if (e==FL_PASTE) {

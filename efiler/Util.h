@@ -102,10 +102,10 @@ shortcut for strdup(tsprintf(...)) - with tasprintf you have to explicitely call
 free() on created strings, with tsprintf you don't.
 */
 
-const char* tsprintf(char* format, ...);
+const char* tsprintf(const char* format, ...);
 
 
-char* tasprintf(char* format, ...);
+char* tasprintf(const char* format, ...);
 
 //}
 

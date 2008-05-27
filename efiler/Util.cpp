@@ -295,7 +295,7 @@ char* strstrmulti(const char *haystack, const char *needles, const char *separat
 
 
 // Print to a static char[] and return pointer
-const char* tsprintf(char *format, ...)
+const char* tsprintf(const char *format, ...)
 {
 	static char buffer[4096];
 	va_list args;
@@ -305,7 +305,7 @@ const char* tsprintf(char *format, ...)
 	return (const char*)buffer;
 }
 
-char* tasprintf(char *format, ...)
+char* tasprintf(const char *format, ...)
 {
 	char buffer[4096];
 	va_list args;

@@ -201,6 +201,12 @@ public:
 		thegroup->hide(); /* group */
 		Fl_Widget::hide(); 
 	}
+
+	void show() {
+		Fl_Widget::show();
+		heading->show();
+		thegroup->show();
+	}
 };
 
 #endif

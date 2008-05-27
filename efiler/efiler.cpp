@@ -39,6 +39,7 @@
 #include <edelib/Run.h>
 #include <edelib/IconTheme.h> // for setting the icon theme
 #include <edelib/MessageBox.h>
+#include <edelib/DirWatch.h>
 
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
@@ -46,6 +47,8 @@
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
+//#include "ede_strverscmp.h" // local copy of strverscmp
+
 
 
 Fl_Window* win;
@@ -83,6 +86,8 @@ int default_tree_width=150;
 
 
 // Subclassed Fl_Window for switching views
+void iconsview_cb(Fl_Widget*, void*);
+void listview_cb(Fl_Widget*, void*); 
 
 class EFiler_Window : public Fl_Double_Window {
 public:
@@ -93,17 +98,12 @@ public:
 	int handle(int e) {
 		// Have F8 function as switch between active views
 		if (e == FL_KEYBOARD && Fl::event_key()==FL_F+8) {
+			void*p;
 			if (view->type() == FILE_DETAILS_VIEW) {
-				view->type(FILE_ICON_VIEW);
-				// We do this juggling with tsprintf to avoid duplicate strings for localization
-				Fl_Menu_Item* i = (Fl_Menu_Item*) main_menu->find_item(tsprintf("%s/%s", _("&View"), _("&Icons")));
-				i->set();
+				iconsview_cb(main_menu,p);
 			} else {
-				view->type(FILE_DETAILS_VIEW);
-				Fl_Menu_Item* i = (Fl_Menu_Item*) main_menu->find_item(tsprintf("%s/%s", _("&View"), _("&Detailed list")));
-				i->set();
+				listview_cb(main_menu,p);
 			}
-			loaddir(current_dir);
 			return 1;
 		}
 		return Fl_Double_Window::handle(e);
@@ -177,7 +177,7 @@ public:
 
 // These variables are global to save time on construction/destruction
 edelib::MimeType mime_resolver;
-struct stat stat_buffer;
+struct stat64 stat_buffer;
 
 struct sopeners {
 	char* type;
@@ -230,8 +230,16 @@ char *simpleopener(const char* mimetype) {
 	LoadDir()
 -------------------------------------------------------------------*/
 
-// modification of versionsort which ignores case
-int myversionsort(const void *a, const void *b) {
+
+// Use local copy of strverscmp
+int ede_versionsort(const void *a, const void *b) {
+	struct dirent** ka = (struct dirent**)a;
+	struct dirent** kb = (struct dirent**)b;
+	return strverscmp((*ka)->d_name,(*kb)->d_name);
+}
+
+// Modification of versionsort which ignores case
+int ede_versioncasesort(const void *a, const void *b) {
 	struct dirent** ka = (struct dirent**)a;
 	struct dirent** kb = (struct dirent**)b;
 	char* ma = strdup((*ka)->d_name);
@@ -241,6 +249,7 @@ int myversionsort(const void *a, const void *b) {
 	free(ma); free(mb);
 	return k;
 }
+
 
 // Return a string describing permissions relative to the current user
 const char* permission_text(mode_t mode, uid_t uid, gid_t gid) {
@@ -358,9 +367,9 @@ void loaddir(const char *path) {
 	int size=0;
 	dirent **files;
 	if (ignorecase) 
-		size = scandir(current_dir, &files, 0, myversionsort);
+		size = scandir(current_dir, &files, 0, ede_versioncasesort);
 	else
-		size = scandir(current_dir, &files, 0, versionsort);
+		size = scandir(current_dir, &files, 0, ede_versionsort);
 
 	if (size<1) { // there should always be . and ..
 		edelib::alert(_("Permission denied!"));
@@ -371,6 +380,10 @@ void loaddir(const char *path) {
 	}
 
 	// Ok, now we know everything is fine...
+
+	// Remove old watch and add new one
+	edelib::DirWatch::remove(old_dir);
+	edelib::DirWatch::add(current_dir, edelib::DW_CREATE | edelib::DW_DELETE | edelib::DW_ATTRIB | edelib::DW_RENAME | edelib::DW_MODIFY);
 
 	// Update directory tree
 	dirtree->set_current(current_dir);
@@ -402,7 +415,7 @@ void loaddir(const char *path) {
 		char fullpath[FL_PATH_MAX];
 		snprintf (fullpath,FL_PATH_MAX-1,"%s%s",current_dir,n);
 
-		if (stat(fullpath,&stat_buffer)) continue; // happens when user has traverse but not read privilege
+		if (stat64(fullpath,&stat_buffer)) continue; // happens when user has traverse but not read privilege
 
 		FileItem *item = new FileItem;
 		item->name = n;
@@ -463,7 +476,7 @@ void loaddir(const char *path) {
 				if (icon != "") item_list[i]->icon = icon;
 				view->update(item_list[i]);
 			}
-			Fl::check();
+			Fl::check(); // keep interface responsive while updating mimetypes
 		}
 	}
 
@@ -505,7 +518,7 @@ void open_cb(Fl_Widget*w, void*data) {
 
 		char* path = (char*)view->path(view->get_focus());
 
-		if (stat(path,&stat_buffer)) return; // error
+		if (stat64(path,&stat_buffer)) return; // error
 		if (S_ISDIR(stat_buffer.st_mode)) {  // directory
 			loaddir(path);
 			return;
@@ -609,6 +622,10 @@ void dirsfirst_cb(Fl_Widget*, void*) {
 }
 
 
+// Implemented after menu definition
+void update_menu_item(const char* label, bool value);
+
+
 // dummy callbacks - TODO
 void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
@@ -616,12 +633,16 @@ void iconsview_cb(Fl_Widget*, void*) {
 	if (view->type() != FILE_ICON_VIEW) {  
 		view->type(FILE_ICON_VIEW);
 		loaddir(current_dir);
+		update_menu_item(_("&Icons"),true);
+		update_menu_item(_("&Detailed list"),false);
 	}
 }
 void listview_cb(Fl_Widget*, void*) { 
 	if (view->type() != FILE_DETAILS_VIEW) {
 		view->type(FILE_DETAILS_VIEW); 
 		loaddir(current_dir);
+		update_menu_item(_("&Icons"),false);
+		update_menu_item(_("&Detailed list"),true);
 	}
 }
 
@@ -713,6 +734,69 @@ void location_input_cb(Fl_Widget*, void*) {
 }
 
 
+// Callback called by edelib::DirWatch
+void directory_change_cb(const char* dir, const char* what_changed, int flags, void* d) {
+	if (!what_changed || flags==edelib::DW_REPORT_NONE) return; // edelib whas unable to figure out what exactly changed
+	if (strcmp(current_dir,dir)) return; // for some reason we're being notified about non-current dir
+
+	// Find item in view
+	int found=-1;
+	for (int i=1; i<=view->size(); i++) {
+		const char *item = view->path(i);
+		if (strcmp(item+strlen(dir),what_changed)==0) { found=i; break; }
+	}
+
+	// If item was changed, it's simplest to remove it from the list then add it again
+	if (found>-1) view->remove(found);
+	if (flags==edelib::DW_REPORT_DELETE) return; // delete ends here
+
+	// Adding new item - code mostly copied from loaddir()
+	// TODO: create a separate function for this
+	char fullpath[FL_PATH_MAX];
+	snprintf (fullpath,FL_PATH_MAX-1,"%s%s",dir,what_changed);
+
+	if (stat64(fullpath,&stat_buffer)) return; // happens when user has traverse but not read privilege
+
+	FileItem *item = new FileItem;
+	item->name = what_changed;
+	item->realpath = fullpath;
+	item->date = nice_time(stat_buffer.st_mtime);
+	item->permissions = permission_text(stat_buffer.st_mode,stat_buffer.st_uid,stat_buffer.st_gid);
+	if (strcmp(what_changed,"..")==0) {
+		item->icon = "undo";
+		item->description = "Go up";
+		item->size = "";
+	} else if (S_ISDIR(stat_buffer.st_mode)) { // directory
+		item->icon = "folder";
+		item->description = "Directory";
+		// item->name += "/";
+		item->size = "";
+		item->realpath += "/";
+	} else {
+		item->icon = "unknown";
+		item->description = "Unknown";
+		item->size = nice_size(stat_buffer.st_size);
+	}
+
+	view->add(item);
+	view->redraw();
+	Fl::check(); // update interface to give time for mimetype resolver
+
+	mime_resolver.set(fullpath);
+	edelib::String desc,icon;
+	desc = mime_resolver.comment();
+	// First letter of desc should be upper case:
+	if (desc.length()>0 && desc[0]>='a' && desc[0]<='z') desc[0] = desc[0]-'a'+'A';
+	icon = mime_resolver.icon_name();
+	if (desc!="" || icon!="") {
+		if (desc != "") item->description = desc;
+		if (icon != "") item->icon = icon;
+		view->update(item);
+	}
+	view->redraw();
+}
+
+
 
 // TODO: move this to view
 // every item should have own context menu defined
@@ -759,8 +843,8 @@ Fl_Menu_Item main_menu_definition[] = {
 		{0},
 
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
-		{_("&Icons"),		0,		iconsview_cb,	0,	FL_MENU_RADIO},
-		{_("&Detailed list"),	0,		listview_cb,	0,	FL_MENU_RADIO|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
+		{_("&Icons"),		0,		iconsview_cb,	0,	FL_MENU_TOGGLE},
+		{_("&Detailed list"),	0,		listview_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE|FL_MENU_DIVIDER}, 
 		{_("Directory &tree"),	FL_F+9,		showtree_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Location bar"),	FL_F+10,	locationbar_cb,	0,	FL_MENU_TOGGLE|FL_MENU_VALUE},
 		{_("&Hidden files"),	0,		showhidden_cb,	0,	FL_MENU_TOGGLE|FL_MENU_DIVIDER},
@@ -778,6 +862,18 @@ Fl_Menu_Item main_menu_definition[] = {
 	{0}
 };
 
+
+// Update checkbox in main menu
+// (needs to come after the menu)
+void update_menu_item(const char* label, bool value) {
+	Fl_Menu_Item *k = main_menu_definition;
+	while(k!=0 && k+1!=0) {
+		if (k->label()!=0 && strcmp(k->label(),label)==0) break;
+		k++;
+	}
+	if (k!=0)
+		if (value) k->set(); else k->clear();
+}
 
 
 // Main program
@@ -799,9 +895,10 @@ int main (int argc, char **argv) {
 		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
 	}
 
-
 fl_register_images();
 edelib::IconTheme::init("crystalsvg");
+	edelib::DirWatch::init();
+	edelib::DirWatch::callback(directory_change_cb);
 
 FL_NORMAL_SIZE=12;
 fl_message_font(FL_HELVETICA, 12);
@@ -864,7 +961,7 @@ edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_Q
 	// FIXME: due to fltk bug this icon doesn't have transparency
 	fl_open_display();
 	Pixmap p, mask;
-	XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), efiler_xpm, &p, &mask, NULL);
+	XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char**)efiler_xpm, &p, &mask, NULL);
 	win->icon((char*)p);
 
 
@@ -880,5 +977,11 @@ edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_Q
 	dirtree->ignore_case(ignorecase);
 	loaddir(current_dir);
 
-	return Fl::run();
+	// Main event loop
+	Fl::run();
+
+	// Cleanup and shutdowns
+	edelib::DirWatch::shutdown();
+
+	return 0;
 }
