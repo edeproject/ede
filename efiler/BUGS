@@ -1,5 +1,10 @@
 Known bugs:
 
+- EDE_Browser:
+	- Clicking on column header causes the whole header to be moved to 
+window x()
+	- Resizing any column to the left leaves garbage after the last column
+	- Resizing last column to the right can have unexpected results
 - If you execute cut, then drag&drop files from another window, cut operation 
 will be assumed.
 - Callback for tree view widget is erratic - it usually doesn't work on Enter 
