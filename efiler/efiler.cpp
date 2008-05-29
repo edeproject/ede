@@ -47,7 +47,7 @@
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
-//#include "ede_strverscmp.h" // local copy of strverscmp
+#include "ede_strverscmp.h" // local copy of strverscmp
 
 
 
@@ -235,7 +235,7 @@ char *simpleopener(const char* mimetype) {
 int ede_versionsort(const void *a, const void *b) {
 	struct dirent** ka = (struct dirent**)a;
 	struct dirent** kb = (struct dirent**)b;
-	return strverscmp((*ka)->d_name,(*kb)->d_name);
+	return ede_strverscmp((*ka)->d_name,(*kb)->d_name);
 }
 
 // Modification of versionsort which ignores case
@@ -245,7 +245,7 @@ int ede_versioncasesort(const void *a, const void *b) {
 	char* ma = strdup((*ka)->d_name);
 	char* mb = strdup((*kb)->d_name);
 	edelib::str_tolower((unsigned char*)ma); edelib::str_tolower((unsigned char*)mb);
-	int k = strverscmp(ma,mb);
+	int k = ede_strverscmp(ma,mb);
 	free(ma); free(mb);
 	return k;
 }
