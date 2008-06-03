@@ -590,6 +590,7 @@ void showtree_cb(Fl_Widget*, void*) {
 	} else {
 		int currentw = dirtree->w();
 		tile->position(currentw, 1, tree_width, 1);
+		dirtree->set_current(current_dir);
 	}
 }
 
@@ -603,16 +604,14 @@ void locationbar_cb(Fl_Widget*, void*) {
 		location_bar->show();
 		location_bar->resize(0, menubar_height, win->w(), location_bar_height);
 		tile->resize(0, menubar_height+location_bar_height, win->w(), win->h()-menubar_height-location_bar_height-statusbar_height);
-//		win->resizable(tile); // win keeps old tile size...
+		win->init_sizes();
 		win->redraw();
 	} else {
-		location_bar->hide();
-//		location_bar->resize(0, menubar_height, win->w(), 0);
+		location_bar->resize(0, menubar_height, win->w(), 0);
 		tile->resize(0, menubar_height, win->w(), win->h()-menubar_height-statusbar_height);
+		location_bar->hide();
+		win->init_sizes();
 		win->redraw();
-		win->resizable(tile);
-		win->redraw();
-		// FIXME tile still doesn't resize :(
 	}
 }
 
@@ -853,7 +852,7 @@ void load_preferences() {
 	app_config.get("gui","dirs_first",dirsfirst,true); // Directories before ordinary files
 	app_config.get("gui","ignore_case",ignorecase,true); // Ignore case when sorting
 	app_config.get("gui","show_location",showlocation,true); // Show location bar
-//	app_config.get("gui","show_tree",showtree,false); // Show directory tree
+	app_config.get("gui","show_tree",showtree,false); // Show directory tree
 	app_config.get("gui","icons_view",icons_view,false); // Show icons (if false, show details)
 
 	app_config.get("gui","window_width",winw,600); // Window dimensions
@@ -862,18 +861,19 @@ void load_preferences() {
 	// Apply settings
 	if (winw!=default_window_width || winh!=default_window_height)
 		win->resize(win->x(),win->y(),winw,winh);
-	if (location_bar->visible() != showlocation) {
-		showlocation = !showlocation; //locationbar_cb will return
+
+	// Location and tree are currently shown - we just need to hide them if neccessary
+
+	if (!showlocation) {
+		showlocation = !showlocation; //locationbar_cb will revert
 		locationbar_cb(win,0); 
 		update_menu_item(_("&Location bar"),showlocation);
 	}
-// showing/hiding tree is bugged
-/*	if ((dirtree->w()>0)!=showtree) {
-		showtree = !showtree; // showtree_cb will return
+	if (!showtree) {
+		showtree = !showtree; // showtree_cb will revert
 		showtree_cb(win,0);
-		win->redraw(); // to actually show the tree
 		update_menu_item(_("Directory &tree"),showtree);
-	}*/
+	}
 	if (icons_view) iconsview_cb(win,0); else listview_cb(win,0);
 	update_menu_item(_("&Hidden files"),showhidden);
 	update_menu_item(_("D&irectories first"),dirsfirst);
@@ -971,7 +971,7 @@ int main (int argc, char **argv) {
 		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
 	}
 
-//edelib::IconTheme::init("crystalsvg");
+edelib::IconTheme::init("crystalsvg");
 
 	edelib::DirWatch::init();
 	edelib::DirWatch::callback(directory_change_cb);
@@ -1041,6 +1041,10 @@ fl_message_font(FL_HELVETICA, 12);
 	// TODO: use icon from theme (e.g. system-file-manager)
 	win->window_icon(efiler_xpm); // new method in edelib::Window
 
+	// We need to init dirtree before loading anything into it
+	dirtree->init();
+	dirtree->show_hidden(showhidden);
+	dirtree->ignore_case(ignorecase);
 
 	// Read user preferences
 	load_preferences();
@@ -1048,13 +1052,8 @@ fl_message_font(FL_HELVETICA, 12);
 	//Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Double_Window docs
 	semaphore=false; // semaphore for loaddir
 
-	showtree=true;
-
 	win->show(argc,argv);
 	view->take_focus();
-	dirtree->init();
-	dirtree->show_hidden(showhidden);
-	dirtree->ignore_case(ignorecase);
 	loaddir(current_dir);
 
 	// Main event loop
