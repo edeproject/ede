@@ -40,6 +40,8 @@
 #include <edelib/IconTheme.h> // for setting the icon theme
 #include <edelib/MessageBox.h>
 #include <edelib/DirWatch.h>
+#include <edelib/Window.h>
+#include <edelib/Resource.h>
 
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
@@ -51,7 +53,7 @@
 
 
 
-Fl_Window* win;
+edelib::Window* win;
 FileView* view;
 Fl_Menu_Bar* main_menu;
 Fl_Box* statusbar;
@@ -61,6 +63,8 @@ Fl_Group* location_bar;
 Fl_File_Input* location_input;
 Fl_Menu_Button* context_menu;
 
+edelib::Resource app_config;
+
 char current_dir[FL_PATH_MAX];
 bool showhidden;
 bool semaphore;
@@ -69,6 +73,7 @@ bool ignorecase;
 bool showtree;
 bool showlocation;
 int tree_width;
+bool notify_available;
 
 
 // constants
@@ -89,11 +94,11 @@ int default_tree_width=150;
 void iconsview_cb(Fl_Widget*, void*);
 void listview_cb(Fl_Widget*, void*); 
 
-class EFiler_Window : public Fl_Double_Window {
+class EFiler_Window : public edelib::Window {
 public:
-	EFiler_Window (int W, int H, const char* title=0) : Fl_Double_Window(W,H,title) {}
+	EFiler_Window (int W, int H, const char* title=0) : edelib::Window(W,H,title) {}
 	EFiler_Window (int X, int Y, int W, int H, const char* title=0) : 
-		Fl_Double_Window(X,Y,W,H,title) {}
+		edelib::Window(X,Y,W,H,title) {}
 
 	int handle(int e) {
 		// Have F8 function as switch between active views
@@ -106,7 +111,7 @@ public:
 			}
 			return 1;
 		}
-		return Fl_Double_Window::handle(e);
+		return edelib::Window::handle(e);
 	}
 };
 
@@ -332,12 +337,15 @@ void loaddir(const char *path) {
 	char* tmpath = strdup(path);
 
 	// Set current_dir
-	// fl_filename_isdir() thinks that / isn't a dir :(
+		// fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
 		if (path[0] == '~' && path[1] == '/') {// Expand tilde
 			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
 		} else if (path[0] != '/') { // Relative path
-			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("PWD"),tmpath);
+			char *t = tmpath;
+			if (path[0] == '.' && path[1] == '/') t+=2; // remove .
+			else if (path[0] == '.' && path[1] != '.') t+=1;
+			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("PWD"),t);
 		} else {
 			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
 		}
@@ -386,12 +394,12 @@ void loaddir(const char *path) {
 	edelib::DirWatch::add(current_dir, edelib::DW_CREATE | edelib::DW_DELETE | edelib::DW_ATTRIB | edelib::DW_RENAME | edelib::DW_MODIFY);
 
 	// Update directory tree
-	dirtree->set_current(current_dir);
+	if (showtree) dirtree->set_current(current_dir);
 	location_input->value(current_dir);
 
 	// set window label
 	// copy_label() is a method that calls strdup() and later free()
-	win->copy_label(tsprintf(_("%s - File manager"), current_dir));
+	win->copy_label(tsprintf(_("%s - File manager"), my_filename_name(current_dir)));
 	statusbar->copy_label(tsprintf(_("Scanning directory %s..."), current_dir)); 
 
 	view->clear();
@@ -423,7 +431,9 @@ void loaddir(const char *path) {
 		item->date = nice_time(stat_buffer.st_mtime);
 		item->permissions = permission_text(stat_buffer.st_mode,stat_buffer.st_uid,stat_buffer.st_gid);
 		if (strcmp(n,"..")==0) {
-			item->icon = "undo";
+			// item->icon = "go-up"; // undo is prettier?!
+			// in edeneu theme, I prefer go-jump rotated 180 degree.. in crystalsvg, undo is best
+			item->icon = "edit-undo";
 			item->description = "Go up";
 			item->size = "";
 		} else if (S_ISDIR(stat_buffer.st_mode)) { // directory
@@ -433,7 +443,10 @@ void loaddir(const char *path) {
 			item->size = "";
 			item->realpath += "/";
 		} else {
-			item->icon = "unknown";
+			item->icon = "empty"; //in crystalsvg "misc" is better...
+			// NOTE: "empty" is *not* listed in icon-naming-spec [1], but is present in 
+			// both KDE and GNOME themes.
+			// [1] http://standards.freedesktop.org/icon-naming-spec/icon-naming-spec-0.8.html
 			item->description = "Unknown";
 			item->size = nice_size(stat_buffer.st_size);
 		}
@@ -599,6 +612,7 @@ void locationbar_cb(Fl_Widget*, void*) {
 		win->redraw();
 		win->resizable(tile);
 		win->redraw();
+		// FIXME tile still doesn't resize :(
 	}
 }
 
@@ -625,9 +639,16 @@ void dirsfirst_cb(Fl_Widget*, void*) {
 // Implemented after menu definition
 void update_menu_item(const char* label, bool value);
 
+// Open with... callback
+// TODO: make a list of openers etc.
+void ow_cb(Fl_Widget*, void*) { 
+	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
+	const char* file = view->path(view->get_focus());
+	edelib::run_program(tsprintf("%s %s", app, file), /*wait=*/false);
+} 
+
 
 // dummy callbacks - TODO
-void ow_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); } // make a list of openers
 void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 void iconsview_cb(Fl_Widget*, void*) {
 	if (view->type() != FILE_ICON_VIEW) {  
@@ -820,6 +841,61 @@ void context_cb(Fl_Widget*, void*) {
 
 
 /*-----------------------------------------------------------------
+	Load / store user preferences
+-------------------------------------------------------------------*/
+
+void load_preferences() {
+	bool icons_view=false;
+	int winw, winh;
+
+	app_config.load("efiler");
+	app_config.get("gui","show_hidden",showhidden,false); // Show hidden files
+	app_config.get("gui","dirs_first",dirsfirst,true); // Directories before ordinary files
+	app_config.get("gui","ignore_case",ignorecase,true); // Ignore case when sorting
+	app_config.get("gui","show_location",showlocation,true); // Show location bar
+//	app_config.get("gui","show_tree",showtree,false); // Show directory tree
+	app_config.get("gui","icons_view",icons_view,false); // Show icons (if false, show details)
+
+	app_config.get("gui","window_width",winw,600); // Window dimensions
+	app_config.get("gui","window_height",winh,400);
+
+	// Apply settings
+	if (winw!=default_window_width || winh!=default_window_height)
+		win->resize(win->x(),win->y(),winw,winh);
+	if (location_bar->visible() != showlocation) {
+		showlocation = !showlocation; //locationbar_cb will return
+		locationbar_cb(win,0); 
+		update_menu_item(_("&Location bar"),showlocation);
+	}
+// showing/hiding tree is bugged
+/*	if ((dirtree->w()>0)!=showtree) {
+		showtree = !showtree; // showtree_cb will return
+		showtree_cb(win,0);
+		win->redraw(); // to actually show the tree
+		update_menu_item(_("Directory &tree"),showtree);
+	}*/
+	if (icons_view) iconsview_cb(win,0); else listview_cb(win,0);
+	update_menu_item(_("&Hidden files"),showhidden);
+	update_menu_item(_("D&irectories first"),dirsfirst);
+}
+
+
+void save_preferences() {
+	app_config.set("gui","show_hidden",showhidden); // Show hidden files
+	app_config.set("gui","dirs_first",dirsfirst); // Directories before ordinary files
+	app_config.set("gui","ignore_case",ignorecase); // Ignore case when sorting
+	app_config.set("gui","show_location",showlocation); // Show location bar
+	app_config.set("gui","show_tree",showtree); // Show directory tree
+	app_config.set("gui","icons_view",(view->type()==FILE_ICON_VIEW)); // Show icons (if false, show details)
+
+	app_config.set("gui","window_width",win->w()); // Window dimensions
+	app_config.set("gui","window_height",win->h());
+
+	app_config.save("efiler");
+}
+
+
+/*-----------------------------------------------------------------
 	GUI design
 -------------------------------------------------------------------*/
 
@@ -895,20 +971,24 @@ int main (int argc, char **argv) {
 		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
 	}
 
-fl_register_images();
-edelib::IconTheme::init("crystalsvg");
+//edelib::IconTheme::init("crystalsvg");
+
 	edelib::DirWatch::init();
 	edelib::DirWatch::callback(directory_change_cb);
+	// Let other components know if we have notify
+	if (edelib::DirWatch::notifier() == edelib::DW_NONE)
+		notify_available=false;
+	else
+		notify_available=true;
 
 FL_NORMAL_SIZE=12;
 fl_message_font(FL_HELVETICA, 12);
 
-// Required by the new edelib::MessageBox class
-edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_QUESTION, MSGBOX_ICON_QUESTION, MSGBOX_ICON_PASSWORD);
-
-
 	// Main GUI design
 	win = new EFiler_Window(default_window_width, default_window_height);
+
+	win->init(); // new method required by edelib::Window
+
 //	win->color(FL_WHITE);
 	win->begin();
 		main_menu = new Fl_Menu_Bar(0,0,default_window_width,menubar_height);
@@ -938,15 +1018,15 @@ edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_Q
 			view->context_callback(context_cb);
 		tile->end();
 
+		// Status bar group
 		Fl_Group *sbgroup = new Fl_Group(0, default_window_height-statusbar_height, default_window_width, statusbar_height);
-			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, statusbar_width, statusbar_height-4);
+			statusbar = new Fl_Box(2, default_window_height-statusbar_height+2, //statusbar_width,
+			default_window_width-4, statusbar_height-4);
 			statusbar->box(FL_DOWN_BOX);
 			statusbar->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_CLIP);
 			statusbar->label(_("EFiler is starting..."));
-
-			Fl_Box* filler = new Fl_Box(statusbar_width+2, default_window_height-statusbar_height+2, default_window_width-statusbar_width, statusbar_height-4);
 		sbgroup->end();
-		sbgroup->resizable(filler);
+		sbgroup->resizable(statusbar);
 
 		context_menu = new Fl_Menu_Button (0,0,0,0);
 		context_menu->type(Fl_Menu_Button::POPUP3);
@@ -958,18 +1038,18 @@ edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_Q
 //	win->resizable(view);
 
 	// Set application (window manager) icon
-	// FIXME: due to fltk bug this icon doesn't have transparency
-	fl_open_display();
-	Pixmap p, mask;
-	XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display), (char**)efiler_xpm, &p, &mask, NULL);
-	win->icon((char*)p);
+	// TODO: use icon from theme (e.g. system-file-manager)
+	win->window_icon(efiler_xpm); // new method in edelib::Window
 
 
-	// TODO remember previous configuration
-	showhidden=false; dirsfirst=true; ignorecase=true; semaphore=false; showtree=true; showlocation=true;
-	tree_width = default_tree_width;
+	// Read user preferences
+	load_preferences();
 
-	Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Double_Window docs
+	//Fl::visual(FL_DOUBLE|FL_INDEX); // see Fl_Double_Window docs
+	semaphore=false; // semaphore for loaddir
+
+	showtree=true;
+
 	win->show(argc,argv);
 	view->take_focus();
 	dirtree->init();
@@ -982,6 +1062,7 @@ edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_Q
 
 	// Cleanup and shutdowns
 	edelib::DirWatch::shutdown();
+	save_preferences();
 
 	return 0;
 }
