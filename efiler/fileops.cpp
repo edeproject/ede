@@ -43,7 +43,7 @@ Fl_Progress* cut_copy_progress;
 bool stop_now;
 bool overwrite_all, skip_all;
 
-enum OperationType_ { // Stop idiotic warnings from gcc
+enum OperationType_ { // Stop idiotic warnings from gcc (anonymous enum in global scope)
 	CUT,
 	COPY,
 	ASK 
@@ -118,7 +118,9 @@ const char* my_filename_dir(const char* path) {
 
 
 
-// Execute cut or copy operation
+// Execute cut or copy operation from GUI (this actually does nothing
+// on the filesystem, just store list of files in buffer and mark operation; files
+// will be copied or moved when do_paste is called)
 void do_cut_copy(bool m_copy) {
 	int num = view->size();
 	if (m_copy) operation = COPY; else operation = CUT;
@@ -178,9 +180,9 @@ void do_cut_copy(bool m_copy) {
 }
 
 
-// Copy single file. Returns true if operation should continue
+// Copy single file on filesystem. Returns false if operation failed and process should be stopped
 
-// Note that at this point directories should be expanded into subdirectories etc.
+// Note that at this point directories should be expanded into subdirectories and files,
 // so when "copying" a directory we actually mean creating a new directory with same properties
 bool my_copy(const char* src, const char* dest) {
 	FILE *fold, *fnew;
@@ -235,7 +237,7 @@ bool my_copy(const char* src, const char* dest) {
 		fl_alert(tsprintf(_("Error copying %s to %s"),src,dest)); */
 
 
-	// This should already be checked!
+	// This should already be checked by file_readable and file_writeable
 	if ( ( fold = fopen( src, "rb" ) ) == NULL ) {
 		int q = ede_choice_alert(tsprintf(_("Cannot read file\n\t%s\n%s"), src, strerror(errno)), _("&Stop"), _("&Continue"), 0);
 		if (q == 1) return true; else return false;
@@ -259,7 +261,7 @@ bool my_copy(const char* src, const char* dest) {
 		}
 
 		if (stop_now) {
-			edelib::alert(_("Copying interrupted!\nFile %s is only half-copied and probably broken."), my_filename_name(dest));
+			edelib::alert(_("Copying interrupted!\nFile %s is only half-copied and probably incorrect."), my_filename_name(dest));
 			break; 
 		}
 	}
@@ -364,10 +366,13 @@ void do_delete() {
 					edelib::alert(_("Couldn't delete directory\n\t%s\n%s"), files_list[i], strerror(errno));
 
 		// refresh directory listing - optimized
-		for (int i=1; i<=view->size(); i++)
-			for (int j=0; j<list_size; j++)
-				if (strcmp(files_list[j],view->path(i))==0)
-					view->remove(i);
+		// if notify is available, it will do it for us
+		if (!notify_available) {
+			for (int i=1; i<=view->size(); i++)
+				for (int j=0; j<list_size; j++)
+					if (strcmp(files_list[j],view->path(i))==0)
+						view->remove(i);
+		}
 	}
 
 	// Cleanup memory
@@ -390,7 +395,7 @@ void do_rename(const char* newname) {
 	else if (!edelib::file_rename(oldpath,newpath))
 		edelib::alert(_("Rename %s to %s failed!"), oldname, newname);
 	else 
-		view->update_path(oldpath,newpath);
+		if (!notify_available) view->update_path(oldpath,newpath);
 }
 
 
@@ -506,7 +511,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 	}
 
 
-	{ // to silence goto
+	{ // to silence warning caused by goto
 
 	overwrite_all=false; skip_all=false;
 	stop_now=false;
@@ -567,7 +572,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 	// This list is used for updating mimetypes after the copying is finished
 	FileItem **item_list=0; 
 	int item_list_size=0;
-	if (strncmp(to,current_dir,strlen(to))==0)
+	if (!notify_available && strncmp(to,current_dir,strlen(to))==0)
 		// avoid malloc if current dir isn't inside the scope of paste
 		item_list = new FileItem*[list_size];
 
@@ -624,7 +629,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 			}
 
 		// Update interface - add file to list (if we are viewing the destination directory)
-		} else if (strcmp(current_dir,my_filename_dir(dest))==0) {
+		} else if (!notify_available && strcmp(current_dir,my_filename_dir(dest))==0) {
 			FileItem *item = new FileItem;
 			item->name = my_filename_name(dest);
 			item->realpath = dest;
@@ -666,7 +671,8 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		goto FINISH;
 	}
 
-	// -- Update interface in a smart way
+	// -- Update interface in a smart way - but only if there is no notify
+	if (!notify_available) {
 
 	// Remove cutted files
 	if (operation == CUT)
@@ -699,8 +705,11 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 		}
 		view->update(item);
 		delete item_list[i];
-	}
-	delete[] item_list;
+	} // for...
+
+	delete[] item_list; // this was allocated before
+
+	} // if (!notify_available)...
 
 	// Select the just pasted files (they're at the bottom)
 	if (item_list_size>0) {
@@ -709,7 +718,7 @@ fprintf (stderr, "from[%d]='%s'\n", k, from[k]);
 			view->select(i,1);
 	}
 
-	} // scoping to silence goto
+	} // scoping to silence goto warning
 
 	// Cleanup memory and exit
 FINISH:

@@ -190,7 +190,7 @@ EDEBUG(DBG "value: %s\n", value.c_str());
 
 	// Get icon
 	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_TINY);
-	if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE);
+	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
 	set_icon(row, Fl_Shared_Image::get(icon.c_str()));
 }
 
@@ -218,7 +218,7 @@ EDEBUG(DBG "value: %s\n", value.c_str());
 
 	// Get icon
 	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_TINY);
-	if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE);
+	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
 	set_icon(row, Fl_Shared_Image::get(icon.c_str()));
 }
 

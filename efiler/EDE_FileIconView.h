@@ -21,7 +21,7 @@
 
 
 // comment this to use edelib::ExpandableGroup
-#define USE_FLU_WRAP_GROUP
+//#define USE_FLU_WRAP_GROUP
 
 #ifdef USE_FLU_WRAP_GROUP
  #include "Flu_Wrap_Group.h"

@@ -237,13 +237,14 @@ void FileIconView::insert(int row, FileItem *item) {
 
 	// Set icon
 	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_MEDIUM);
-	if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE);
+	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
 	b->image(Fl_Shared_Image::get(icon.c_str()));
 
 #ifdef USE_FLU_WRAP_GROUP
 	Flu_Wrap_Group::insert(*b,row);
 #else
 	edelib::ExpandableGroup::insert(*b,row);
+	edelib::ExpandableGroup::handle(FL_SHOW); // This will force calling reposition_childs()
 #endif
 	//insert(*b,row); -- why doesn't this work?
 	redraw();
@@ -285,7 +286,7 @@ void FileIconView::update(FileItem *item) {
 
 	// Set icon
 	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_MEDIUM);
-	if (icon=="") icon = edelib::IconTheme::get("misc",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE);
+	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_MEDIUM,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
 	w->image(Fl_Shared_Image::get(icon.c_str()));
 
 	w->redraw();

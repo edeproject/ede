@@ -56,6 +56,7 @@ void make_end_with_slash(char* path) {
 
 // Filesystem data
 // TODO: find better icons for Amiga, Macintosh etc.
+// TODO: use USB icon for removable media, regardless of filesystem
 
 static struct {
 	char id[15];
@@ -80,62 +81,62 @@ static struct {
 	{"usbfs",	"", ""},
 
 // Common filesystems
-	{"ext2",	"Linux disk (%s)",		"hdd_unmount"},
-	{"ext2fs",	"Linux disk (%s)",		"hdd_unmount"},
-	{"ext3",	"Linux disk (%s)",		"hdd_unmount"},
-	{"reiserfs",	"Linux disk (%s)",		"hdd_unmount"},
-	{"ffs",		"BSD disk (%s)",		"hdd_unmount"},
-	{"ufs",		"Unix disk (%s)",		"hdd_unmount"},
-	{"dos",		"Windows disk (%s)",		"win_mount"},
-	{"fat",		"Windows disk (%s)",		"win_mount"},
-	{"msdos",	"Windows disk (%s)",		"win_mount"},
-	{"ntfs",	"Windows disk (%s)",		"win_mount"},
-	{"pcfs",	"Windows disk (%s)",		"win_mount"},
-	{"umsdos",	"Windows disk (%s)",		"win_mount"},
-	{"vfat",	"Windows disk (%s)",		"win_mount"},
-	{"cd9660",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"cdfs",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"cdrfs",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"hsfs",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"iso9660",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"isofs",	"CD-ROM (%s)",			"cdrom_unmount"},
-	{"udf",		"DVD-ROM (%s)",			"dvd_unmount"},
-	{"cifs",	"Shared directory (%s)",	"server"},
-	{"nfs",		"Shared directory (%s)",	"server"},
-	{"nfs4",	"Shared directory (%s)",	"server"},
-	{"smbfs",	"Shared directory (%s)",	"server"},
-	{"cramfs",	"Virtual (RAM) disk (%s)",	"memory"},
+	{"ext2",	"Linux legacy (%s)",		"drive-harddisk"},
+	{"ext2fs",	"Linux legacy (%s)",		"drive-harddisk"},
+	{"ext3",	"Linux disk (%s)",		"drive-harddisk"},
+	{"reiserfs",	"Linux alternative (%s)",	"drive-harddisk"},
+	{"ffs",		"BSD disk (%s)",		"drive-harddisk"},
+	{"ufs",		"Unix disk (%s)",		"drive-harddisk"},
+	{"dos",		"Windows disk (%s)",		"drive-harddisk"}, // I would prefer a Windows icon
+	{"fat",		"Windows disk (%s)",		"drive-harddisk"},
+	{"msdos",	"Windows disk (%s)",		"drive-harddisk"},
+	{"ntfs",	"Windows disk (%s)",		"drive-harddisk"},
+	{"pcfs",	"Windows disk (%s)",		"drive-harddisk"},
+	{"umsdos",	"Windows disk (%s)",		"drive-harddisk"},
+	{"vfat",	"Windows disk (%s)",		"drive-harddisk"},
+	{"cd9660",	"CD-ROM (%s)",			"media-cdrom"},
+	{"cdfs",	"CD-ROM (%s)",			"media-cdrom"},
+	{"cdrfs",	"CD-ROM (%s)",			"media-cdrom"},
+	{"hsfs",	"CD-ROM (%s)",			"media-cdrom"},
+	{"iso9660",	"CD-ROM (%s)",			"media-cdrom"},
+	{"isofs",	"CD-ROM (%s)",			"media-cdrom"},
+	{"udf",		"DVD-ROM (%s)",			"media-dvd"},
+	{"cifs",	"Shared directory (%s)",	"folder-remote"},
+	{"nfs",		"Shared directory (%s)",	"folder-remote"},
+	{"nfs4",	"Shared directory (%s)",	"folder-remote"},
+	{"smbfs",	"Shared directory (%s)",	"folder-remote"},
+	{"cramfs",	"Virtual (RAM) disk (%s)",	"memory"}, // no icon for ramdisk in fd.o specification or edeneu
 	{"mfs",		"Virtual (RAM) disk (%s)",	"memory"},
 	{"ramfs",	"Virtual (RAM) disk (%s)",	"memory"},
 	{"romfs",	"Virtual (RAM) disk (%s)",	"memory"},
 	{"union",	"Virtual (RAM) disk (%s)",	"memory"}, // not accurate, but good enough
 	{"unionfs",	"Virtual (RAM) disk (%s)",	"memory"}, // not accurate, but good enough
-	{"jfs",		"IBM AIX disk (%s)",		"hdd_unmount"},
-	{"xfs",		"SGI IRIX disk (%s)",		"hdd_unmount"},
+	{"jfs",		"IBM AIX disk (%s)",		"drive-harddisk"},
+	{"xfs",		"SGI IRIX disk (%s)",		"drive-harddisk"},
 
 
 // Other filesystems
-	{"coherent",	"Unix disk (%s)",		"hdd_unmount"},
-	{"sysv",	"Unix disk (%s)",		"hdd_unmount"},
-	{"xenix",	"Unix disk (%s)",		"hdd_unmount"},
-	{"adfs",	"RiscOS disk (%s)",		"hdd_unmount"},
-	{"filecore",	"RiscOS disk (%s)",		"hdd_unmount"},
-	{"ados",	"Amiga disk (%s)",		"hdd_unmount"},
-	{"affs",	"Amiga disk (%s)",		"hdd_unmount"},
-	{"afs",		"AFS shared directory (%s)",	"server"},
-	{"befs",	"BeOS disk (%s)",		"hdd_unmount"},
-	{"bfs",		"UnixWare disk (%s)",		"hdd_unmount"},
-	{"efs",		"SGI IRIX disk (%s)",		"hdd_unmount"},
-	{"ext",		"Old Linux disk (%s)",		"hdd_unmount"},
-	{"hfs",		"Macintosh disk (%s)",		"hdd_unmount"}, // Also used for HP-UX filesystem!!
-	{"hpfs",	"OS/2 disk (%s)",		"hdd_unmount"},
-//	{"lfs",		"BSD LFS disk (%s)",		"hdd_unmount"}, // This is said to not work
-	{"minix",	"Minix disk (%s)",		"hdd_unmount"},
-	{"ncpfs",	"NetWare shared directory (%s)",	"server"},
-	{"nwfs",	"NetWare shared directory (%s)",	"server"},
-	{"qns",		"QNX disk (%s)",		"hdd_unmount"},
-	{"supermount",	"Removable disk (%s)", 		"cdrom_umnount"}, // ???
-	{"xiafs",	"Old Linux disk (%s)",		"hdd_unmount"},
+	{"coherent",	"Unix disk (%s)",		"drive-harddisk"},
+	{"sysv",	"Unix disk (%s)",		"drive-harddisk"},
+	{"xenix",	"Unix disk (%s)",		"drive-harddisk"},
+	{"adfs",	"RiscOS disk (%s)",		"drive-harddisk"},
+	{"filecore",	"RiscOS disk (%s)",		"drive-harddisk"},
+	{"ados",	"Amiga disk (%s)",		"drive-harddisk"},
+	{"affs",	"Amiga disk (%s)",		"drive-harddisk"},
+	{"afs",		"AFS shared directory (%s)",	"folder-remote"},
+	{"befs",	"BeOS disk (%s)",		"drive-harddisk"},
+	{"bfs",		"UnixWare disk (%s)",		"drive-harddisk"},
+	{"efs",		"SGI IRIX disk (%s)",		"drive-harddisk"},
+	{"ext",		"Old Linux disk (%s)",		"drive-harddisk"},
+	{"hfs",		"Macintosh disk (%s)",		"drive-harddisk"}, // Also used for HP-UX filesystem!!
+	{"hpfs",	"OS/2 disk (%s)",		"drive-harddisk"},
+//	{"lfs",		"BSD LFS disk (%s)",		"drive-harddisk"}, // This is said to not work
+	{"minix",	"Minix disk (%s)",		"drive-harddisk"},
+	{"ncpfs",	"NetWare shared directory (%s)",	"folder-remote"},
+	{"nwfs",	"NetWare shared directory (%s)",	"folder-remote"},
+	{"qns",		"QNX disk (%s)",		"drive-harddisk"},
+	{"supermount",	"Removable disk (%s)", 		"media-cdrom"}, // ???
+	{"xiafs",	"Old Linux disk (%s)",		"drive-harddisk"},
 
 // Virtual filesystems (various views of existing files)
 // How often are these used?
@@ -168,13 +169,14 @@ void DirTree::init()
 
 	// Top level icon
 	add(_("System"));
-	set_icon(1, Fl_Shared_Image::get(edelib::IconTheme::get("tux",edelib::ICON_SIZE_TINY).c_str()));
+	set_icon(1, Fl_Shared_Image::get(edelib::IconTheme::get("computer",edelib::ICON_SIZE_TINY).c_str()));
+	// TODO: use OS icons: Tux for Linux, devil for FreeBSD...
 	data(1, strdup("about:sysinfo"));
 
 	// Home icon
 	snprintf(buffer,PATH_MAX,_("%s's Home"), getenv("USER"));
 	add(strdup(buffer));
-	set_icon(2, Fl_Shared_Image::get(edelib::IconTheme::get("folder_home",edelib::ICON_SIZE_TINY).c_str()));
+	set_icon(2, Fl_Shared_Image::get(edelib::IconTheme::get("user-home",edelib::ICON_SIZE_TINY).c_str()));
 	strncpy(buffer,getenv("HOME"),PATH_MAX);
 	make_end_with_slash(buffer);
 	data(2, strdup(buffer));
@@ -182,7 +184,10 @@ void DirTree::init()
 
 	// Root icon
 	add(_("Whole disk"));
-	set_icon(3, Fl_Shared_Image::get(edelib::IconTheme::get("folder_red",edelib::ICON_SIZE_TINY).c_str()));
+	edelib::String root_icon = edelib::IconTheme::get("folder_red",edelib::ICON_SIZE_TINY);
+	if (root_icon=="") // sigh...
+		root_icon = edelib::IconTheme::get("folder",edelib::ICON_SIZE_TINY);
+	set_icon(3, Fl_Shared_Image::get(root_icon.c_str()));
 	data(3,strdup("/"));
 	indent(3,1);
 

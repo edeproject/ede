@@ -17,6 +17,7 @@
 
 #include "EDE_FileView.h"
 #include <FL/Fl_Box.H>
+#include <edelib/Window.h>
 
 // Execute cut or copy operation when List View is active
 void do_cut_copy(bool m_copy);
@@ -31,9 +32,14 @@ void do_delete();
 // Rename the file that has focus to given name
 void do_rename(const char*);
 
+// Show part of path with filename - works for directories too
+const char* my_filename_name(const char*);
 
+
+// Stuff declared in global scope in efiler.cpp
 extern FileView* view;
-extern Fl_Window* win;
+extern edelib::Window* win;
 extern Fl_Box* statusbar;
 extern char current_dir[];
 extern void loaddir(const char*);
+extern bool notify_available;
