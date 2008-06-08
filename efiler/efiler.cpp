@@ -25,23 +25,23 @@
 
 
 #include <Fl/Fl.H>
-#include <Fl/Fl_Double_Window.H>
 #include <Fl/Fl_Menu_Bar.H>
 #include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
 #include <Fl/filename.H>
 #include <Fl/Fl_File_Input.H> // location bar
 #include <FL/Fl_Shared_Image.H> // for fl_register_images()
 
-#include <edelib/Nls.h>
-#include <edelib/MimeType.h>
-#include <edelib/String.h>
-#include <edelib/StrUtil.h>
-#include <edelib/Run.h>
+#include <edelib/Directory.h>
+#include <edelib/DirWatch.h>
 #include <edelib/IconTheme.h> // for setting the icon theme
 #include <edelib/MessageBox.h>
-#include <edelib/DirWatch.h>
-#include <edelib/Window.h>
+#include <edelib/MimeType.h>
+#include <edelib/Nls.h>
 #include <edelib/Resource.h>
+#include <edelib/Run.h>
+#include <edelib/String.h>
+#include <edelib/StrUtil.h>
+#include <edelib/Window.h>
 
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
@@ -50,6 +50,7 @@
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
 #include "ede_strverscmp.h" // local copy of strverscmp
+#include "mailcap.h" // handling mailcap file
 
 
 
@@ -121,7 +122,7 @@ public:
 	Some improvements to Fl_File_Input, that should be added 
 	upstream:
 	* enable to set shortcut in label (STR 1770 for Fl_Input_)
-	* navigate using Ctrl+arrow (here we jump to dir. sep.)
+	* navigate using Ctrl+arrow (jump to dir separator)
 -------------------------------------------------------------------*/
 
 class My_File_Input : public Fl_File_Input {
@@ -340,12 +341,12 @@ void loaddir(const char *path) {
 		// fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
 		if (path[0] == '~' && path[1] == '/') {// Expand tilde
-			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("HOME"),tmpath+1);
+			snprintf(current_dir,FL_PATH_MAX,"%s/%s",edelib::dir_home().c_str(),tmpath+1);
 		} else if (path[0] != '/') { // Relative path
 			char *t = tmpath;
 			if (path[0] == '.' && path[1] == '/') t+=2; // remove .
 			else if (path[0] == '.' && path[1] != '.') t+=1;
-			snprintf(current_dir,FL_PATH_MAX,"%s/%s",getenv("PWD"),t);
+			snprintf(current_dir,FL_PATH_MAX,"%s/%s",edelib::dir_current().c_str(),t);
 		} else {
 			if (path!=current_dir) strncpy(current_dir,tmpath,strlen(tmpath)+1);
 		}
@@ -539,7 +540,10 @@ void open_cb(Fl_Widget*w, void*data) {
 
 		// Find opener
 		mime_resolver.set(path);
-		char* opener = simpleopener(mime_resolver.type().c_str());
+//		char* opener = simpleopener(mime_resolver.type().c_str());
+		int tmp=(int)data; // cast data for passing to mailcap_opener
+		if (tmp<1 || tmp>8) tmp=1;
+		const char* opener = mailcap_opener(mime_resolver.type().c_str(), (MailcapAction)tmp);
 
 	// dump core
 	struct rlimit *rlim = (struct rlimit*)malloc(sizeof(struct rlimit));
@@ -551,10 +555,13 @@ void open_cb(Fl_Widget*w, void*data) {
 		const char *o2 = tsprintf(opener,path); // opener should contain %s
 		fprintf (stderr, "run_program: %s\n", o2);
 
-		if (opener) { 
+		if (tmp==16) { // 16 - open script
+			int k=edelib::run_program(path,false); fprintf(stderr, "retval: %d\n", k); 
+		}
+		else if (opener) { 
 			int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 		} else
-			statusbar->copy_label(tsprintf(_("No program to open %s!"), fl_filename_name(path)));
+			statusbar->copy_label(tsprintf(_("No program to open %s! (%s)"), fl_filename_name(path),mime_resolver.type().c_str()));
 
 	rlim->rlim_cur = old_rlimit;
 	setrlimit (RLIMIT_CORE, rlim);
@@ -643,7 +650,7 @@ void update_menu_item(const char* label, bool value);
 void ow_cb(Fl_Widget*, void*) { 
 	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
 	const char* file = view->path(view->get_focus());
-	edelib::run_program(tsprintf("%s %s", app, file), /*wait=*/false);
+	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
 } 
 
 
@@ -822,7 +829,11 @@ void directory_change_cb(const char* dir, const char* what_changed, int flags, v
 // every item should have own context menu defined
 
 Fl_Menu_Item context_menu_definition[] = {
-	{_("&Open"),		0,	open_cb},
+	{_("&Open"),		0,	open_cb,	(void*)1,},
+	{_("&View"),		0,	open_cb,	(void*)1,FL_MENU_INVISIBLE},
+	{_("&Edit"),		0,	open_cb,	(void*)4,FL_MENU_INVISIBLE},
+	{_("Pri&nt"),		0,	open_cb,	(void*)8,FL_MENU_INVISIBLE},
+	{_("&Execute"),		0,	open_cb,	(void*)16,FL_MENU_INVISIBLE},
 	{_("Open &with..."),	0,	ow_cb,		0,FL_MENU_DIVIDER},
 	{_("&Cut"),		0,	cut_cb},
 	{_("Co&py"),		0,	copy_cb},
@@ -832,8 +843,42 @@ Fl_Menu_Item context_menu_definition[] = {
 	{0}
 };
 
+bool file_executable(const char* path) {
+	if (stat64(path,&stat_buffer)) return false; // error
+
+	static uid_t uid = stat_buffer.st_uid, uuid = getuid();
+	static gid_t gid = stat_buffer.st_gid, ugid = getgid();
+	mode_t mode = stat_buffer.st_mode;
+
+	if (S_ISDIR(mode)) return false;
+	
+	if (uid == uuid && mode&S_IXUSR) return true;
+	if (gid == ugid && mode&S_IXGRP) return true;
+	if (mode&S_IXOTH) return true;
+	return false;
+}
+
 // Right click - show context menu
 void context_cb(Fl_Widget*, void*) {
+	char* path = (char*)view->path(view->get_focus());
+
+	mime_resolver.set(path);
+	int actions = mailcap_actions(mime_resolver.type().c_str());
+
+	Fl_Menu_Item *k = context_menu_definition;
+	while(k->label()!=0) {
+		if (k->label()!=0 && strcmp(k->label(),_("&Open"))==0)
+			if (actions&MAILCAP_EDIT) k->hide(); else k->show();
+		if (k->label()!=0 && (strcmp(k->label(),_("&View"))==0 || strcmp(k->label(),_("&Edit"))==0))
+			if (actions&MAILCAP_EDIT) k->show(); else k->hide();
+		if (k->label()!=0 && strcmp(k->label(),_("Pri&nt"))==0)
+			if (actions&MAILCAP_PRINT) k->show(); else k->hide();
+		if (k->label()!=0 && strcmp(k->label(),_("&Execute"))==0)
+			if (file_executable(path)) k->show(); else k->hide();
+		k++;
+	}
+
+
 	context_menu->popup();
 	context_menu->value(-1);
 }
@@ -847,7 +892,7 @@ void load_preferences() {
 	bool icons_view=false;
 	int winw, winh;
 
-	app_config.load("efiler");
+	app_config.load("ede/efiler");
 	app_config.get("gui","show_hidden",showhidden,false); // Show hidden files
 	app_config.get("gui","dirs_first",dirsfirst,true); // Directories before ordinary files
 	app_config.get("gui","ignore_case",ignorecase,true); // Ignore case when sorting
@@ -891,7 +936,7 @@ void save_preferences() {
 	app_config.set("gui","window_width",win->w()); // Window dimensions
 	app_config.set("gui","window_height",win->h());
 
-	app_config.save("efiler");
+	app_config.save("ede/efiler");
 }
 
 
@@ -952,26 +997,33 @@ void update_menu_item(const char* label, bool value) {
 }
 
 
+int parsecmd(int argc, char**argv, int &index) {
+	if ((strcmp(argv[index],"-ic")==0) || (strcmp(argv[index],"-icons")==0)) {
+		edelib::IconTheme::init(argv[++index]);
+		++index;
+		return 1;
+	}
+	return 0;
+}
+
 // Main program
 extern int FL_NORMAL_SIZE;
 int main (int argc, char **argv) {
 
 	// Parse command line - this must come first
 	int unknown=0;
-	Fl::args(argc,argv,unknown);
+	Fl::args(argc,argv,unknown,parsecmd);
 	if (unknown==argc)
-		snprintf(current_dir, FL_PATH_MAX, getenv("HOME"));
+		snprintf(current_dir, FL_PATH_MAX, edelib::dir_home().c_str());
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
 			printf(_("EFiler - EDE File Manager\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
 			printf(_("Usage:\n\tefiler [OPTIONS] [PATH]\n\n"));
-			printf(_("Options:\n%s\n"),Fl::help);
+			printf(_("Options:\n -ic[ons] icon theme\n%s\n"),Fl::help);
 			return 1;
 		}
 		strncpy(current_dir, argv[unknown], strlen(argv[unknown])+1);
 	}
-
-edelib::IconTheme::init("crystalsvg");
 
 	edelib::DirWatch::init();
 	edelib::DirWatch::callback(directory_change_cb);
