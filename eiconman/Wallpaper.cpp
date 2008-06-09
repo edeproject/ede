@@ -138,10 +138,14 @@ Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_
 						*destptr++ = (tmp & 0xff000000) >> 24;
 						*destptr++ = (tmp & 0xff0000) >> 16;
 						*destptr++ = (tmp & 0xff00) >> 8;
-						*destptr++ = (tmp & 0xff);
+
+						// FIXME: check this somehow !
+						if(id == 4)
+							*destptr++ = (tmp & 0xff);
 					} else {
 						// little endian
-						*destptr++ = (tmp & 0xff);
+						if(id == 4)
+							*destptr++ = (tmp & 0xff);
 						*destptr++ = (tmp & 0xff00) >> 8;
 						*destptr++ = (tmp & 0xff0000) >> 16;
 						*destptr++ = (tmp & 0xff000000) >> 24;
