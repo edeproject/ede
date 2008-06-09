@@ -15,7 +15,10 @@
 
 #include "Log.h"
 #include "Xsm.h"
+
+#ifdef HAVE_COMPOSITE
 #include "Composite.h"
+#endif
 
 #include <edelib/List.h>
 #include <edelib/String.h>
@@ -56,7 +59,9 @@ class EvokeService {
 		bool  is_running;
 		Log*  logfile;
 		Xsm*  xsm;
+#ifdef HAVE_COMPOSITE
 		Composite* composite;
+#endif
 		char* pidfile;
 		char* lockfile;
 

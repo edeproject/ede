@@ -19,7 +19,6 @@ ObjectC++Flags EvokeService.cpp evoke.cpp : -DUSE_FLTK_LOOP_EMULATION ;
 
 SOURCE = evoke.cpp 
 		 EvokeService.cpp 
-		 Composite.cpp
 		 ClassHack.c
 		 Xsm.cpp 
 		 Spawn.cpp 
@@ -28,7 +27,11 @@ SOURCE = evoke.cpp
 		 Logout.cpp 
 		 Autostart.cpp ;
 
+# for composite
+SOURCE += Composite.cpp ;
+ObjectC++Flags $(SOURCE) : -DHAVE_COMPOSITE ;
 LinkAgainst evoke : -lXcomposite -lXdamage -lXfixes -lXrender ;
+
 #LinkAgainst evoke : -lpthread ;
 
 EdeProgram evoke : $(SOURCE) ;

@@ -1,11 +1,11 @@
 <? xml version="1.0" encoding="UTF-8" ?>
 <ede-settings>
-	<setting name="Fltk/Background" type="color" red="186" green="182" blue="77" alpha="0" />
-	<setting name="Fltk/Background2" type="color" red="34" green="42" blue="161" alpha="0" />
+	<setting name="Fltk/Background" type="color" red="220" green="222" blue="227" alpha="0" />
+	<setting name="Fltk/Background2" type="color" red="239" green="239" blue="239" alpha="0" />
 	<setting name="Gtk/CanChangeAccels" type="int" value="0" />
 	<setting name="Gtk/CursorThemeName" type="string" value="default" />
 	<setting name="Gtk/CursorThemeSize" type="int" value="16" />
-	<setting name="Gtk/FontName" type="string" value="Sans 10" />
+	<setting name="Gtk/FontName" type="string" value="Sans 8" />
 	<setting name="Gtk/KeyThemeName" type="string" value="Default" />
 	<setting name="Gtk/ToolbarStyle" type="string" value="icons" />
 	<setting name="Net/Background/Normal" type="color" red="186" green="45" blue="23" alpha="0" />
@@ -13,7 +13,7 @@
 	<setting name="Net/CursorBlinkTime" type="int" value="500" />
 	<setting name="Net/DndDragThreshold" type="int" value="8" />
 	<setting name="Net/DoubleClickTime" type="int" value="300" />
-	<setting name="Net/IconThemeName" type="string" value="Rodent" />
+	<setting name="Net/IconThemeName" type="string" value="edeneu" />
 	<setting name="Net/ThemeName" type="string" value="Raleigh" />
 	<setting name="Net/UserName" type="string" value="John Foo" />
 </ede-settings>

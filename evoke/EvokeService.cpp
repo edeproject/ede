@@ -198,7 +198,11 @@ void wake_up_cb(int fd, void* v) {
 }
 
 EvokeService::EvokeService() : 
-	is_running(0), logfile(NULL), xsm(NULL), composite(NULL), pidfile(NULL), lockfile(NULL) { 
+	is_running(0), logfile(NULL), xsm(NULL), 
+#ifdef HAVE_COMPOSITE
+		composite(NULL), 
+#endif
+		pidfile(NULL), lockfile(NULL) { 
 
 	wake_up_pipe[0] = wake_up_pipe[1] = -1;
 }
@@ -207,7 +211,9 @@ EvokeService::~EvokeService() {
 	if(logfile)
 		delete logfile;
 
+#ifdef HAVE_COMPOSITE
 	delete composite;
+#endif
 
 	stop_xsettings_manager(true);
 
@@ -500,12 +506,14 @@ void EvokeService::stop_xsettings_manager(bool serialize) {
 }
 
 void EvokeService::init_composite(void) {
+#ifdef HAVE_COMPOSITE
 	composite = new Composite();
 
 	if(!composite->init()) {
 		delete composite;
 		composite = NULL;
 	}
+#endif
 }
 
 void EvokeService::setup_atoms(Display* d) {
@@ -725,8 +733,10 @@ bool EvokeService::find_and_unregister_process(pid_t pid, EvokeProcess& pc) {
 }
 
 int EvokeService::composite_handle(const XEvent* xev) {
+#ifdef HAVE_COMPOSITE
 	if(composite)
 		return composite->handle_xevents(xev);
+#endif
 	return 1;
 }
 
