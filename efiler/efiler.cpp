@@ -26,10 +26,9 @@
 
 #include <Fl/Fl.H>
 #include <Fl/Fl_Menu_Bar.H>
-#include <Fl/Fl_File_Chooser.H> // for fl_dir_chooser, used in "Open location"
+#include <Fl/Fl_Menu_Button.H>
 #include <Fl/filename.H>
 #include <Fl/Fl_File_Input.H> // location bar
-#include <FL/Fl_Shared_Image.H> // for fl_register_images()
 
 #include <edelib/Directory.h>
 #include <edelib/DirWatch.h>
@@ -65,6 +64,11 @@ Fl_File_Input* location_input;
 Fl_Menu_Button* context_menu;
 
 edelib::Resource app_config;
+edelib::MimeType mime_resolver;
+
+struct stat64 stat_buffer;
+
+// global values
 
 char current_dir[FL_PATH_MAX];
 bool showhidden;
@@ -85,13 +89,17 @@ const int menubar_height = 30;
 const int location_bar_height = 40;
 const int statusbar_height = 24;
 const int statusbar_width = 400;
+const bool dumpcore_on_exec = true; // if external handler crashes
 
 int default_tree_width=150;
 
 
 
+/*-----------------------------------------------------------------
+	Subclassed Window for handling F8 key to switch between
+	icon view and list view
+-------------------------------------------------------------------*/
 
-// Subclassed Fl_Window for switching views
 void iconsview_cb(Fl_Widget*, void*);
 void listview_cb(Fl_Widget*, void*); 
 
@@ -175,65 +183,8 @@ public:
 
 
 
-
 /*-----------------------------------------------------------------
-	"Simple opener" - keep a list of openers in text file
-	This is just a temporary fix so that efiler works atm.
--------------------------------------------------------------------*/
-
-// These variables are global to save time on construction/destruction
-edelib::MimeType mime_resolver;
-struct stat64 stat_buffer;
-
-struct sopeners {
-	char* type;
-	char* opener;
-	sopeners* next;
-} *openers=0;
-
-char *simpleopener(const char* mimetype) {
-	sopeners* p;
-	if (!openers) {
-		FILE* fp = fopen("openers.txt","r");
-		if (!fp) { edelib::alert(_("File openers.txt not found")); return 0; }
-		char buf[FL_PATH_MAX*2];
-		while (!feof(fp)) {
-			fgets((char*)&buf, FL_PATH_MAX*2, fp);
-			if (buf[0]=='\0' || buf[1]=='\0' || buf[0]=='#') continue;
-			buf[strlen(buf)-1]='\0';
-			char *tmp = strstr(buf, "||");
-			if (!tmp) continue; // malformatted opener
-			*tmp = '\0';
-			sopeners* q = new sopeners; 
-			q->type=strdup(buf);
-			q->opener=strdup(tmp+2);
-//fprintf (stderr, "Found type: '%s' opener: '%s'\n",q->type,q->opener);
-			q->next=0;
-			if (!openers) openers=q;
-			else p->next = q;
-			p=q;
-		}
-		fclose(fp);
-	}
-	p=openers;
-	char *result=0; int topscore=0;
-	while (p != 0) {
-		int score=strlen(p->type);
-		if (strncmp(p->type,mimetype,score)==0 && score>topscore) {
-			topscore=score;
-			result=p->opener;
-		}
-		p=p->next;
-	}
-	return result;
-}
-
-
-
-
-
-/*-----------------------------------------------------------------
-	LoadDir()
+	loaddir() and friends
 -------------------------------------------------------------------*/
 
 
@@ -326,6 +277,7 @@ const char* permission_text(mode_t mode, uid_t uid, gid_t gid) {
 	}
 }
 
+// This function loads list of files in path into main view
 void loaddir(const char *path) {
 	if (semaphore) return; // Prevent loaddir to interrupt previous loaddir - that can result in crash
 	semaphore=true;
@@ -337,14 +289,13 @@ void loaddir(const char *path) {
 	// Sometimes path is just a pointer to current_dir
 	char* tmpath = strdup(path);
 
-	// Set current_dir
-		// fl_filename_isdir() thinks that / isn't a dir :(
+	// Set current_dir  ( fl_filename_isdir() thinks that / isn't a dir :(
 	if (strcmp(path,"/")==0 || fl_filename_isdir(path)) {
 		if (path[0] == '~' && path[1] == '/') {// Expand tilde
 			snprintf(current_dir,FL_PATH_MAX,"%s/%s",edelib::dir_home().c_str(),tmpath+1);
 		} else if (path[0] != '/') { // Relative path
 			char *t = tmpath;
-			if (path[0] == '.' && path[1] == '/') t+=2; // remove .
+			if (path[0] == '.' && path[1] == '/') t+=2; // remove '.'
 			else if (path[0] == '.' && path[1] != '.') t+=1;
 			snprintf(current_dir,FL_PATH_MAX,"%s/%s",edelib::dir_current().c_str(),t);
 		} else {
@@ -380,9 +331,8 @@ void loaddir(const char *path) {
 	else
 		size = scandir(current_dir, &files, 0, ede_versionsort);
 
-	if (size<1) { // there should always be . and ..
+	if (size<1) { // there should always be at least '.' and '..'
 		edelib::alert(_("Permission denied!"));
-//		edelib::fl_alert(_("Permission denied!"));
 		strncpy(current_dir,old_dir,strlen(current_dir));
 		semaphore=false;
 		return;
@@ -418,7 +368,7 @@ void loaddir(const char *path) {
 		// hide files with dot except .. (up directory)
 		if (!showhidden && (n[0] == '.') && (strcmp(n,"..")!=0)) continue;
 
-		// hide files ending with tilde (backup) - NOTE
+		// hide files ending with tilde (backup)
 		if (!showhidden && (n[strlen(n)-1] == '~')) continue;
 
 		char fullpath[FL_PATH_MAX];
@@ -433,7 +383,7 @@ void loaddir(const char *path) {
 		item->permissions = permission_text(stat_buffer.st_mode,stat_buffer.st_uid,stat_buffer.st_gid);
 		if (strcmp(n,"..")==0) {
 			// item->icon = "go-up"; // undo is prettier?!
-			// in edeneu theme, I prefer go-jump rotated 180 degree.. in crystalsvg, undo is best
+			// in edeneu theme, I prefer go-jump rotated 180 degrees... in crystalsvg, undo is best
 			item->icon = "edit-undo";
 			item->description = "Go up";
 			item->size = "";
@@ -511,84 +461,114 @@ void loaddir(const char *path) {
 }
 
 
+/*-----------------------------------------------------------------
+	file_open()
+-------------------------------------------------------------------*/
+
+// This function will open a file using a handler according to its MIME type
+// and the action parameter
+void file_open(const char* path, MailcapAction action) {
+
+	if (stat64(path,&stat_buffer)) return; // stat error
+	if (S_ISDIR(stat_buffer.st_mode)) {  // directories are handled internally
+		loaddir(path);
+		return;
+	}
+
+	// Find opener
+	mime_resolver.set(path);
+//	char* opener = simpleopener(mime_resolver.type().c_str());
+	const char* opener = mailcap_opener(mime_resolver.type().c_str(), action);
+
+	struct rlimit *rlim; rlim_t old_rlimit;
+	if (dumpcore_on_exec) {
+		rlim = (struct rlimit*)malloc(sizeof(struct rlimit));
+		getrlimit (RLIMIT_CORE, rlim);
+		old_rlimit = rlim->rlim_cur; // keep previous rlimit
+		rlim->rlim_cur = RLIM_INFINITY;
+		setrlimit (RLIMIT_CORE, rlim);
+	}
+
+	const char *o2 = tsprintf(opener,path); // opener should contain %s
+	fprintf (stderr, "run_program: %s\n", o2);
+
+	if (action == MAILCAP_EXEC) {
+		int k=edelib::run_program(path,false); fprintf(stderr, "retval: %d\n", k); 
+	} else if (opener) {
+		int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
+	} else {
+		statusbar->copy_label(tsprintf(_("No program to open %s! (%s)"), fl_filename_name(path),mime_resolver.type().c_str()));
+		// TODO: open with...
+	}
+
+	if (dumpcore_on_exec) {
+		rlim->rlim_cur = old_rlimit;
+		setrlimit (RLIMIT_CORE, rlim);
+		free(rlim);
+	}
+}
+
+
 
 /*-----------------------------------------------------------------
 	Main menu and other callbacks
 -------------------------------------------------------------------*/
 
-// This callback is called by doubleclicking on file list, by main menu and context menu
+
+// ------------ Main menu callbacks
+
+
+// File menu
+
+// File > Open
+// This callback is also called by doubleclicking on file list and from context menu
 void open_cb(Fl_Widget*w, void*data) {
-
+	// Ignore any other caller / event
 	if (Fl::event_clicks() || Fl::event_key() == FL_Enter || w==main_menu || w==context_menu) {
-
-//if (Fl::event_clicks()) fprintf(stderr, "clicks\n");
-//if (Fl::event_key()==FL_Enter) fprintf(stderr, "ekey\n");
+		// Prevent calling two times rapidly
+		// (e.g. sloppy double/triple/quadruple click)
+		const int min_secs = 1; // min. number of secs between two calls
 		static timeval tm = {0,0};
 		timeval newtm;
 		gettimeofday(&newtm,0);
-		if (newtm.tv_sec - tm.tv_sec < 1 || (newtm.tv_sec-tm.tv_sec==1 && newtm.tv_usec<tm.tv_usec)) return; // no calling within 1 second
+		if (newtm.tv_sec - tm.tv_sec < min_secs || (newtm.tv_sec-tm.tv_sec==min_secs && newtm.tv_usec<tm.tv_usec)) return; 
 		tm=newtm;
-		if (view->get_focus()==0) return; // This can happen while efiler is loading
 
-		char* path = (char*)view->path(view->get_focus());
+		// Nothing is selected!?
+		// This can happen while efiler is loading
+		if (view->get_focus()==0) return; 
 
-		if (stat64(path,&stat_buffer)) return; // error
-		if (S_ISDIR(stat_buffer.st_mode)) {  // directory
-			loaddir(path);
-			return;
-		}
-
-		// Find opener
-		mime_resolver.set(path);
-//		char* opener = simpleopener(mime_resolver.type().c_str());
-		int tmp=(int)data; // cast data for passing to mailcap_opener
-		if (tmp<1 || tmp>8) tmp=1;
-		const char* opener = mailcap_opener(mime_resolver.type().c_str(), (MailcapAction)tmp);
-
-	// dump core
-	struct rlimit *rlim = (struct rlimit*)malloc(sizeof(struct rlimit));
-	getrlimit (RLIMIT_CORE, rlim);
-	rlim_t old_rlimit = rlim->rlim_cur; // keep previous rlimit
-	rlim->rlim_cur = RLIM_INFINITY;
-	setrlimit (RLIMIT_CORE, rlim);
-
-		const char *o2 = tsprintf(opener,path); // opener should contain %s
-		fprintf (stderr, "run_program: %s\n", o2);
-
-		if (tmp==16) { // 16 - open script
-			int k=edelib::run_program(path,false); fprintf(stderr, "retval: %d\n", k); 
-		}
-		else if (opener) { 
-			int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
-		} else
-			statusbar->copy_label(tsprintf(_("No program to open %s! (%s)"), fl_filename_name(path),mime_resolver.type().c_str()));
-
-	rlim->rlim_cur = old_rlimit;
-	setrlimit (RLIMIT_CORE, rlim);
-	free(rlim);
-
+		file_open(view->path(view->get_focus()), MAILCAP_VIEW);
 	}
-} // open_cb
+}
 
+// File > Open with...
+// TODO: make a list of openers etc.
+void openwith_cb(Fl_Widget*, void*) {
+	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
+	const char* file = view->path(view->get_focus());
+	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
+} 
 
-
-// Main menu callbacks
+// File > New (efiler window)
 void new_cb(Fl_Widget*, void*) {
-	// FIXME: use program path 
+	// FIXME: use program path, in case it's not in PATH
 	edelib::run_program(tsprintf("efiler %s",current_dir),false); 
 }
 
+// File > Quit
 void quit_cb(Fl_Widget*, void*) { win->hide(); }
 
+// Options in Edit menu
 void cut_cb(Fl_Widget*, void*) { do_cut_copy(false); }
 void copy_cb(Fl_Widget*, void*) { do_cut_copy(true); }
 void paste_cb(Fl_Widget*, void*) { Fl::paste(*view,1); } // view->handle() will call do_paste()
 void delete_cb(Fl_Widget*, void*) { do_delete(); }
+void viewrename_cb(Fl_Widget*, void*) { view->start_rename(); } // Just call view's rename functionality
 
-// Call view's rename functionality
-void viewrename_cb(Fl_Widget*, void*) { view->start_rename(); }
+// Options in View menu
 
-
+// View > Directory tree
 void showtree_cb(Fl_Widget*, void*) {
 	showtree = !showtree;
 	if (!showtree) {
@@ -601,10 +581,12 @@ void showtree_cb(Fl_Widget*, void*) {
 	}
 }
 
+// View > Refresh (and also F5 key)
 void refresh_cb(Fl_Widget*, void*) { 
 	loaddir(current_dir); 
 }
 
+// View > Location bar
 void locationbar_cb(Fl_Widget*, void*) {
 	showlocation = !showlocation;
 	if (showlocation) {
@@ -622,6 +604,7 @@ void locationbar_cb(Fl_Widget*, void*) {
 	}
 }
 
+// View > Hidden files
 void showhidden_cb(Fl_Widget*, void*) { 
 	showhidden=!showhidden; 
 	dirtree->show_hidden(showhidden);
@@ -629,6 +612,7 @@ void showhidden_cb(Fl_Widget*, void*) {
 	loaddir(current_dir); 
 }
 
+// View > Sort > Ignore case
 void case_cb(Fl_Widget*, void*) { 
 	ignorecase=!ignorecase;
 	dirtree->ignore_case(ignorecase);
@@ -636,26 +620,17 @@ void case_cb(Fl_Widget*, void*) {
 	loaddir(current_dir); 
 }
 
+// View > Sort > Directories first
 void dirsfirst_cb(Fl_Widget*, void*) { 
 	dirsfirst=!dirsfirst; 
 	loaddir(current_dir); 
 }
 
 
-// Implemented after menu definition
+// This fn changes menu and so must be implemented after menu definition
 void update_menu_item(const char* label, bool value);
 
-// Open with... callback
-// TODO: make a list of openers etc.
-void ow_cb(Fl_Widget*, void*) { 
-	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
-	const char* file = view->path(view->get_focus());
-	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
-} 
-
-
-// dummy callbacks - TODO
-void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
+// View > Icons
 void iconsview_cb(Fl_Widget*, void*) {
 	if (view->type() != FILE_ICON_VIEW) {  
 		view->type(FILE_ICON_VIEW);
@@ -664,6 +639,8 @@ void iconsview_cb(Fl_Widget*, void*) {
 		update_menu_item(_("&Detailed list"),false);
 	}
 }
+
+// View > Detailed list
 void listview_cb(Fl_Widget*, void*) { 
 	if (view->type() != FILE_DETAILS_VIEW) {
 		view->type(FILE_DETAILS_VIEW); 
@@ -673,10 +650,33 @@ void listview_cb(Fl_Widget*, void*) {
 	}
 }
 
-
+// Help > About efiler
 void about_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
-void aboutede_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
 
+// Help > About EDE
+void aboutede_cb(Fl_Widget*, void*) { 
+	// Sanel created an external app for About EDE called eabout
+	edelib::run_program("eabout", /*wait=*/false);
+}
+
+
+
+
+// ------------ Other callbacks
+
+
+// Context menu callbacks (items are displayed depending on type)
+void fileedit_cb(Fl_Widget*w, void*) {
+	file_open(view->path(view->get_focus()), MAILCAP_EDIT);
+}
+void fileprint_cb(Fl_Widget*w, void*) {
+	file_open(view->path(view->get_focus()), MAILCAP_PRINT);
+}
+void fileexec_cb(Fl_Widget*w, void*) {
+	file_open(view->path(view->get_focus()), MAILCAP_EXEC);
+}
+void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
+// Other options use callbacks from Edit menu
 
 
 // Directory tree callback
@@ -690,7 +690,7 @@ void tree_cb(Fl_Widget*, void*) {
 
 // This callback handles location input: changing the directory, autocomplete 
 // and callbacks for shortcut buttons
-// location_input is set to FL_WHEN_CHANGED 
+// location_input is set to FL_WHEN_CHANGED
 void location_input_cb(Fl_Widget*, void*) {
 	if (Fl::event_key() == FL_Enter || Fl::event()==FL_RELEASE)
 		// second event is click on button
@@ -790,7 +790,7 @@ void directory_change_cb(const char* dir, const char* what_changed, int flags, v
 	item->date = nice_time(stat_buffer.st_mtime);
 	item->permissions = permission_text(stat_buffer.st_mode,stat_buffer.st_uid,stat_buffer.st_gid);
 	if (strcmp(what_changed,"..")==0) {
-		item->icon = "undo";
+		item->icon = "edit_undo";
 		item->description = "Go up";
 		item->size = "";
 	} else if (S_ISDIR(stat_buffer.st_mode)) { // directory
@@ -800,7 +800,7 @@ void directory_change_cb(const char* dir, const char* what_changed, int flags, v
 		item->size = "";
 		item->realpath += "/";
 	} else {
-		item->icon = "unknown";
+		item->icon = "empty";
 		item->description = "Unknown";
 		item->size = nice_size(stat_buffer.st_size);
 	}
@@ -824,25 +824,7 @@ void directory_change_cb(const char* dir, const char* what_changed, int flags, v
 }
 
 
-
-// TODO: move this to view
-// every item should have own context menu defined
-
-Fl_Menu_Item context_menu_definition[] = {
-	{_("&Open"),		0,	open_cb,	(void*)1,},
-	{_("&View"),		0,	open_cb,	(void*)1,FL_MENU_INVISIBLE},
-	{_("&Edit"),		0,	open_cb,	(void*)4,FL_MENU_INVISIBLE},
-	{_("Pri&nt"),		0,	open_cb,	(void*)8,FL_MENU_INVISIBLE},
-	{_("&Execute"),		0,	open_cb,	(void*)16,FL_MENU_INVISIBLE},
-	{_("Open &with..."),	0,	ow_cb,		0,FL_MENU_DIVIDER},
-	{_("&Cut"),		0,	cut_cb},
-	{_("Co&py"),		0,	copy_cb},
-	{_("Pa&ste"),		0,	paste_cb},
-	{_("&Delete"),		0,	delete_cb,	0,FL_MENU_DIVIDER},
-	{_("P&references..."),	0,	pref_cb},
-	{0}
-};
-
+// Function returns true if file is executable
 bool file_executable(const char* path) {
 	if (stat64(path,&stat_buffer)) return false; // error
 
@@ -858,30 +840,6 @@ bool file_executable(const char* path) {
 	return false;
 }
 
-// Right click - show context menu
-void context_cb(Fl_Widget*, void*) {
-	char* path = (char*)view->path(view->get_focus());
-
-	mime_resolver.set(path);
-	int actions = mailcap_actions(mime_resolver.type().c_str());
-
-	Fl_Menu_Item *k = context_menu_definition;
-	while(k->label()!=0) {
-		if (k->label()!=0 && strcmp(k->label(),_("&Open"))==0)
-			if (actions&MAILCAP_EDIT) k->hide(); else k->show();
-		if (k->label()!=0 && (strcmp(k->label(),_("&View"))==0 || strcmp(k->label(),_("&Edit"))==0))
-			if (actions&MAILCAP_EDIT) k->show(); else k->hide();
-		if (k->label()!=0 && strcmp(k->label(),_("Pri&nt"))==0)
-			if (actions&MAILCAP_PRINT) k->show(); else k->hide();
-		if (k->label()!=0 && strcmp(k->label(),_("&Execute"))==0)
-			if (file_executable(path)) k->show(); else k->hide();
-		k++;
-	}
-
-
-	context_menu->popup();
-	context_menu->value(-1);
-}
 
 
 /*-----------------------------------------------------------------
@@ -940,15 +898,17 @@ void save_preferences() {
 }
 
 
+
 /*-----------------------------------------------------------------
-	GUI design
+	Menu definitions
 -------------------------------------------------------------------*/
 
-// Main window menu - definition
+
+// Main menu
 Fl_Menu_Item main_menu_definition[] = {
 	{_("&File"),	0, 0, 0, FL_SUBMENU},
 		{_("&Open"),		FL_CTRL+'o',	open_cb},
-		{_("Open &with..."),	0,		ow_cb,		0,FL_MENU_DIVIDER},
+		{_("Open &with..."),	0,		openwith_cb,	0,FL_MENU_DIVIDER},
 //		{_("Open &location"),	0,		location_cb,	0,FL_MENU_DIVIDER},
 		{_("&New window"),	FL_CTRL+'n',	new_cb,		0,FL_MENU_DIVIDER},
 		{_("&Quit"),		FL_CTRL+'q',	quit_cb},
@@ -985,7 +945,7 @@ Fl_Menu_Item main_menu_definition[] = {
 
 
 // Update checkbox in main menu
-// (needs to come after the menu)
+// (needs to come after the menu definition)
 void update_menu_item(const char* label, bool value) {
 	Fl_Menu_Item *k = main_menu_definition;
 	while(k!=0 && k+1!=0) {
@@ -997,6 +957,54 @@ void update_menu_item(const char* label, bool value) {
 }
 
 
+// Context menu - shown on right click in view (see context_cb())
+Fl_Menu_Item context_menu_definition[] = {
+	{_("&Open"),		0,	open_cb,},
+	{_("&View"),		0,	open_cb,	0, FL_MENU_INVISIBLE},
+	{_("&Edit"),		0,	fileedit_cb,	0, FL_MENU_INVISIBLE},
+	{_("Pri&nt"),		0,	fileprint_cb,	0, FL_MENU_INVISIBLE},
+	{_("&Execute"),		0,	fileexec_cb,	0,FL_MENU_INVISIBLE},
+	{_("Open &with..."),	0,	openwith_cb,	0,FL_MENU_DIVIDER},
+	{_("&Cut"),		0,	cut_cb},
+	{_("Co&py"),		0,	copy_cb},
+	{_("Pa&ste"),		0,	paste_cb},
+	{_("&Delete"),		0,	delete_cb,	0,FL_MENU_DIVIDER},
+	{_("P&references..."),	0,	pref_cb},
+	{0}
+};
+
+
+// Right click - show context menu
+void context_cb(Fl_Widget*, void*) {
+	char* path = (char*)view->path(view->get_focus());
+
+	mime_resolver.set(path);
+	int actions = mailcap_actions(mime_resolver.type().c_str());
+
+	// Update context menu to show only options relevant to this file type
+	Fl_Menu_Item *k = context_menu_definition;
+	while(k->label()!=0) {
+		if (k->label()!=0 && strcmp(k->label(),_("&Open"))==0)
+			if (actions&MAILCAP_EDIT) k->hide(); else k->show();
+		if (k->label()!=0 && (strcmp(k->label(),_("&View"))==0 || strcmp(k->label(),_("&Edit"))==0))
+			if (actions&MAILCAP_EDIT) k->show(); else k->hide();
+		if (k->label()!=0 && strcmp(k->label(),_("Pri&nt"))==0)
+			if (actions&MAILCAP_PRINT) k->show(); else k->hide();
+		if (k->label()!=0 && strcmp(k->label(),_("&Execute"))==0)
+			if (file_executable(path)) k->show(); else k->hide();
+		k++;
+	}
+
+	context_menu->popup();
+	context_menu->value(-1);
+}
+
+
+/*-----------------------------------------------------------------
+	main()
+-------------------------------------------------------------------*/
+
+// Parser for Fl::args()
 int parsecmd(int argc, char**argv, int &index) {
 	if ((strcmp(argv[index],"-ic")==0) || (strcmp(argv[index],"-icons")==0)) {
 		edelib::IconTheme::init(argv[++index]);
@@ -1034,14 +1042,13 @@ int main (int argc, char **argv) {
 		notify_available=true;
 
 FL_NORMAL_SIZE=12;
-fl_message_font(FL_HELVETICA, 12);
+//fl_message_font(FL_HELVETICA, 12);
 
 	// Main GUI design
 	win = new EFiler_Window(default_window_width, default_window_height);
 
 	win->init(); // new method required by edelib::Window
 
-//	win->color(FL_WHITE);
 	win->begin();
 		main_menu = new Fl_Menu_Bar(0,0,default_window_width,menubar_height);
 		main_menu->menu(main_menu_definition);
