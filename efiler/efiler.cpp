@@ -45,11 +45,13 @@
 #include "EDE_FileView.h" // our file view widget
 #include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
+#include "OpenWith.h"  // Open with... window
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
 #include "ede_strverscmp.h" // local copy of strverscmp
 #include "mailcap.h" // handling mailcap file
+
 
 
 
@@ -62,6 +64,7 @@ Fl_Tile* tile;
 Fl_Group* location_bar;
 Fl_File_Input* location_input;
 Fl_Menu_Button* context_menu;
+OpenWith *ow;
 
 edelib::Resource app_config;
 edelib::MimeType mime_resolver;
@@ -493,7 +496,7 @@ void file_open(const char* path, MailcapAction action) {
 	fprintf (stderr, "run_program: %s\n", o2);
 
 	if (action == MAILCAP_EXEC) {
-		int k=edelib::run_program(path,false); fprintf(stderr, "retval: %d\n", k); 
+		int k=edelib::run_program(path,false); fprintf(stderr, "Xretval: %d\n", k); 
 	} else if (opener) {
 		int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 	} else {
@@ -545,9 +548,12 @@ void open_cb(Fl_Widget*w, void*data) {
 // File > Open with...
 // TODO: make a list of openers etc.
 void openwith_cb(Fl_Widget*, void*) {
-	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
+
+//	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
 	const char* file = view->path(view->get_focus());
-	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
+//	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
+	ow->show(file);
+//	Fl::run();
 } 
 
 // File > New (efiler window)
@@ -1104,6 +1110,8 @@ FL_NORMAL_SIZE=12;
 	dirtree->init();
 	dirtree->show_hidden(showhidden);
 	dirtree->ignore_case(ignorecase);
+
+	ow = new OpenWith();
 
 	// Read user preferences
 	load_preferences();
