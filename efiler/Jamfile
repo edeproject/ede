@@ -10,8 +10,7 @@
 
 SubDir TOP efiler ;
 
-SOURCE = Fl_Icon_Browser.cxx EDE_Browser.cpp EDE_DirTree.cpp Util.cpp efiler.cpp fileops.cpp filesystem.cpp 
-Flu_Wrap_Group.cpp EDE_FileIconView.cpp EDE_FileDetailsView.cpp ede_strverscmp.c ;
+SOURCE = Fl_Icon_Browser.cxx EDE_Browser.cpp EDE_DirTree.cpp Util.cpp efiler.cpp fileops.cpp filesystem.cpp Flu_Wrap_Group.cpp EDE_FileIconView.cpp EDE_FileDetailsView.cpp ede_strverscmp.c mailcap.cpp OpenWith.cpp ;
 
 LinkAgainst efiler : -lXpm ;
 

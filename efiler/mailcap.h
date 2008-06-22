@@ -18,7 +18,8 @@ enum MailcapAction {
 	MAILCAP_VIEW   = 1,
 	MAILCAP_CREATE = 2,
 	MAILCAP_EDIT   = 4,
-	MAILCAP_PRINT  = 8
+	MAILCAP_PRINT  = 8,
+	MAILCAP_EXEC   = 16 // execute
 };
 
 
