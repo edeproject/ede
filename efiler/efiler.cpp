@@ -46,6 +46,7 @@
 #include "EDE_DirTree.h" // directory tree
 #include "Util.h" // ex-edelib
 #include "OpenWith.h"  // Open with... window
+#include "Properties.h"  // File properties window
 
 #include "fileops.h" // file operations
 #include "filesystem.h" // filesystem support
@@ -496,12 +497,22 @@ void file_open(const char* path, MailcapAction action) {
 	fprintf (stderr, "run_program: %s\n", o2);
 
 	if (action == MAILCAP_EXEC) {
+		// File is an executable - run it
 		int k=edelib::run_program(path,false); fprintf(stderr, "Xretval: %d\n", k); 
+	} else if (mime_resolver.type() == "application/x-executable") {
+		edelib::MessageBox mb;
+		mb.label(_("Warning"));
+		mb.set_text(tsprintf(_("The file \"%s\" is an executable program. Do you want to run it? It might be a virus!"), fl_filename_name(path)));
+		mb.set_theme_icon(MSGBOX_ICON_WARNING);
+		mb.add_button(_("&No"), edelib::MSGBOX_BUTTON_RETURN);
+		mb.add_button(_("&Yes"));
+		int k=mb.run();
+		if (k==1) k=edelib::run_program(path,false); fprintf(stderr, "Xretval: %d\n", k); 
 	} else if (opener) {
 		int k=edelib::run_program(o2,false); fprintf(stderr, "retval: %d\n", k); 
 	} else {
-		statusbar->copy_label(tsprintf(_("No program to open %s! (%s)"), fl_filename_name(path),mime_resolver.type().c_str()));
-		// TODO: open with...
+		// Show "Open with..." dialog
+		ow->show(path, mime_resolver.type().c_str(), mime_resolver.type().c_str());
 	}
 
 	if (dumpcore_on_exec) {
@@ -549,11 +560,9 @@ void open_cb(Fl_Widget*w, void*data) {
 // TODO: make a list of openers etc.
 void openwith_cb(Fl_Widget*, void*) {
 
-//	const char* app = edelib::input(_("Enter the name of application to open this file with:"));
 	const char* file = view->path(view->get_focus());
-//	edelib::run_program(tsprintf("%s '%s'", app, file), /*wait=*/false);
-	ow->show(file);
-//	Fl::run();
+	mime_resolver.set(file);
+	ow->show(file, mime_resolver.type().c_str(), mime_resolver.comment().c_str());
 } 
 
 // File > New (efiler window)
@@ -681,7 +690,11 @@ void fileprint_cb(Fl_Widget*w, void*) {
 void fileexec_cb(Fl_Widget*w, void*) {
 	file_open(view->path(view->get_focus()), MAILCAP_EXEC);
 }
-void pref_cb(Fl_Widget*, void*) { fprintf(stderr, "callback\n"); }
+void props_cb(Fl_Widget*, void*) { 
+	Properties p(view->path(view->get_focus()));
+	p.show();
+	Fl::run();
+}
 // Other options use callbacks from Edit menu
 
 
@@ -926,7 +939,7 @@ Fl_Menu_Item main_menu_definition[] = {
 		{_("&Paste"),		FL_CTRL+'v',	paste_cb},
 		{_("&Rename"),		FL_F+2,		viewrename_cb},
 		{_("&Delete"),		FL_Delete,	delete_cb,	0,	FL_MENU_DIVIDER},
-		{_("Pre&ferences"),	FL_CTRL+'p',	pref_cb},
+		{_("Prop&erties"),	FL_CTRL+'p',	props_cb},
 		{0},
 
 	{_("&View"),	0, 0, 0, FL_SUBMENU},
@@ -969,13 +982,13 @@ Fl_Menu_Item context_menu_definition[] = {
 	{_("&View"),		0,	open_cb,	0, FL_MENU_INVISIBLE},
 	{_("&Edit"),		0,	fileedit_cb,	0, FL_MENU_INVISIBLE},
 	{_("Pri&nt"),		0,	fileprint_cb,	0, FL_MENU_INVISIBLE},
-	{_("&Execute"),		0,	fileexec_cb,	0,FL_MENU_INVISIBLE},
-	{_("Open &with..."),	0,	openwith_cb,	0,FL_MENU_DIVIDER},
+	{_("&Execute"),		0,	fileexec_cb,	0, FL_MENU_INVISIBLE},
+	{_("Open &with..."),	0,	openwith_cb,	0, FL_MENU_DIVIDER},
 	{_("&Cut"),		0,	cut_cb},
 	{_("Co&py"),		0,	copy_cb},
 	{_("Pa&ste"),		0,	paste_cb},
-	{_("&Delete"),		0,	delete_cb,	0,FL_MENU_DIVIDER},
-	{_("P&references..."),	0,	pref_cb},
+	{_("&Delete"),		0,	delete_cb,	0, FL_MENU_DIVIDER},
+	{_("P&roperties..."),	0,	props_cb},
 	{0}
 };
 

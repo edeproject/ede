@@ -28,13 +28,17 @@ enum MailcapAction {
 // with filename. Parameter MAILCAP_TYPE indicates the type of action to 
 // be performed
 
-
 const char* mailcap_opener(const char* type, MailcapAction action=MAILCAP_VIEW);
 
 
 // Returns a list of actions available for a given type
 
 int mailcap_actions(const char* type);
+
+
+// Add new type to the list of actions
+
+void mailcap_add_type(const char* type, const char* opener);
 
 
 #endif

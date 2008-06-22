@@ -1,3 +1,19 @@
+/*
+ * $Id$
+ *
+ * EFiler - EDE File Manager
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2000-2007 EDE Authors.
+ *
+ * This program is licenced under terms of the
+ * GNU General Public Licence version 2 or newer.
+ * See COPYING for details.
+ */
+
+
+// Open with.. dialog window
+
+
 #include "OpenWith.h"
 
 #include <edelib/IconTheme.h>
@@ -18,18 +34,32 @@
 #include <sys/stat.h>
 
 #include "Util.h"
+#include "mailcap.h"
+
+
+#define DIALOG_WIDTH 410
+#define DIALOG_HEIGHT 145
+
+// Callbacks
 
 void openwith_cancel_cb(Fl_Widget*w, void*) {
 	Fl_Window* win = (Fl_Window*)w->parent();
 	win->hide();
 }
 
+// This function is friend of OpenWith because it needs to access
+// _type and _file
 void openwith_ok_cb(Fl_Widget*w, void*i) {
 	Fl_Input* inpt = (Fl_Input*)i;
 	OpenWith* win = (OpenWith*)w->parent();
-fprintf(stderr, "Opening %s '%s'\n", inpt->value(), win->file());
-	int k = edelib::run_program(tsprintf("%s '%s'", inpt->value(), win->file()), /*wait=*/false);
-fprintf(stderr, "retval: %d\n", k);
+
+	// Handle Always use... button
+	if (win->always_use->value() == 1) {
+		mailcap_add_type(win->_type, inpt->value());
+	}
+
+	// Run program
+	int k = edelib::run_program(tsprintf("%s '%s'", inpt->value(), win->_file), /*wait=*/false);
 	win->hide();
 }
 
@@ -39,6 +69,7 @@ void openwith_browse_cb(Fl_Widget*w, void*i) {
 	inpt->value(file);
 }
 
+// Callback that handles "autocomplete" in the openwith dialog
 void program_input_cb(Fl_Widget*w, void*p) {
 	edelib::list<edelib::String>* progs = (edelib::list<edelib::String>*)p;
 	Fl_Input *inpt = (Fl_Input*)w;
@@ -74,7 +105,10 @@ void program_input_cb(Fl_Widget*w, void*p) {
 }
 
 
-OpenWith::OpenWith()  : edelib::Window(410,110, _("Choose program")), _file(0) {
+// OpenWith constructor
+// Also initializes various internal arrays
+
+OpenWith::OpenWith()  : edelib::Window(DIALOG_WIDTH, DIALOG_HEIGHT, _("Choose program")), _file(0) {
 	set_modal();
 
 	edelib::list<edelib::String>::iterator it1, it2;
@@ -83,23 +117,64 @@ OpenWith::OpenWith()  : edelib::Window(410,110, _("Choose program")), _file(0) {
 	char pn[FL_PATH_MAX];
 
 	Fl_Group *gr;
-	Fl_Box *img, *txt;
-	Fl_Button *but1, *but2, *but3;
+	Fl_Box *img;
 	Fl_Image* i;
+	Fl_Button *but1, *but2, *but3;
 
-	// Extract all parts of $PATH
+	// Window design
+	begin();
+	img = new Fl_Box(10, 10, 60, 55); // icon
+
+	// informative text
+	txt = new Fl_Box(75, 10, w()-85, 25);
+	txt->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_WRAP);
+
+	// input for program name
+	inpt = new Fl_Input(75, 45, w()-175, 25);
+	inpt->when(FL_WHEN_ENTER_KEY_CHANGED);
+	inpt->callback(program_input_cb, &programs);
+
+	// Ok & Cancel buttons
+	but1 = new Fl_Return_Button(w()-200, 115, 90, 25, "&Ok"); 
+	but2 = new Fl_Button(w()-100, 115, 90, 25, "&Cancel");
+	but1->callback(openwith_ok_cb,inpt);
+	but2->callback(openwith_cancel_cb);
+
+	// Browse button
+	but3 = new Fl_Button(w()-90, 45, 80, 25, "&Browse...");
+	but3->callback(openwith_browse_cb,inpt);
+
+	// Always use this program...
+	always_use = new Fl_Check_Button(75, 80, w()-85, 20);
+	always_use->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_TOP | FL_ALIGN_WRAP);
+
+	end();
+
+	// Set icon
+	if(edelib::IconTheme::inited()) {
+		i = Fl_Shared_Image::get(edelib::IconTheme::get("dialog-question", edelib::ICON_SIZE_MEDIUM).c_str());
+		if(!i) return;
+	
+		img->image(i);
+	}
+
+
+	// -- Find all executables in $PATH and add them to programs list
+
+	// Split $PATH at ':' character
 	char* path = strdup(getenv("PATH")); // original would get destroyed
 	char *pathpart = strtok(path, ":");
 	while (pathpart) {
 		// Get list of files in pathpart
-		int size = scandir(pathpart, &files,0,alphasort);
+		int size = scandir(pathpart, &files, 0, alphasort);
 		for (int i=0; i<size; i++) {
 			// Attach filename to directory to get full path
 			char *n = files[i]->d_name;
 			snprintf (pn,FL_PATH_MAX-1,"%s/%s",pathpart,n);
-			if (stat(pn,&buf)) continue;
+			if (stat(pn,&buf)) continue; // some kind of error
+
+			// Skip all directories and non-executables
 			if (!S_ISDIR(buf.st_mode) && (buf.st_mode&S_IXOTH)) {
-				// Not directory, executable
 				edelib::String name(n);
 				it1=programs.begin(); it2=programs.end();
 				bool exists=false;
@@ -109,39 +184,30 @@ OpenWith::OpenWith()  : edelib::Window(410,110, _("Choose program")), _file(0) {
 				}
 				if (!exists) programs.push_back(n);
 			}
+			Fl::check();
 		}
 		pathpart=strtok(NULL, ":");
+		Fl::check();
 	}
 	free(path);
 
 	programs.sort();
 
-	// Window design
-	begin();
-	img = new Fl_Box(10, 10, 60, 55);
+}
 
-	txt = new Fl_Box(75, 10, w()-85, 25, _("Enter the name of application to open this file with:"));
-	inpt = new Fl_Input(75, 40, w()-175, 25);
 
-	txt->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_WRAP);
+void OpenWith::show(const char* pfile, const char* ptype, const char* pcomment) { 
+	_file=pfile;
+	_type=ptype;
 
-	but1 = new Fl_Return_Button(w()-200, 75, 90, 25, "&Ok");
-	but2 = new Fl_Button(w()-100, 75, 90, 25, "&Cancel");
-	but3 = new Fl_Button(w()-90, 40, 80, 25, "&Browse...");
+	// Clear input box
+	inpt->value("");
 
-	end();
+	// Set textual description
+	txt->copy_label(tsprintf(_("Enter the name of application used to open file \"%s\":"),fl_filename_name(pfile)));
 
-	but1->callback(openwith_ok_cb,inpt);
-	but2->callback(openwith_cancel_cb);
-	but3->callback(openwith_browse_cb,inpt);
+	// Set "always use" label
+	always_use->copy_label(tsprintf(_("Always use this program for opening files of type \"%s\""), pcomment));
 
-	inpt->when(FL_WHEN_ENTER_KEY_CHANGED);
-	inpt->callback(program_input_cb, &programs);
-
-	// Set icon
-	if(!edelib::IconTheme::inited()) return;
-	i = Fl_Shared_Image::get(edelib::IconTheme::get("dialog-question", edelib::ICON_SIZE_MEDIUM).c_str());
-	if(!i) return;
-
-	img->image(i);
+	edelib::Window::show();
 }
