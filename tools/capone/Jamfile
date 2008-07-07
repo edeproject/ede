@@ -1,0 +1,13 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2008 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP tools capone ;
+
+SubInclude TOP tools capone src ;

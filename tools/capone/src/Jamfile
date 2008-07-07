@@ -1,0 +1,27 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2008 EDE Authors.
+#
+# This program is licenced under terms of the 
+# GNU General Public Licence version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP tools capone src ;
+
+PCRE_SRC = pcre/pcre.c ;
+Library $(SUBDIR)/pcre/libpcre : $(PCRE_SRC) ;
+
+SCHEME_SRC = scheme.c dynload.c ;
+ObjectCcFlags $(SCHEME_SRC) : -DUSE_STRLWR=1 -DUSE_DL=1 -DUSE_MATH=1 -DUSE_ASCII_NAMES=0 -DINLINE=inline ;
+
+SCARAB_SRC = capone.cpp $(SCHEME_SRC) dbus.cpp re.cpp sys.cpp ;
+
+#ObjectC++Flags $(SCARAB_SRC) : -pg ;
+#ObjectCcFlags $(SCARAB_SRC) : -g3 -pg ;
+
+EdeProgram capone : $(SCARAB_SRC) ;
+LinkAgainst capone : -Lpcre -lpcre -ledelib_dbus -ldbus-1 -ledelib -lfltk -ldl ;
+
+#LINKFLAGS on capone = [ on capone return $(LINKFLAGS) ] -pg ;
