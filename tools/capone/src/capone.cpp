@@ -26,10 +26,10 @@ const char* next_param(int curr, char** argv, int argc) {
 void help(void) {
 	puts("Usage: capone [OPTIONS] [FILE]\n");
 	puts("Options:");
-	puts("   -h, --help             Show this help");
-	puts("   -v, --version          Show version");
-	puts("   -d, --lib-dir [dir]    Directory with startup libraries");
-	puts("   -e, --eval    [str]    Evaluate given expression\n");
+	puts("   -h, --help                  Show this help");
+	puts("   -v, --version               Show version");
+	puts("   -d, --lib-dir      [dir]    Directory with startup libraries");
+	puts("   -e, --eval         [str]    Evaluate given expression\n");
 }
 
 void do_file_or_expr(FILE* f, const char* expr, const char* dir) {
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 				i++;
-			} else if(CHECK_ARGV(a, "-e", "--expr")) {
+			} else if(CHECK_ARGV(a, "-e", "--eval")) {
 				expr = next_param(i, argv, argc);
 				if(!expr) {
 					puts("Missing expression");
@@ -114,9 +114,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if(expr)
+	if(expr) {
 		do_file_or_expr(NULL, expr, l);
-	else if(filename) {
+	} else if(filename) {
 		FILE* f = fopen(filename, "r");
 		if(!f) {
 			printf("Unable to open '%s'!\n", filename);
