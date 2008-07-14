@@ -5,6 +5,19 @@
 (define first car)
 (define rest  cdr)
 
+;; inc/dec familly
+(define (inc n)
+ (+ 1 n))
+
+(define (dec n)
+ (- n 1))
+
+(define-macro (inc! n)
+ `(set! ,n (+ 1 ,n)))
+
+(define-macro (dec! n)
+ `(set! ,n (- ,n 1)))
+
 ;;
 ;; Allow defining functions like:
 ;;  (def name (param1 param2)
