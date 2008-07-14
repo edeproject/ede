@@ -79,3 +79,16 @@
 	(if (= n 0)
 	  lst
 	  (loop (- n 1) (cons n lst)))))
+
+;;
+;; function for easier timing
+;;
+(define (timeit proc)
+  (let ((v1 0)
+		(v2 0))
+
+    (set! v1 (clock))
+	(proc)
+    (set! v2 (clock))
+    ;; 1000000 is value of CLOCKS_PER_SEC
+	(/ (- v2 v1) 1000000)))

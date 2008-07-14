@@ -37,10 +37,10 @@
  (set! i (+ i 1))
 )
 ;
-;(set! l (re-split "</" "<a href=\"foo\">foo</a>xxx<a href=\"baz\">baz</a>"))
-;(for i in l
-; (print i "\n")
-;)
+(set! l (re-split "</" "<a href=\"foo\">foo</a>xxx<a href=\"baz\">baz</a>"))
+(for i in l
+ (print i "\n")
+)
 
 
 ;(print (re-replace "-" "@this--is-foo" "<p>") "\n")

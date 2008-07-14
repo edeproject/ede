@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <edelib/Missing.h>
 
 extern "C" {
@@ -64,6 +65,10 @@ static pointer s_setenv(scheme* sc, pointer args) {
 	return sc->F;
 }
 
+static pointer s_clock(scheme* sc, pointer args) {
+	return mk_real(sc, (double)clock());
+}
+
 void register_sys_functions(scheme* sc) {
 	sc->vptr->scheme_define(
 		sc,
@@ -76,4 +81,10 @@ void register_sys_functions(scheme* sc) {
 		sc->global_env,
 		sc->vptr->mk_symbol(sc, "setenv"),
 		sc->vptr->mk_foreign_func(sc, s_setenv));
+
+	sc->vptr->scheme_define(
+		sc,
+		sc->global_env,
+		sc->vptr->mk_symbol(sc, "clock"),
+		sc->vptr->mk_foreign_func(sc, s_clock));
 }
