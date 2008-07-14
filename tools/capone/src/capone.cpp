@@ -28,10 +28,11 @@ void help(void) {
 	puts("Options:");
 	puts("   -h, --help             Show this help");
 	puts("   -v, --version          Show version");
-	puts("   -d, --lib-dir [dir]    Directory with startup libraries\n");
+	puts("   -d, --lib-dir [dir]    Directory with startup libraries");
+	puts("   -e, --eval    [str]    Evaluate given expression\n");
 }
 
-void do_file(FILE* f, const char* dir) {
+void do_file_or_expr(FILE* f, const char* expr, const char* dir) {
 	scheme sc;
 	if(!scheme_init(&sc)) {
 		puts("Unable to load interpreter!");
@@ -59,17 +60,26 @@ void do_file(FILE* f, const char* dir) {
 	register_re_functions(&sc);
 	register_sys_functions(&sc);
 
-	scheme_load_file(&sc, f);
-	if(sc.retcode != 0)
-		puts("Errors in file");
+	if(f) {
+		scheme_load_file(&sc, f);
+		if(sc.retcode != 0)
+			puts("Errors in file");
+	}
+
+	if(expr) {
+		scheme_load_string(&sc, expr);
+		if(sc.retcode != 0)
+			printf("Errors in expression '%s'\n", expr);
+	}
 
 	scheme_deinit(&sc);
 }
 
 int main(int argc, char** argv) {
-	const char* a, *l, *filename;
+	const char* a, *l, *filename, *expr;
 	l = "../lib";
 	filename = NULL;
+	expr = NULL;
 
 	for(int i = 1; i < argc; i++) {
 		a = argv[i];
@@ -87,6 +97,13 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 				i++;
+			} else if(CHECK_ARGV(a, "-e", "--expr")) {
+				expr = next_param(i, argv, argc);
+				if(!expr) {
+					puts("Missing expression");
+					return 1;
+				}
+				i++;
 			} else {
 				printf("Unknown '%s' parameter. Run capone -h for more options\n", a);
 				return 1;
@@ -97,19 +114,21 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if(filename) {
+	if(expr)
+		do_file_or_expr(NULL, expr, l);
+	else if(filename) {
 		FILE* f = fopen(filename, "r");
 		if(!f) {
 			printf("Unable to open '%s'!\n", filename);
 			return 1;
 		}
 
-		do_file(f, l);
+		do_file_or_expr(f, NULL, l);
 		fclose(f);
 	} else {
-		printf("\033[33mcapone " VERSION "\033[0m \033[32m(based on tinyscheme 1.39)\033[0m\n");
+		printf("\033[33mcapone " VERSION "\033[0m (based on tinyscheme 1.39)\n");
 		printf("Type \"(quit)\" or press Ctrl-C to exit interpreter when you are done.");
-		do_file(stdin, l);
+		do_file_or_expr(stdin, NULL, l);
 	}
 
 	return 0;
