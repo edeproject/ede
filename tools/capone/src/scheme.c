@@ -17,9 +17,9 @@
 #ifndef WIN32
 # include <unistd.h>
 #endif
-#if USE_DL
+/*#if USE_DL
 # include "dynload.h"
-#endif
+#endif*/
 #if USE_MATH
 # include <math.h>
 #endif
@@ -98,6 +98,10 @@ static const char *strlwr(char *s) {
 
 #ifndef InitFile
 # define InitFile "init.scm"
+#endif
+
+#ifndef ErrorHeader
+# define ErrorHeader "*** Error: "
 #endif
 
 #ifndef FIRST_CELLSEGS
@@ -3403,7 +3407,7 @@ static pointer opexe_4(scheme *sc, enum scheme_opcodes op) {
                sc->args=cons(sc,mk_string(sc," -- "),sc->args);
                setimmutable(car(sc->args));
           }
-          putstr(sc, "Error: ");
+          putstr(sc, ErrorHeader);
           putstr(sc, strvalue(car(sc->args)));
           sc->args = cdr(sc->args);
           s_goto(sc,OP_ERR1);
@@ -4198,7 +4202,9 @@ static struct scheme_interface vtbl ={
   setimmutable,
 
   scheme_load_file,
-  scheme_load_string
+  scheme_load_string,
+
+  scheme_error
 };
 #endif
 
@@ -4421,6 +4427,12 @@ void scheme_define(scheme *sc, pointer envir, pointer symbol, pointer value) {
      } else { 
           new_slot_spec_in_env(sc, envir, symbol, value); 
      } 
+}
+
+void scheme_error(scheme *sc, const char *str) {
+	putstr(sc, ErrorHeader);
+	putstr(sc, str);
+	putstr(sc, "\n");
 }
 
 #if !STANDALONE

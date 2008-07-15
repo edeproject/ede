@@ -4,6 +4,7 @@
 extern "C" {
 #include "scheme.h"
 #include "scheme-private.h"
+#include "dynload.h"
 }
 
 #include "dbus.h"
@@ -55,6 +56,10 @@ void do_file_or_expr(FILE* f, const char* expr, const char* dir) {
 	scheme_load_file(&sc, init);
 	if(sc.retcode != 0)
 		puts("Errors in " BASE_FILE);
+
+
+	/* define 'load-extension' function first */
+	scheme_define(&sc, sc.global_env, mk_symbol(&sc,"load-extension"), mk_foreign_func(&sc, scm_load_ext));
 
 	register_dbus_functions(&sc);
 	register_re_functions(&sc);

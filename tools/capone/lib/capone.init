@@ -197,15 +197,27 @@
 		 (cdrs (cdr unz)))
 	    (cons (apply proc cars) (apply map (cons proc cdrs)))))))
 
-(define (for-each proc . lists)
-  (if (null? lists)
-      (apply proc)
-      (if (null? (car lists))
-	  #t
-	  (let* ((unz (apply unzip1-with-cdr lists))
-		 (cars (car unz))
-		 (cdrs (cdr unz)))
-	    (apply proc cars) (apply map (cons proc cdrs))))))
+;; 
+;; Original implementation that pretty sucks
+;; Althought it behaves as given in Dybvig's book, PLT and chicken
+;; versions does not allow multiple list arguments
+;;
+;(define (for-each proc . lists)
+;  (if (null? lists)
+;      (apply proc)
+;      (if (null? (car lists))
+;	  #t
+;	  (let* ((unz (apply unzip1-with-cdr lists))
+;		 (cars (car unz))
+;		 (cdrs (cdr unz)))
+;	    (apply proc cars) (apply map (cons proc cdrs))))))
+
+(define (for-each proc lst)
+  (if (null? lst)
+      lst
+      (begin 
+        (proc (car lst))
+        (for-each proc (cdr lst)))))
 
 (define (list-tail x k)
     (if (zero? k)

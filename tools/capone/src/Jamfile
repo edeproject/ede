@@ -11,6 +11,7 @@
 SubDir TOP tools capone src ;
 
 PCRE_SRC = pcre/pcre.c ;
+ObjectCcFlags $(PCRE_SRC) : $(GLOBALFLAGS) ;
 Library $(SUBDIR)/pcre/libpcre : $(PCRE_SRC) ;
 
 SCHEME_SRC = scheme.c dynload.c ;

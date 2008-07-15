@@ -21,26 +21,36 @@
 	      (map-more (cdr lst)
 		            (map3 cdr more)))))))
 
-(define v1 0)
-(define v2 0)
+(define lst (iota 9000))
 
-(set! v1 (clock))
-(define l (iota 1009))
-;(define l (iota 10))
-(set! v2 (clock))
-(println "=== Pass 1: " (/ (- v2 v1) 1000000))
+(print "Working my map... ")
+;; my map
+(timeit-start)
+(map3
+ (fn (x)
+  (+ 1 x)) lst) 
+(timeit-end)
+(println (timeit-result) " ms")
 
-(println "Doing map...")
+(print "Working with builtin map... ")
+;; real map
+(timeit-start)
+(map
+ (fn (x)
+  (+ 1 x)) lst)
+(timeit-end)
+(println (timeit-result) " ms")
 
-(set! v1 (clock))
-(println (map3 (lambda (x) (+ 1 x)) l))
-(set! v2 (clock))
-(println "=== Pass 2: " (/ (- v2 v1) 1000000))
-;(println (map + l l))
+(print "Working my map [2]... ")
+;; my map
+(timeit-start)
+(map3 + lst lst lst)
+(timeit-end)
+(println (timeit-result) " ms")
 
-(println "Time is: " (timeit 
-					  (lambda ()
-					   (define v1 (iota 100))
-					   (map + v1 v1)
-					  )))
-
+(print "Working with builtin map [2]... ")
+;; real map
+(timeit-start)
+(map + lst lst lst)
+(timeit-end)
+(println (timeit-result) " ms")

@@ -136,6 +136,7 @@ void scheme_apply0(scheme *sc, const char *procname);
 SCHEME_EXPORT pointer scheme_apply1(scheme *sc, const char *procname, pointer);
 void scheme_set_external_data(scheme *sc, void *p);
 SCHEME_EXPORT void scheme_define(scheme *sc, pointer env, pointer symbol, pointer value);
+SCHEME_EXPORT void scheme_error(scheme *sc, const char *str);
 
 typedef pointer (*foreign_func)(scheme *, pointer);
 
@@ -211,6 +212,8 @@ struct scheme_interface {
   void (*setimmutable)(pointer p);
   void (*load_file)(scheme *sc, FILE *fin);
   void (*load_string)(scheme *sc, const char *input);
+
+  void (*error)(scheme *sc, const char *str);
 };
 #endif
 

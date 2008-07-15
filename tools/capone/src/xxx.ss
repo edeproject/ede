@@ -26,21 +26,21 @@
  (print i "\n")
 )
 
-(print (first (re-match "-" "some-sample-string" 0)) "\n")
-
-(define pos (re-match "http://(.*):" "http://www.google.com:8080"))
-(print pos "\n")
-(set! i (first pos))
-
-(while [< i (first (rest pos))]
- (print (string-ref "http://www.google.com:8080" i) "\n")
- (set! i (+ i 1))
-)
+;(print (first (re-match "-" "some-sample-string" 0)) "\n")
 ;
-(set! l (re-split "</" "<a href=\"foo\">foo</a>xxx<a href=\"baz\">baz</a>"))
-(for i in l
- (print i "\n")
-)
+;(define pos (re-match "http://(.*):" "http://www.google.com:8080"))
+;(print pos "\n")
+;(set! i (first pos))
+;
+;(while [< i (first (rest pos))]
+; (print (string-ref "http://www.google.com:8080" i) "\n")
+; (set! i (+ i 1))
+;)
+;;
+;(set! l (re-split "</" "<a href=\"foo\">foo</a>xxx<a href=\"baz\">baz</a>"))
+;(for i in l
+; (print i "\n")
+;)
 
 
 ;(print (re-replace "-" "@this--is-foo" "<p>") "\n")

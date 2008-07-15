@@ -105,3 +105,15 @@
     (set! v2 (clock))
     ;; 1000000 is value of CLOCKS_PER_SEC
 	(/ (- v2 v1) 1000000)))
+
+(define *timeit-start-value* 0)
+(define *timeit-end-value* 0)
+
+(define (timeit-start)
+  (set! *timeit-start-value* (clock)))
+
+(define (timeit-end)
+  (set! *timeit-end-value* (clock)))
+
+(define (timeit-result)
+  (/ (- *timeit-end-value* *timeit-start-value*) 1000000))
