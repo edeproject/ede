@@ -15,6 +15,8 @@ extern "C" {
 #define BASE_FILE "capone.init"
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
+extern pointer reverse_in_place(scheme *sc, pointer term, pointer list);
+
 const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
@@ -33,7 +35,21 @@ void help(void) {
 	puts("   -e, --eval         [str]    Evaluate given expression\n");
 }
 
-void do_file_or_expr(FILE* f, const char* expr, const char* dir) {
+void register_args_var(scheme* sc, int argc, char** argv) {
+	pointer args = sc->NIL;
+	for(int i = 0; i < argc; i++) {
+		pointer v = mk_string(sc, argv[i]);
+		args = cons(sc, v, args);
+	}
+
+	args = reverse_in_place(sc, sc->NIL, args);
+	scheme_define(sc, 
+			sc->global_env,
+			mk_symbol(sc, "*args*"),
+			args);
+}
+
+void do_file_or_expr(FILE* f, const char* expr, const char* dir, int argc, char** argv) {
 	scheme sc;
 	if(!scheme_init(&sc)) {
 		puts("Unable to load interpreter!");
@@ -60,6 +76,8 @@ void do_file_or_expr(FILE* f, const char* expr, const char* dir) {
 
 	/* define 'load-extension' function first */
 	scheme_define(&sc, sc.global_env, mk_symbol(&sc,"load-extension"), mk_foreign_func(&sc, scm_load_ext));
+
+	register_args_var(&sc, argc, argv);
 
 	register_dbus_functions(&sc);
 	register_re_functions(&sc);
@@ -120,7 +138,7 @@ int main(int argc, char** argv) {
 	}
 
 	if(expr) {
-		do_file_or_expr(NULL, expr, l);
+		do_file_or_expr(NULL, expr, l, argc, argv);
 	} else if(filename) {
 		FILE* f = fopen(filename, "r");
 		if(!f) {
@@ -128,12 +146,12 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 
-		do_file_or_expr(f, NULL, l);
+		do_file_or_expr(f, NULL, l, argc, argv);
 		fclose(f);
 	} else {
 		printf("\033[33mcapone " VERSION "\033[0m (based on tinyscheme 1.39)\n");
 		printf("Type \"(quit)\" or press Ctrl-C to exit interpreter when you are done.");
-		do_file_or_expr(stdin, NULL, l);
+		do_file_or_expr(stdin, NULL, l, argc, argv);
 	}
 
 	return 0;

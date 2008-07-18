@@ -84,14 +84,26 @@
 		  (throw "Unsupported type in 'for' loop"))))))
 
 ;;
+;; range function; returns a list of numbers in form [start end)
+;;
+;; Althought we could wrote this function cleanly without decrementors
+;; using recursion call after 'cons', we would loose tail call optimization
+;; yielding much slower function.
+;;
+(define (range start end)
+  (let loop ((s (- start 1))
+			 (e (- end   1))
+			 (lst '()))
+    (if (>= s e)
+	  lst
+	  (loop s (- e 1) (cons e lst)))))
+
+;;
 ;; iota function; returns a list of numbers
 ;;
+
 (define (iota n)
-  (let loop ((n n)
-			 (lst '()))
-	(if (= n 0)
-	  lst
-	  (loop (- n 1) (cons n lst)))))
+  (range 0 n))
 
 ;;
 ;; function for easier timing
