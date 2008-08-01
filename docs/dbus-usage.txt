@@ -1,0 +1,21 @@
+D-BUS usage in EDE
+==================
+
+This document describes link:http://freedesktop.org/software/dbus/[D-BUS] usage in EDE applications.
+It is not meant to describe D-BUS protocol nor how to use it either via libdbus nor edelib, but
+to document and explain what programs listen or send data via D-BUS protocol.
+
+Naming convention
+-----------------
+EDE uses 'org.equinoxproject' as main namespace for interfaces and object paths, e.g.
+
+-----------------------------------------------------------
+  org.equinoxproject.Eiconman   # eiconman interface
+  /org/equinoxproject/Eiconman  # eiconman object path
+-----------------------------------------------------------
+
+Applications
+------------
+
+eiconman
+~~~~~~~~
