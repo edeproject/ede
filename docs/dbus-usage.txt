@@ -1,7 +1,7 @@
 D-BUS usage in EDE
 ==================
 
-This document describes link:http://freedesktop.org/software/dbus/[D-BUS] usage in EDE applications.
+This document describes link:http://freedesktop.org/wiki/Software/dbus/[D-BUS] usage in EDE applications.
 It is not meant to describe D-BUS protocol nor how to use it either via libdbus nor edelib, but
 to document and explain what programs listen or send data via D-BUS protocol.
 
@@ -19,3 +19,16 @@ Applications
 
 eiconman
 ~~~~~~~~
+
+Signals
+^^^^^^^
+*org.equinoxproject.Eiconman.DesktopChanged*
+
+org.equinoxproject.Eiconman.DesktopChanged(int32 n, string name)
+
+'---------'---------'------------
+ Name      Type      Description
+-------------------------------------
+ n         int32     Desktop number
+ name      string    Desktop name
+-------------------------------------
