@@ -11,7 +11,7 @@ Introduction
 Why not make, you probably ask yourself, since the rest of the world
 use it? Well, make is a nice tool for small projects, or relatively
 large one with monolithic configuration file. This means, if you have
-1000 files and you want to build them on the same way, make can be usefull
+1000 files and you want to build them on the same way, make can be useful
 (sorta of).
 
 On other hand, if you want some of them to have specific requirements,
@@ -27,22 +27,21 @@ libraries (today very often), that library 'will be tied to' that binary, even
 if binary does not use any function from it. It is silly that ecalc requires,
 for example, libogg for startup, even if it does not use any function from it!
 
-In EDE 1.x we had pretty simple (and that is 'wohaaa' with arcane make syntax)
-build system based on make (without automake stuff because is... ah, check comments
-online about it :-P) that served us very well. 
+In EDE 1.x we had pretty simple build system based on make (without automake stuff 
+because is... ah, check comments online about it :-P) that served us very well. 
 
 But it had a lot of limitation. You couldn't, as sample, specify '-DSHAPE' flag
 for a window manager without passing it to every program in the tree. The same
 applies for linked libraries too.
 
-Jam is designed for these cases, and when they occur, it is like homeland for him.
+Jam is designed for these cases and when they occur, it is like homeland for him.
 So, you want only 'foo.cpp' from 'baz' directory to get '-DXYZ' flag, no problem. Or you
 want that every file in 'baz' directory (no matter is it binary or shared library)
 be linked with 'libtaz'; no problem either.
 
 So how it looks like
 --------------------
-Here are few samples with syntax explaination.
+Here are few samples with syntax explanation.
 
 Let say you have 'foo.cpp', a cool application and you want to create executable from
 it. This is the way:
@@ -100,97 +99,3 @@ must have space before ending ';' character, like:
 Well, that is a jam syntax :-)
 
 ===================================
-
-
-EDE build specific rules
-------------------------
-This is the main reason why you are reading this :-P. This is a list of rules
-for easier building various pieces and short showcase how to use them.
-
-Program rules
-~~~~~~~~~~~~~
-These rules are used to build binary file(s).
-
-
-Program [target] : [sources] : [libraries] : [flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creates [target] binary from [sources]. If libraries are given (normal way of linking
-like '-lfoo', they will be used. If [flags] are given, like '-DABC' they will be
-passed to compiler. Like:
-
--------------------------
-# Compile and link with fltk libraries
-SOURCE = Main.cpp SciCalc.cpp ;
-Program ecalc : $(SOURCE) : -L/usr/local/share -lfltk -lX11 -lm -lstdc++ ;
-
-# Compile and link with fltk libraries; also pass -D_DEBUG
-SOURCE = Main.cpp SciCalc.cpp ;
-Program ecalc : $(SOURCE) : -L/usr/local/share -lfltk -lX11 -lm -lstdc++ : -D_DEBUG ;
--------------------------
-
-
-EdeProgram [target] : [sources] : [optional-libraries] : [optional-flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Create [target] and link it with edelib and fltk libraries. If [optional-libraries] and
-[optional-flags] are given, they will be used. Like:
-
--------------------------
-SOURCE = abc.cpp ;
-EdeProgram abc : abc.cpp ;
--------------------------
-
-EfltkProgram [target] : [sources] : [optional-libraries] : [optional-flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The same as EdeProgram, but will link with efltk libraries. This rule is used to compile 
-some programs from 1.x version, and will be removed when those programs are ported
-to the edelib and fltk code.
-
-FltkProgram [target] : [sources] : [optional-libraries] : [optional-flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Create [target] linking it with fltk libraries only. Also will link with images libraries.
-
-
-FltkProgramBare [target] : [sources] : [optional-libraries] : [optional-flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Same as FltkProgram, but will *not* link with images libraries. Usefull for programs
-which does not require images support.
-
-Library rules
-~~~~~~~~~~~~~
-These rules are used to build either static or shared libraries.
-
-StaticLibrary [library] : [sources] : [optional-flags] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creates static library from [sources] files. If [optional-flags] are given, they
-will be passed to the compiler. Sample:
-
--------------------------
-# Compile each file with -D_DEBUG flag and create
-# mylib.a library
-StaticLibrary mylib : file1.cpp file2.cpp file3.cpp : -D_DEBUG ;
--------------------------
-
-SharedLibrary [library] : [sources] : [optional-linklibs] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creates a shared library from [sources] and link with [optional-linklibs]. Shared library
-will, by default, have a '.so' extension, if extension in [library] was not given.
-
-SharedLibraryVersioned [library] : [sources] : [optional-linklibs] : [optional-version] : [nolink] ;
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creates a versioned shared library (like foo.so.1.2.0) and symbolic link (foo.so) to it.
-If [optional-version] is given, it will be used to add version extension, if not,
-this rule behaves the same as SharedLibrary (meaning symbolic link will *not* be created).
-
-If option [nolink] was given, but [optional-version] does, symbolic link will not be created.
-Here are few samples:
-
--------------------------
-# Create foo.so.1.2.0 and symbolic link to it
-SharedLibraryVersioned foo : file1.cpp file2.cpp : -L/some/path -lsomelib : 1.2.0 ;
-
-# Create foo.so.1.2.0 without symbolic link
-SharedLibraryVersioned foo : file1.cpp file2.cpp : -L/some/path -lsomelib : 1.2.0 : nolink ;
-
-# Create foo.so.1.2.0 without linking with external libraries
-SharedLibraryVersioned foo : file1.cpp file2.cpp : : 1.2.0 : nolink ;
--------------------------

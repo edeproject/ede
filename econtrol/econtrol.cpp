@@ -19,6 +19,8 @@
 #include <edelib/Nls.h>
 #include <edelib/Window.h>
 #include <edelib/MessageBox.h>
+#include <edelib/Run.h>
+#include <edelib/File.h>
 
 #include <FL/Fl.h>
 #include <FL/Fl_Button.h>
@@ -29,14 +31,25 @@
 typedef edelib::list<edelib::String> StrList;
 typedef edelib::list<edelib::String>::iterator StrListIter;
 
+bool file_can_execute(const edelib::String& f) {
+	if(edelib::file_executable(f.c_str()))
+		return true;
+
+	/* find full path then */
+	edelib::String fp = edelib::file_path(f.c_str());
+	if(fp.empty())
+		return false;
+	return edelib::file_executable(fp.c_str());
+}
+
 class ControlButton : public Fl_Button {
 	private:
 		Fl_Box* tipbox;
 		edelib::String tipstr;
 		edelib::String exec;
 	public:
-		ControlButton(Fl_Box* t, const edelib::String& ts, int x, int y, int w, int h, const char* l = 0) : 
-		Fl_Button(x, y, w, h, l), tipbox(t), tipstr(ts) {
+		ControlButton(Fl_Box* t, const edelib::String& ts, const edelib::String& e, int x, int y, int w, int h, const char* l = 0) : 
+		Fl_Button(x, y, w, h, l), tipbox(t), tipstr(ts), exec(e) {
 			box(FL_FLAT_BOX);
 			align(FL_ALIGN_WRAP);
 			color(FL_BACKGROUND2_COLOR);
@@ -58,9 +71,14 @@ int ControlButton::handle(int event) {
 			box(FL_DOWN_BOX);
 			redraw();
 
-			if(Fl::event_clicks())
-				edelib::message("Executing programs not implemented yet");
-
+			if(Fl::event_clicks()) {
+				if(exec.empty())
+					edelib::alert(_("Unable to execute command for '%s'. Command value is not set"), label());
+				else if(!file_can_execute(exec.c_str()))
+					edelib::alert(_("Unable to run program '%s'. Program not found"), exec.c_str());
+				else
+					edelib::run_program(exec.c_str(), false);
+			}
 			return 0;
 		case FL_RELEASE:
 			box(FL_FLAT_BOX);
@@ -119,7 +137,7 @@ void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 		if(c.get(section, "Exec", buff, sizeof(buff)))
 			exec = buff;
 
-		ControlButton* cb = new ControlButton(tipbox, tip, 0, 0, 80, 100);
+		ControlButton* cb = new ControlButton(tipbox, tip, exec, 0, 0, 80, 100);
 		cb->copy_label(name.c_str());
 
 		c.get(section, "IconPathAbsolute", abspath, false);

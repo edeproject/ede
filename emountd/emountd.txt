@@ -1,0 +1,14 @@
+Emountd documentation
+=====================
+
+Emountd is EDE service responsible for reporting when storage
+devices get mounted or unmounted. Reporting is done via D-BUS protocol and
+interested applications should listen certain signals.
+
+Specific emountd signals can be found at link:dbus-usage.html[D-BUS usage] page.
+
+Options
+-------
+
+--no-daemon::
+	Do not run in background. Emountd will by default run in background.

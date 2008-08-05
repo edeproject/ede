@@ -10,4 +10,5 @@
 
 SubDir TOP docs ;
 
-EdeManual index.txt introduction.txt jambuild.txt dbus-usage.txt ;
+EdeManual index.txt introduction.txt jambuild.txt ;
+EdeManualWithToc dbus-usage.txt ;

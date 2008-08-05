@@ -24,8 +24,9 @@
 *Programs*
 
 - link:ecalc.html[Ecalc]
-- link:evoke.html[Evoke]
 - link:etip.html[Etip]
+- link:evoke.html[Evoke]
+- link:emountd.html[Emountd]
 
 *Development*
 

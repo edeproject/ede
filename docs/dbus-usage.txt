@@ -1,6 +1,8 @@
 D-BUS usage in EDE
 ==================
 
+Introduction
+------------
 This document describes link:http://freedesktop.org/wiki/Software/dbus/[D-BUS] usage in EDE applications.
 It is not meant to describe D-BUS protocol nor how to use it either via libdbus nor edelib, but
 to document and explain what programs listen or send data via D-BUS protocol.
@@ -14,21 +16,141 @@ EDE uses 'org.equinoxproject' as main namespace for interfaces and object paths,
   /org/equinoxproject/Eiconman  # eiconman object path
 -----------------------------------------------------------
 
-Applications
-------------
+rest of the name will be application name and method or signal name, like:
 
-eiconman
-~~~~~~~~
+-----------------------------------------------------------
+  org.equinoxproject.Eiconman.FooMethod   # FooMethod belongs to eiconman
+-----------------------------------------------------------
 
-Signals
-^^^^^^^
-*org.equinoxproject.Eiconman.DesktopChanged*
+Interfaces
+----------
 
-org.equinoxproject.Eiconman.DesktopChanged(int32 n, string name)
+org.equinoxproject.Eiconman
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Used by eiconman and access object is '/org/eqiunoxproject/Eiconman'. Provided
+signals are:
 
-'---------'---------'------------
+DesktopChanged(int32 n, string name)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[grid="all"]
+`---------`---------`----------------
  Name      Type      Description
 -------------------------------------
  n         int32     Desktop number
  name      string    Desktop name
 -------------------------------------
+
+Notify when desktop view was changed.
+
+'''''
+
+org.equinoxproject.Emountd
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Used by emountd and access object is '/org/equinoxproject/Emountd'. Provided 
+signals are:
+
+
+Mounted(struct device_info)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+'device_info' contains the following fields:
+
+[grid="all"]
+`---------------`---------`-----------------------------------
+ Name            Type      Description
+--------------------------------------------------------------
+ id              uint32    Device ID for easier tracking 
+ label           string    Device label (can be empty)
+ mount_point     string    Device mount point
+ device_file     string    Device file
+ drive_type      int32     Drive type (see <<X1, Drive types>>)
+ cdrom_type      int32     CDROM type, valid only if 'drive_type == DRIVE_TYPE_CDROM' (see <<X2, Volume disc types>>)
+ read_only       bool      Is device mounted read-only
+--------------------------------------------------------------
+
+Notify when storage device was mounted.
+
+Unmounted(int32 udi)
+^^^^^^^^^^^^^^^^^^^^^
+
+[grid="all"]
+`---------`---------`----------------
+ Name      Type      Description
+-------------------------------------
+ id        int32     Device ID for easier tracking  
+-------------------------------------
+
+Notify when storage device was unmounted.
+
+AudioCDAdded(struct audio_device_info)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+'audio_device_info' contains the following fields:
+
+[grid="all"]
+`---------------`---------`-----------------------------------
+ Name            Type      Description
+--------------------------------------------------------------
+ id              uint32    Device ID for easier tracking 
+ label           string    Device label (can be empty)
+ device_file     string    Device file
+--------------------------------------------------------------
+
+Notify when Audio CD was added.
+
+AudioCDRemoved(int32 udi)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[grid="all"]
+`---------`---------`----------------
+ Name      Type      Description
+-------------------------------------
+ id        int32     Device ID for easier tracking  
+-------------------------------------
+
+Notify when Audio CD was removed.
+
+Device enumerations directly maps to HAL ones and those values
+are send in 'drive_type' and 'cdrom_type' (device_info struct).
+
+[[X1]]
+*Drive types:*
+-------------------------------------------------------------
+ DRIVE_TYPE_REMOVABLE_DISK        = 0x00
+ DRIVE_TYPE_DISK                  = 0x01
+ DRIVE_TYPE_CDROM                 = 0x02
+ DRIVE_TYPE_FLOPPY                = 0x03
+ DRIVE_TYPE_TAPE                  = 0x04
+ DRIVE_TYPE_COMPACT_FLASH         = 0x05
+ DRIVE_TYPE_MEMORY_STICK          = 0x06
+ DRIVE_TYPE_SMART_MEDIA           = 0x07
+ DRIVE_TYPE_SD_MMC                = 0x08
+ DRIVE_TYPE_CAMERA                = 0x09
+ DRIVE_TYPE_PORTABLE_AUDIO_PLAYER = 0x0a
+ DRIVE_TYPE_ZIP                   = 0x0b
+ DRIVE_TYPE_JAZ                   = 0x0c
+ DRIVE_TYPE_FLASHKEY              = 0x0d
+ DRIVE_TYPE_MO                    = 0x0e
+-------------------------------------------------------------
+
+[[X2]]
+*Volume disc types:*
+-------------------------------------------------------------
+ VOLUME_DISC_TYPE_CDROM       = 0x00
+ VOLUME_DISC_TYPE_CDR         = 0x01
+ VOLUME_DISC_TYPE_CDRW        = 0x02
+ VOLUME_DISC_TYPE_DVDROM      = 0x03
+ VOLUME_DISC_TYPE_DVDRAM      = 0x04
+ VOLUME_DISC_TYPE_DVDR        = 0x05
+ VOLUME_DISC_TYPE_DVDRW       = 0x06
+ VOLUME_DISC_TYPE_DVDPLUSR    = 0x07
+ VOLUME_DISC_TYPE_DVDPLUSRW   = 0x08
+ VOLUME_DISC_TYPE_DVDPLUSR_DL = 0x09
+ VOLUME_DISC_TYPE_BDROM       = 0x0a
+ VOLUME_DISC_TYPE_BDR         = 0x0b
+ VOLUME_DISC_TYPE_BDRE        = 0x0c
+ VOLUME_DISC_TYPE_HDDVDROM    = 0x0d
+ VOLUME_DISC_TYPE_HDDVDR      = 0x0e
+ VOLUME_DISC_TYPE_HDDVDRW     = 0x0f
+ VOLUME_DISC_TYPE_MO          = 0x10
+-------------------------------------------------------------
+
