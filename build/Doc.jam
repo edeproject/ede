@@ -15,7 +15,7 @@ MANUALDIR = "$(DOCDIR)/manual" ;
 # Must be relative to "docs" dir
 MANUALICONS = "images" ;
 
-# EdeManual [file] : [optinal-images] ;
+# EdeManual [file] : [optinal-images] : "make-toc" ;
 # Creates [file].html via asciidoc. If [optinal-images] are
 # given, they will be copied in $(DOCICONS).
 rule EdeManual
@@ -24,6 +24,9 @@ rule EdeManual
 		Echo "ASCIIDOC not defined; documentation will not be built !" ;
 		return ;
 	}
+
+	# see if we have tidy installed
+	local tidy_paths = [ Glob $(PATH) : tidy ] ;
 
 	local html_ext = ".html" ;
 	local path = $(SEARCH_SOURCE) ;
@@ -46,7 +49,19 @@ rule EdeManual
 		# set output to $(MANUALDIR) directory
 		MakeLocate $(target) : $(MANUALDIR) ;
 
-		AsciiDoc1 $(target) : $(source) ;
+		# a hack to create Table of Content
+		# seems that this is the only way asciidoc can do it
+		if $(3) = "make-toc" {
+			TOC_FLAG on $(target) = "-a toc" ;
+		}
+
+		if ! $(tidy_paths) {
+			AsciiDoc1 $(target) : $(source) ;
+		} else {
+			TIDY on $(target) = "tidy" ;
+			AsciiDoc2 $(target) : $(source) ;
+		}
+
 		LocalClean clean : $(target) ;
 	}
 
@@ -70,9 +85,24 @@ rule EdeManual
 	}
 }
 
+# EdeManualWithToc [file] : [optinal-images] ;
+# The same as EdeManual, but it will build Table of Contents
+rule EdeManualWithToc
+{
+	EdeManual $(1) : $(2) : "make-toc" ;
+}
+
 actions AsciiDoc1
 {
-	$(ASCIIDOC) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o $(<) $(>)
+	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o $(<) $(>)
+}
+
+# version with tidy (utility to clean HTML/XHTML code)
+actions AsciiDoc2
+{
+	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o "$(<).tmp" $(>)
+	$(TIDY) -q -i "$(<).tmp" > "$(<)"
+	$(RM) "$(<).tmp"
 }
 
 NotFile doc ;
