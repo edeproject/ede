@@ -173,7 +173,7 @@ int net_get_workspace_names(char** names) {
 		const char* p = (const char*)prop;
 		for(int i = 0, s = 0; i < n && alloc < MAX_DESKTOPS; i++, alloc++) {
 			if(p[i] == '\0') {
-				EDEBUG("%c ", p[i]);
+				E_DEBUG("%c ", p[i]);
 				names[alloc] = strndup((p + s), i - s + 1);
 				s = i + 1;
 			}

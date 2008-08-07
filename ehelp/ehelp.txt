@@ -1,0 +1,48 @@
+Ehelp documentation
+===================
+
+Ehelp is program that will display EDE help in web browser. It will use
+a list of predefined browsers and if find one of them, it will run it.
+
+Running 'ehelp' without options will open help's starting page. On other 
+hand, if you want to display a help of some program or documentation about
+some services, running 'ehelp [program-name-or-service]' will do that.
+
+.Displaying evoke help
+------------------------------
+ehelp evoke
+------------------------------
+
+In case you are not sure for what programs help exists, using '--titles'
+option will show it.
+
+.Using '--titles' option
+------------------------------
+$ehelp --titles
+
+Known titles:
+  HACKING
+  contact
+  dbus-usage
+  ecalc
+  emountd
+  etip
+  evoke
+  images
+  index
+  introduction
+  jambuild
+------------------------------
+
+
+If you don't like browser ehelp chooses, you can change it pointing
+$BROWSER environment variable to desired program.
+
+Options
+-------
+
+--help::
+	Display help
+
+--titles::
+	Display a list of known titles

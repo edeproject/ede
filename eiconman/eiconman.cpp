@@ -45,8 +45,8 @@
 #include <time.h>   // time
 
 #define EICONMAN_UID       0x10
-#define CONFIG_NAME        "eiconman.conf"
-#define ICONS_CONFIG_NAME  "eiconman-icons.conf"
+#define CONFIG_NAME        "ede/eiconman"
+#define ICONS_CONFIG_NAME  "ede/eiconman-icons"
 
 #define EICONMAN_INTERFACE "org.equinoxproject.Eiconman"
 #define EICONMAN_OBJECT    "/org/equinoxproject/Eiconman"
@@ -58,7 +58,6 @@
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #undef MAX
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
-
 
 /*
  * Which widgets Fl::belowmouse() should skip. This should be updated
@@ -88,7 +87,7 @@ Fl_Menu_Item desktop_menu[] = {
 };
 
 Desktop* Desktop::pinstance = NULL;
-bool running = false;
+static bool running = false;
 
 inline unsigned int random_pos(int max) { 
 	return (rand() % max); 
@@ -106,12 +105,12 @@ inline void dpy_sizes(int& width, int& height) {
 }
 
 void exit_signal(int signum) {
-    EDEBUG(ESTRLOC ": Exiting (got signal %d)\n", signum);
+    E_DEBUG(E_STRLOC ": Exiting (got signal %d)\n", signum);
     running = false;
 }
 
 void restart_signal(int signum) {
-	EDEBUG(ESTRLOC ": Restarting (got signal %d)\n", signum);
+	E_DEBUG(E_STRLOC ": Restarting (got signal %d)\n", signum);
 }
 
 void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
@@ -169,7 +168,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 }
 
 Desktop::~Desktop() { 
-	EDEBUG("Desktop::~Desktop()\n");
+	E_DEBUG("Desktop::~Desktop()\n");
 
 	save_icons();
 
@@ -213,7 +212,7 @@ void Desktop::init_internals(void) {
 	 */
 	edelib::String desktop_path = edelib::dir_home();
 	if(desktop_path.empty()) {
-		EWARNING(ESTRLOC ": can't read home directory; icons will not be loaded\n");
+		E_WARNING(E_STRLOC ": can't read home directory; icons will not be loaded\n");
 		return;
 	}
 	desktop_path += "/Desktop";
@@ -227,7 +226,7 @@ void Desktop::init_internals(void) {
 		if(!edelib::DirWatch::add(desktop_path.c_str(), 
 					edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
 
-			EWARNING(ESTRLOC ": Unable to watch %s\n", desktop_path.c_str());
+			E_WARNING(E_STRLOC ": Unable to watch %s\n", desktop_path.c_str());
 		}
 	}
 
@@ -242,11 +241,10 @@ void Desktop::init_internals(void) {
 
 	if(edelib::dir_exists(trash_path.c_str())) {
 		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))
-			EWARNING(ESTRLOC ": Unable to watch %s\n", trash_path.c_str());
+			E_WARNING(E_STRLOC ": Unable to watch %s\n", trash_path.c_str());
 	}
 
 	edelib::DirWatch::callback(dir_watch_cb);
-
 	running = true;
 }
 
@@ -267,7 +265,7 @@ void Desktop::shutdown(void) {
 }
 
 Desktop* Desktop::instance(void) {
-	EASSERT(Desktop::pinstance != NULL && "Desktop::init() should be run first");
+	E_ASSERT(Desktop::pinstance != NULL && "Desktop::init() should be run first");
 	return Desktop::pinstance;
 }
 
@@ -294,7 +292,7 @@ void Desktop::hide(void) {
 void Desktop::update_workarea(void) {
 	int X, Y, W, H;
 	if(!net_get_workarea(X, Y, W, H)) {
-		EWARNING(ESTRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
+		E_WARNING(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
 		X = Y = 0;
 		dpy_sizes(W, H);
 	}
@@ -313,9 +311,9 @@ void Desktop::set_bg_color(int c, bool do_redraw) {
 }
 
 void Desktop::read_config(void) {
-	edelib::Config conf;
+	edelib::Resource conf;
 	if(!conf.load(CONFIG_NAME)) {
-		EWARNING(ESTRLOC ": Can't load %s, using default...\n", CONFIG_NAME);
+		E_WARNING(E_STRLOC ": Can't load %s, using default...\n", CONFIG_NAME);
 		return;
 	}
 
@@ -329,27 +327,21 @@ void Desktop::read_config(void) {
 	char wpath[256];
 
 	conf.get("Desktop", "Color", dsett->color, default_bg_color);
+	conf.get("Desktop", "WallpaperUse", dsett->wp_use, default_wp_use);
+	conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
 
-	if(conf.error() != edelib::CONF_ERR_SECTION) {
-		conf.get("Desktop", "WallpaperUse", dsett->wp_use, default_wp_use);
-		conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
-
-		// keep path but disable wallpaper if file does not exists
-		if(!edelib::file_exists(wpath)) {
-			EDEBUG(ESTRLOC ": %s as wallpaper does not exists\n", wpath);
-			dsett->wp_use = false;
-		}
-	} else {
-		// color is already filled
-		dsett->wp_use = default_wp_use;
+	// keep path but disable wallpaper if file does not exists
+	if(!edelib::file_exists(wpath)) {
+		E_DEBUG(E_STRLOC ": %s as wallpaper does not exists\n", wpath);
+		dsett->wp_use = false;
 	}
 
-	conf.get("Icons", "Label Background", gisett.label_background, FL_BLUE);
-	conf.get("Icons", "Label Foreground", gisett.label_foreground, FL_WHITE);
-	conf.get("Icons", "Label Fontsize",   gisett.label_fontsize, 12);
-	conf.get("Icons", "Label Maxwidth",   gisett.label_maxwidth, 75);
-	conf.get("Icons", "Label Transparent",gisett.label_transparent, false);
-	conf.get("Icons", "Label Visible",    gisett.label_draw, true);
+	conf.get("Icons", "LabelBackground", gisett.label_background, FL_BLUE);
+	conf.get("Icons", "LabelForeground", gisett.label_foreground, FL_WHITE);
+	conf.get("Icons", "LabelFontsize",   gisett.label_fontsize, 12);
+	conf.get("Icons", "LabelMaxwidth",   gisett.label_maxwidth, 75);
+	conf.get("Icons", "LabelTransparent",gisett.label_transparent, false);
+	conf.get("Icons", "LabelVisible",    gisett.label_draw, true);
 	conf.get("Icons", "OneClickExec",     gisett.one_click_exec, false);
 	conf.get("Icons", "AutoArrange",      gisett.auto_arrange, true);
 
@@ -358,11 +350,11 @@ void Desktop::read_config(void) {
 }
 
 void Desktop::load_icons(const char* path) {
-	EASSERT(path != NULL);
-	edelib::Config conf, *conf_ptr = NULL;
+	E_ASSERT(path != NULL);
+	edelib::Resource conf, *conf_ptr = NULL;
 
 	if(!conf.load(ICONS_CONFIG_NAME))
-		EWARNING(ESTRLOC ": Can't load icons positions from %s, randomizing them...\n", ICONS_CONFIG_NAME);
+		E_WARNING(E_STRLOC ": Can't load icons positions from %s, randomizing them...\n", ICONS_CONFIG_NAME);
 	else 
 		conf_ptr = &conf;
 
@@ -370,7 +362,7 @@ void Desktop::load_icons(const char* path) {
 
 	// list with full path; icon basename is extracted in add_icon_pathed()
 	if(!dir_list(path, lst, true)) {
-		EDEBUG(ESTRLOC ": Can't read %s\n", path);
+		E_DEBUG(E_STRLOC ": Can't read %s\n", path);
 		return;
 	}
 
@@ -379,8 +371,8 @@ void Desktop::load_icons(const char* path) {
 		add_icon_pathed((*it).c_str(), conf_ptr);
 }
 
-bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
-	EASSERT(path != NULL);
+bool Desktop::add_icon_pathed(const char* path, edelib::Resource* conf) {
+	E_ASSERT(path != NULL);
 
 	IconSettings is;
 	bool can_add = false;
@@ -401,7 +393,7 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
 
 		// then try to figure out it's mime; if fails, ignore it
 		if(mt.set(path)) {
-			EDEBUG(ESTRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
+			E_DEBUG(E_STRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
 			is.icon = mt.icon_name();
 			// icon label path's basename
 			is.name = base;
@@ -409,7 +401,7 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
 
 			can_add = true;
 		} else {
-			EDEBUG(ESTRLOC ": Failed mime-type for %s, ignoring...\n", path);
+			E_DEBUG(E_STRLOC ": Failed mime-type for %s, ignoring...\n", path);
 			can_add = false;
 		}
 	}
@@ -426,11 +418,12 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
 		int icon_y = random_pos(w() - 10);
 
 		if(conf) {
-			conf->get(base, "X", icon_x, icon_x);
-			conf->get(base, "Y", icon_y, icon_y);
+			// we load positions from used eiconman-icos.conf only
+			conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
+			conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
 		}
 
-		EDEBUG(ESTRLOC ": %s found with: %i %i\n", base, icon_x, icon_y);
+		E_DEBUG(E_STRLOC ": %s found with: %i %i\n", base, icon_x, icon_y);
 		is.x = icon_x;
 		is.y = icon_y;
 		is.full_path = path;
@@ -443,7 +436,7 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Config* conf) {
 }
 
 void Desktop::save_icons(void) {
-	edelib::Config conf;
+	edelib::Resource conf;
 	char* icon_base;
 	DesktopIconListIter it = icons.begin(), it_end = icons.end();
 
@@ -457,11 +450,11 @@ void Desktop::save_icons(void) {
 	}
 
 	if(!conf.save(ICONS_CONFIG_NAME))
-		EWARNING(ESTRLOC ": Unable to store icons positions\n");
+		E_WARNING(E_STRLOC ": Unable to store icons positions\n");
 }
 
 DesktopIcon* Desktop::find_icon_pathed(const char* path) {
-	EASSERT(path != NULL);
+	E_ASSERT(path != NULL);
 
 	if(icons.empty())
 		return NULL;
@@ -476,7 +469,7 @@ DesktopIcon* Desktop::find_icon_pathed(const char* path) {
 }
 
 bool Desktop::remove_icon_pathed(const char* path) {
-	EASSERT(path != NULL);
+	E_ASSERT(path != NULL);
 
 	if(icons.empty())
 		return false;
@@ -504,16 +497,16 @@ bool Desktop::remove_icon_pathed(const char* path) {
 
 // read .desktop files
 bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
-	EASSERT(path != NULL);
+	E_ASSERT(path != NULL);
 
 	if(!edelib::file_exists(path)) {
-		EDEBUG(ESTRLOC ": %s don't exists\n");
+		E_DEBUG(E_STRLOC ": %s don't exists\n");
 		return false;
 	}
 
 	edelib::DesktopFile dconf;
 	if(!dconf.load(path)) {
-		EWARNING(ESTRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
+		E_WARNING(E_STRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
 		return false;
 	}
 
@@ -532,7 +525,7 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 		is.type = ICON_NORMAL;
 	
 	if(!dconf.icon(buff, buffsz)) {
-		EWARNING(ESTRLOC ": No Icon key, balling out\n");
+		E_WARNING(E_STRLOC ": No Icon key, balling out\n");
 		return false;
 	}
 
@@ -554,7 +547,7 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	is.cmd = buff;
 
 	if(!dconf.name(buff, buffsz)) {
-		EDEBUG(ESTRLOC ": No Name key\n");
+		E_DEBUG(E_STRLOC ": No Name key\n");
 		is.name = "(none)";
 	} else
 		is.name = buff;
@@ -563,7 +556,7 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 }
 
 void Desktop::add_icon(DesktopIcon* ic) {
-	EASSERT(ic != NULL);
+	E_ASSERT(ic != NULL);
 
 	icons.push_back(ic);
 	add((Fl_Widget*)ic);
@@ -584,7 +577,7 @@ void Desktop::unfocus_all(void) {
 }
 
 void Desktop::select(DesktopIcon* ic, bool do_redraw) { 
-	EASSERT(ic != NULL);
+	E_ASSERT(ic != NULL);
 
 	if(in_selection(ic))
 		return;
@@ -600,7 +593,7 @@ void Desktop::select(DesktopIcon* ic, bool do_redraw) {
 }
 
 void Desktop::select_only(DesktopIcon* ic) { 
-	EASSERT(ic != NULL);
+	E_ASSERT(ic != NULL);
 
 	unfocus_all();
 	selectionbuff.clear();
@@ -611,7 +604,7 @@ void Desktop::select_only(DesktopIcon* ic) {
 }
 
 bool Desktop::in_selection(const DesktopIcon* ic) { 
-	EASSERT(ic != NULL);
+	E_ASSERT(ic != NULL);
 
 	if(selectionbuff.empty())
 		return false;
@@ -712,7 +705,7 @@ void Desktop::select_in_area(void) {
 
 	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
 		ic = (*it);
-		EASSERT(ic != NULL && "Impossible to happen");
+		E_ASSERT(ic != NULL && "Impossible to happen");
 
 		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
 			if(!ic->is_focused()) {
@@ -783,7 +776,7 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 		return;
 	}
 
-	EDEBUG(ESTRLOC ": DND on Desktop, got: %s\n", src_copy);
+	E_DEBUG(E_STRLOC ": DND on Desktop, got: %s\n", src_copy);
 
 	// valid url's (if got) ends with \r\n, clean that
 	char* pp = strstr(src_copy, "\r\n");
@@ -848,7 +841,7 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 
 		edelib::MimeType mt;
 		if(!mt.set(sptr)) {
-			EWARNING(ESTRLOC ": MimeType for %s (%s) failed, not dropping icon\n", sptr, src_copy);
+			E_WARNING(E_STRLOC ": MimeType for %s (%s) failed, not dropping icon\n", sptr, src_copy);
 			delete [] src_copy;
 			return;
 		}
@@ -878,7 +871,7 @@ void Desktop::draw(void) {
 		clear_xoverlay();
 
 		DESKTOP_WINDOW::draw();
-		EDEBUG(ESTRLOC ": REDRAW ALL\n");
+		E_DEBUG(E_STRLOC ": REDRAW ALL\n");
 	}
 
 	if(damage() & EDAMAGE_OVERLAY) {
@@ -895,7 +888,7 @@ void Desktop::draw(void) {
 			if(child(i)->damage() == EDAMAGE_CHILD_LABEL) {
 				update_child(*child(i));
 				child(i)->clear_damage();
-				EDEBUG(ESTRLOC ": ICON REDRAW \n");
+				E_DEBUG(E_STRLOC ": ICON REDRAW \n");
 			}
 		}
 	}
@@ -920,7 +913,7 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 			}
 		}
 
-		EDEBUG(ESTRLOC ": event on trash dir %s\n", dir);
+		E_DEBUG(E_STRLOC ": event on trash dir %s\n", dir);
 
 		return;
 	}
@@ -939,10 +932,10 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	sleep(1);
 
 	if(flags == edelib::DW_REPORT_CREATE) {
-		EDEBUG(ESTRLOC ": adding %s\n", changed);
+		E_DEBUG(E_STRLOC ": adding %s\n", changed);
 
 		if(find_icon_pathed(changed)) {
-			EDEBUG(ESTRLOC ": %s already registered; skipping...\n", changed);
+			E_DEBUG(E_STRLOC ": %s already registered; skipping...\n", changed);
 			return;
 		}
 
@@ -959,17 +952,17 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 			redraw();
 
 	} else if(flags == edelib::DW_REPORT_MODIFY) {
-		EDEBUG(ESTRLOC ": modified %s\n", changed);
+		E_DEBUG(E_STRLOC ": modified %s\n", changed);
 	} else if(flags == edelib::DW_REPORT_DELETE) {
-		EDEBUG(ESTRLOC ": deleted %s\n", changed);
+		E_DEBUG(E_STRLOC ": deleted %s\n", changed);
 		if(remove_icon_pathed(changed))
 			redraw();
 	} else
-		EDEBUG(ESTRLOC ": %s changed with %i\n", changed, flags);
+		E_DEBUG(E_STRLOC ": %s changed with %i\n", changed, flags);
 }
 
 void Desktop::execute(const char* cmd) {
-	EASSERT(cmd != NULL);
+	E_ASSERT(cmd != NULL);
 	edelib::run_program(cmd, false);
 }
 
@@ -989,7 +982,7 @@ int Desktop::handle(int event) {
 			Fl_Widget* clicked = Fl::belowmouse();
 			
 			if(NOT_SELECTABLE(clicked)) {
-				EDEBUG(ESTRLOC ": DESKTOP CLICK !!!\n");
+				E_DEBUG(E_STRLOC ": DESKTOP CLICK !!!\n");
 				if(!selectionbuff.empty()) {
 					/*
 					 * Only focused are in selectionbuff, so this is 
@@ -1048,7 +1041,7 @@ int Desktop::handle(int event) {
 			if(!moving)
 				tmp_icon->handle(FL_PUSH);
 
-			EDEBUG(ESTRLOC ": FL_PUSH from desktop\n");
+			E_DEBUG(E_STRLOC ": FL_PUSH from desktop\n");
 			selection_x = Fl::event_x_root();
 			selection_y = Fl::event_y_root();
 	
@@ -1058,10 +1051,10 @@ int Desktop::handle(int event) {
 		case FL_DRAG:
 			moving = true;
 			if(!selectionbuff.empty()) {
-				EDEBUG(ESTRLOC ": DRAG icon from desktop\n");
+				E_DEBUG(E_STRLOC ": DRAG icon from desktop\n");
 				move_selection(Fl::event_x_root(), Fl::event_y_root(), false);
 			} else {
-				EDEBUG(ESTRLOC ": DRAG from desktop\n");
+				E_DEBUG(E_STRLOC ": DRAG from desktop\n");
 				/*
 				 * Moving is started with pushed button.
 				 * From this point selection box is created and is rolled until release
@@ -1083,8 +1076,8 @@ int Desktop::handle(int event) {
 			return 1;
 
 		case FL_RELEASE:
-			EDEBUG(ESTRLOC ": RELEASE from desktop\n");
-			EDEBUG(ESTRLOC ": clicks: %i\n", Fl::event_is_click());
+			E_DEBUG(E_STRLOC ": RELEASE from desktop\n");
+			E_DEBUG(E_STRLOC ": clicks: %i\n", Fl::event_is_click());
 
 			if(selbox->show) {
 				selbox->x = selbox->y = selbox->w = selbox->h = 0;

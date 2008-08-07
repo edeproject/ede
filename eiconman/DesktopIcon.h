@@ -13,8 +13,6 @@
 #ifndef __DESKTOPICON_H__
 #define __DESKTOPICON_H__
 
-#include <edelib/String.h>
-
 #include <FL/Fl_Widget.h>
 #include <FL/Fl_Window.h>
 #include <FL/Fl_Box.h>
@@ -22,6 +20,8 @@
 #include <FL/Fl_Image.h>
 
 #include <X11/Xlib.h> // Pixmap
+
+#include <edelib/String.h>
 
 class GlobalIconSettings;
 class IconSettings;

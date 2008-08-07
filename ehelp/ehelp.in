@@ -1,0 +1,79 @@
+#!/bin/sh
+
+#help_dir="/home/sanel/programs/EDE/ede2/docs/manual"
+help_dir="@docdir@/ede/manual"
+browser_list="firefox mozilla konqueror opera navigator dillo"
+
+url=""
+
+if [ "$1" = "--help" ]; then
+	echo "Usage: ehelp [OPTIONS] [TITLE]"
+	echo "Display EDE Manual in the web browser"
+	echo "Options:"
+	echo "   --help         Show this help"
+	echo "   --titles       Show known titles"
+	echo ""
+	echo "Example:"
+	echo " ehelp evoke - display evoke help"
+	exit 1
+fi
+
+if [ "$1" = "--titles" ]; then
+	echo "Known titles:"
+
+	content=`ls $help_dir/ | sort`
+	for c in $content; do
+		echo " " $c | sed 's/\.html//g'
+	done
+	exit 0
+fi
+
+if [ -z "$1" ]; then
+	url="$help_dir/index.html"
+else
+	url="$help_dir/$1.html"
+	if [ ! -f "$url" ]; then
+		echo "Unable to find $1. Going to start page..."
+		url="$help_dir/index.html"
+	fi
+fi
+
+# let browser knows it is file
+url="file://$url"
+
+# try to find browser
+if [ -z "$BROWSER" ]; then
+	for i in $browser_list; do
+		if which $i > /dev/null 2>&1; then
+			BROWSER="$i"
+			break;
+		fi
+	done
+fi
+
+if [ -z $BROWSER ]; then
+	xmessage -title "Error" -center -file - <<EOF
+Failed to find any of known browsers ($browser_list).
+
+If you thing that I made mistake, please try to set
+BROWSER environment variable with full path pointing 
+to the browser binary
+EOF
+	exit 1
+fi
+
+# run browser
+$BROWSER $url
+
+if [ $? -ne 0 ]; then
+	xmessage -title "Error" -center -file - <<EOF
+Unable to run '$BROWSER'.
+
+Please check if program path is correct or 
+adjust BROWSER environment variable pointing
+to the correct binary
+EOF
+	exit 1
+fi
+
+exit 0

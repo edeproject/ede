@@ -24,6 +24,7 @@
 *Programs*
 
 - link:ecalc.html[Ecalc]
+- link:ehelp.html[Ehelp]
 - link:etip.html[Etip]
 - link:evoke.html[Evoke]
 - link:emountd.html[Emountd]

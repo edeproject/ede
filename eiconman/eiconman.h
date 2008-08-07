@@ -23,7 +23,7 @@
 #include <FL/Fl_Image.h>
 
 #include <edelib/String.h>
-#include <edelib/Config.h>
+#include <edelib/Resource.h>
 #include <edelib/List.h>
 #include <edelib/EdbusConnection.h>
 
@@ -126,7 +126,7 @@ class Desktop : public DESKTOP_WINDOW {
 		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);
-		bool add_icon_pathed(const char* path, edelib::Config* conf);
+		bool add_icon_pathed(const char* path, edelib::Resource* conf);
 		DesktopIcon* find_icon_pathed(const char* path);
 		bool remove_icon_pathed(const char* path);
 		bool update_icon_pathed(const char* path);

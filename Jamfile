@@ -22,6 +22,7 @@ SubInclude TOP ecrasher ;
 SubInclude TOP edesktopconf ;
 #SubInclude TOP edewm ;
 SubInclude TOP efiler ;
+SubInclude TOP ehelp ;
 SubInclude TOP eiconman ;
 SubInclude TOP eimage ;
 SubInclude TOP elma ;
