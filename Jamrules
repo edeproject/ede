@@ -29,14 +29,17 @@ EDEDESKTOPDIR ?= "$(PREFIX)/data/desktop" ;
 GLOBALFLAGS  ?= -Wall -pedantic -g3 -D_DEBUG -I$(TOP) ;
 STDLIB       ?= -lstdc++ ;
 
+# some options
+REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
+
 # edelib libraries path
 EDELIBINCLUDE ?= -I/opt/ede/include ;
 EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
 
 # fltk libraries path
 FLTKINCLUDE      ?= -I/usr/local/include ;
-FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lX11 -lXpm ;
-FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lX11 ;
+FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lXft -lX11 -lXpm ;
+FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lXft -lX11 ;
 
 # backward; efltk libraries path
 EFLTKINCLUDE       ?= -I/usr/local/include ;
