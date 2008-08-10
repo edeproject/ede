@@ -10,4 +10,5 @@
  
 SubDir TOP ehelp ;
 
+InstallEdeProgram ehelp ;
 EdeManual ehelp.txt ;

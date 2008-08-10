@@ -1,29 +1,32 @@
 #!/bin/sh
 
-#help_dir="/home/sanel/programs/EDE/ede2/docs/manual"
 help_dir="@docdir@/ede/manual"
 browser_list="firefox mozilla konqueror opera navigator dillo"
 
+program="ehelp"
 url=""
 
 if [ "$1" = "--help" ]; then
-	echo "Usage: ehelp [OPTIONS] [TITLE]"
-	echo "Display EDE Manual in the web browser"
-	echo "Options:"
-	echo "   --help         Show this help"
-	echo "   --titles       Show known titles"
-	echo ""
-	echo "Example:"
-	echo " ehelp evoke - display evoke help"
+	cat <<EOF
+Usage: $program [OPTIONS] [TITLE]
+Display EDE Manual in the web browser
+Options:
+   --help         Show this help
+   --titles       Show known titles
+
+Example:
+   $program evoke - display evoke help
+EOF
 	exit 1
 fi
 
 if [ "$1" = "--titles" ]; then
 	echo "Known titles:"
 
-	content=`ls $help_dir/ | sort`
+	content=`ls $help_dir/ | sort -f`
 	for c in $content; do
-		echo " " $c | sed 's/\.html//g'
+		# show only files (readable), stripping extension
+		[ -r "$help_dir/$c" ] && echo " " $c | sed 's/\.html//g'
 	done
 	exit 0
 fi
@@ -32,13 +35,13 @@ if [ -z "$1" ]; then
 	url="$help_dir/index.html"
 else
 	url="$help_dir/$1.html"
-	if [ ! -f "$url" ]; then
-		echo "Unable to find $1. Going to start page..."
+	if [ ! -r "$url" ]; then
+		echo "Unable to open $1. Going to start page..."
 		url="$help_dir/index.html"
 	fi
 fi
 
-# let browser knows it is file
+# let browser knows it is a file
 url="file://$url"
 
 # try to find browser
@@ -52,8 +55,8 @@ if [ -z "$BROWSER" ]; then
 fi
 
 if [ -z $BROWSER ]; then
-	xmessage -title "Error" -center -file - <<EOF
-Failed to find any of known browsers ($browser_list).
+	xmessage -title "$program error" -center -buttons "Close" -file - <<EOF
+Failed to find any of known browsers!
 
 If you thing that I made mistake, please try to set
 BROWSER environment variable with full path pointing 
@@ -66,8 +69,8 @@ fi
 $BROWSER $url
 
 if [ $? -ne 0 ]; then
-	xmessage -title "Error" -center -file - <<EOF
-Unable to run '$BROWSER'.
+	xmessage -title "$program error" -center -buttons "Close" -file - <<EOF
+Unable to run '$BROWSER'!
 
 Please check if program path is correct or 
 adjust BROWSER environment variable pointing
