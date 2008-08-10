@@ -14,16 +14,17 @@
 #include <config.h>
 #endif
 
+#include <unistd.h>
+#include <string.h>
+
 #include <edelib/Nls.h>
 #include <edelib/Color.h>
 #include <edelib/Window.h>
-#include <edelib/Config.h>
+#include <edelib/Resource.h>
 #include <edelib/Debug.h>
 #include <edelib/Util.h>
 #include <edelib/FontChooser.h>
 #include <edelib/Directory.h>
-
-#include <string.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Tabs.H>
@@ -42,7 +43,8 @@
 #include <FL/x.h>
 
 #define EICOMAN_UID    0x10
-#define EICOMAN_CONFIG "../eiconman/eiconman.conf"
+//#define EICOMAN_CONFIG "../eiconman/eiconman.conf"
+#define EICOMAN_CONFIG "ede/eiconman"
 
 Fl_Menu_Item mode_menu[] = {
 	{_("Center"), 0, 0},
@@ -199,7 +201,7 @@ void close_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
-void color_cb(Fl_Button* btn, void*) {
+void color_cb(Fl_Widget* btn, void*) {
 	unsigned char r, g, b;
 
 	edelib::color_fltk_to_rgb(btn->color(), r, g, b);
@@ -218,6 +220,7 @@ void wallpaper_color_cb(Fl_Widget*, void* w) {
 	if(fl_color_chooser(_("Choose color"), r, g, b)) {
 		Fl_Color c = (Fl_Color)edelib::color_rgb_to_fltk(r, g, b);
 		desk_background_color->color(c);
+		desk_background_color->redraw();
 		wallpaper->color(c);
 		wallpaper_img->redraw();
 		wallpaper->redraw();
@@ -225,7 +228,7 @@ void wallpaper_color_cb(Fl_Widget*, void* w) {
 }
 
 void browse_cb(Fl_Widget*, void*) {
-	char* ret = fl_file_chooser(_("Background image"), "*.jpg\t*.png", NULL);
+	char* ret = fl_file_chooser(_("Background image"), "*.jpg\t*.png", desk_background->value());
 	if(!ret)
 		return;
 
@@ -249,7 +252,7 @@ void choice_cb(Fl_Widget*, void*) {
 }
 
 void apply_cb(Fl_Widget*, void* w) {
-	edelib::Config conf;
+	edelib::Resource conf;
 	conf.set("Desktop", "Color", (int)desk_background_color->color());
 	conf.set("Desktop", "WallpaperUse", desk_use_wallpaper->value());
 	conf.set("Desktop", "WallpaperMode", desk_background_mode->value());
@@ -257,13 +260,13 @@ void apply_cb(Fl_Widget*, void* w) {
 	if(desk_background->value())
 		conf.set("Desktop", "Wallpaper", desk_background->value());
 
-	conf.set("Icons", "Label Background", (int)icon_background_color->color());
-	conf.set("Icons", "Label Foreground", (int)icon_label_color->color());
-	conf.set("Icons", "Label Font",       icon_font);
-	conf.set("Icons", "Label Fontsize",   icon_font_size);
-	conf.set("Icons", "Label Maxwidth",   icon_label_width->value());
-	conf.set("Icons", "Label Transparent", icon_show_background_color->value());
-	conf.set("Icons", "Label Visible", icon_show_label->value());
+	conf.set("Icons", "LabelBackground", (int)icon_background_color->color());
+	conf.set("Icons", "LabelForeground", (int)icon_label_color->color());
+	conf.set("Icons", "LabelFont",       icon_font);
+	conf.set("Icons", "LabelFontsize",   icon_font_size);
+	conf.set("Icons", "LabelMaxwidth",   icon_label_width->value());
+	conf.set("Icons", "LabelTransparent", icon_show_background_color->value());
+	conf.set("Icons", "LabelVisible", icon_show_label->value());
 	conf.set("Icons", "OneClickExec", engage_with_one_click->value());
 
 	if(conf.save(EICOMAN_CONFIG))
@@ -273,6 +276,8 @@ void apply_cb(Fl_Widget*, void* w) {
 void ok_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	apply_cb(0, win);
+	/* a hack so edesktopconf can send a message before it was closed */
+	sleep(1); 
 	win->hide();
 }
 
@@ -302,7 +307,7 @@ void load_settings(void) {
 	int i_label_width = 55;
 	bool one_click = false;
 
-	edelib::Config conf;
+	edelib::Resource conf;
 	char wpath[256];
 	bool wpath_found = false;
 
@@ -316,16 +321,15 @@ void load_settings(void) {
 		else
 			wpath_found = false;
 
-		conf.get("Icons", "Label Background", i_background_color, i_background_color);
-		conf.get("Icons", "Label Foreground", i_label_color, i_label_color);
-		conf.get("Icons", "Label Font", icon_font, 1);
-		conf.get("Icons", "Label Fontsize",   icon_font_size, 12);
-		conf.get("Icons", "Label Maxwidth",   i_label_width, i_label_width);
-		conf.get("Icons", "Label Transparent",i_show_background_color, i_show_background_color);
-		conf.get("Icons", "Label Visible",    i_show_label, i_show_label);
+		conf.get("Icons", "LabelBackground", i_background_color, i_background_color);
+		conf.get("Icons", "LabelForeground", i_label_color, i_label_color);
+		conf.get("Icons", "LabelFont", icon_font, 1);
+		conf.get("Icons", "LabelFontsize",   icon_font_size, 12);
+		conf.get("Icons", "LabelMaxwidth",   i_label_width, i_label_width);
+		conf.get("Icons", "LabelTransparent",i_show_background_color, i_show_background_color);
+		conf.get("Icons", "LabelVisible",    i_show_label, i_show_label);
 		conf.get("Icons", "OneClickExec",     one_click, one_click);
 	}
-
 
 	desk_background_color->color(d_background_color);
 	wallpaper->color(d_background_color);
@@ -350,9 +354,6 @@ void load_settings(void) {
 }
 
 int main(int argc, char** argv) {
-	Fl::set_fonts("iso8859-2");
-	Fl::set_font(FL_HELVETICA, "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-2");
-
 	int show_group = 1;
 	if(argc > 1) {
 		if(strcmp(argv[1], "--desktop") == 0)
@@ -461,12 +462,10 @@ int main(int argc, char** argv) {
 			g3->end();
 		tabs->end();
 
-		Fl_Button* ok = new Fl_Button(260, 250, 90, 25, _("&OK"));
+		/* Fl_Button* ok = new Fl_Button(260, 250, 90, 25, _("&OK"));
+		ok->callback(ok_cb, win); */
+		Fl_Button* ok = new Fl_Button(355, 250, 90, 25, _("&OK"));
 		ok->callback(ok_cb, win);
-		//ok->labelfont((Fl_Font)18);
-		//ok->labelsize(14);
-		Fl_Button* apply = new Fl_Button(355, 250, 90, 25, _("&Apply"));
-		apply->callback(apply_cb, win);
 		Fl_Button* cancel = new Fl_Button(450, 250, 90, 25, _("&Cancel"));
 		cancel->callback(close_cb, win);
 	win->end();
