@@ -30,8 +30,9 @@
 #include "eiconman.h"
 #include "Utils.h"
 
-// minimal icon size
-#define ICONSIZE 48
+// minimal icon sizes
+#define ICON_SIZE_MIN_W 48
+#define ICON_SIZE_MIN_H 48
 
 // spaces around box in case of large/small icons
 #define OFFSET_W 16
@@ -44,7 +45,7 @@
 static void rename_cb(Fl_Widget*, void* d);
 static void props_cb(Fl_Widget*, void* d);
 
-Fl_Menu_Item icon_menu[] = {
+static Fl_Menu_Item icon_menu[] = {
 	{_("    &Open    "),   0, 0},
 	{_("    &Rename    "), 0, rename_cb, 0},
 	{_("    &Delete    "), 0, 0, 0, FL_MENU_DIVIDER},
@@ -52,7 +53,7 @@ Fl_Menu_Item icon_menu[] = {
 	{0}
 };
 
-Fl_Menu_Item icon_trash_menu[] = {
+static Fl_Menu_Item icon_trash_menu[] = {
 	{_("    &Open    "),       0, 0},
 	{_("    &Properties    "), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("    &Empty    "),      0, 0},
@@ -78,7 +79,7 @@ static void props_cb(Fl_Widget*, void* d) {
 }
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
-	Fl_Widget(is->x, is->y, ICONSIZE, ICONSIZE) {
+	Fl_Widget(is->x, is->y, ICON_SIZE_MIN_W, ICON_SIZE_MIN_H) {
 
 	E_ASSERT(gs != NULL);
 
@@ -133,7 +134,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 				int img_h = img->h();
 
 				// resize box if icon is larger
-				if(img_w > ICONSIZE || img_h > ICONSIZE)
+				if(img_w > ICON_SIZE_MIN_W || img_h > ICON_SIZE_MIN_H)
 					size(img_w + OFFSET_W, img_h + OFFSET_H);
 
 				image(img);
@@ -180,9 +181,9 @@ void DesktopIcon::load_icon(int face) {
 
 	edelib::String ipath = edelib::IconTheme::get(ic, edelib::ICON_SIZE_HUGE);
 	if(ipath.empty()) {
-
 		ipath = edelib::IconTheme::get("empty", edelib::ICON_SIZE_HUGE);
 		E_DEBUG(E_STRLOC ": Didn't find '%s' icon, ", ic);
+
 		if(!ipath.empty()) {
 			E_DEBUG("loaded 'empty' instead\n");
 		} else {
@@ -201,7 +202,7 @@ void DesktopIcon::load_icon(int face) {
 	int img_h = img->h();
 
 	// resize box if icon is larger
-	if(img_w > ICONSIZE || img_h > ICONSIZE)
+	if(img_w > ICON_SIZE_MIN_W || img_h > ICON_SIZE_MIN_H)
 		size(img_w + OFFSET_W, img_h + OFFSET_H);
 
 	image(img);

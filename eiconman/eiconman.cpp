@@ -170,7 +170,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 Desktop::~Desktop() { 
 	E_DEBUG("Desktop::~Desktop()\n");
 
-	save_icons();
+	save_icons_positions();
 
 	delete dsett;
 	delete selbox;
@@ -360,7 +360,7 @@ void Desktop::load_icons(const char* path) {
 
 	StringList lst;
 
-	// list with full path; icon basename is extracted in add_icon_pathed()
+	// list with full path; icon basename is extracted in add_icon_by_path()
 	if(!dir_list(path, lst, true)) {
 		E_DEBUG(E_STRLOC ": Can't read %s\n", path);
 		return;
@@ -368,10 +368,10 @@ void Desktop::load_icons(const char* path) {
 
 	StringListIter it, it_end;
 	for(it = lst.begin(), it_end = lst.end(); it != it_end; ++it)
-		add_icon_pathed((*it).c_str(), conf_ptr);
+		add_icon_by_path((*it).c_str(), conf_ptr);
 }
 
-bool Desktop::add_icon_pathed(const char* path, edelib::Resource* conf) {
+bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	E_ASSERT(path != NULL);
 
 	IconSettings is;
@@ -435,7 +435,7 @@ bool Desktop::add_icon_pathed(const char* path, edelib::Resource* conf) {
 	return can_add;
 }
 
-void Desktop::save_icons(void) {
+void Desktop::save_icons_positions(void) {
 	edelib::Resource conf;
 	char* icon_base;
 	DesktopIconListIter it = icons.begin(), it_end = icons.end();
@@ -453,7 +453,7 @@ void Desktop::save_icons(void) {
 		E_WARNING(E_STRLOC ": Unable to store icons positions\n");
 }
 
-DesktopIcon* Desktop::find_icon_pathed(const char* path) {
+DesktopIcon* Desktop::find_icon_by_path(const char* path) {
 	E_ASSERT(path != NULL);
 
 	if(icons.empty())
@@ -468,7 +468,7 @@ DesktopIcon* Desktop::find_icon_pathed(const char* path) {
 	return NULL;
 }
 
-bool Desktop::remove_icon_pathed(const char* path) {
+bool Desktop::remove_icon_by_path(const char* path) {
 	E_ASSERT(path != NULL);
 
 	if(icons.empty())
@@ -752,7 +752,7 @@ void Desktop::notify_desktop_changed(void) {
 	XFreeStringList(names);
 }
 
-void Desktop::drop_source(const char* src, int src_len, int x, int y) {
+void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	if(!src)
 		return;
 
@@ -762,7 +762,7 @@ void Desktop::drop_source(const char* src, int src_len, int x, int y) {
 	char* src_copy = new char[src_len + 1];
 	int real_len = 0;
 
-	// mozilla sends UTF-16 form; for now use this hack untill Utf8.cpp code is ready
+	// mozilla sends UTF-16 form; for now use this hack untill some utf8 code is ready
 	for(int i = 0, j = 0; i < src_len; i++) {
 		if(src[i] != 0) {
 			src_copy[j++] = src[i];
@@ -901,12 +901,12 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 		return;
 
 	if(trash_path == dir) {
-		bool trash_dir_empty = edelib::dir_empty(trash_path.c_str());
+		bool is_empty = edelib::dir_empty(trash_path.c_str());
 
 		DesktopIconListIter it, it_end;
 		for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
 			if((*it)->icon_type() == ICON_TRASH) {
-				if(trash_dir_empty)
+				if(is_empty)
 					(*it)->icon1();
 				else
 					(*it)->icon2();
@@ -934,7 +934,7 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	if(flags == edelib::DW_REPORT_CREATE) {
 		E_DEBUG(E_STRLOC ": adding %s\n", changed);
 
-		if(find_icon_pathed(changed)) {
+		if(find_icon_by_path(changed)) {
 			E_DEBUG(E_STRLOC ": %s already registered; skipping...\n", changed);
 			return;
 		}
@@ -948,14 +948,14 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 		 */
 		//sleep(1);
 
-		if(add_icon_pathed(changed, 0))
+		if(add_icon_by_path(changed, 0))
 			redraw();
 
 	} else if(flags == edelib::DW_REPORT_MODIFY) {
 		E_DEBUG(E_STRLOC ": modified %s\n", changed);
 	} else if(flags == edelib::DW_REPORT_DELETE) {
 		E_DEBUG(E_STRLOC ": deleted %s\n", changed);
-		if(remove_icon_pathed(changed))
+		if(remove_icon_by_path(changed))
 			redraw();
 	} else
 		E_DEBUG(E_STRLOC ": %s changed with %i\n", changed, flags);
@@ -1135,7 +1135,7 @@ int Desktop::handle(int event) {
 			if(di)
 				return di->handle(event);
 
-			drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x(), Fl::event_y());
+			dnd_drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x(), Fl::event_y());
 			return 1;
 		}
 

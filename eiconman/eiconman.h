@@ -83,7 +83,6 @@ struct SelectionOverlay {
 
 class Wallpaper;
 class DesktopIcon;
-
 class Fl_Menu_Button;
 
 typedef edelib::list<DesktopIcon*> DesktopIconList;
@@ -122,14 +121,14 @@ class Desktop : public DESKTOP_WINDOW {
 		void init_internals(void);
 
 		void load_icons(const char* path);
-		void save_icons(void);
+		void save_icons_positions(void);
 		bool read_desktop_file(const char* path, IconSettings& is);
 
 		void add_icon(DesktopIcon* ic);
-		bool add_icon_pathed(const char* path, edelib::Resource* conf);
-		DesktopIcon* find_icon_pathed(const char* path);
-		bool remove_icon_pathed(const char* path);
-		bool update_icon_pathed(const char* path);
+		bool add_icon_by_path(const char* path, edelib::Resource* conf);
+		DesktopIcon* find_icon_by_path(const char* path);
+		bool remove_icon_by_path(const char* path);
+		bool update_icon_by_path(const char* path);
 
 		void unfocus_all(void);
 
@@ -140,7 +139,7 @@ class Desktop : public DESKTOP_WINDOW {
 
 		void select_in_area(void);
 
-		void drop_source(const char* src, int src_len, int x, int y);
+		void dnd_drop_source(const char* src, int src_len, int x, int y);
 
 		DesktopIcon* below_mouse(int px, int py);
 

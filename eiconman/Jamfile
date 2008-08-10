@@ -16,10 +16,9 @@ ObjectC++Flags eiconman.cpp : -DUSE_EDELIB_WINDOW ;
 SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
 
 ObjectC++Flags $(SOURCE) : -Wno-long-long -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include ;
-LinkAgainst eiconman : -L/opt/ede/lib -ledelib -ledelib_dbus -ldbus-1 ;
 
+LinkAgainst eiconman : -L/opt/ede/lib -ledelib -ledelib_dbus -ldbus-1 ;
 EdeProgram eiconman : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
 
-
-FltkProgramBare test/notify : test/notify.cpp : noinstall ;
+#FltkProgramBare test/notify : test/notify.cpp : noinstall ;

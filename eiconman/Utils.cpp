@@ -25,14 +25,14 @@ Atom _XA_NET_CURRENT_DESKTOP = 0;
 Atom _XA_NET_DESKTOP_NAMES = 0;
 Atom _XA_XROOTPMAP_ID = 0;
 
-int overlay_x = 0;
-int overlay_y = 0;
-int overlay_w = 0;
-int overlay_h = 0;
+static int overlay_x = 0;
+static int overlay_y = 0;
+static int overlay_w = 0;
+static int overlay_h = 0;
 
-Fl_Window* overlay_drawable = NULL;
+static Fl_Window* overlay_drawable = NULL;
 
-char dash_list[] = {1};
+static char dash_list[] = {1};
 
 void init_atoms(void) {
 	_XA_NET_WORKAREA               = XInternAtom(fl_display, "_NET_WORKAREA", False);
