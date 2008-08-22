@@ -9,9 +9,10 @@
 # See COPYING for details.
 
 
-#RMDIR_UNSFE ?= $(RM) -Rf ;
+#RMDIR_UNSAFE ?= $(RM) -Rf ;
 #RMDIR_SAFE  ?= "rmdir" ;
 #CP ?= "cp" ;
+#COPYDIR ?= "cp -R" ;
 #MV ?= "mv" ;
 #MKDIRS ?= "mkdir -p" ;
 #LINKCMD ?= "ln -s" ;
@@ -147,7 +148,7 @@ actions MkDir1
 }
 
 # Cleandir clean : [directory] ;
-# Removes directory in 'Clean clean' fassion
+# Removes directory in 'Clean clean' fashion
 actions piecemeal together existing Cleandir
 {
 	$(RMDIR_UNSAFE) "$(>)"
@@ -171,4 +172,9 @@ actions Copy
 actions Move
 {
 	$(MV) "$(>)" "$(<)"
+}
+
+actions CopyDir
+{
+	$(COPYDIR) "$(>)" "$(<)"
 }

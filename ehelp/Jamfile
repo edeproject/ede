@@ -10,5 +10,36 @@
  
 SubDir TOP ehelp ;
 
-InstallEdeProgram ehelp ;
+rule MakeScript
+{
+	# add grist to file names (not needed, but you never know...)
+	local source = [ FGristFiles $(>) ] ;
+
+	# let jam call from the top directory (jam ehelp) knows what to
+	# build and not be confused with the same name of directory
+	SEARCH on $(source) = $(SUBDIR) ;
+
+	LocalDepends $(<) : $(source) ;
+	LocalDepends all : $(<) ;
+	LocalClean clean : $(<) ;
+
+	# where generated target will be located
+	MakeLocate $(<) : $(LOCATE_TARGET) ;
+
+	MakeScript1 $(<) : $(source) ;
+
+	# let it be installed on 'jam install'
+	InstallEdeProgram $(<) ;
+
+	# make it executable
+	MODE on $(<) = $(EXEMODE) ;
+	Chmod $(<) ;
+}
+
+actions existing MakeScript1
+{
+	cat "$(>)" | $(SED) -e 's|@ededocdir@|$(EDEDOCDIR)|' > "$(<)"
+}
+
+MakeScript ehelp : ehelp.in ;
 EdeManual ehelp.txt ;

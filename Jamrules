@@ -9,14 +9,15 @@
 # See COPYING for details.
 
 # tools used by jam rules
-XGETTEXT    ?= xgettext ;
-MSGFMT      ?= msgfmt ;
-RMDIR_UNSFE ?= $(RM) -Rf ;
-RMDIR_SAFE  ?= rmdir ;
-CP          ?= cp ;
-MV          ?= mv ;
-MKDIRS      ?= "mkdir -p" ;
-LINKCMD     ?= "ln -s" ;
+XGETTEXT     ?= xgettext ;
+MSGFMT       ?= msgfmt ;
+RMDIR_UNSAFE ?= $(RM) -Rf ;
+RMDIR_SAFE   ?= rmdir ;
+CP           ?= cp ;
+COPYDIR      ?= "cp -R" ;
+MV           ?= mv ;
+MKDIRS       ?= "mkdir -p" ;
+LINKCMD      ?= "ln -s" ;
 
 # directories where data will be installed
 PREFIX        ?= "/opt/ede2" ;
@@ -24,6 +25,7 @@ EDEBINDIR     ?= "$(PREFIX)/bin" ;
 EDECONFIGDIR  ?= "$(PREFIX)/data/config" ;
 EDEICONDIR    ?= "$(PREFIX)/data/icons" ;
 EDEDESKTOPDIR ?= "$(PREFIX)/data/desktop" ;
+EDEDOCDIR     ?= "$(PREFIX)/share/doc/ede-2.0.0" ;
 
 # global flags used to be passed to every target
 GLOBALFLAGS  ?= -Wall -pedantic -g3 -D_DEBUG -I$(TOP) ;

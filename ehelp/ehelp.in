@@ -1,6 +1,6 @@
 #!/bin/sh
 
-help_dir="@docdir@/ede/manual"
+help_dir="@ededocdir@/manual"
 browser_list="firefox mozilla konqueror opera navigator dillo"
 
 program="ehelp"

@@ -8,9 +8,10 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-#EDEBINDIR = "/home/sanel/xxx/bin" ;
-#EDEICONDIR = "/home/sanel/xxx/icons" ;
-#EDEDESKTOPFILES = "/home/sanel/xxx/desktop" ;
+# jam by default set 711 for executable files which is
+# too restrictive disabling shell scripts to be excuted.
+# Here I'm changing it to default used
+EXEMODE = 755 ;
 
 # MakeInstallPrivate [location-dir] : [targets] : [opt-file-mode] : [opt-chown] : [opt-chgrp] ;
 rule MakeInstallPrivate

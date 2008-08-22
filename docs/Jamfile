@@ -12,3 +12,18 @@ SubDir TOP docs ;
 
 EdeManual index.txt introduction.txt jambuild.txt ;
 EdeManualWithToc dbus-usage.txt ;
+
+MANUAL_FILES       = [ Wildcard manual : *.html : manual ] ;
+MANUAL_IMGS        = [ FDirName $(SUBDIR) manual images ] ;
+
+# where will be installed
+MANUAL_INSTALL_DIR = [ FDirName $(EDEDOCDIR) manual ] ;
+
+# install generated documents
+InstallData $(MANUAL_INSTALL_DIR) : $(MANUAL_FILES) ;
+
+# copy directory with images
+# TODO: if someone erase images from installed directory, directory
+# will not be copied again until someone removes manual directory from installation path
+CopyDir $(MANUAL_INSTALL_DIR) : $(MANUAL_IMGS) ;
+Cleandir uninstall : $(MANUAL_INSTALL_DIR) ;

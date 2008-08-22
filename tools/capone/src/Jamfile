@@ -23,6 +23,6 @@ SCARAB_SRC = capone.cpp $(SCHEME_SRC) dbus.cpp re.cpp sys.cpp ;
 #ObjectCcFlags $(SCARAB_SRC) : -g3 -pg ;
 
 EdeProgram capone : $(SCARAB_SRC) ;
-LinkAgainst capone : -Lpcre -lpcre -ledelib_dbus -ldbus-1 -ledelib -lfltk -ldl ;
+LinkAgainst capone : -Lpcre -lpcre -ledelib_dbus -ldbus-1 -ledelib -lfltk -ldl -lm -lXext -lXft -lX11 ;
 
 #LINKFLAGS on capone = [ on capone return $(LINKFLAGS) ] -pg ;
