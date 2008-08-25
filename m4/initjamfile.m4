@@ -8,10 +8,7 @@ dnl Based on code from Autojam (c) Matze Braun <matze@braunis.de>
 #  EDE_INIT_JAM
 #    This rule fixes several issues related to autoconf being make centric
 #----------------------------------------------------------------------------
-AC_DEFUN([EDE_INIT_JAM],
-    [
-     AC_OUTPUT_INSTALLDIRS
-     AC_FIX_INSTALL])
+AC_DEFUN([EDE_INIT_JAM], [AC_OUTPUT_INSTALLDIRS])
 
 #-----------------------------------------------------------------------------
 # AC_OUTPUT_INSTALLDIRS
@@ -19,12 +16,6 @@ AC_DEFUN([EDE_INIT_JAM],
 #   properties in the Jamconfig file for them. We deal with stuff like
 #   variable references inside the paths (often the paths contain ${prefix})
 #   and with correct quoting here.
-#   The script will set the INSTALLDIR.PREFIX, INSTALLDIR.EXEC_PREFIX,
-#   INSTALLDIR.APPLICATION, INSTALLDIR.SBIN, INSTALLDIR.LIBEXEC,
-#   INSTALLDIR.DATA, INSTALLDIR.MAP, INSTALLDIR.CONFIG, INSTALLDIR.SHAREDSTATE
-#   INSTALLDIR.LOCALSTATE, INSTALLDIR.PLUGIN, INSTALLDIR.DOC
-#   INSTALLDIR.LIBRARY, INSTALLDIR.INCLUDE, INSTALLDIR.OLDINCLUDE,
-#   INSTALLDIR.INFO, INSTALLDIR.MAN
 #-----------------------------------------------------------------------------
 AC_DEFUN([AC_OUTPUT_INSTALLDIRS],[
 # Handle the case when no prefix is given. And the special case when a path
@@ -41,6 +32,7 @@ exec_prefix=AC_FIX_VARIABLEREF([$exec_prefix])
 bindir=AC_FIX_VARIABLEREF([$bindir])
 sbindir=AC_FIX_VARIABLEREF([$sbindir])
 libexecdir=AC_FIX_VARIABLEREF([$libexecdir])
+datarootdir=AC_FIX_VARIABLEREF([$datarootdir])
 datadir=AC_FIX_VARIABLEREF([$datadir])
 sysconfdir=AC_FIX_VARIABLEREF([$sysconfdir])
 sharedstatedir=AC_FIX_VARIABLEREF([$sharedstatedir])
@@ -69,25 +61,7 @@ AC_SUBST(mandir)
 ])
 
 #-----------------------------------------------------------------------------
-# AC_FIX_INSTALL
-#   Fixes the output from AC_PROG_INSTALL
-#-----------------------------------------------------------------------------
-AC_DEFUN([AC_FIX_INSTALL], [
-AC_REQUIRE([AC_PROG_INSTALL])
-INSTALL=AC_FIX_VARIABLEREF([$INSTALL])
-INSTALL_PROGRAM=AC_FIX_VARIABLEREF([$INSTALL_PROGRAM])
-INSTALL_SCRIPT=AC_FIX_VARIABLEREF([$INSTALL_SCRIPT])
-INSTALL_DATA=AC_FIX_VARIABLEREF([$INSTALL_DATA])
-
-# fix for order...
-AC_SUBST([INSTALL])
-AC_SUBST([INSTALL_PROGRAM])
-AC_SUBST([INSTALL_SCRIPT])
-AC_SUBST([INSTALL_DATA])
-])
-
-#-----------------------------------------------------------------------------
-# AC_PREPARE_INSTALLPATH
+# AC_FIX_VARIABLEREF
 #   Transform variables of the form ${bla} to $(bla) inside the string and
 #   correctly quotes backslashes.
 #   This is needed if you want to output some of the paths that autoconf

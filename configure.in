@@ -2,110 +2,138 @@ dnl
 dnl $Id: configure.in 1719 2006-08-15 08:56:42Z karijes $
 dnl
 dnl Part of Equinox Desktop Environment (EDE).
-dnl Copyright (c) 2000-2007 EDE Authors.
+dnl Copyright (c) 2000-2008 EDE Authors.
 dnl 
 dnl This program is licenced under terms of the 
 dnl GNU General Public Licence version 2 or newer.
 dnl See COPYING for details.
 
-dnl If edeconf.h.in missing, parse this file with autoheader
-dnl or run './prepare'.
+m4_define([ede_major_version], [2])
+m4_define([ede_minor_version], [0])
+m4_define([ede_patch_version], [0])
+m4_define([ede_version_short], [200])
+m4_define([ede_version], [ede_major_version.ede_minor_version.ede_patch_version])
 
-AC_PREREQ(2.16)
-AC_INIT(EDE, 2.0.0 alpha, [karijes@users.sourceforge.net])
-AC_DEFINE(VERSION, 200, [Short version number])
-
-dnl dummy real file from source, so older autoconf versions
-dnl does not require creating EDE file in source root
+AC_PREREQ(2.13)
+AC_INIT(edewm, ede_version, [karijes@users.sourceforge.net])
 AC_CONFIG_SRCDIR(COPYING)
-
 AC_CONFIG_HEADER(edeconf.h:edeconf.h.in)
 
-dnl $PACKAGE_VERSION is filled from AC_INIT
+dnl PACKAGE_VERSION is filled from AC_INIT
 EDE_VERSION=$PACKAGE_VERSION
 
 if test "$prefix" = NONE; then
-	INSTALL_DIR="/usr/local"
+	EDE_INSTALL_DIR="/usr/local"
 else
-	INSTALL_DIR="$prefix"
+	EDE_INSTALL_DIR="$prefix"
 fi
-AC_DEFINE_UNQUOTED(PREFIX, "$INSTALL_DIR", [Default installation place. Overwrite if you like.])
+AC_DEFINE_UNQUOTED(PREFIX, "$EDE_INSTALL_DIR", [Default installation place])
 
-SOURCE_DIR="`pwd`"
-OPTIMFLAGS="-O2"
-DEBUGFLAGS=""
+PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
+
+EDE_OPTIM_FLAGS=""
+EDE_DEBUG_FLAGS=""
+
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [turn on debugging support (default=no)]),, enable_debug=no)
+AC_ARG_ENABLE(profile, AC_HELP_STRING([--enable-profile], [turn on profiling support (default=no)]),, enable_profile=no)
+AC_ARG_ENABLE(shape, AC_HELP_STRING([--enable-shape], [enable XShape extension (default=yes)]),, enable_shape=yes)
+AC_ARG_ENABLE(composite, AC_HELP_STRING([--enable-composite], [enable XComposite extension (default=yes)]),, enable_composite=yes)
+AC_ARG_ENABLE(hal, AC_HELP_STRING([--enable-hal], [enable HAL usage (default=yes)]),, enable_hal=yes)
 
 AC_PROG_CXX
 AC_PROG_CPP
+EDE_PROG_JAM
+
 AC_PATH_PROG(MSGFMT, msgfmt)
 AC_PATH_PROG(XGETTEXT, xgettext)
-AC_PATH_PROG(DOXYGEN, doxygen)
-dnl sh/gdb is used by elauncher
 AC_PATH_PROG(GDB, gdb)
-AC_PATH_PROG(SH, sh)
+AC_PATH_PROG(PYTHON, python)
 
-EDE_PROG_JAM()
+AC_PATH_X
+AC_PATH_XTRA
 
-dnl basic headers
 AC_HEADER_STDC
-dnl TODO: it would be nice if we could pass parameter
-dnl for custom STL implementation (via STDLIB var), and
-dnl test be linked against it
-EDE_CHECK_STL()
 
-AC_CHECK_HEADER(dirent.h, AC_DEFINE(HAVE_DIRENT_H, 1, [Define to 1 if you have dirent.h]))
-AC_CHECK_HEADER(ndir.h, AC_DEFINE(HAVE_NDIR_H, 1, [Define to 1 if you have ndir.h]))
-AC_CHECK_HEADER(sys/dir.h, AC_DEFINE(HAVE_SYS_DIR_H, 1, [Define to 1 if you have sys/dir.h]))
-AC_CHECK_HEADER(sys/ndir.h, AC_DEFINE(HAVE_SYS_NDIR_H, 1, [Define to 1 if you have sys/ndir.h]))
+if test "$enable_profile" = "yes"; then
+	enable_debug=yes
+fi
 
-dnl functions and headers used by pty.h
-AC_CHECK_FUNCS(grantpt, AC_DEFINE(HAVE_GRANTPT, 1, [Define to 1 if you have grantpt() in stdlib.h]))
-AC_CHECK_FUNCS(ptsname, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have ptsname() in stdlib.h]))
-AC_CHECK_FUNCS(unlockpt, AC_DEFINE(HAVE_PTSNAME, 1, [Define to 1 if you have unlockpt() in stdlib.h]))
-AC_CHECK_FUNCS(_getpty, AC_DEFINE(HAVE__GETPTY, 1, [Define to 1 if you have _getpty()]))
-AC_CHECK_HEADER(pty.h, AC_DEFINE(HAVE_PTY_H, 1, [Define to 1 if you have pty.h]))
-AC_CHECK_HEADER(libutil.h, AC_DEFINE(HAVE_LIBUTIL_H, 1, [Define to 1 if you have libutil.h]))
-AC_CHECK_HEADER(util.h, AC_DEFINE(HAVE_UTIL_H, 1, [Define to 1 if you have util.h]))
+if test "$enable_debug" = "yes"; then
+	EDE_DEBUG_FLAGS="$EDE_DEBUG_FLAGS -g3 -D_DEBUG -DDEBUG"
+	EDE_OPTIM_FLAGS=""
+fi
 
-EDE_CHECK_TIME_FUNCS()
+if test "$enable_profile" = "yes"; then
+	EDE_DEBUG_FLAGS="$EDE_DEBUG_FLAGS -pg"
+fi
 
-EDE_CHECK_X11()
+if test "$enable_shape" = "yes"; then
+	AC_CHECK_HEADER(X11/extensions/shape.h, [have_xshape_h=yes],)
 
-dnl --enable-debug and --enable-profile options
-EDE_DEVELOPMENT()
+	if test "$have_xshape_h" = "yes"; then
+		AC_CHECK_LIB(Xext, XShapeInputSelected, [have_xshape=yes],,$X_LIBS)
+	fi
 
-dnl --enable-shape option
-EDE_X11_SHAPE()
+	if test "$have_xshape" = "yes"; then
+		AC_DEFINE(HAVE_SHAPE, 1, [Define to 1 if you have XShape extension])
+	fi
+fi
 
-dnl set FLTKFLAGS, FLTKLIBS
-EDE_CHECK_FLTK()
-dnl set EFLTKFLAGS, EFLTKLIBS
-EDE_CHECK_EFLTK()
+if test "$enable_composite" = "yes"; then
+	PKG_CHECK_MODULES(COMPOSITE, [xcomposite, xdamage, xext], [have_xcomposite=yes],)
 
-EDE_CHECK_LIBMAGIC()
+	if test "$have_xcomposite" = "yes"; then
+		AC_DEFINE(HAVE_COMPOSITE, 1, [Define to 1 if you have Xcomposite extension])
+	fi
+fi
 
-dnl sound stuff
-EDE_CHECK_ALSA()
-dnl --enable-sound option
-dnl set SOUNDFLAGS, SOUNDLIBS
-EDE_SOUND()
+if test "$enable_hal" = "yes"; then
+	PKG_CHECK_MODULES(HAL, [hal, hal-storage], [have_hal=yes],)
 
-EDE_INIT_JAM()
-AC_SUBST(SOURCE_DIR)
-AC_SUBST(OPTIMFLAGS)
-AC_SUBST(DEBUGFLAGS)
-AC_SUBST(FLTKFLAGS)
-AC_SUBST(FLTKLIBS)
-AC_SUBST(EFLTKFLAGS)
-AC_SUBST(EFLTKLIBS)
-AC_SUBST(SOUNDFLAGS)
-AC_SUBST(SOUNDLIBS)
-AC_SUBST(MAKE_EVOLUME)
-AC_SUBST(INSTALL_DIR)
-AC_SUBST(XGETTEXT)
-AC_SUBST(MSGFMT)
-AC_SUBST(DOXYGEN)
+	if test "$have_hal" = "yes"; then
+		AC_DEFINE(HAVE_HAL, 1, [Define to 1 if you have HAL libraries])
+	fi
+fi
 
-AC_OUTPUT([
- Jamconfig
-])
+PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
+if test "$have_edelib" = "no"; then
+	AC_MSG_ERROR(edelib not found! You must install it first)
+fi
+
+PKG_CHECK_MODULES(EDELIB_DBUS, [edelib-dbus],, [have_edelib_dbus=no])
+if test "$have_edelib_dbus" = "no"; then
+	AC_MSG_ERROR(edelib-dbus not found! You must install it first)
+fi
+
+AC_PATH_PROG(FLTK_CONFIG, fltk-config)
+if test -n "$FLTK_CONFIG"; then
+	fltk_version=`$FLTK_CONFIG --version`
+
+	AC_MSG_CHECKING([for FLTK version >= 1.1.7])
+
+	case "$fltk_version" in ["1.1."[789]])
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_ERROR([Looks like you have an older FLTK version ($fltk_version). Required is >= 1.1.7])
+	esac
+
+	dnl remove -Wno-non-virtual-dtor from flags
+	FLTK_CFLAGS=`$FLTK_CONFIG --cxxflags | sed -e 's/-Wno-non-virtual-dtor//'`
+	dnl remove -lsupc++ so we can chose what to use
+	FLTK_LIBS_NOIMAGES=`$FLTK_CONFIG --ldflags | sed -e 's/-lsupc++//g'`
+	FLTK_LIBS=`$FLTK_CONFIG --use-images --ldflags | sed -e 's/-lsupc++//g'`
+else
+	AC_MSG_ERROR([You don't have FLTK installed. To compile EDE, you will need it.])
+fi
+
+EDE_INIT_JAM
+
+AC_SUBST(EDE_VERSION)
+AC_SUBST(EDE_OPTIM_FLAGS)
+AC_SUBST(EDE_DEBUG_FLAGS)
+AC_SUBST(FLTK_CFLAGS)
+AC_SUBST(FLTK_LIBS)
+AC_SUBST(FLTK_LIBS_NOIMAGES)
+
+AC_OUTPUT([config.jam])

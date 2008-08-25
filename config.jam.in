@@ -1,0 +1,82 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2000-2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+# directories
+prefix      ?= "@prefix@" ;
+exec_prefix ?= "@exec_prefix@" ;
+datarootdir ?= "@datarootdir@" ;
+bindir      ?= "@bindir@" ;
+datadir     ?= "@datadir@" ;
+docdir      ?= "@datadir@/doc" ;
+includedir  ?= "@includedir@" ;
+libdir      ?= "@libdir@" ;
+mandir      ?= "@mandir@" ;
+srcdir      ?= "@abs_srcdir@" ;
+sysconfdir  ?= "@sysconfdir@" ;
+
+# tools used by jam rules
+XGETTEXT     ?= @XGETTEXT@ ;
+MSGFMT       ?= @MSGFMT@ ;
+RMDIR_UNSAFE ?= $(RM) -Rf ;
+RMDIR_SAFE   ?= rmdir ;
+CP           ?= cp ;
+COPYDIR      ?= "cp -R" ;
+MV           ?= mv ;
+MKDIRS       ?= "mkdir -p" ;
+LINKCMD      ?= "ln -s" ;
+
+# directories used by build system
+PREFIX        ?= "$(prefix)" ;
+EDEBINDIR     ?= "$(bindir)" ;
+EDECONFIGDIR  ?= "$(datadir)/config" ;
+EDEICONDIR    ?= "$(datadir)/icons" ;
+EDEDESKTOPDIR ?= "$(datadir)/desktop" ;
+EDEMIMEDIR    ?= "$(datadir)/mime" ;
+EDEDOCDIR     ?= "$(docdir)/ede-2.0.0" ;
+
+EDE_VERSION ?= "@EDE_VERSION@" ;
+
+OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
+DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
+
+# global flags used to be passed to every target
+GLOBALFLAGS  ?= -Wall -pedantic -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
+STDLIB       ?= -lstdc++ ;
+
+# Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
+# edelib is compiled as shared library
+REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
+
+# edelib libraries path
+EDELIBINCLUDE       ?= @EDELIB_CFLAGS@ ;
+EDELIBLIB           ?= @EDELIB_LIBS@ ;
+EDELIB_DBUS_INCLUDE ?= @EDELIB_DBUS_CFLAGS@ ;
+EDELIB_DBUS_LIB     ?= @EDELIB_DBUS_LIBS@ ;
+
+# fltk libraries path
+FLTKINCLUDE      ?= @FLTK_CFLAGS@ ;
+FLTKLIB          ?= @FLTK_LIBS@ ;
+FLTKLIB_NOIMAGES ?= @FLTK_LIBS_NOIMAGES@ ;
+
+# backward; efltk libraries path
+EFLTKINCLUDE      ?= @EFLTK_CFLAGS@ ;
+EFLTKLIB          ?= @EFLTK_LIBS@ ;
+EFLTKLIB_NOIMAGES ?= @EFLTK_LIBS_NOIMAGES@ ;
+
+# Xcomposite
+COMPOSITEINCLUDE ?= @COMPOSITE_CFLAGS@ ;
+COMPOSITELIB     ?= @COMPOSITE_LIBS@ ;
+
+# HAL
+HALINCLUDE ?= @HAL_CFLAGS@
+HALLIB     ?= @HAL_LIBS@
+
+# do not touch this
+JAMCONFIG_READ = "yes" ;
