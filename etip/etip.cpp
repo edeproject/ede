@@ -125,12 +125,10 @@ void write_autostart_stuff(void) {
 
 	bool show_at_startup = check_button->value();
 
-	// Hm... looks like a bug in edelib. If failed, Config should still be usable
 	if(!conf.load(path.c_str()))
-		conf.clear();
+		conf.create_new(edelib::DESK_FILE_TYPE_APPLICATION);
 
 	// always write these values so someone does not try to play with us
-	conf.set_type(edelib::DESK_FILE_TYPE_APPLICATION);
 	conf.set_hidden(show_at_startup);
 	conf.set_name("Etip");
 	conf.set_exec("etip");
