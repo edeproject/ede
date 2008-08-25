@@ -55,6 +55,13 @@ rule LinkAgainst
 	LINKLIBS on $(1) = [ on $(1) return $(LINKLIBS) ] $(2) ;
 }
 
+# LinkAgainstAsFirst [taraget] : [libraries] ;
+# The same as LinkAgainst, except [libraries] will be placed before other libraries.
+rule LinkAgainstAsFirst
+{
+	LINKLIBS on $(1) = $(2) [ on $(1) return $(LINKLIBS) ] ;
+}
+
 # Program [target] : [sources] ;
 # Compiles and links [target] from [sources]. No external flags or
 # libraries are used since this should be generic rule for compiling

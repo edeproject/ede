@@ -141,6 +141,13 @@ rule InstallEdeMimeFiles
 	}
 }
 
+# InstallEdeDoc [targets] ;
+# Installs targets to EDEDOCDIR directory
+rule InstallEdeDoc
+{
+	InstallData $(EDEDOCDIR) : $(1) ;
+}
+
 actions Install1
 {
 	$(CP) "$(>)" "$(<)"
