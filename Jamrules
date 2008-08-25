@@ -25,13 +25,15 @@ EDEBINDIR     ?= "$(PREFIX)/bin" ;
 EDECONFIGDIR  ?= "$(PREFIX)/data/config" ;
 EDEICONDIR    ?= "$(PREFIX)/data/icons" ;
 EDEDESKTOPDIR ?= "$(PREFIX)/data/desktop" ;
+EDEMIMEDIR    ?= "$(PREFIX)/share/mime" ;
 EDEDOCDIR     ?= "$(PREFIX)/share/doc/ede-2.0.0" ;
 
 # global flags used to be passed to every target
 GLOBALFLAGS  ?= -Wall -pedantic -g3 -D_DEBUG -I$(TOP) ;
 STDLIB       ?= -lstdc++ ;
 
-# some options
+# Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
+# edelib is compiled as shared library
 REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
 
 # edelib libraries path
