@@ -7,7 +7,7 @@
 # Copyright (c) 2008 Sanel Zukan
 # License as usually, the same as the rest of EDE parts...
 
-pots="ede-2.0.0-l10n"
+pots="ede-@EDE_VERSION@-l10n"
 
 directories="
  eabout 

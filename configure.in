@@ -136,4 +136,9 @@ AC_SUBST(FLTK_CFLAGS)
 AC_SUBST(FLTK_LIBS)
 AC_SUBST(FLTK_LIBS_NOIMAGES)
 
-AC_OUTPUT([config.jam])
+AC_OUTPUT([
+ config.jam
+ tools/l10n-prepare.sh
+])
+
+chmod +x tools/l10n-prepare.sh
