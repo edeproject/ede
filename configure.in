@@ -15,7 +15,7 @@ m4_define([ede_version_short], [200])
 m4_define([ede_version], [ede_major_version.ede_minor_version.ede_patch_version])
 
 AC_PREREQ(2.13)
-AC_INIT(edewm, ede_version, [karijes@users.sourceforge.net])
+AC_INIT(EDE, ede_version, [karijes@users.sourceforge.net])
 AC_CONFIG_SRCDIR(COPYING)
 AC_CONFIG_HEADER(edeconf.h:edeconf.h.in)
 
