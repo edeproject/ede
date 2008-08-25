@@ -43,7 +43,7 @@ Compiling
 At the moment, certain modules in EDE do not compile! In order to build and install
 EDE do the following steps:
 
-1. 	./prepare
+1. 	./autogen.sh
 
 2.	./configure [OPTIONS] (we suggest using --enable-debug)
 
