@@ -8,11 +8,11 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-ASCIIDOC  = "$(TOP)/docs/asciidoc/asciidoc.py" ;
-DOCDIR    = "$(TOP)/docs" ;
+ASCIIDOC  = "$(TOP)/doc/asciidoc/asciidoc.py" ;
+DOCDIR    = "$(TOP)/doc" ;
 MANUALDIR = "$(DOCDIR)/manual" ;
 
-# Must be relative to "docs" dir
+# Must be relative to "doc" dir
 MANUALICONS = "images" ;
 
 # EdeManual [file] : [optinal-images] : "make-toc" ;

@@ -30,6 +30,6 @@ SubInclude TOP emountd ;
 SubInclude TOP etimedate ;
 SubInclude TOP etip ;
 SubInclude TOP evoke ;
-SubInclude TOP docs ;
-SubInclude TOP datas ;
+SubInclude TOP doc ;
+SubInclude TOP data ;
 SubInclude TOP tools ;

@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP docs ;
+SubDir TOP doc ;
 
 EdeManual index.txt introduction.txt jambuild.txt ;
 EdeManualWithToc dbus-usage.txt ;

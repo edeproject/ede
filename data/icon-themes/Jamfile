@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP datas icon-themes ;
+SubDir TOP data icon-themes ;
 
 # ConvertIconTheme [icon-theme-name] : [icon-sizes] : [icon-categories] ;
 # Mass conversion of scalable (.svg) icon theme to .png one. Make sure directory

@@ -8,6 +8,6 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP datas mime-types ;
+SubDir TOP data mime-types ;
 
 InstallEdeMimeFiles x-fluid.xml ;
