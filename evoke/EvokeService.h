@@ -13,18 +13,17 @@
 #ifndef __EVOKESERVICE_H__
 #define __EVOKESERVICE_H__
 
-#include "Log.h"
-#include "Xsm.h"
-
-#ifdef HAVE_COMPOSITE
-#include "Composite.h"
-#endif
+#include <FL/x.h>
+#include <pthread.h>
 
 #include <edelib/List.h>
 #include <edelib/String.h>
 
-#include <FL/x.h>
-#include <pthread.h>
+#include "Log.h"
+#include "Xsm.h"
+#ifdef HAVE_COMPOSITE
+#include "Composite.h"
+#endif
 
 struct EvokeClient {
 	edelib::String desc;      // short program description (used in Starting... message)

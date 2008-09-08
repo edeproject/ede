@@ -10,12 +10,13 @@
  * See COPYING for details.
  */
 
-#include "Log.h"
-#include "Logout.h"
-#include "EvokeService.h"
-#include "Splash.h"
-#include "Spawn.h"
-#include "Autostart.h"
+#include <sys/types.h> // getpid
+#include <unistd.h>    // pipe
+#include <fcntl.h>     // fcntl
+#include <stdlib.h>    // free
+#include <string.h>    // strdup, memset
+#include <errno.h>
+#include <signal.h>
 
 #include <edelib/File.h>
 #include <edelib/Config.h>
@@ -27,15 +28,14 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 
-#include <sys/types.h> // getpid
-#include <unistd.h>    // pipe
-#include <fcntl.h>     // fcntl
-#include <stdlib.h>    // free
-#include <string.h>    // strdup, memset
-#include <errno.h>
-#include <signal.h>
+#include "Log.h"
+#include "Logout.h"
+#include "EvokeService.h"
+#include "Splash.h"
+#include "Spawn.h"
+#include "Autostart.h"
 
-void resolve_path(const edelib::String& datadir, edelib::String& item, bool have_datadir) {
+static void resolve_path(const edelib::String& datadir, edelib::String& item, bool have_datadir) {
 	if(item.empty())
 		return;
 
@@ -51,7 +51,7 @@ void resolve_path(const edelib::String& datadir, edelib::String& item, bool have
 	}
 }
 
-char* get_basename(const char* path) {
+static char* get_basename(const char* path) {
 	char* p = strrchr(path, '/');
 	if(p) 
 		return (p + 1);
@@ -72,7 +72,7 @@ char* get_basename(const char* path) {
  * Alternative would be to sort items (by their basename) and apply consecutive unique on 
  * them, but... is it worth ?
  */
-void basename_unique(StringList& lst) {
+static void basename_unique(StringList& lst) {
 	if(lst.empty())
 		return;
 
@@ -95,7 +95,7 @@ void basename_unique(StringList& lst) {
 	}
 }
 
-int get_int_property_value(Atom at) {
+static int get_int_property_value(Atom at) {
 	Atom real;
 	int format;
 	unsigned long n, extra;
@@ -112,7 +112,7 @@ int get_int_property_value(Atom at) {
 	return ret;
 }
 
-int get_string_property_value(Atom at, char* txt, int txt_len) {
+static int get_string_property_value(Atom at, char* txt, int txt_len) {
 	XTextProperty names;
 	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &names, at);
 	if(!names.nitems || !names.value)
@@ -136,7 +136,7 @@ int get_string_property_value(Atom at, char* txt, int txt_len) {
  * XmuClientWindow() will return parent window of given window; this is used so we don't 
  * send delete message to some button or else, but it's parent.
  */
-Window mu_try_children(Display* dpy, Window win, Atom wm_state) {
+static Window mu_try_children(Display* dpy, Window win, Atom wm_state) {
 	Atom real;
 	Window root, parent;
 	Window* children = 0;
@@ -167,7 +167,7 @@ Window mu_try_children(Display* dpy, Window win, Atom wm_state) {
 	return ret;
 }
 
-Window mu_client_window(Display* dpy, Window win, Atom wm_state) {
+static Window mu_client_window(Display* dpy, Window win, Atom wm_state) {
 	Atom real;
 	int format;
 	unsigned long n, extra;
@@ -193,7 +193,7 @@ void service_watcher_cb(int pid, int signum) {
 	EvokeService::instance()->service_watcher(pid, signum);
 }
 
-void wake_up_cb(int fd, void* v) {
+static void wake_up_cb(int fd, void* v) {
 	EvokeService::instance()->wake_up(fd);
 }
 
@@ -313,10 +313,6 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	if(c.get("evoke", "Splash", buff, sizeof(buff)))
 		splashimg = buff;
 
-	edelib::String sound;
-	if(c.get("evoke", "Sound", buff, sizeof(buff)))
-		sound = buff;
-
 	// Startup key must exists
 	if(!c.get("evoke", "Startup", buff, sizeof(buff)))
 		return false;
@@ -356,7 +352,6 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	 * since Splash expects that.
 	 */
 	resolve_path(datadir, splashimg, have_datadir);
-	resolve_path(datadir, sound, have_datadir);
 
 	ClientListIter it, it_end;
 	for(it = clients.begin(), it_end = clients.end(); it != it_end; ++it)
@@ -365,7 +360,6 @@ bool EvokeService::init_splash(const char* config, bool no_splash, bool dry_run)
 	Splash sp(no_splash, dry_run);
 	sp.set_clients(&clients);
 	sp.set_background(&splashimg);
-	sp.set_sound(&sound);
 
 	sp.run();
 

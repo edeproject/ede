@@ -10,7 +10,12 @@
  * See COPYING for details.
  */
 
-#include "Xsm.h"
+#include <string.h>
+#include <limits.h>
+
+#include <FL/x.h>
+#include <X11/Xresource.h>
+
 #include <edelib/Debug.h>
 #include <edelib/TiXml.h>
 #include <edelib/File.h>
@@ -19,12 +24,8 @@
 #include <edelib/Util.h>
 #include <edelib/Directory.h>
 #include <edelib/XSettingsCommon.h>
-#include <string.h>
-#include <limits.h>
 
-#include <FL/x.h>
-
-#include <X11/Xresource.h>
+#include "Xsm.h"
 
 #define USER_XRESOURCE       ".Xdefaults"
 #define USER_XRESOURCE_TMP   ".Xdefaults-tmp"
@@ -41,7 +42,7 @@ struct ResourceMap {
  * highest priority and will override all previous classes (X Resource class, not C++ one :P)
  * with the same xresource_key.
  */
-ResourceMap resource_map [] = {
+static ResourceMap resource_map [] = {
 	{ "Fltk/Background2", "background", "*Text" },
 	{ "Fltk/Background",  "background", "*" },
 	{ "Fltk/Foreground",  "foreground", "*" }
@@ -49,7 +50,7 @@ ResourceMap resource_map [] = {
 
 #define RESOURCE_MAP_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
-int ignore_xerrors(Display* display, XErrorEvent* xev) {
+static int ignore_xerrors(Display* display, XErrorEvent* xev) {
 	return True;
 }
 
@@ -319,6 +320,7 @@ bool Xsm::save_serialized(const char* file) {
 
 		iter = iter->next;
 	}
+
 	setting_file.printf("</ede-settings>\n");
 
 	setting_file.close();

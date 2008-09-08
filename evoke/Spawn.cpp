@@ -10,7 +10,6 @@
  * See COPYING for details.
  */
 
-#include "Spawn.h"
 
 #include <sys/types.h> // fork
 #include <unistd.h>    // fork, open, close, dup
@@ -21,9 +20,10 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-
 #include <sys/time.h>       // getrlimit, setrlimit
 #include <sys/resource.h>   //
+
+#include "Spawn.h"
 
 extern char** environ;
 SignalWatch* global_watch = 0;
@@ -152,52 +152,3 @@ int spawn_program_with_core(const char* cmd, SignalWatch* wf, pid_t* child_pid_r
 
 	return ret;
 }
-
-int spawn_backtrace(const char* gdb_path, const char* program, const char* core, const char* output, const char* script) {
-	const char* gdb_script = "bt\nquit\n";
-	const int gdb_script_len = 8;
-
-	//signal(SIGCHLD, SIG_DFL);
-
-	// file with gdb commands
-	int sfd = open(script, O_WRONLY | O_TRUNC | O_CREAT, 0770);
-	if(sfd == -1)
-		return -1;
-	write(sfd, gdb_script, gdb_script_len);
-	close(sfd);
-
-	// output file with gdb backtrace
-	int ofd = open(output, O_WRONLY | O_TRUNC | O_CREAT, 0770);
-	if(ofd == -1)
-		return -1;
-
-	pid_t pid = fork();
-
-	if(pid == -1) {
-		close(ofd);
-		return -1;
-	} else if(pid == 0) {
-		dup2(ofd, 1);
-		close(ofd);
-
-		char* argv[8];
-		argv[0] = (char*)gdb_path;
-		argv[1] = "--quiet";
-		argv[2] = "--batch";
-		argv[3] = "-x";
-		argv[4] = (char*)script;
-		argv[5] = (char*)program;
-		argv[6] = (char*)core;
-		argv[7] = 0;
-
-		execvp(argv[0], argv);
-		return -1;
-	} else {
-		int status;
-		if(waitpid(pid, &status, 0) != pid)
-			return -1;
-	}
-
-	return 0;
-}
-

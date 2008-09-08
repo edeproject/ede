@@ -22,7 +22,6 @@ class Splash : public Fl_Double_Window {
 	private:
 		ClientList* clist;
 		const edelib::String* bkg;
-		const edelib::String* sound;
 		unsigned int counter;
 		bool no_splash;
 		bool dry_run;
@@ -42,7 +41,6 @@ class Splash : public Fl_Double_Window {
 		 */
 		void set_clients(ClientList* cl) { clist = cl; }
 		void set_background(const edelib::String* s) { bkg = s; }
-		void set_sound(const edelib::String* s) { sound = s; }
 
 		const ClientList* get_clients(void) const { return clist; }
 		bool next_client(void);

@@ -10,17 +10,17 @@
  * See COPYING for details.
  */
 
-#include "Splash.h"
-#include "Spawn.h"
+#include <stdio.h> // snprintf
+
+#include <FL/Fl_Shared_Image.h>
+#include <FL/Fl.h>
 
 #include <edelib/Run.h>
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
 
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl.h>
-
-#include <stdio.h> // snprintf
+#include "Splash.h"
+#include "Spawn.h"
 
 #define TIMEOUT_START    0.5  // timeout when splash is first time shown (also for first client)
 #define TIMEOUT_CONTINUE 2.0  // timeout between starting rest of the cliens
@@ -28,9 +28,9 @@
 extern void service_watcher_cb(int pid, int signum);
 
 #ifndef EDEWM_HAVE_NET_SPLASH
-Splash* global_splash = NULL;
+static Splash* global_splash = NULL;
 
-int splash_xmessage_handler(int e) {
+static int splash_xmessage_handler(int e) {
 	if(fl_xevent->type == MapNotify) {
 		XRaiseWindow(fl_display, fl_xid(global_splash));
 		return 1;
@@ -51,7 +51,7 @@ int splash_xmessage_handler(int e) {
  * repeatedly call runner() untill all clients are 
  * started then hide splash window
  */
-void runner_cb(void* s) {
+static void runner_cb(void* s) {
 	Splash* sp = (Splash*)s;
 
 	if(sp->next_client())
@@ -93,7 +93,7 @@ void Splash::show(void) {
 #endif
 
 void Splash::run(void) {
-	EASSERT(clist != NULL);
+	E_ASSERT(clist != NULL);
 
 	if(no_splash) {
 		while(next_client_nosplash()) 
@@ -223,7 +223,7 @@ bool Splash::next_client(void) {
 	}
 
 
-	EASSERT(counter < clist->size() && "Internal error; 'counter' out of bounds");
+	E_ASSERT(counter < clist->size() && "Internal error; 'counter' out of bounds");
 
 	char buff[1024];
 	const char* msg = (*clist_it).desc.c_str();
@@ -257,7 +257,7 @@ bool Splash::next_client_nosplash(void) {
 		return false;
 	}
 
-	EASSERT(counter < clist->size() && "Internal error; 'counter' out of bounds");
+	E_ASSERT(counter < clist->size() && "Internal error; 'counter' out of bounds");
 
 	char buff[1024];
 	const char* msg = (*clist_it).desc.c_str();

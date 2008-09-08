@@ -10,17 +10,17 @@
  * See COPYING for details.
  */
 
-#include "EvokeService.h"
-
-#include <FL/Fl.h>
-#include <FL/x.h>
+#include <string.h>
+#include <signal.h>
 
 #include <edelib/Config.h>
 #include <edelib/Debug.h>
 #include <edelib/File.h>
 
-#include <string.h>
-#include <signal.h>
+#include <FL/Fl.h>
+#include <FL/x.h>
+
+#include "EvokeService.h"
 
 #define FOREVER       1e20
 #define CONFIG_FILE   "evoke.conf"
@@ -34,28 +34,28 @@
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
-void quit_signal(int sig) {
+static void quit_signal(int sig) {
 	EVOKE_LOG("Got quit signal %i\n", sig);
 	EvokeService::instance()->stop();
 }
 
-void xmessage_handler(int, void*) {
+static void xmessage_handler(int, void*) {
+#ifdef USE_FLTK_LOOP_EMULATION
 	XEvent xev;
 	while(XEventsQueued(fl_display, QueuedAfterReading)) {
 		XNextEvent(fl_display, &xev);
 		EvokeService::instance()->handle((const XEvent*)&xev);
 	}
-}
-
-int xmessage_handler2(int) {
+#else
 	return EvokeService::instance()->handle(fl_xevent);
+#endif
 }
 
-int composite_handler(int ev) {
+static int composite_handler(int ev) {
 	return EvokeService::instance()->composite_handle(fl_xevent);
 }
 
-const char* next_param(int curr, char** argv, int argc) {
+static const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
 		return NULL;
@@ -241,9 +241,9 @@ int main(int argc, char** argv) {
 #else
 	/*
 	 * NOTE: composite_handler() is not needed since it will be included
-	 * within xmessage_handler2() call
+	 * within xmessage_handler() call
 	 */
-	Fl::add_handler(xmessage_handler2);
+	Fl::add_handler(xmessage_handler);
 #endif
 
 	service->start();

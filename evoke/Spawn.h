@@ -36,6 +36,5 @@ typedef void (SignalWatch)(int pid, int status);
 
 int spawn_program(const char* cmd, SignalWatch* wf = 0, pid_t* child_pid_ret = 0, const char* ofile = 0);
 int spawn_program_with_core(const char* cmd, SignalWatch* wf = 0, pid_t* child_pid_ret = 0);
-int spawn_backtrace(const char* gdb_path, const char* program, const char* core, const char* output, const char* script);
 
 #endif

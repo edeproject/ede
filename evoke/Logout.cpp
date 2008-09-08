@@ -10,9 +10,6 @@
  * See COPYING for details.
  */
 
-#include "Logout.h"
-#include <edelib/Nls.h>
-
 #include <FL/Fl_Double_Window.h>
 #include <FL/Fl_Box.h>
 #include <FL/Fl_Button.h>
@@ -21,6 +18,9 @@
 #include <FL/Fl.h>
 #include <FL/x.h>
 #include <string.h> // memset
+
+#include <edelib/Nls.h>
+#include "Logout.h"
 
 static int logout_ret;
 static Fl_Double_Window* win;
@@ -31,7 +31,7 @@ static Fl_Round_Button*  rb3;
 unsigned char* take_x11_screenshot(unsigned char *p, int X, int Y, int w, int h, int alpha);
 unsigned char* make_darker(unsigned char *p, int X, int Y, int w, int h);
 
-void rb_cb(Fl_Widget*, void* r) {
+static void rb_cb(Fl_Widget*, void* r) {
 	Fl_Round_Button* rb = (Fl_Round_Button*)r;
 	if(rb == rb2) {
 		rb1->value(0);
@@ -47,7 +47,7 @@ void rb_cb(Fl_Widget*, void* r) {
 	rb->value(1);
 }
 
-void ok_cb(Fl_Widget*, void*) {
+static void ok_cb(Fl_Widget*, void*) {
 	if(rb1->value())
 		logout_ret = LOGOUT_LOGOUT;
 	else if(rb2->value())
@@ -57,7 +57,7 @@ void ok_cb(Fl_Widget*, void*) {
 	win->hide();
 }
 
-void cancel_cb(Fl_Widget*, void*) {
+static void cancel_cb(Fl_Widget*, void*) {
 	logout_ret = LOGOUT_CANCEL;
 	win->hide();
 }
@@ -73,7 +73,7 @@ int logout_dialog(int screen_w, int screen_h, bool disable_restart, bool disable
 	win = new Fl_Double_Window(0, 0, screen_w, screen_h, _("Logout, restart or shutdown"));
 	win->begin();
 		Fl_Box* bb = new Fl_Box(0, 0, win->w(), win->h());
-		Fl_RGB_Image* img = new Fl_RGB_Image(imgdata, 1024, 768);
+		Fl_RGB_Image* img = new Fl_RGB_Image(imgdata, win->w(), win->h());
 		img->alloc_array = 1;
 		bb->image(img);
 
@@ -113,6 +113,7 @@ int logout_dialog(int screen_w, int screen_h, bool disable_restart, bool disable
 
 
 	g->position(screen_w/2 - g->w()/2, screen_h/2 - g->h()/2);
+	//win->position(screen_w/2 - win->w()/2, screen_h/2 - win->h()/2);
 
 	win->end();
 	win->clear_border();
