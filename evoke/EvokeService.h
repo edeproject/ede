@@ -13,7 +13,7 @@
 #ifndef __EVOKESERVICE_H__
 #define __EVOKESERVICE_H__
 
-#include <FL/x.h>
+#include <FL/x.H>
 #include <pthread.h>
 
 #include <edelib/List.h>

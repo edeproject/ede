@@ -13,7 +13,7 @@
 #ifndef __TEXTAREA_H__
 #define __TEXTAREA_H__
 
-#include <FL/Fl_Input.h>
+#include <FL/Fl_Input.H>
 #include <edelib/Debug.h>
 
 /*

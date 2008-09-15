@@ -31,13 +31,13 @@
 #include <edelib/Util.h>
 #include <edelib/Nls.h>
 
-#include <FL/Fl.h>
-#include <FL/x.h>
-#include <FL/fl_draw.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl_Menu_Button.h>
-#include <FL/fl_ask.h>
+#include <FL/Fl.H>
+#include <FL/x.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/fl_ask.H>
 
 #include <unistd.h> // sleep
 #include <signal.h>

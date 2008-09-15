@@ -16,13 +16,13 @@
 #include <time.h>
 #include <stdio.h>
 
-#include <FL/Fl.h>
-#include <FL/Fl_Tabs.h>
-#include <FL/Fl_Group.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Input.h>
-#include <FL/Fl_Output.h>
-#include <FL/Fl_Shared_Image.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Tabs.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Output.H>
+#include <FL/Fl_Shared_Image.H>
 
 #include <edelib/Nls.h>
 #include <edelib/Window.h>

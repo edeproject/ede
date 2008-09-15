@@ -1,8 +1,8 @@
-#include <FL/Fl.h>
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Input.h>
-#include <FL/Fl_Button.h>
-#include <FL/x.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Button.H>
+#include <FL/x.H>
 
 #include <string.h>
 

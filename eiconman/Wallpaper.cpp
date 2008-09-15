@@ -15,10 +15,10 @@
 
 #include <edelib/Debug.h>
 
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl_RGB_Image.h>
-#include <FL/fl_draw.h>
-#include <FL/x.h>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_RGB_Image.H>
+#include <FL/fl_draw.H>
+#include <FL/x.H>
 
 #include <string.h> // memcpy
 #include <stdlib.h> // malloc

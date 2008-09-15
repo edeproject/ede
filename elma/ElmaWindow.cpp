@@ -10,7 +10,7 @@
  * See COPYING for details.
  */
 
-#include <FL/Fl.h>
+#include <FL/Fl.H>
 #include <edelib/Debug.h>
 
 #include <sys/types.h>

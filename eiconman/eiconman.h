@@ -16,11 +16,11 @@
 #ifdef USE_EDELIB_WINDOW
 	#include <edelib/Window.h>
 #else
-	#include <FL/Fl_Window.h>
-	#include <FL/Fl_Double_Window.h>
+	#include <FL/Fl_Window.H>
+	#include <FL/Fl_Double_Window.H>
 #endif
 
-#include <FL/Fl_Image.h>
+#include <FL/Fl_Image.H>
 
 #include <edelib/String.h>
 #include <edelib/Resource.h>

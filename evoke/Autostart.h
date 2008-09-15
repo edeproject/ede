@@ -13,10 +13,10 @@
 #ifndef __AUTOSTART_H__
 #define __AUTOSTART_H__
 
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Check_Browser.h>
-#include <FL/Fl_Button.h>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Check_Browser.H>
+#include <FL/Fl_Button.H>
 
 #include <edelib/String.h>
 

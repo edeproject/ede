@@ -13,8 +13,8 @@
 #ifndef __SPLASH_H__
 #define __SPLASH_H__
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Box.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Box.H>
 
 #include "EvokeService.h"
 

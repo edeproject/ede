@@ -13,9 +13,9 @@
 #include "icons/core.xpm"
 #include "CrashDialog.h"
 
-#include <FL/Fl.h>
-#include <FL/Fl_Pixmap.h>
-#include <FL/Fl_File_Chooser.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Pixmap.H>
+#include <FL/Fl_File_Chooser.H>
 
 #include <sys/utsname.h>
 #include <sys/types.h>

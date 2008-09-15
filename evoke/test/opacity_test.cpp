@@ -1,8 +1,8 @@
-#include <FL/Fl.h>
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Value_Slider.h>
-#include <FL/x.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/x.H>
 
 #include <stdio.h>
 

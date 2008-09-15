@@ -12,7 +12,7 @@
 
 #include "Utils.h"
 #include <X11/Xproto.h> // CARD32
-#include <FL/x.h>
+#include <FL/x.H>
 #include <edelib/Debug.h>
 
 #include <string.h> // strrchr, strncpy, strlen

@@ -11,7 +11,7 @@
  */
 
 #include "Background.h"
-#include <FL/Fl_Shared_Image.h>
+#include <FL/Fl_Shared_Image.H>
 #include <edelib/Debug.h>
 
 bool Background::load_images(const char* bpath, const char* ppath) {

@@ -13,7 +13,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include <FL/x.h>
+#include <FL/x.H>
 #include <X11/Xresource.h>
 
 #include <edelib/Debug.h>

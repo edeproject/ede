@@ -12,8 +12,8 @@
 
 #include <stdio.h> // snprintf
 
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl.h>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl.H>
 
 #include <edelib/Run.h>
 #include <edelib/Debug.h>

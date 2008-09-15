@@ -15,8 +15,8 @@
 #include "EvokeService.h"
 
 #include <edelib/Nls.h>
-#include <FL/Fl_Pixmap.h>
-#include <FL/Fl.h>
+#include <FL/Fl_Pixmap.H>
+#include <FL/Fl.H>
 
 Fl_Pixmap warnpix(warning_xpm);
 

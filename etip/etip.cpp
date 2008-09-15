@@ -10,13 +10,13 @@
  * See COPYING for the details.
  */
 
-#include <FL/Fl.h>
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Check_Button.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Group.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Pixmap.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Pixmap.H>
 
 #include <edelib/Nls.h>
 #include <edelib/Config.h>

@@ -13,7 +13,7 @@
 #ifndef __WALLPAPER_H__
 #define __WALLPAPER_H__
 
-#include <FL/Fl_Box.h>
+#include <FL/Fl_Box.H>
 
 #include <X11/Xlib.h>  // XImage, Pixmap
 

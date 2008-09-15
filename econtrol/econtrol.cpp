@@ -22,11 +22,11 @@
 #include <edelib/Run.h>
 #include <edelib/File.h>
 
-#include <FL/Fl.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Shared_Image.h>
-#include <FL/fl_draw.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/fl_draw.H>
 
 typedef edelib::list<edelib::String> StrList;
 typedef edelib::list<edelib::String>::iterator StrListIter;

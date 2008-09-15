@@ -1,5 +1,5 @@
-#include <FL/x.h>
-#include <FL/Fl.h>
+#include <FL/x.H>
+#include <FL/Fl.H>
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>

@@ -3,8 +3,8 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Box.H>
-#include <FL/fl_show_colormap.h>
-#include <FL/x.h>
+#include <FL/fl_show_colormap.H>
+#include <FL/x.H>
 
 #include <stdio.h>
 #include <string.h>

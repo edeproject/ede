@@ -10,11 +10,11 @@
  * See COPYING for details.
  */
 
-#include <FL/Fl.h>
-#include <FL/fl_draw.h>
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl_Menu_Button.h>
-#include <FL/x.h>
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/x.H>
 
 #include <edelib/Debug.h>
 #include <edelib/IconTheme.h>

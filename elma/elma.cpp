@@ -14,8 +14,8 @@
 
 #if 0
 #include <string.h>
-#include <FL/x.h>
-#include <FL/Fl.h>
+#include <FL/x.H>
+#include <FL/Fl.H>
 #include <edelib/String.h>
 #include <edelib/Config.h>
 

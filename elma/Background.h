@@ -13,7 +13,7 @@
 #ifndef __BACKGROUND_H__
 #define __BACKGROUND_H__
 
-#include <FL/Fl_Box.h>
+#include <FL/Fl_Box.H>
 
 class Fl_Image;
 

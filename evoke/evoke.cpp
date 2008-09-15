@@ -17,8 +17,8 @@
 #include <edelib/Debug.h>
 #include <edelib/File.h>
 
-#include <FL/Fl.h>
-#include <FL/x.h>
+#include <FL/Fl.H>
+#include <FL/x.H>
 
 #include "EvokeService.h"
 

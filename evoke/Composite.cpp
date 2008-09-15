@@ -16,8 +16,8 @@
 
 #include <edelib/Debug.h>
 
-#include <FL/x.h>
-#include <FL/Fl.h>
+#include <FL/x.H>
+#include <FL/Fl.H>
 
 #include <string.h> // memcpy
 #include <stdlib.h> // malloc, realloc

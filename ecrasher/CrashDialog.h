@@ -13,12 +13,12 @@
 #ifndef __CRASHDIALOG_H__
 #define __CRASHDIALOG_H__
 
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Pixmap.h>
-#include <FL/Fl_Text_Display.h>
-#include <FL/Fl_Text_Buffer.h>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Pixmap.H>
+#include <FL/Fl_Text_Display.H>
+#include <FL/Fl_Text_Buffer.H>
 
 #include <edelib/String.h>
 

@@ -10,13 +10,13 @@
  * See COPYING for details.
  */
 
-#include <FL/Fl_Double_Window.h>
-#include <FL/Fl_Box.h>
-#include <FL/Fl_Button.h>
-#include <FL/Fl_Round_Button.h>
-#include <FL/Fl_RGB_Image.h>
-#include <FL/Fl.h>
-#include <FL/x.h>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Round_Button.H>
+#include <FL/Fl_RGB_Image.H>
+#include <FL/Fl.H>
+#include <FL/x.H>
 #include <string.h> // memset
 
 #include <edelib/Nls.h>

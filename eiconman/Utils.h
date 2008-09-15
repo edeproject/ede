@@ -13,8 +13,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include <FL/Fl_Window.h>
-#include <FL/Fl_Image.h>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Image.H>
 
 #include <X11/Xlib.h> // Pixmap
 

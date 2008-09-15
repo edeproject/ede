@@ -15,8 +15,8 @@
 
 #include <edelib/Config.h>
 
-#include <FL/Fl.h>
-#include <FL/x.h>
+#include <FL/Fl.H>
+#include <FL/x.H>
 #include <stdlib.h>
 
 ElmaService::ElmaService() : config(NULL), theme(NULL) {

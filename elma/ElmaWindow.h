@@ -13,7 +13,7 @@
 #ifndef __ELMAWINDOW_H__
 #define __ELMAWINDOW_H__
 
-#include <FL/Fl_Double_Window.h>
+#include <FL/Fl_Double_Window.H>
 
 class Background;
 class TextArea;
