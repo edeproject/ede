@@ -1,7 +1,7 @@
-Ecalc documentation
-===================
+ede-calc documentation
+======================
 
-Ecalc is small calculator with scientific functions. It is based on
+ede-calc is small calculator with scientific functions. It is based on
 modified flCalc by Yves Usson.
 
-image:images/ecalc.jpg[Ecalc]
+image:images/ede-calc.jpg[ede-calc]
