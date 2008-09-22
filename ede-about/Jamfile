@@ -8,9 +8,9 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eabout ;
+SubDir TOP ede-about ;
 
-SOURCE = eabout.cpp ;
+SOURCE = ede-about.cpp ;
 
-EdeProgram eabout : $(SOURCE) ;
+EdeProgram ede-about : $(SOURCE) ;
 TranslationStrings  locale : $(SOURCE) ;
