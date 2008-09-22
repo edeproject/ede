@@ -1,7 +1,7 @@
-Etip documentation
-===================
+ede-tip documentation
+=====================
 
-Etip is 'Tip of the Day' program which will show tips about EDE usage.
+ede-tip is 'Tip of the Day' program which will show tips about EDE usage.
 It is also capable to show fortune-like tips, reading fortune files.
 
 image:images/ede-tip.jpg[ede-tip]
@@ -9,10 +9,10 @@ image:images/ede-tip.jpg[ede-tip]
 Details
 -------
 
-Etip will be usually invoked when EDE is started, and if you don't want 
+ede-tip will be usually invoked when EDE is started, and if you don't want 
 this, you can always uncheck 'Show tips at startup' checkbox.
 
-Etip will read tips from fortune-like file, which is based on two parts:
+ede-tip will read tips from fortune-like file, which is based on two parts:
 
    * file with tips
    * a companion with *.dat* extension
@@ -77,7 +77,7 @@ to find .dat file). 'ede-tip-compiler' have some more options, and for the detai
 Configuration
 -------------
 
-Etip does not have command options and the only file it reads (beside tip files) is 'ede-tip.conf'.
+ede-tip does not have command options and the only file it reads (beside tip files) is 'ede-tip.conf'.
 This file should contain path to the tip file name. Here is the sample:
 
 --------------
