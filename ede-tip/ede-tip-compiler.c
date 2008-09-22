@@ -176,7 +176,7 @@ STR *Firstch;			/* first chars of each string */
 
 void usage(void)
 {
-    fprintf(stderr, "etip-compiler [-iorsx] [-c char] sourcefile [datafile]\n");
+    fprintf(stderr, "ede-tip-compiler [-iorsx] [-c char] sourcefile [datafile]\n");
 	fprintf(stderr, "Creates .dat file from fortune source file\n");
     exit(1);
 }

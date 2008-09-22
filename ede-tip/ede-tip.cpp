@@ -1,7 +1,7 @@
 /*
  * $Id: etip.cpp 1664 2006-06-14 00:21:44Z karijes $
  *
- * Etip, show some tips!
+ * ede-tip, show some tips!
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2008 EDE Authors.
  *
@@ -9,6 +9,10 @@
  * GNU General Public License version 2 or newer.
  * See COPYING for the details.
  */
+
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -26,10 +30,6 @@
 #include <edelib/Util.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Directory.h>
-
-#include <stdlib.h>
-#include <time.h>
-#include <stdio.h>
 
 #include "icons/hint.xpm"
 #include "Fortune.h"
@@ -67,7 +67,7 @@ const char* random_fortune(void) {
 
 FortuneFile* load_fortune_file(void) {
 	edelib::Config conf;
-	if(!conf.load("etip.conf"))
+	if(!conf.load("ede-tip.conf"))
 		return NULL;
 
 	char path[1024];
@@ -97,7 +97,7 @@ bool create_directory_if_needed(const edelib::String& path) {
 }
 
 /* 
- * Save/create etip.desktop inside autostart directory.
+ * Save/create ede-tip.desktop inside autostart directory.
  * Autostart resides in ~/.config/autostart and directory does not
  * exists, it will be created (only /autostart/, not full path).
  *
@@ -119,8 +119,8 @@ void write_autostart_stuff(void) {
 	if(!create_directory_if_needed(path))
 		return;
 
-	// now see if etip.desktop exists, and update it if do
-	path += "/etip.desktop";
+	// now see if ede-tip.desktop exists, and update it if do
+	path += "/ede-tip.desktop";
 	edelib::DesktopFile conf;
 
 	bool show_at_startup = check_button->value();
@@ -130,8 +130,8 @@ void write_autostart_stuff(void) {
 
 	// always write these values so someone does not try to play with us
 	conf.set_hidden(show_at_startup);
-	conf.set_name("Etip");
-	conf.set_exec("etip");
+	conf.set_name("EDE Tips");
+	conf.set_exec("ede-tip");
 
 	if(conf.save(path.c_str()) == false)
 		edelib::alert(_("I'm not able to save %s. Probably I don't have enough permissions to do that ?"), path.c_str());
@@ -139,7 +139,7 @@ void write_autostart_stuff(void) {
 
 void read_autostart_stuff(void) {
 	edelib::String path = edelib::user_config_dir();
-	path += "/autostart/etip.desktop";
+	path += "/autostart/ede-tip.desktop";
 
 	edelib::DesktopFile conf;
 	if(!conf.load(path.c_str())) {

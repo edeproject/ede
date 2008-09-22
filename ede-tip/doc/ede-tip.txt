@@ -4,7 +4,7 @@ Etip documentation
 Etip is 'Tip of the Day' program which will show tips about EDE usage.
 It is also capable to show fortune-like tips, reading fortune files.
 
-image:images/etip.jpg[Etip]
+image:images/ede-tip.jpg[ede-tip]
 
 Details
 -------
@@ -21,15 +21,15 @@ File with tips is plain text file in human readable form and is main source wher
 you should add, changed and delete tips. Each tip is separated with *%* character
 at the beginning of the line, and (as advice), those should be nicely formatted
 (proposal is to use around 66 characters per line so they can nicely fit inside
-etip window).
+ede-tip window).
 
 *.dat* file is binary file and does not contain any tip strings; it have only
 offsets to those in plain text file to allow fast random access to any of
-specific tip string. *.dat* files are created with 'etip-compiler' command (see bellow
+specific tip string. *.dat* files are created with 'ede-tip-compiler' command (see bellow
 for the details), and must be updated each time when a source file with tips is updated.
 
 [NOTE]
-Both files must exists so etip can read the content.
+Both files must exists so ede-tip can read the content.
 
 Example
 -------
@@ -49,9 +49,9 @@ This is tip three. Progress, man, progress :)
 Please let end line in each tip contains *%* character. With this we retain a small
 compatibility with fortune
 
-Now save this file in 'demo' and invoke 'etip-compiler' on it. Doing that is like:
+Now save this file in 'demo' and invoke 'ede-tip-compiler' on it. Doing that is like:
 --------------
-etip-compiler demo
+ede-tip-compiler demo
 --------------
 
 You will see output like this:
@@ -62,22 +62,22 @@ Longest string: 46 bytes
 Shortest string: 17 bytes
 --------------
 
-Output from 'etip-compiler' shows some informations you probably don't need and, most important,
+Output from 'ede-tip-compiler' shows some informations you probably don't need and, most important,
 it shows that he created *demo.dat* file. If you want to suppress these outputs, just
 use '-s' flag, like:
 
 --------------
-etip-compiler -s demo
+ede-tip-compiler -s demo
 --------------
 
-'etip-compiler' will, by default, use input name and append *.dat* suffix; the best way is to keep
-it like that since etip expects names of tip file and .dat file are the same (or will not be able
-to find .dat file). 'etip-compiler' have some more options, and for the details see below.
+'ede-tip-compiler' will, by default, use input name and append *.dat* suffix; the best way is to keep
+it like that since ede-tip expects names of tip file and .dat file are the same (or will not be able
+to find .dat file). 'ede-tip-compiler' have some more options, and for the details see below.
 
 Configuration
 -------------
 
-Etip does not have command options and the only file it reads (beside tip files) is 'etip.conf'.
+Etip does not have command options and the only file it reads (beside tip files) is 'ede-tip.conf'.
 This file should contain path to the tip file name. Here is the sample:
 
 --------------
@@ -89,19 +89,19 @@ This file should contain path to the tip file name. Here is the sample:
 Make sure in the same directory exists *.dat* file.
 
 
-etip-compiler details
----------------------
+ede-tip-compiler details
+------------------------
 
-As you could see from the previous text, 'etip-compiler' is simple command line tool that will
+As you could see from the previous text, 'ede-tip-compiler' is simple command line tool that will
 create .dat files. It will correctly scan tip file, calculate offsets (and something more) and spit
-that in the file that etip understands.
+that in the file that ede-tip understands.
 
 [NOTE]
-You must invoke etip-compiler each time you change file with the tips or .dat companion will contains
+You must invoke ede-tip-compiler each time you change file with the tips or .dat companion will contains
 incorrect data.
 
-etip-compiler options
----------------------
+ede-tip-compiler options
+------------------------
 
 -s::
 	Suppress output details
