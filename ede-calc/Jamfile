@@ -2,15 +2,15 @@
 # $Id$
 #
 # Part of Equinox Desktop Environment (EDE).
-# Copyright (c) 2000-2007 EDE Authors.
+# Copyright (c) 2007-2008 EDE Authors.
 #
 # This program is licenced under terms of the 
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ecalc ;
+SubDir TOP ede-calc ;
 
 SOURCE = SciCalc.cpp Main.cpp ;
 
-FltkProgramBare ecalc : $(SOURCE) ;
-EdeManual doc/ecalc.txt : doc/ecalc.jpg ;
+FltkProgramBare ede-calc : $(SOURCE) ;
+EdeManual doc/ede-calc.txt : doc/ede-calc.jpg ;
