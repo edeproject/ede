@@ -3,7 +3,7 @@
  *
  * Desktop configuration tool
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2007-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -16,15 +16,6 @@
 
 #include <unistd.h>
 #include <string.h>
-
-#include <edelib/Nls.h>
-#include <edelib/Color.h>
-#include <edelib/Window.h>
-#include <edelib/Resource.h>
-#include <edelib/Debug.h>
-#include <edelib/Util.h>
-#include <edelib/FontChooser.h>
-#include <edelib/Directory.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Tabs.H>
@@ -42,9 +33,17 @@
 #include <FL/Fl_Menu_Button.h>
 #include <FL/x.h>
 
-#define EICOMAN_UID    0x10
-//#define EICOMAN_CONFIG "../eiconman/eiconman.conf"
-#define EICOMAN_CONFIG "ede/eiconman"
+#include <edelib/Nls.h>
+#include <edelib/Color.h>
+#include <edelib/Window.h>
+#include <edelib/Resource.h>
+#include <edelib/Debug.h>
+#include <edelib/Util.h>
+#include <edelib/FontChooser.h>
+#include <edelib/Directory.h>
+
+#define EDE_DESKTOP_UID    0x10
+#define EDE_DESKTOP_CONFIG "ede/ede-desktop"
 
 Fl_Menu_Item mode_menu[] = {
 	{_("Center"), 0, 0},
@@ -269,14 +268,14 @@ void apply_cb(Fl_Widget*, void* w) {
 	conf.set("Icons", "LabelVisible", icon_show_label->value());
 	conf.set("Icons", "OneClickExec", engage_with_one_click->value());
 
-	if(conf.save(EICOMAN_CONFIG))
-		edelib::Window::update_settings(EICOMAN_UID);
+	if(conf.save(EDE_DESKTOP_CONFIG))
+		edelib::Window::update_settings(EDE_DESKTOP_UID);
 }
 
 void ok_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	apply_cb(0, win);
-	/* a hack so edesktopconf can send a message before it was closed */
+	/* a hack so ede-desktop-conf can send a message before it was closed */
 	sleep(1); 
 	win->hide();
 }
