@@ -310,7 +310,7 @@ void load_settings(void) {
 	char wpath[256];
 	bool wpath_found = false;
 
-	if(conf.load(EICOMAN_CONFIG)) {
+	if(conf.load(EDE_DESKTOP_CONFIG)) {
 		conf.get("Desktop", "Color", d_background_color, d_background_color); 
 		conf.get("Desktop", "WallpaperUse", d_wp_use, d_wp_use);
 		conf.get("Desktop", "WallpaperMode", b_mode, b_mode);
