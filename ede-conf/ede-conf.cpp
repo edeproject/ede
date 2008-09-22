@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Econtrol, control panel for EDE
+ * ede-conf, a control panel for EDE
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2008 EDE Authors.
  *
@@ -9,6 +9,12 @@
  * GNU General Public License version 2 or newer.
  * See COPYING for details.
  */
+
+#include <FL/Fl.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/fl_draw.H>
 
 #include <edelib/Config.h>
 #include <edelib/StrUtil.h>
@@ -21,12 +27,6 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
 #include <edelib/File.h>
-
-#include <FL/Fl.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Shared_Image.H>
-#include <FL/fl_draw.H>
 
 typedef edelib::list<edelib::String> StrList;
 typedef edelib::list<edelib::String>::iterator StrListIter;
@@ -98,7 +98,7 @@ void close_cb(Fl_Widget*, void* w) {
 void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 	edelib::Config c;
 
-	if(!c.load("econtrol.conf")) {
+	if(!c.load("ede-conf.conf")) {
 		EWARNING("Can't load config\n");
 		return;
 	}
