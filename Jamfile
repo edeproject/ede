@@ -15,10 +15,10 @@ EdeManual HACKING.txt ;
 Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
 # SubInclude goes after local rules
-SubInclude TOP eabout ;
-SubInclude TOP ecalc ;
-SubInclude TOP econtrol ;
-SubInclude TOP ecrasher ;
+SubInclude TOP ede-about ;
+SubInclude TOP ede-calc ;
+SubInclude TOP ede-control ;
+SubInclude TOP ede-crasher ;
 SubInclude TOP edesktopconf ;
 #SubInclude TOP edewm ;
 SubInclude TOP efiler ;
