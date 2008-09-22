@@ -8,8 +8,8 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ecrasher ;
+SubDir TOP ede-crasher ;
 
-SOURCE = ecrasher.cpp CrashDialog.cpp ;
+SOURCE = ede-crasher.cpp CrashDialog.cpp ;
 
-EdeProgram ecrasher : $(SOURCE) ;
+EdeProgram ede-crasher : $(SOURCE) ;
