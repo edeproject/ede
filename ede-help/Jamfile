@@ -8,14 +8,14 @@
 # GNU General Public License version 2 or later.
 # See COPYING for the details.
  
-SubDir TOP ehelp ;
+SubDir TOP ede-help ;
 
 rule MakeScript
 {
 	# add grist to file names (not needed, but you never know...)
 	local source = [ FGristFiles $(>) ] ;
 
-	# let jam call from the top directory (jam ehelp) knows what to
+	# let jam call from the top directory (jam ede-help) knows what to
 	# build and not be confused with the same name of directory
 	SEARCH on $(source) = $(SUBDIR) ;
 
@@ -41,5 +41,5 @@ actions existing MakeScript1
 	cat "$(>)" | $(SED) -e 's|@ededocdir@|$(EDEDOCDIR)|' > "$(<)"
 }
 
-MakeScript ehelp : ehelp.in ;
-EdeManual ehelp.txt ;
+MakeScript ede-help : ede-help.in ;
+EdeManual ede-help.txt ;
