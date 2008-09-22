@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Ecrasher, a crash handler tool
+ * ede-crasher, a crash handler tool
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2008 EDE Authors.
  *
@@ -26,7 +26,7 @@ const char* next_param(int curr, char** argv, int argc) {
 }
 
 void help(void) {
-	puts("Usage: ecrasher [OPTIONS]");
+	puts("Usage: ede-crasher [OPTIONS]");
 	puts("EDE crash handler\n");
 	puts("Options:");
 	puts("  -h, --help                  this help");
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 			}
 			i++;
 		} else {
-			printf("Unknown '%s' parameter. Run ecrasher -h for options\n", a);
+			printf("Unknown '%s' parameter. Run 'ede-crasher -h' for options\n", a);
 			return 1;
 		}
 	}
