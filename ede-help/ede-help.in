@@ -23,7 +23,7 @@ fi
 if [ "$1" = "--titles" ]; then
 	echo "Known titles:"
 
-	content=`ls $help_dir/ | sort -f`
+	content=`ls $help_dir/ | sort -f | sed 's/^images$//'`
 	for c in $content; do
 		# show only files (readable), stripping extension
 		[ -r "$help_dir/$c" ] && echo " " $c | sed 's/\.html//g'
@@ -31,7 +31,7 @@ if [ "$1" = "--titles" ]; then
 	exit 0
 fi
 
-if [ -z "$1" ]; then
+if [ "x$1" = "x" ]; then
 	url="$help_dir/index.html"
 else
 	url="$help_dir/$1.html"
@@ -45,7 +45,7 @@ fi
 url="file://$url"
 
 # try to find browser
-if [ -z "$BROWSER" ]; then
+if [ "x$BROWSER" = "x" ]; then
 	for i in $browser_list; do
 		if which $i > /dev/null 2>&1; then
 			BROWSER="$i"
@@ -54,7 +54,7 @@ if [ -z "$BROWSER" ]; then
 	done
 fi
 
-if [ -z $BROWSER ]; then
+if [ "x$BROWSER" = "x" ]; then
 	xmessage -title "$program error" -center -buttons "Close" -file - <<EOF
 Failed to find any of known browsers!
 
