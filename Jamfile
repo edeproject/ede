@@ -2,7 +2,7 @@
 # $Id$
 #
 # Part of Equinox Desktop Environment (EDE).
-# Copyright (c) 2000-2007 EDE Authors.
+# Copyright (c) 2007-2008 EDE Authors.
 #
 # This program is licenced under terms of the 
 # GNU General Public Licence version 2 or newer.
@@ -19,16 +19,16 @@ SubInclude TOP ede-about ;
 SubInclude TOP ede-calc ;
 SubInclude TOP ede-control ;
 SubInclude TOP ede-crasher ;
-SubInclude TOP edesktopconf ;
+SubInclude TOP ede-desktop-conf ;
 #SubInclude TOP edewm ;
 SubInclude TOP efiler ;
-SubInclude TOP ehelp ;
+SubInclude TOP ede-help ;
 SubInclude TOP eiconman ;
 SubInclude TOP eimage ;
 SubInclude TOP elma ;
 SubInclude TOP emountd ;
 SubInclude TOP etimedate ;
-SubInclude TOP etip ;
+SubInclude TOP ede-tip ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
