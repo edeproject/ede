@@ -3,7 +3,7 @@
 help_dir="@ededocdir@/manual"
 browser_list="firefox mozilla konqueror opera navigator dillo"
 
-program="ehelp"
+program="ede-help"
 url=""
 
 if [ "$1" = "--help" ]; then
