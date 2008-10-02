@@ -90,7 +90,7 @@ void Xsm::xresource_replace(void) {
 	edelib::String home = edelib::dir_home();
 
 	// try to open ~/.Xdefaults; if failed, X Resource will not complain
-	edelib::String db_file = edelib::build_filename("/", home.c_str(), USER_XRESOURCE);
+	edelib::String db_file = edelib::build_filename(home.c_str(), USER_XRESOURCE);
 
 	// initialize XResource manager
 	XrmInitialize();
@@ -145,7 +145,7 @@ void Xsm::xresource_replace(void) {
 		XrmPutLineResource(&db, tmp.c_str());
 	}
 
-	edelib::String tmp_db_file = edelib::build_filename("/", home.c_str(), USER_XRESOURCE_TMP);
+	edelib::String tmp_db_file = edelib::build_filename(home.c_str(), USER_XRESOURCE_TMP);
 
 	/*
 	 * Try to merge existing ~/.Xdefaults (if present) with our changes. If there is existing
@@ -158,7 +158,7 @@ void Xsm::xresource_replace(void) {
 	//XrmSetDatabase(fl_display, db);
 	XrmDestroyDatabase(db);
 	if(status) {
-		edelib::String db_backup = edelib::build_filename("/", home.c_str(), USER_XRESOURCE_SAVED);
+		edelib::String db_backup = edelib::build_filename(home.c_str(), USER_XRESOURCE_SAVED);
 		edelib::file_rename(db_file.c_str(), db_backup.c_str());
 	} 
 
@@ -169,8 +169,8 @@ void Xsm::xresource_undo(void) {
 	edelib::String home, db_file_backup, db_file;
 
 	home = edelib::dir_home();
-	db_file_backup = edelib::build_filename("/", home.c_str(), USER_XRESOURCE_SAVED);
-	db_file = edelib::build_filename("/", home.c_str(), USER_XRESOURCE);
+	db_file_backup = edelib::build_filename(home.c_str(), USER_XRESOURCE_SAVED);
+	db_file = edelib::build_filename(home.c_str(), USER_XRESOURCE);
 
 	/*
 	 * If we have backup, restore it; otherwise delete ~/.Xdefaults.

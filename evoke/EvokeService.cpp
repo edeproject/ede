@@ -42,7 +42,7 @@ static void resolve_path(const edelib::String& datadir, edelib::String& item, bo
 	const char* i = item.c_str();
 
 	if(!edelib::file_exists(i) && have_datadir) {
-		item = edelib::build_filename("/", datadir.c_str(), i);
+		item = edelib::build_filename(datadir.c_str(), i);
 		i = item.c_str();
 		if(!edelib::file_exists(i)) {
 			// no file, send then empty
