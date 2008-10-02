@@ -8,15 +8,15 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eiconman ;
+SubDir TOP ede-desktop ;
 
 ObjectC++Flags DesktopIcon.cpp : -DUSE_SHAPE ;
-ObjectC++Flags eiconman.cpp : -DUSE_EDELIB_WINDOW ;
+ObjectC++Flags ede-desktop.cpp : -DUSE_EDELIB_WINDOW ;
 
-SOURCE = eiconman.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
+SOURCE = ede-desktop.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
 
 ObjectC++Flags $(SOURCE) : -Wno-long-long -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include ;
 
-EdeProgram  eiconman : $(SOURCE) ;
-LinkAgainst eiconman : -L/opt/ede/lib -ledelib_dbus -ldbus-1 ;
+EdeProgram  ede-desktop : $(SOURCE) ;
+LinkAgainst ede-desktop : -L/opt/ede/lib -ledelib_dbus -ldbus-1 ;
 TranslationStrings locale : $(SOURCE) ;

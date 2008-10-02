@@ -1,17 +1,17 @@
 /*
  * $Id$
  *
- * Eiconman, desktop and icon manager
+ * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2006-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
  * See COPYING for details.
  */
 
-#ifndef __EICONMAN_H__
-#define __EICONMAN_H__
+#ifndef __EDE_DESKTOP_H__
+#define __EDE_DESKTOP_H__
 
 #ifdef USE_EDELIB_WINDOW
 	#include <edelib/Window.h>
@@ -106,8 +106,8 @@ class Desktop : public DESKTOP_WINDOW {
 
 		SelectionOverlay*  selbox;
 
-		GlobalIconSettings gisett;
-		DesktopSettings*   dsett;
+		GlobalIconSettings* gisett;
+		DesktopSettings*    dsett;
 
 		Fl_Menu_Button*  dmenu;
 		Wallpaper*       wallpaper;

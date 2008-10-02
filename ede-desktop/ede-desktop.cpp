@@ -1,12 +1,12 @@
 /*
  * $Id$
  *
- * Eiconman, desktop and icon manager
+ * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2006-2008 EDE Authors.
  *
- * This program is licensed under the terms of 
- * the GNU General Public License version 2 or later.
+ * This program is licensed under terms of the 
+ * GNU General Public License version 2 or newer.
  * See COPYING for details.
  */
 
@@ -14,10 +14,18 @@
 #include <config.h>
 #endif
 
-#include "eiconman.h"
-#include "DesktopIcon.h"
-#include "Utils.h"
-#include "Wallpaper.h"
+#include <unistd.h> // sleep
+#include <signal.h>
+#include <stdlib.h> // rand, srand
+#include <time.h>   // time
+
+#include <FL/Fl.H>
+#include <FL/x.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/fl_ask.H>
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -31,25 +39,17 @@
 #include <edelib/Util.h>
 #include <edelib/Nls.h>
 
-#include <FL/Fl.H>
-#include <FL/x.H>
-#include <FL/fl_draw.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Shared_Image.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/fl_ask.H>
+#include "ede-desktop.h"
+#include "DesktopIcon.h"
+#include "Utils.h"
+#include "Wallpaper.h"
 
-#include <unistd.h> // sleep
-#include <signal.h>
-#include <stdlib.h> // rand, srand
-#include <time.h>   // time
+#define EDE_DESKTOP_UID    0x10
+#define CONFIG_NAME        "ede/ede-desktop"
+#define ICONS_CONFIG_NAME  "ede/ede-desktop-icons"
 
-#define EICONMAN_UID       0x10
-#define CONFIG_NAME        "ede/eiconman"
-#define ICONS_CONFIG_NAME  "ede/eiconman-icons"
-
-#define EICONMAN_INTERFACE "org.equinoxproject.Eiconman"
-#define EICONMAN_OBJECT    "/org/equinoxproject/Eiconman"
+#define EDE_DESKTOP_INTERFACE "org.equinoxproject.Desktop"
+#define EDE_DESKTOP_OBJECT    "/org/equinoxproject/Desktop"
 
 #define SELECTION_SINGLE (Fl::event_button() == 1)
 #define SELECTION_MULTI  (Fl::event_button() == 1 && (Fl::event_key(FL_Shift_L) || Fl::event_key(FL_Shift_R)))
@@ -123,11 +123,11 @@ void settings_changed_cb(void* data) {
 }
 
 void background_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("../edesktopconf/edesktopconf");
+	Desktop::instance()->execute("../ede-desktop-conf/ede-desktop-conf");
 }
 
 void icons_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("../edesktopconf/edesktopconf --icons");
+	Desktop::instance()->execute("../ede-desktop-conf/ede-desktop-conf --icons");
 }
 
 int desktop_xmessage_handler(int event) { 
@@ -153,7 +153,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 
 #ifdef USE_EDELIB_WINDOW
 	DESKTOP_WINDOW::init();
-	settings_uid(EICONMAN_UID);
+	settings_uid(EDE_DESKTOP_UID);
 	settings_callback(settings_changed_cb);
 	//DESKTOP_WINDOW::single_buffer(true);
 #endif
@@ -161,6 +161,17 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selbox = new SelectionOverlay;
 	selbox->x = selbox->y = selbox->w = selbox->h = 0;
 	selbox->show = false;
+
+	gisett = new GlobalIconSettings;
+	// gnome light blue
+	gisett->label_background = 138;
+	gisett->label_foreground = FL_WHITE;
+	gisett->label_fontsize = 12;
+	gisett->label_maxwidth = 75;
+	gisett->label_transparent = false;
+	gisett->label_draw = true;
+	gisett->one_click_exec = false;
+	gisett->auto_arrange = true;
 
 	dsett = new DesktopSettings;
 	dsett->color = FL_GRAY;
@@ -172,6 +183,7 @@ Desktop::~Desktop() {
 
 	save_icons_positions();
 
+	delete gisett;
 	delete dsett;
 	delete selbox;
 	delete dbus;
@@ -326,9 +338,9 @@ void Desktop::read_config(void) {
 	int  default_wp_use   = false;
 	char wpath[256];
 
-	conf.get("Desktop", "Color", dsett->color, default_bg_color);
-	conf.get("Desktop", "WallpaperUse", dsett->wp_use, default_wp_use);
-	conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath));
+	conf.get("Desktop", "color", dsett->color, default_bg_color);
+	conf.get("Desktop", "wallpaper_use", dsett->wp_use, default_wp_use);
+	conf.get("Desktop", "wallpaper", wpath, sizeof(wpath));
 
 	// keep path but disable wallpaper if file does not exists
 	if(!edelib::file_exists(wpath)) {
@@ -336,14 +348,16 @@ void Desktop::read_config(void) {
 		dsett->wp_use = false;
 	}
 
-	conf.get("Icons", "LabelBackground", gisett.label_background, FL_BLUE);
-	conf.get("Icons", "LabelForeground", gisett.label_foreground, FL_WHITE);
-	conf.get("Icons", "LabelFontsize",   gisett.label_fontsize, 12);
-	conf.get("Icons", "LabelMaxwidth",   gisett.label_maxwidth, 75);
-	conf.get("Icons", "LabelTransparent",gisett.label_transparent, false);
-	conf.get("Icons", "LabelVisible",    gisett.label_draw, true);
-	conf.get("Icons", "OneClickExec",     gisett.one_click_exec, false);
-	conf.get("Icons", "AutoArrange",      gisett.auto_arrange, true);
+	// '138' is gnome light blue
+	conf.get("Icons", "label_background", gisett->label_background, 138);
+
+	conf.get("Icons", "label_foreground", gisett->label_foreground, FL_WHITE);
+	conf.get("Icons", "label_fontsize",   gisett->label_fontsize, 12);
+	conf.get("Icons", "label_maxwidth",   gisett->label_maxwidth, 75);
+	conf.get("Icons", "label_transparent",gisett->label_transparent, false);
+	conf.get("Icons", "label_visible",    gisett->label_draw, true);
+	conf.get("Icons", "one_click_exec",   gisett->one_click_exec, false);
+	conf.get("Icons", "auto_arrange",     gisett->auto_arrange, true);
 
 	if(dsett->wp_use)
 		wallpaper->set(wpath);
@@ -418,7 +432,7 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 		int icon_y = random_pos(w() - 10);
 
 		if(conf) {
-			// we load positions from used eiconman-icos.conf only
+			// we load positions from used ede-desktop-icos.conf only
 			conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
 			conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
 		}
@@ -428,7 +442,7 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 		is.y = icon_y;
 		is.full_path = path;
 
-		DesktopIcon* dic = new DesktopIcon(&gisett, &is, dsett->color);
+		DesktopIcon* dic = new DesktopIcon(gisett, &is, dsett->color);
 		add_icon(dic);
 	}
 
@@ -743,8 +757,8 @@ void Desktop::notify_desktop_changed(void) {
 
 	if(dbus) {
 		edelib::EdbusMessage msg;
-		// send org.equinoxproject.Eiconman.DesktopChanged(int32, string) signal
-		msg.create_signal(EICONMAN_OBJECT, EICONMAN_INTERFACE, "DesktopChanged");
+		// send org.equinoxproject.Desktop.DesktopChanged(int32, string) signal
+		msg.create_signal(EDE_DESKTOP_OBJECT, EDE_DESKTOP_INTERFACE, "DesktopChanged");
 		msg << num << names[num];
 		dbus->send(msg);
 	}
@@ -850,7 +864,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 		is.icon = mt.icon_name();
 	}
 
-	DesktopIcon* dic = new DesktopIcon(&gisett, &is, color());
+	DesktopIcon* dic = new DesktopIcon(gisett, &is, color());
 	add_icon(dic);
 
 	delete [] src_copy;

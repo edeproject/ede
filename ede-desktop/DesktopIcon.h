@@ -1,9 +1,9 @@
 /*
  * $Id$
  *
- * Eiconman, desktop and icon manager
+ * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2006-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -13,13 +13,13 @@
 #ifndef __DESKTOPICON_H__
 #define __DESKTOPICON_H__
 
+#include <X11/Xlib.h> // Pixmap
+
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Image.H>
-
-#include <X11/Xlib.h> // Pixmap
 
 #include <edelib/String.h>
 

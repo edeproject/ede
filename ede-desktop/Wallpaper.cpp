@@ -1,27 +1,27 @@
 /*
  * $Id$
  *
- * Eiconman, desktop and icon manager
+ * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2000-2007 EDE Authors.
+ * Copyright (c) 2006-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
  * See COPYING for details.
  */
 
-#include "Wallpaper.h"
-#include "Utils.h"
-
-#include <edelib/Debug.h>
+#include <string.h> // memcpy
+#include <stdlib.h> // malloc
 
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_RGB_Image.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
 
-#include <string.h> // memcpy
-#include <stdlib.h> // malloc
+#include <edelib/Debug.h>
+
+#include "Wallpaper.h"
+#include "Utils.h"
 
 #define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
 	tmp = 0; \
@@ -41,7 +41,7 @@
 		tmp |= (((int)b >> (-bshift)) & bmask);
 
 
-Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_h) {
+static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_h) {
 	if(!img)
 		return 0;
 

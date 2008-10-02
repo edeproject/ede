@@ -1,9 +1,9 @@
 /*
  * $Id$
  *
- * Eiconman, desktop and icon manager
+ * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2008 EDE Authors.
+ * Copyright (c) 2006-2008 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
