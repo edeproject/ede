@@ -12,22 +12,26 @@ Naming convention
 EDE uses 'org.equinoxproject' as main namespace for interfaces and object paths, e.g.
 
 -----------------------------------------------------------
-  org.equinoxproject.Eiconman   # eiconman interface
-  /org/equinoxproject/Eiconman  # eiconman object path
+  org.equinoxproject.Desktop   # ede-desktop interface
+  /org/equinoxproject/Desktop  # ede-desktop object path
 -----------------------------------------------------------
 
-rest of the name will be application name and method or signal name, like:
+rest of the name will be application name and method or signal name. If application name
+is not suitable or could not be represented as D-BUS name or could be ambiguous, it can be replaced 
+with application functionality (e.g. 'org.equinoxproject.Desktop' sounds much better than
+'org.equinoxproject.Ede_Desktop').
 
+Sample:
 -----------------------------------------------------------
-  org.equinoxproject.Eiconman.FooMethod   # FooMethod belongs to eiconman
+  org.equinoxproject.Desktop.FooMethod   # FooMethod belongs to ede-desktop
 -----------------------------------------------------------
 
 Interfaces
 ----------
 
-org.equinoxproject.Eiconman
+org.equinoxproject.Desktop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Used by eiconman and access object is '/org/eqiunoxproject/Eiconman'. Provided
+Used by ede-destkop and access object is '/org/eqiunoxproject/Desktop'. Provided
 signals are:
 
 DesktopChanged(int32 n, string name)
