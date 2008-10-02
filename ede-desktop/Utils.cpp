@@ -311,3 +311,16 @@ char* get_basename(const char* path) {
 
 	return (char*)path;
 }
+
+bool is_temp_filename(const char* path) {
+	int len;
+
+	if(!path || path[0] == '\0' || path[0] == '.')
+		return true;
+
+	len = strlen(path);
+	if(path[len - 1] == '~')
+		return true;
+
+	return false;
+}

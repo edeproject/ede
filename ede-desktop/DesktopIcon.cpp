@@ -308,6 +308,7 @@ int DesktopIcon::drag_icon_y(void) {
 void DesktopIcon::rename(const char* str) {
 	if(!str)
 		return;
+
 	if(settings->name == str)
 		return;
 

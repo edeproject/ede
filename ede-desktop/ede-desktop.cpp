@@ -914,6 +914,10 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	if(!do_dirwatch || !changed || flags == edelib::DW_REPORT_NONE)
 		return;
 
+	// skip temporary files
+	if(is_temp_filename(changed))
+		return;
+
 	if(trash_path == dir) {
 		bool is_empty = edelib::dir_empty(trash_path.c_str());
 
@@ -932,17 +936,6 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 		return;
 	}
 
-	/*
-	 * Check first we don't get any temporary files (starting with '.'
-	 * or ending with '~', like vim does when editing file). For now these
-	 * are only conditions, but I will probably add them more when issues occured.
-	 *
-	 * FIXME: use strcmp() family ?
-	 */
-	edelib::String tmp(changed);
-	if(tmp.empty() || tmp[0] == '.' || tmp[tmp.length()-1] == '~')
-		return;
-
 	sleep(1);
 
 	if(flags == edelib::DW_REPORT_CREATE) {
@@ -952,15 +945,6 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 			E_DEBUG(E_STRLOC ": %s already registered; skipping...\n", changed);
 			return;
 		}
-
-		/*
-		 * Uh; looks like kernel report event faster than file is created
-		 * (in some cases). This can be bad for .desktop files when are copied
-		 * (eg. on my machine after 'cp Home.desktop foo.desktop', will fail
-		 * to load foo.desktop since it's content is not fully copied). 
-		 * Due that we stop for one sec (use usleep() ???)
-		 */
-		//sleep(1);
 
 		if(add_icon_by_path(changed, 0))
 			redraw();

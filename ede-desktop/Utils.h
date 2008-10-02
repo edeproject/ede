@@ -41,5 +41,6 @@ void set_xoverlay_drawable(Fl_Window* win);
 Pixmap create_mask(Fl_Image* img);
 
 char* get_basename(const char* path);
+bool  is_temp_filename(const char* path);
 
 #endif
