@@ -252,21 +252,21 @@ void choice_cb(Fl_Widget*, void*) {
 
 void apply_cb(Fl_Widget*, void* w) {
 	edelib::Resource conf;
-	conf.set("Desktop", "Color", (int)desk_background_color->color());
-	conf.set("Desktop", "WallpaperUse", desk_use_wallpaper->value());
-	conf.set("Desktop", "WallpaperMode", desk_background_mode->value());
+	conf.set("Desktop", "color", (int)desk_background_color->color());
+	conf.set("Desktop", "wallpaper_use", desk_use_wallpaper->value());
+	conf.set("Desktop", "wallpaper_mode", desk_background_mode->value());
 
 	if(desk_background->value())
-		conf.set("Desktop", "Wallpaper", desk_background->value());
+		conf.set("Desktop", "wallpaper", desk_background->value());
 
-	conf.set("Icons", "LabelBackground", (int)icon_background_color->color());
-	conf.set("Icons", "LabelForeground", (int)icon_label_color->color());
-	conf.set("Icons", "LabelFont",       icon_font);
-	conf.set("Icons", "LabelFontsize",   icon_font_size);
-	conf.set("Icons", "LabelMaxwidth",   icon_label_width->value());
-	conf.set("Icons", "LabelTransparent", icon_show_background_color->value());
-	conf.set("Icons", "LabelVisible", icon_show_label->value());
-	conf.set("Icons", "OneClickExec", engage_with_one_click->value());
+	conf.set("Icons", "label_background", (int)icon_background_color->color());
+	conf.set("Icons", "label_foreground", (int)icon_label_color->color());
+	conf.set("Icons", "label_font",       icon_font);
+	conf.set("Icons", "label_fontsize",   icon_font_size);
+	conf.set("Icons", "label_maxwidth",   icon_label_width->value());
+	conf.set("Icons", "label_transparent", !icon_show_background_color->value());
+	conf.set("Icons", "label_visible", icon_show_label->value());
+	conf.set("Icons", "one_click_exec", engage_with_one_click->value());
 
 	if(conf.save(EDE_DESKTOP_CONFIG))
 		edelib::Window::update_settings(EDE_DESKTOP_UID);
@@ -311,23 +311,23 @@ void load_settings(void) {
 	bool wpath_found = false;
 
 	if(conf.load(EDE_DESKTOP_CONFIG)) {
-		conf.get("Desktop", "Color", d_background_color, d_background_color); 
-		conf.get("Desktop", "WallpaperUse", d_wp_use, d_wp_use);
-		conf.get("Desktop", "WallpaperMode", b_mode, b_mode);
+		conf.get("Desktop", "color", d_background_color, d_background_color); 
+		conf.get("Desktop", "wallpaper_use", d_wp_use, d_wp_use);
+		conf.get("Desktop", "wallpaper_mode", b_mode, b_mode);
 
-		if(conf.get("Desktop", "Wallpaper", wpath, sizeof(wpath)))
+		if(conf.get("Desktop", "wallpaper", wpath, sizeof(wpath)))
 			wpath_found = true;
 		else
 			wpath_found = false;
 
-		conf.get("Icons", "LabelBackground", i_background_color, i_background_color);
-		conf.get("Icons", "LabelForeground", i_label_color, i_label_color);
-		conf.get("Icons", "LabelFont", icon_font, 1);
-		conf.get("Icons", "LabelFontsize",   icon_font_size, 12);
-		conf.get("Icons", "LabelMaxwidth",   i_label_width, i_label_width);
-		conf.get("Icons", "LabelTransparent",i_show_background_color, i_show_background_color);
-		conf.get("Icons", "LabelVisible",    i_show_label, i_show_label);
-		conf.get("Icons", "OneClickExec",     one_click, one_click);
+		conf.get("Icons", "label_background", i_background_color, i_background_color);
+		conf.get("Icons", "label_foreground", i_label_color, i_label_color);
+		conf.get("Icons", "label_font", icon_font, 1);
+		conf.get("Icons", "label_fontsize",   icon_font_size, 12);
+		conf.get("Icons", "label_maxwidth",   i_label_width, i_label_width);
+		conf.get("Icons", "label_transparent",i_show_background_color, i_show_background_color);
+		conf.get("Icons", "label_visible",    i_show_label, i_show_label);
+		conf.get("Icons", "one_click_exec",     one_click, one_click);
 	}
 
 	desk_background_color->color(d_background_color);
@@ -342,7 +342,7 @@ void load_settings(void) {
 
 	icon_background_color->color(i_background_color);
 	icon_label_color->color(i_label_color);
-	icon_show_background_color->value(i_show_background_color);
+	icon_show_background_color->value(!i_show_background_color);
 	icon_show_label->value(i_show_label);
 	icon_label_width->value(i_label_width);
 	engage_with_one_click->value(one_click);
