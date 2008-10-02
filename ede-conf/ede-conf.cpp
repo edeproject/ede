@@ -31,7 +31,7 @@
 typedef edelib::list<edelib::String> StrList;
 typedef edelib::list<edelib::String>::iterator StrListIter;
 
-bool file_can_execute(const edelib::String& f) {
+static bool file_can_execute(const edelib::String& f) {
 	if(edelib::file_executable(f.c_str()))
 		return true;
 
@@ -64,13 +64,19 @@ int ControlButton::handle(int event) {
 		case FL_ENTER:
 			tipbox->label(tipstr.c_str());
 			return 1;
+
 		case FL_LEAVE:
 			tipbox->label("");
 			return 1;
-		case FL_PUSH:
-			box(FL_DOWN_BOX);
-			redraw();
 
+		case FL_DRAG:
+			return 1;
+
+		case FL_PUSH:
+			if(Fl::visible_focus() && handle(FL_FOCUS))
+				Fl::focus(this);
+
+			box(FL_DOWN_BOX);
 			if(Fl::event_clicks()) {
 				if(exec.empty())
 					edelib::alert(_("Unable to execute command for '%s'. Command value is not set"), label());
@@ -79,33 +85,54 @@ int ControlButton::handle(int event) {
 				else
 					edelib::run_program(exec.c_str(), false);
 			}
-			return 0;
+			return 1;
+
 		case FL_RELEASE:
 			box(FL_FLAT_BOX);
 			redraw();
-			return 0;
-		default:
-			return Fl_Button::handle(event);
+			return 1;
 	}
+
 	return Fl_Button::handle(event);
 }
 
-void close_cb(Fl_Widget*, void* w) {
+static void close_cb(Fl_Widget*, void* w) {
 	Fl_Window* win = (Fl_Window*)w;
 	win->hide();
 }
 
-void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
+static void fetch_icon(ControlButton* btn, const char* path, bool abs) {
+	Fl_Image* img = NULL;
+
+	if(abs) {
+		img = Fl_Shared_Image::get(path);
+	} else {
+		edelib::String p = edelib::IconTheme::get(path, edelib::ICON_SIZE_LARGE);
+		if(!p.empty()) {
+			img = Fl_Shared_Image::get(p.c_str());
+		} else {
+			// nothing found, try "empty" icon
+			p = edelib::IconTheme::get("empty", edelib::ICON_SIZE_LARGE);
+			if(!p.empty())
+				img = Fl_Shared_Image::get(p.c_str());
+		}
+	}
+
+	if(img)
+		btn->image(img);
+}
+
+static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 	edelib::Config c;
 
 	if(!c.load("ede-conf.conf")) {
-		EWARNING("Can't load config\n");
+		E_WARNING("Can't load config\n");
 		return;
 	}
 
 	char buff[1024];
-	if(!c.get("Control Panel", "Items", buff, sizeof(buff))) {
-		EWARNING("Can't find Items key\n");
+	if(!c.get("edeconf", "Items", buff, sizeof(buff))) {
+		E_WARNING("Can't find Items key\n");
 		return;
 	}
 
@@ -128,7 +155,7 @@ void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 		if(c.get(section, "Name", buff, sizeof(buff)))
 			name = buff;
 		else {
-			EWARNING("No %s, skipping...\n", section);
+			E_WARNING("No %s, skipping...\n", section);
 			continue;
 		}
 
@@ -137,32 +164,31 @@ void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 		if(c.get(section, "Exec", buff, sizeof(buff)))
 			exec = buff;
 
-		ControlButton* cb = new ControlButton(tipbox, tip, exec, 0, 0, 80, 100);
+		ControlButton* cb = new ControlButton(tipbox, tip, exec, 0, 0, 100, 100);
 		cb->copy_label(name.c_str());
 
 		c.get(section, "IconPathAbsolute", abspath, false);
 
-		if(c.get(section, "Icon", buff, sizeof(buff))) {
-			if(abspath) {
-				Fl_Image* img = Fl_Shared_Image::get(buff);
-				cb->image(img);
-			} else {
-				edelib::String iconpath = edelib::IconTheme::get(buff, edelib::ICON_SIZE_LARGE);
-				if(!iconpath.empty())
-					cb->image(Fl_Shared_Image::get(iconpath.c_str()));
-				else
-					EWARNING("Can't find %s icon\n", buff);
-			}
-		}
+		if(c.get(section, "Icon", buff, sizeof(buff)))
+			fetch_icon(cb, buff, abspath);
 
 		g->add(cb);
 	}
 }
 
 int main() {
-	edelib::Window* win = new edelib::Window(455, 330, _("EDE Control Panel"));
+	edelib::Window* win = new edelib::Window(455, 330, _("EDE Configuration Place"));
 	win->init();
 	win->begin();
+
+		/* 
+		 * Resizable invisible box.
+		 * It is created first so (due stacking order) does not steal FL_ENTER/FL_LEAVE 
+		 * events from ControlButton children
+		 */
+		Fl_Box* rbox = new Fl_Box(10, 220, 120, 65);
+		win->resizable(rbox);
+
 		Fl_Group* titlegrp = new Fl_Group(0, 0, 455, 50);
 		titlegrp->box(FL_FLAT_BOX);
 		titlegrp->color(138);
@@ -179,9 +205,10 @@ int main() {
 		edelib::ExpandableGroup* icons = new edelib::ExpandableGroup(10, 60, 435, 225);
 		icons->box(FL_DOWN_BOX);
 		icons->color(FL_BACKGROUND2_COLOR);
+		icons->begin();
 		icons->end();
 
-		Fl_Box* tipbox = new Fl_Box(10, 295, 240, 25, _("Double click on desired item"));
+		Fl_Box* tipbox = new Fl_Box(10, 295, 240, 25, _("Double click on a desired item"));
 		tipbox->box(FL_FLAT_BOX);
 		tipbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE | FL_ALIGN_CLIP);
 
@@ -191,10 +218,6 @@ int main() {
 		Fl_Button* close = new Fl_Button(355, 295, 90, 25, _("&Close"));
 		close->callback(close_cb, win);
 		Fl::focus(close);
-
-		// resizable invisible box
-		Fl_Box* rbox = new Fl_Box(10, 220, 120, 65);
-		win->resizable(rbox);
 	win->end();
 	win->show();
 	return Fl::run();
