@@ -192,13 +192,14 @@ Desktop::~Desktop() {
 }
 
 void Desktop::init_internals(void) {
+	edelib::String p;
+
 	init_atoms();
 	update_workarea();
 
 	/*
-	 * NOTE: order how childs are added is important. First
-	 * non iconable ones should be added (wallpaper, menu, ...)
-	 * then icons, so they can be drawn at top of them.
+	 * NOTE: order how childs are added is important. First non iconable ones should be 
+	 * added (wallpaper, menu, ...) then icons, so they can be drawn at top of them.
 	 */
 	begin();
 		dmenu = new Fl_Menu_Button(0, 0, 0, 0);
@@ -216,28 +217,22 @@ void Desktop::init_internals(void) {
 		dbus = NULL;
 	}
 
+	// read main config
 	read_config();
 
-	/*
-	 * Now try to load icons, first looking inside ~/Desktop directory
-	 * FIXME: dir_exists() can't handle '~/Desktop' ???
-	 */
-	edelib::String desktop_path = edelib::dir_home();
-	if(desktop_path.empty()) {
-		E_WARNING(E_STRLOC ": can't read home directory; icons will not be loaded\n");
-		return;
-	}
-	desktop_path += "/Desktop";
+	// now try to load icons, looking inside ~/Desktop directory
+	p = edelib::dir_home();
+	edelib::String desktop_path = edelib::build_filename(p.c_str(), "Desktop");
 
-	// setup watcher on ~/Desktop and Trash directories
+	// setup watcher used for Desktop and Trash directories
 	edelib::DirWatch::init();
 
 	if(edelib::dir_exists(desktop_path.c_str())) {
 		load_icons(desktop_path.c_str());
 
 		if(!edelib::DirWatch::add(desktop_path.c_str(), 
-					edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) {
-
+					edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) 
+		{
 			E_WARNING(E_STRLOC ": Unable to watch %s\n", desktop_path.c_str());
 		}
 	}
@@ -248,8 +243,8 @@ void Desktop::init_internals(void) {
 	 *
 	 * FIXME: at startup it should be checked is Trash empty and update icons for that
 	 */
-	trash_path = edelib::user_data_dir();
-	trash_path += "/Trash/files";
+	p = edelib::user_data_dir();
+	trash_path = edelib::build_filename(p.c_str(), "Trash/files");
 
 	if(edelib::dir_exists(trash_path.c_str())) {
 		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))

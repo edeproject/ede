@@ -120,31 +120,6 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 		imenu->menu(icon_menu);
 
 	load_icon(ICON_FACE_ONE);
-
-#if 0
-	if(!settings->icon.empty()) {
-		const char* nn = settings->icon.c_str();
-
-		//edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_MEDIUM);
-		edelib::String ipath = edelib::IconTheme::get(nn, edelib::ICON_SIZE_HUGE);
-		if(!ipath.empty()) {
-			Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
-			if(img) {
-				int img_w = img->w();
-				int img_h = img->h();
-
-				// resize box if icon is larger
-				if(img_w > ICON_SIZE_MIN_W || img_h > ICON_SIZE_MIN_H)
-					size(img_w + OFFSET_W, img_h + OFFSET_H);
-
-				image(img);
-			} else 
-				E_DEBUG(E_STRLOC ": Unable to load %s\n", ipath.c_str());
-		} else
-			E_DEBUG(E_STRLOC ": Got empty icon name ?!?\n");
-	}
-#endif
-
 	fix_position(x(), y());
 
 	//Use desktop color as color for icon background
@@ -337,8 +312,6 @@ void DesktopIcon::icon2(void) {
 }
 
 void DesktopIcon::fast_redraw(void) {
-	E_ASSERT(parent() != NULL && "Impossible !");
-
 	int wsz = w();
 	int xpos = x();
 
