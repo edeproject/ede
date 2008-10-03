@@ -920,9 +920,9 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 		for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
 			if((*it)->icon_type() == ICON_TRASH) {
 				if(is_empty)
-					(*it)->icon1();
+					(*it)->use_icon1();
 				else
-					(*it)->icon2();
+					(*it)->use_icon2();
 			}
 		}
 

@@ -40,6 +40,7 @@ class DesktopIcon : public Fl_Widget {
 
 		MovableIcon* micon;
 
+		Fl_Image*       darker_img;
 		Fl_Menu_Button* imenu;
 
 		void load_icon(int face);
@@ -87,9 +88,9 @@ class DesktopIcon : public Fl_Widget {
 		 */
 		const edelib::String& path(void);
 
-		int icon_type(void);
-		void icon1(void);
-		void icon2(void);
+		int  icon_type(void);
+		void use_icon1(void);
+		void use_icon2(void);
 };
 
 class MovableIcon : public Fl_Window {

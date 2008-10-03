@@ -86,6 +86,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	lwidth = lheight = 0;
 	focus = false;
 	micon = NULL;
+	darker_img = NULL;
 
 	/*
 	 * GlobalIconSettings is shared from desktop so we only
@@ -137,6 +138,7 @@ DesktopIcon::~DesktopIcon() {
 	if(micon)
 		delete micon;
 
+	delete darker_img;
 	delete imenu;
 }
 
@@ -181,6 +183,11 @@ void DesktopIcon::load_icon(int face) {
 		size(img_w + OFFSET_W, img_h + OFFSET_H);
 
 	image(img);
+	
+	// darker icon version for selection
+	delete darker_img;
+	darker_img = image()->copy(image()->w(), image()->h());
+	darker_img->color_average(FL_BLUE, 0.6);
 }
 
 void DesktopIcon::update_label_size(void) {
@@ -243,7 +250,6 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 		micon->show();
 	} else {
 		E_ASSERT(micon != NULL);
-
 		micon->position(x, y);
 	}
 
@@ -301,12 +307,12 @@ int DesktopIcon::icon_type(void) {
 	return settings->type;
 }
 
-void DesktopIcon::icon1(void) {
+void DesktopIcon::use_icon1(void) {
 	load_icon(ICON_FACE_ONE);
 	fast_redraw();
 }
 
-void DesktopIcon::icon2(void) {
+void DesktopIcon::use_icon2(void) {
 	load_icon(ICON_FACE_TWO);
 	fast_redraw();
 }
@@ -336,7 +342,11 @@ void DesktopIcon::draw(void) {
 		ix += x();
 		iy += y();
 
-		im->draw(ix, iy);
+		// darker_img is always present if image() is present
+		if(is_focused())
+			darker_img->draw(ix, iy);
+		else
+			im->draw(ix, iy);
 
 		E_DEBUG(E_STRLOC ": DesktopIcon icon redraw\n");
 	}
