@@ -10,7 +10,7 @@
  * See COPYING for details.
  */
 
-#include "etimedate.h"
+#include "ede-timedate.h"
 
 #include <edelib/Nls.h>
 #include <edelib/MessageBox.h>

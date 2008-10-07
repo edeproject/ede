@@ -11,8 +11,8 @@
  */
 
 
-#ifndef etimedate_h
-#define etimedate_h
+#ifndef __EDE_TIMEDATE_H__
+#define __EDE_TIMEDATE_H__
 
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
