@@ -27,7 +27,7 @@ SubInclude TOP ede-help ;
 SubInclude TOP eimage ;
 SubInclude TOP elma ;
 SubInclude TOP emountd ;
-SubInclude TOP etimedate ;
+SubInclude TOP ede-timedate ;
 SubInclude TOP ede-tip ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
