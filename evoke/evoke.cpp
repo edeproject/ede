@@ -39,21 +39,28 @@ static void quit_signal(int sig) {
 	EvokeService::instance()->stop();
 }
 
-static void xmessage_handler(int, void*) {
+static int xmessage_handler(int) {
 #ifdef USE_FLTK_LOOP_EMULATION
 	XEvent xev;
 	while(XEventsQueued(fl_display, QueuedAfterReading)) {
 		XNextEvent(fl_display, &xev);
 		EvokeService::instance()->handle((const XEvent*)&xev);
 	}
+	return 1;
 #else
 	return EvokeService::instance()->handle(fl_xevent);
 #endif
 }
 
+#ifdef USE_FLTK_LOOP_EMULATION
+static void xmessage_handler_fd(int, void*) {
+	xmessage_handler(0);
+}
+
 static int composite_handler(int ev) {
 	return EvokeService::instance()->composite_handle(fl_xevent);
 }
+#endif
 
 static const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
@@ -64,7 +71,7 @@ static const char* next_param(int curr, char** argv, int argc) {
 	return argv[j];
 }
 
-void help(void) {
+static void help(void) {
 	puts("Usage: evoke [OPTIONS]");
 	puts("EDE startup manager responsible for starting, quitting and tracking");
 	puts("various pieces of desktop environment and external programs.");
@@ -236,7 +243,7 @@ int main(int argc, char** argv) {
 	 * windows it already don't know.
 	 */
 #ifdef USE_FLTK_LOOP_EMULATION
-	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler);
+	Fl::add_fd(ConnectionNumber(fl_display), 1, xmessage_handler_fd);
 	Fl::add_handler(composite_handler);
 #else
 	/*
@@ -255,7 +262,7 @@ int main(int argc, char** argv) {
 	 	 * send to xmessage_handler() and composite will wrongly draw the screen.
 	 	 */
 		if(XQLength(fl_display)) {
-			xmessage_handler(0, 0);
+			xmessage_handler(0);
 			continue;
 		}
 #else

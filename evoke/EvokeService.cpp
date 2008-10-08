@@ -112,6 +112,7 @@ static int get_int_property_value(Atom at) {
 	return ret;
 }
 
+#if 0
 static int get_string_property_value(Atom at, char* txt, int txt_len) {
 	XTextProperty names;
 	XGetTextProperty(fl_display, RootWindow(fl_display, fl_screen), &names, at);
@@ -130,6 +131,7 @@ static int get_string_property_value(Atom at, char* txt, int txt_len) {
 	XFreeStringList(vnames);
 	return 1;
 }
+#endif
 
 /*
  * This is re-implementation of XmuClientWindow() so I don't have to link code with libXmu. 
@@ -589,7 +591,6 @@ void EvokeService::service_watcher(int pid, int ret) {
 	write(wake_up_pipe[1], &ret, sizeof(int));
 }
 
-#include <FL/fl_ask.H>
 void EvokeService::wake_up(int fd) {
 	puts("=== wake_up() ===");
 
@@ -630,7 +631,6 @@ void EvokeService::wake_up(int fd) {
 				break;
 			case 127:
 				edelib::alert(_("Program not found"));
-				//fl_alert(_("Program not found"));
 				break;
 			case 126:
 				edelib::alert(_("Program not executable"));
@@ -750,6 +750,7 @@ int EvokeService::handle(const XEvent* xev) {
 	}
 
 	if(xev->type == PropertyNotify) {
+#if 0
 		if(xev->xproperty.atom == _ede_spawn) {
 			char buff[1024];
 			if(get_string_property_value(_ede_spawn, buff, sizeof(buff))) {
@@ -759,6 +760,7 @@ int EvokeService::handle(const XEvent* xev) {
 				EVOKE_LOG("Got _EDE_EVOKE_SPAWN with malformed data. Ignoring...\n");
 			}
 		}
+#endif
 
 		if(xev->xproperty.atom == _ede_evoke_quit) {
 			int val = get_int_property_value(_ede_evoke_quit);
@@ -778,7 +780,7 @@ int EvokeService::handle(const XEvent* xev) {
 				int dh = DisplayHeight(fl_display, fl_screen);
 
 				// TODO: add XDM service permissions
-				printf("got %i\n", logout_dialog(dw, dh, 1, 1));
+				printf("got %i\n", logout_dialog(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART));
 				//quit_x11();
 			} else	
 				EVOKE_LOG("Got _EDE_EVOKE_SHUTDOWN_ALL with bad code (%i). Ignoring...\n", val);

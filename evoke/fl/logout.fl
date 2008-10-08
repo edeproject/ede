@@ -2,34 +2,29 @@
 version 1.0108 
 header_name {.h} 
 code_name {.cxx}
-Function {} {open selected
+Function {} {open
 } {
   Fl_Window {} {open
-    xywh {365 265 325 185} type Double visible
+    xywh {479 284 335 180} type Double visible
   } {
     Fl_Box {} {
-      label {Logout, restart or shut down the computer ?}
-      xywh {10 9 305 39} labelfont 1 align 148
+      label {How do you want to quit?}
+      xywh {10 9 315 25} labelfont 1 align 212
+    }
+    Fl_Choice {} {open
+      xywh {10 45 315 25} down_box BORDER_BOX labelsize 14 textsize 14
+    } {}
+    Fl_Box {} {
+      label {This option will close all programs and logs out from the current session}
+      xywh {10 80 315 55} align 213
+    }
+    Fl_Button {} {
+      label {&OK} selected
+      xywh {140 145 90 25}
     }
     Fl_Button {} {
       label {&Cancel}
-      xywh {225 150 90 25}
-    }
-    Fl_Button {} {
-      label {&OK}
-      xywh {130 150 90 25}
-    }
-    Fl_Round_Button {} {
-      label {Logout from the current session}
-      xywh {25 60 275 20} down_box ROUND_DOWN_BOX
-    }
-    Fl_Round_Button {} {
-      label {Restart the computer}
-      xywh {25 85 215 20} down_box ROUND_DOWN_BOX
-    }
-    Fl_Round_Button {} {
-      label {Shut down the computer}
-      xywh {25 110 215 20} down_box ROUND_DOWN_BOX
+      xywh {235 145 90 25}
     }
   }
 } 
