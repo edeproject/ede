@@ -212,12 +212,11 @@
 ;		 (cdrs (cdr unz)))
 ;	    (apply proc cars) (apply map (cons proc cdrs))))))
 
-(define (for-each proc lst)
-  (if (null? lst)
-      lst
-      (begin 
-        (proc (car lst))
-        (for-each proc (cdr lst)))))
+(define (for-each proc lst) 
+ (if (not (null? lst))
+  (begin 
+   (proc (car lst)) 
+   (for-each proc (cdr lst)))))
 
 (define (list-tail x k)
     (if (zero? k)
