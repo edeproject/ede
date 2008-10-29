@@ -173,6 +173,64 @@ FileDetailsView::FileDetailsView(int X, int Y, int W, int H, char*label) : EDE_B
 }
 
 
+// Try various names and sizes for icons
+Fl_Image* FileDetailsView::try_icon(edelib::String icon_name) {
+	edelib::String icon_path;
+	edelib::String tmpname;
+
+fprintf (stderr, "-- Trying %s\n", icon_name.c_str());
+
+	icon_path = edelib::IconTheme::get(icon_name.c_str(), edelib::ICON_SIZE_TINY);
+	if (icon_path!="")
+		return Fl_Shared_Image::get(icon_path.c_str());
+
+	// Because edelib doesn't resample icons, we need to do that manually
+	icon_path = edelib::IconTheme::get(icon_name.c_str(),edelib::ICON_SIZE_SMALL);
+	if (icon_path=="") icon_path = edelib::IconTheme::get(icon_name.c_str(),edelib::ICON_SIZE_MEDIUM);
+	if (icon_path=="") icon_path = edelib::IconTheme::get(icon_name.c_str(),edelib::ICON_SIZE_LARGE);
+	if (icon_path=="") icon_path = edelib::IconTheme::get(icon_name.c_str(),edelib::ICON_SIZE_HUGE);
+	if (icon_path=="") icon_path = edelib::IconTheme::get(icon_name.c_str(),edelib::ICON_SIZE_ENORMOUS);
+
+	if (icon_path!="") {
+		Fl_Image *temp = Fl_Shared_Image::get(icon_path.c_str());
+		if (temp) {
+			return temp->copy(edelib::ICON_SIZE_TINY, edelib::ICON_SIZE_TINY);
+		}
+	}
+
+	// Try Gnome icons
+	if (icon_name.substr(0,11) != "gnome-mime-") {
+		tmpname = "gnome-mime-";
+		tmpname += icon_name;
+		Fl_Image *tmpimage = try_icon(tmpname);
+		if (tmpimage) return tmpimage;
+
+		// Try generic icons without last part
+		if (icon_name.find('-',0) != edelib::String::npos) {
+			tmpname = icon_name.substr(0,icon_name.find('-',0));
+			tmpimage = try_icon(tmpname);
+			if (tmpimage) return tmpimage;
+
+			// Replace text with txt
+			if (tmpname == "text") {
+				tmpimage = try_icon("txt");
+				if (tmpimage) return tmpimage;
+			}
+		}
+
+		// No icon found for this mimetype, we're trying a generic "file" icon
+		// (in crystalsvg "misc" looks better...)
+		if (icon_name != "empty") {
+			return try_icon("empty");
+		}
+	}
+	
+
+	// Not even generic icon is found :( 
+	return 0;
+}
+
+
 // Methods for mainpulating items
 // They are named similarly to browser methods, except that they take 
 // struct FileItem (defined in EDE_FileView.h)
@@ -188,10 +246,9 @@ void FileDetailsView::insert(int row, FileItem *item) {
 	bucket.add(realpath);
 EDEBUG(DBG "value: %s\n", value.c_str());
 
-	// Get icon
-	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_TINY);
-	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
-	set_icon(row, Fl_Shared_Image::get(icon.c_str()));
+	// Don't crash if try_icon returns nothing
+	Fl_Image *tmp = try_icon(item->icon);
+	if (tmp) set_icon(row, tmp);
 }
 
 
@@ -216,10 +273,9 @@ void FileDetailsView::update(FileItem *item) {
 	bucket.add(realpath);
 EDEBUG(DBG "value: %s\n", value.c_str());
 
-	// Get icon
-	edelib::String icon = edelib::IconTheme::get(item->icon.c_str(),edelib::ICON_SIZE_TINY);
-	if (icon=="") icon = edelib::IconTheme::get("empty",edelib::ICON_SIZE_TINY,edelib::ICON_CONTEXT_MIMETYPE); //in crystalsvg "misc" is better...
-	set_icon(row, Fl_Shared_Image::get(icon.c_str()));
+	// Don't crash if try_icon returns nothing
+	Fl_Image *tmp = try_icon(item->icon);
+	if (tmp) set_icon(row, tmp);
 }
 
 // This method is needed because update() uses path to find item in list

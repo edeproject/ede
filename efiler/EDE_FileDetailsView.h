@@ -16,6 +16,7 @@
 
 
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Image.H>
 
 #include <edelib/String.h>
 
@@ -54,6 +55,8 @@ private:
 	// This is called to actually rename file (when user presses Enter in editbox)
 	void finish_rename();
 
+	// Try various names and sizes for icons
+	Fl_Image* try_icon(edelib::String icon_name);
 
 	// Find row number corresponding to realpath (encoded in data())
 	int findrow(edelib::String realpath) {
