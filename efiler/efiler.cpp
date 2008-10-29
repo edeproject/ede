@@ -97,6 +97,7 @@ const bool dumpcore_on_exec = true; // if external handler crashes
 
 int default_tree_width=150;
 
+char* new_icon_theme;
 
 
 /*-----------------------------------------------------------------
@@ -1026,7 +1027,8 @@ void context_cb(Fl_Widget*, void*) {
 // Parser for Fl::args()
 int parsecmd(int argc, char**argv, int &index) {
 	if ((strcmp(argv[index],"-ic")==0) || (strcmp(argv[index],"-icons")==0)) {
-		edelib::IconTheme::init(argv[++index]);
+//		edelib::IconTheme::init(argv[++index]);
+		new_icon_theme = strdup(argv[++index]);
 		++index;
 		return 1;
 	}
@@ -1039,6 +1041,7 @@ int main (int argc, char **argv) {
 
 	// Parse command line - this must come first
 	int unknown=0;
+	new_icon_theme=0;
 	Fl::args(argc,argv,unknown,parsecmd);
 	if (unknown==argc)
 		snprintf(current_dir, FL_PATH_MAX, edelib::dir_home().c_str());
@@ -1067,6 +1070,12 @@ FL_NORMAL_SIZE=12;
 	win = new EFiler_Window(default_window_width, default_window_height);
 
 	win->init(); // new method required by edelib::Window
+	if (new_icon_theme) {
+		fprintf(stderr, "Inicijalizujem %s\n", new_icon_theme);
+		if (edelib::IconTheme::inited()) edelib::IconTheme::shutdown();
+		edelib::IconTheme::init(new_icon_theme);
+		free(new_icon_theme);
+	}
 
 	win->begin();
 		main_menu = new Fl_Menu_Bar(0,0,default_window_width,menubar_height);
