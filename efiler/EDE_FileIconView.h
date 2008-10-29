@@ -77,6 +77,9 @@ private:
 	// This is called to actually rename file (when user presses Enter in editbox)
 	void finish_rename();
 
+	// Try various names and sizes for icons
+	Fl_Image* try_icon(edelib::String icon_name);
+
 
 public:
 
