@@ -152,7 +152,7 @@ void read_files() {
 			}
 			// Use just the first BUFLEN chars
 			strncpy(buffer, line.c_str(), BUFLEN);
-			buffer[BUFLEN]='\0';
+			buffer[BUFLEN-1]='\0';
 		}
 
 		// Parse line
