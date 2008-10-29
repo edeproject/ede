@@ -8,9 +8,9 @@
 # GNU General Public Licence version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP ede-screensaver-conf ;
 
 SOURCE = escreensaver.cpp escrsaverconf.cpp ;
 
-MakeProgram esvrconf : $(SOURCE) ;
-ExtractStrings locale : $(SOURCE) ;
+EfltkProgram ede-screensaver-conf : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
