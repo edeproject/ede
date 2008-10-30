@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+
 #include <edelib/Missing.h>
 
 extern "C" {
@@ -69,6 +70,18 @@ static pointer s_clock(scheme* sc, pointer args) {
 	return mk_real(sc, (double)clock());
 }
 
+/* originaly 'random-next' sucked badly so this is, hopefully, a better replacement */
+static int seed_inited = 0;
+
+static pointer s_random_next(scheme* sc, pointer args) {
+	if(!seed_inited) {
+		srand(time(0));
+		seed_inited = 1;
+	}
+
+	return mk_integer(sc, rand());
+}
+
 void register_sys_functions(scheme* sc) {
 	sc->vptr->scheme_define(
 		sc,
@@ -87,4 +100,10 @@ void register_sys_functions(scheme* sc) {
 		sc->global_env,
 		sc->vptr->mk_symbol(sc, "clock"),
 		sc->vptr->mk_foreign_func(sc, s_clock));
+
+	sc->vptr->scheme_define(
+		sc,
+		sc->global_env,
+		sc->vptr->mk_symbol(sc, "random-next"),
+		sc->vptr->mk_foreign_func(sc, s_random_next));
 }

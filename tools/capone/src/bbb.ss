@@ -21,7 +21,7 @@
 	      (map-more (cdr lst)
 		            (map3 cdr more)))))))
 
-(define lst (iota 9000))
+(define lst (iota 3000))
 
 (print "Working my map... ")
 ;; my map

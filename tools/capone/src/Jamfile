@@ -17,12 +17,12 @@ Library $(SUBDIR)/pcre/libpcre : $(PCRE_SRC) ;
 SCHEME_SRC = scheme.c dynload.c ;
 ObjectCcFlags $(SCHEME_SRC) : -DUSE_STRLWR=1 -DUSE_DL=1 -DUSE_MATH=1 -DUSE_ASCII_NAMES=0 -DINLINE=inline ;
 
-SCARAB_SRC = capone.cpp $(SCHEME_SRC) dbus.cpp re.cpp sys.cpp ;
+CAPONE_SRC = capone.cpp $(SCHEME_SRC) dbus.cpp re.cpp sys.cpp ;
 
-#ObjectC++Flags $(SCARAB_SRC) : -pg ;
-#ObjectCcFlags $(SCARAB_SRC) : -g3 -pg ;
+#ObjectC++Flags $(CAPONE_SRC) : -pg ;
+#ObjectCcFlags $(CAPONE_SRC) : -g3 -pg ;
 
-EdeProgram capone : $(SCARAB_SRC) ;
+EdeProgram capone : $(CAPONE_SRC) ;
 LinkAgainst capone : -Lpcre -lpcre -ledelib_dbus -ldbus-1 -ledelib -lfltk -ldl -lm -lXext -lXft -lX11 ;
 
 #LINKFLAGS on capone = [ on capone return $(LINKFLAGS) ] -pg ;

@@ -541,17 +541,6 @@
                          (set-output-port prev-outport)
                          res)))))
 
-; Random number generator (maximum cycle)
-(define *seed* 1)
-(define (random-next)
-     (let* ((a 16807) (m 2147483647) (q (quotient m a)) (r (modulo m a)))
-          (set! *seed*
-               (-   (* a (- *seed*
-                         (* (quotient *seed* q) q)))
-                    (* (quotient *seed* q) r)))
-          (if (< *seed* 0) (set! *seed* (+ *seed* m)))
-          *seed*))
-
 ;; SRFI-0 
 ;; COND-EXPAND
 ;; Implemented as a macro

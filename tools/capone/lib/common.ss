@@ -5,7 +5,7 @@
 (define first car)
 (define rest  cdr)
 
-;; inc/dec familly
+;; inc/dec family
 (define (inc n)
  (+ 1 n))
 
@@ -101,9 +101,23 @@
 ;;
 ;; iota function; returns a list of numbers
 ;;
-
 (define (iota n)
   (range 0 n))
+
+;;
+;; Inplace vector shuffle via Fisher-Yates algorithm
+;;
+(define (shuffle-vector! v)
+ (let ((i (vector-length v))
+	   (k 0)
+	   (tmp 0))
+  (while (> i 1)
+   (set! k (modulo (random-next) i))
+   (dec! i)
+   (set! tmp (vector-ref v i))
+   (vector-set! v i (vector-ref v k))
+   (vector-set! v k tmp)
+)))
 
 ;;
 ;; function for easier timing
