@@ -18,6 +18,10 @@
 (define-macro (dec! n)
  `(set! ,n (- ,n 1)))
 
+(define-macro (if-not . body)
+ `(if (not ,(car body))
+	 ,@(cdr body)))
+
 ;;
 ;; Allow defining functions like:
 ;;  (def name (param1 param2)
