@@ -11,6 +11,7 @@
 (load "utest.ss")
 (load "math.ss")
 (load "string.ss")
+(load "if-not.ss")
 
 (ut-println "")
 (ut-println "  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
