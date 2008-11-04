@@ -88,6 +88,36 @@
 		  (throw "Unsupported type in 'for' loop"))))))
 
 ;;
+;; Split a list to a list of pairs so we can easily
+;; embed it in 'let' expression via 'slet' macro
+;; e.g. (1 2 3 4) => ((1 2) (3 4))
+;;
+(define (explode-list lst)
+ (let loop ((lst lst)
+			(n   '()))
+  (if (null? lst)
+   (reverse n)
+   (begin
+	;; huh...
+	(set! n (cons (list (car lst) (cadr lst)) n))
+	(loop (cddr lst) n)
+))))
+
+;;
+;; slet or 'simplified let' is a 'let' with little less bracess
+;; e.g. (let (a 1 b 2) body)
+;;
+(define-macro (slet . body)
+ `(let ,@(list (explode-list (car body)))
+	 ,@(cdr body)
+))
+
+(define-macro (slet* . body)
+ `(let* ,@(list (explode-list (car body)))
+	 ,@(cdr body)
+))
+
+;;
 ;; range function; returns a list of numbers in form [start end)
 ;;
 ;; Althought we could wrote this function cleanly without decrementors

@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 		do_file_or_expr(f, NULL, l, argc, argv);
 		fclose(f);
 	} else {
-		printf("\033[33mcapone " VERSION "\033[0m (based on tinyscheme 1.39)\n");
+		printf("capone " VERSION " (based on tinyscheme 1.39)\n");
 		printf("Type \"(quit)\" or press Ctrl-C to exit interpreter when you are done.");
 		do_file_or_expr(stdin, NULL, l, argc, argv);
 	}

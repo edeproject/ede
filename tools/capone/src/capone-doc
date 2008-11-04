@@ -10,41 +10,56 @@ sub write_prolog {
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>$_[0]</title>
 <style type="text/css">
+body {
+   margin: 0;
+   padding: 0;
+   text-align: center;
+}
+
+.content {
+   margin: 0 auto;
+   padding: 10px 0 0 0;
+   width: 83%;
+   text-align: left;
+}
 
 h5.function {
    margin: 5px 0 5px 0;
    padding: 0;
 
-   color: red;
+   color: #527bbd;
    font-weight: bold;
    font-size: 120%;
 }
 
 h5.example {
-	margin: 0;
-	padding: 0;
+   margin: 0;
+   padding-bottom: 0.3em;
 }
 
 pre {
    margin: 0;
-   padding: 0 0 0 20px;
-   color: gray;
+   padding: 0.6em 0.2em 0.2em 0.2em;
+   color: black;
+   background: #f4f4f4;
+   border: 1px solid silver;
 }
 
 .footer {
-	padding: 20px 0 20px 0;
-	text-align: center;
-	font-size: 80%;
+   padding: 20px 0 10px 0;
+   text-align: center;
+   font-size: 80%;
 }
-
 </style>
 </head>
-<body style="margin: 20px;" text="#111111" bgcolor="#FFFFFF">
+<body>
+<div class="content">
 EOL
 }
 
 sub write_epilog {
 	print <<EOL
+</div> <!-- content -->
 <div class="footer">generated with capone-doc</div>
 </body>
 </html>
@@ -53,7 +68,7 @@ EOL
 
 sub main {
 	if(@ARGV eq 0) {
-		print "Usage: capone-doc [FILE]\n";
+		print "Usage: capone-doc [FILE] [TITLE]\n";
 		print "Generate html-ized documentation by extracting documentation\n";
 		print "specific tags on the specific manner from capone source file\n";
 		return;
@@ -62,20 +77,25 @@ sub main {
 	$in_block = 0;
 	$filename = $ARGV[0];
 
+	if($ARGV[1] eq "") {
+		$title = $filename . " documentation";
+	} else {
+		$title = $ARGV[1];
+	}
+
 	open(INFILE, $filename) or die "Can't open $filename: $!";
 
-	&write_prolog($filename);
+	&write_prolog($title);
 
 	while(<INFILE>) {
 		# find markers
 		if(/^;;=/) {
 			if($in_block eq 0) {
-				print "<div class=\"function\">\n";
+				print "<div class=\"segment\">\n";
 				$in_block = 1;
 			} else {
-				print "</div>\n";
+				print "</div> <!-- segment -->\n";
 				print "<br />\n";
-				print "<center>-- &part; --</center>\n";
 				$in_block = 0;
 			}
 
@@ -86,7 +106,6 @@ sub main {
 		if($in_block eq 1) {
 			# strip comments
 			s/;;\s*\n$/<br \/>\n/;
-			#s/;;\s*//;
 			s/;;//;
 
 			# \code and \endcode
@@ -101,6 +120,9 @@ sub main {
 
 			# \return
 			s/\\return (.*)/ <b>returns:<\/b> $1<br \/>/;
+
+			# \syntax
+			s/\\syntax (.*)/ <b>syntax:<\/b> <i>$1<\/i><br \/>/;
 
 			# \br
 			s/\\br/<br \/>/g;
