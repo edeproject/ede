@@ -187,15 +187,39 @@
 	 (append cars (list car1))
 	 (append cdrs (list cdr1))))))
 
-(define (map proc . lists)
-  (if (null? lists)
-      (apply proc)
-      (if (null? (car lists))
-	  '()
-	  (let* ((unz (apply unzip1-with-cdr lists))
-		 (cars (car unz))
-		 (cdrs (cdr unz)))
-	    (cons (apply proc cars) (apply map (cons proc cdrs)))))))
+;;
+;; Original implementation that pretty sucks
+;;
+;(define (map proc . lists)
+;  (if (null? lists)
+;      (apply proc)
+;      (if (null? (car lists))
+;	  '()
+;	  (let* ((unz (apply unzip1-with-cdr lists))
+;		 (cars (car unz))
+;		 (cdrs (cdr unz)))
+;	    (cons (apply proc cars) (apply map (cons proc cdrs)))))))
+
+(define (map1 proc lst)
+ (if (null? lst)
+  lst
+  (let loop ((lst lst)
+			 (nls '()))
+   (if (null? lst)
+	(reverse nls)
+	(loop (cdr lst) 
+	      (cons (proc (car lst)) nls))))))
+
+(define (map proc lst . more)
+ (if (null? more)
+  (map1 proc lst)
+  (let map-more ((lst  lst)
+	   			 (more more))
+   (if (null? lst)
+    lst
+    (cons (apply proc (car lst) (map car more))
+	      (map-more (cdr lst) 
+		   			(map cdr more)))))))
 
 ;; 
 ;; Original implementation that pretty sucks
