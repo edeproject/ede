@@ -22,6 +22,9 @@
  `(if (not ,(car body))
 	 ,@(cdr body)))
 
+(define-macro (var v val)
+ `(define ,v ,val))
+
 ;;
 ;; Allow defining functions like:
 ;;  (def name (param1 param2)
