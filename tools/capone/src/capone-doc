@@ -77,10 +77,10 @@ sub main {
 	$in_block = 0;
 	$filename = $ARGV[0];
 
-	if($ARGV[1] eq "") {
-		$title = $filename . " documentation";
-	} else {
+	if($ARGV[1]) {
 		$title = $ARGV[1];
+	} else {
+		$title = $filename . " documentation";
 	}
 
 	open(INFILE, $filename) or die "Can't open $filename: $!";
