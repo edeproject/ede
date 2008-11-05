@@ -85,14 +85,14 @@ void do_file_or_expr(FILE* f, const char* expr, const char* dir, int argc, char*
 
 	if(f) {
 		scheme_load_file(&sc, f);
-		if(sc.retcode != 0)
-			puts("Errors in file");
+		if(sc.retcode != 0 && sc.interactive_repl != 1)
+			puts("*** Errors in source file");
 	}
 
 	if(expr) {
 		scheme_load_string(&sc, expr);
 		if(sc.retcode != 0)
-			printf("Errors in expression '%s'\n", expr);
+			printf("*** Bad expression '%s'\n", expr);
 	}
 
 	scheme_deinit(&sc);

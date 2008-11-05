@@ -58,8 +58,6 @@
  *  Basic memory allocation units
  */
 
-#define banner "TinyScheme 1.39"
-
 #include <string.h>
 #include <stdlib.h>
 #ifndef __APPLE__
@@ -94,10 +92,6 @@ static const char *strlwr(char *s) {
 
 #ifndef prompt
 # define prompt ">>> "
-#endif
-
-#ifndef InitFile
-# define InitFile "init.scm"
 #endif
 
 #ifndef ErrorHeader
@@ -4446,7 +4440,7 @@ void scheme_apply0(scheme *sc, const char *procname) {
      sc->interactive_repl=0;
      sc->retcode=0;
      Eval_Cycle(sc,OP_EVAL);
-     }
+}
 
 void scheme_call(scheme *sc, pointer func, pointer args) { 
    dump_stack_reset(sc); 
@@ -4457,103 +4451,4 @@ void scheme_call(scheme *sc, pointer func, pointer args) {
    sc->retcode = 0; 
    Eval_Cycle(sc, OP_APPLY); 
 } 
-#endif
-
-/* ========== Main ========== */
-
-//#if STANDALONE
-#if 0
-
-#if defined(__APPLE__) && !defined (OSX)
-int main()
-{
-     extern MacTS_main(int argc, char **argv);
-     char**    argv;
-     int argc = ccommand(&argv);
-     MacTS_main(argc,argv);
-     return 0;
-}
-int MacTS_main(int argc, char **argv) {
-#else
-int main(int argc, char **argv) {
-#endif
-  scheme sc;
-  FILE *fin;
-  char *file_name=InitFile;
-  int retcode;
-  int isfile=1;
-  
-  if(argc==1) {
-    printf(banner);
-  }
-  if(argc==2 && strcmp(argv[1],"-?")==0) {
-    printf("Usage: %s [-? | <file1> <file2> ... | -1 <file> <arg1> <arg2> ...]\n\tUse - as filename for stdin.\n",argv[0]);
-    return 1;
-  }
-  if(!scheme_init(&sc)) {
-    fprintf(stderr,"Could not initialize!\n");
-    return 2;
-  }
-  scheme_set_input_port_file(&sc, stdin);
-  scheme_set_output_port_file(&sc, stdout);
-#if USE_DL
-  scheme_define(&sc,sc.global_env,mk_symbol(&sc,"load-extension"),mk_foreign_func(&sc, scm_load_ext));
-#endif
-  argv++;
-  if(access(file_name,0)!=0) {
-    char *p=getenv("TINYSCHEMEINIT");
-    if(p!=0) {
-      file_name=p;
-    }
-  }
-  do {
-    if(strcmp(file_name,"-")==0) {
-      fin=stdin;
-    } else if(strcmp(file_name,"-1")==0 || strcmp(file_name,"-c")==0) {
-      pointer args=sc.NIL;
-      isfile=file_name[1]=='1';
-      file_name=*argv++;
-      if(strcmp(file_name,"-")==0) {
-	fin=stdin;
-      } else if(isfile) {
-	fin=fopen(file_name,"r");
-      }
-      for(;*argv;argv++) {
-	pointer value=mk_string(&sc,*argv);
-	args=cons(&sc,value,args);
-      }
-      args=reverse_in_place(&sc,sc.NIL,args);
-      scheme_define(&sc,sc.global_env,mk_symbol(&sc,"*args*"),args);
-
-    } else {
-      fin=fopen(file_name,"r");
-    }
-    if(isfile && fin==0) {
-      fprintf(stderr,"Could not open file %s\n",file_name);
-    } else {
-      if(isfile) {
-        scheme_load_file(&sc,fin);
-      } else {
-        scheme_load_string(&sc,file_name);
-      }
-      if(!isfile || fin!=stdin) {
-	if(sc.retcode!=0) {
-	  fprintf(stderr,"Errors encountered reading %s\n",file_name);
-	}
-	if(isfile) {
-	  fclose(fin);
-	}
-      }
-    }
-    file_name=*argv++;
-  } while(file_name!=0);
-  if(argc==1) {
-    scheme_load_file(&sc,stdin);
-  }
-  retcode=sc.retcode;
-  scheme_deinit(&sc);
-  
-  return retcode;
-}
-
 #endif
