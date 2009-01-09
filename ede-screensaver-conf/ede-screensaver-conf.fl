@@ -1,0 +1,68 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {} {
+  Fl_Window {} {
+    label {Screensaver options} open
+    xywh {266 111 340 445} type Double visible
+  } {
+    Fl_Box {} {
+      xywh {120 163 100 15} box BORDER_BOX
+    }
+    Fl_Box {} {
+      xywh {65 10 210 158} box THIN_UP_BOX
+    }
+    Fl_Box {} {
+      xywh {78 20 184 138} box DOWN_BOX color 56
+      code0 {/* box size is intentionaly odd so preserve aspect ratio */}
+    }
+    Fl_Box {} {
+      xywh {95 173 146 14} box THIN_UP_BOX
+    }
+    Fl_Group {} {
+      label Screensaver open
+      xywh {10 215 320 45} box ENGRAVED_BOX align 5
+    } {
+      Fl_Choice {} {
+        xywh {19 225 180 25} down_box BORDER_BOX labelsize 14 textsize 14
+      } {}
+      Fl_Spinner {} {
+        label {Timeout:}
+        tooltip {Idle time in minutes after screensaver is started} xywh {275 226 45 25} value 1
+      }
+    }
+    Fl_Group {} {
+      label DPMS open
+      xywh {10 290 320 110} box ENGRAVED_BOX align 5
+    } {
+      Fl_Check_Button {} {
+        label Enabled
+        xywh {20 299 180 26} down_box DOWN_BOX
+      }
+      Fl_Box {} {selected
+        image {icons/energy.xpm} xywh {20 341 75 49} labelsize 14
+      }
+      Fl_Spinner {} {
+        label {Standby:}
+        tooltip {Minutes for standby} xywh {275 301 45 24} value 1
+      }
+      Fl_Spinner {} {
+        label {Suspend:}
+        tooltip {Minutes for suspend} xywh {275 331 45 24} value 1
+      }
+      Fl_Spinner {} {
+        label {Off:}
+        tooltip {Minutes to turn off the screen} xywh {275 360 45 24} value 1
+      }
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {145 410 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {240 410 90 25}
+    }
+  }
+} 
