@@ -20,6 +20,7 @@ static Fl_Pixmap image_energy(energy_star_xpm);
 static Fl_Spinner*       standby_val;
 static Fl_Spinner*       suspend_val;
 static Fl_Spinner*       off_val;
+static Fl_Spinner*       timeout_val;
 static Fl_Double_Window* main_win;
 static Fl_Double_Window* preview_win;
 
@@ -60,6 +61,9 @@ static void choice_cb(Fl_Widget* w, void* s) {
 		return;
 	}
 
+	/* FIXME: for now only one is allowed */
+	sp->mode = SAVER_ONE;
+
 	/* find the name matches in our list and run it's command */
 	HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
 	for(; it != it_end; ++it) {
@@ -79,8 +83,14 @@ static void close_cb(Fl_Widget*, void*) {
 
 static void ok_cb(Fl_Widget*, void* s) {
 	SaverPrefs* sp = (SaverPrefs*)s;
-	if(sp)
+	if(sp) {
+		sp->timeout = (int)timeout_val->value();
+		sp->dpms_standby = (int)standby_val->value();
+		sp->dpms_suspend = (int)suspend_val->value();
+		sp->dpms_off = (int)off_val->value();
+
 		xscreensaver_save_config(sp);
+	}
 	close_cb(0, 0);
 }
 
@@ -132,37 +142,36 @@ int main(int argc, char **argv) {
 			saver_list->add("(None)", 0, 0);
 
 			if(sp) {
-				saver_list->callback((Fl_Callback*)choice_cb, sp);
-
-				/* 1 is first item, 0 is '(None)' */
 				int sel = 0;
+				saver_list->callback((Fl_Callback*)choice_cb, sp);
 
 				/* fix possible error */
 				if(sp->curr_hack >= sp->hacks.size())
-					sp->curr_hack = 1;
+					sp->curr_hack = 0;
 
 				HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
-				for(int i = 0; it != it_end; ++it, i++) {
+				for(int i = 1; it != it_end; ++it, i++) {
 					saver_list->add((*it)->name.c_str(), 0, 0);
 
 					/*
-					 * check real hack index number against current one
-					 * and let it match position in our Fl_Choice list
+					 * Check real hack index number against current one and let it match 
+					 * position in our Fl_Choice list. Note that first item is '(None)'
+					 * so 'i' starts from 1
 					 */
-					if(sp->mode != SAVER_OFF && sel == 0 && (*it)->sindex == sp->curr_hack)
+					if(sp->mode != SAVER_OFF && (*it)->sindex == sp->curr_hack)
 						sel = i;
 				}
 
 				saver_list->value(sel);
 			}
 
-			Fl_Spinner* timeout = new Fl_Spinner(275, 226, 45, 25, _("Timeout:"));
-			timeout->tooltip(_("Idle time in minutes after screensaver is started"));
-			timeout->range(1, 500);
+			timeout_val = new Fl_Spinner(275, 226, 45, 25, _("Timeout:"));
+			timeout_val->tooltip(_("Idle time in minutes after screensaver is started"));
+			timeout_val->range(1, 500);
 			if(sp)
-				timeout->value(sp->timeout);
+				timeout_val->value(sp->timeout);
 			else
-				timeout->value(1);
+				timeout_val->value(1);
 
 		g1->end();
 

@@ -22,6 +22,7 @@
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(file_remove)
+EDELIB_NS_USING(file_rename)
 EDELIB_NS_USING(run_program)
 EDELIB_NS_USING(dir_home)
 EDELIB_NS_USING(dir_exists)
@@ -483,10 +484,27 @@ void xscreensaver_save_config(SaverPrefs *sp) {
 	fprintf(fd, "# XScreenSaver Preferences File\n");
 	fprintf(fd, "# Written by ede-screensaver-conf\n\n");
 
+	const char* val;
+
+	switch(sp->mode) {
+		case SAVER_OFF:
+			val = "off";
+			break;
+		case SAVER_BLANK:
+			val = "blank";
+			break;
+		case SAVER_RANDOM:
+			val = "random";
+			break;
+		default:
+			val = "one";
+			break;
+	}
+
+	fprintf(fd, "mode: %s\n", val);
 	fprintf(fd, "selected: %i\n", sp->curr_hack);
 	fprintf(fd, "timeout: 00:%i:00\n", sp->timeout);
 
-	const char* val;
 
 	if(sp->dpms_enabled)
 		val = "yes";
@@ -504,22 +522,34 @@ void xscreensaver_save_config(SaverPrefs *sp) {
 		fprintf(fd, "\t\t \"%s\"  %s\t\t \\n\\\n", (*it)->name.c_str(), (*it)->exec.c_str());
 
 	fprintf(fd, "\n\n");
+
+	/* some defaults */
+	fprintf(fd, "sgiSaverExtension:	True\n");
+	fprintf(fd, "xidleExtension: True\n");
+	fprintf(fd, "procInterrupts: True\n");
+	fprintf(fd, "GetViewPortIsFullOfLies: False\n");
+	fprintf(fd, "demoCommand: xscreensaver-demo\n");
+	fprintf(fd, "prefsCommand: xscreensaver-demo -prefs\n");
+
 	fclose(fd);
 
 	/* 
-	 * now open it as Xresource database and merge with the real ~/.xscreensaver
-	 * file, so other values we didn't wrote/used are preserved
+	 * Now open it as Xresource database and merge with the real ~/.xscreensaver
+	 * file, so other values we didn't wrote/used are preserved. If it does not
+	 * exists, save it as ordinary file
 	 */
 	XrmInitialize();
-	XrmDatabase db = XrmGetFileDatabase(tmp_path.c_str());
+
+	XrmDatabase db = XrmGetFileDatabase(path.c_str());
 	if(db) {
-		XrmCombineFileDatabase(path.c_str(), &db, 1);
+		XrmCombineFileDatabase(tmp_path.c_str(), &db, True);
 		/* and store it as ~/.xscreensaver */
 		XrmPutFileDatabase(db, path.c_str());
 		XrmDestroyDatabase(db);
+		file_remove(tmp_path.c_str());
+	} else {
+		file_rename(tmp_path.c_str(), path.c_str());
 	}
-
-	//file_remove(tmp_path.c_str());
 }
 
 /* run screensaver in in FLTK window */
