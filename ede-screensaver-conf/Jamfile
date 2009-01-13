@@ -10,4 +10,7 @@
 
 SubDir TOP ede-screensaver-conf ;
 
-EdeProgram ede-screensaver-conf : ede-screensaver-conf.cpp XScreenSaver.cpp ;
+SOURCE = ede-screensaver-conf.cpp XScreenSaver.cpp ;
+
+EdeProgram ede-screensaver-conf : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
