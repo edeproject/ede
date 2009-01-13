@@ -48,6 +48,18 @@ static void choice_cb(Fl_Widget* w, void* s) {
 	if(!saver_name)
 		return;
 
+	/* when we want to disable it */
+	if(strcmp(saver_name, "(None)") == 0) {
+		xscreensaver_kill_preview();
+		/* just draw an empty box */
+		Fl_Box* b = new Fl_Box(0, 0, 180, 134);
+		preview_win->add(b);
+		preview_win->redraw();
+
+		sp->mode = SAVER_OFF;
+		return;
+	}
+
 	/* find the name matches in our list and run it's command */
 	HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
 	for(; it != it_end; ++it) {
@@ -117,16 +129,17 @@ int main(int argc, char **argv) {
 		g1->begin();
 			Fl_Choice* saver_list = new Fl_Choice(19, 225, 180, 25);
 			saver_list->down_box(FL_BORDER_BOX);
+			saver_list->add("(None)", 0, 0);
 
 			if(sp) {
 				saver_list->callback((Fl_Callback*)choice_cb, sp);
 
-				/* 0 is first item */
-				int sel = -1;
+				/* 1 is first item, 0 is '(None)' */
+				int sel = 0;
 
 				/* fix possible error */
 				if(sp->curr_hack >= sp->hacks.size())
-					sp->curr_hack = 0;
+					sp->curr_hack = 1;
 
 				HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
 				for(int i = 0; it != it_end; ++it, i++) {
@@ -136,7 +149,7 @@ int main(int argc, char **argv) {
 					 * check real hack index number against current one
 					 * and let it match position in our Fl_Choice list
 					 */
-					if(sel == -1 && (*it)->sindex == sp->curr_hack)
+					if(sp->mode != SAVER_OFF && sel == 0 && (*it)->sindex == sp->curr_hack)
 						sel = i;
 				}
 
@@ -145,10 +158,11 @@ int main(int argc, char **argv) {
 
 			Fl_Spinner* timeout = new Fl_Spinner(275, 226, 45, 25, _("Timeout:"));
 			timeout->tooltip(_("Idle time in minutes after screensaver is started"));
+			timeout->range(1, 500);
 			if(sp)
 				timeout->value(sp->timeout);
 			else
-				timeout->value(0);
+				timeout->value(1);
 
 		g1->end();
 
@@ -163,31 +177,34 @@ int main(int argc, char **argv) {
 			if(sp)
 				denabled->value(sp->dpms_enabled);
 			else
-				denabled->value(0);
+				denabled->value(1);
 
 			Fl_Box* energy_image = new Fl_Box(20, 341, 75, 49);
 			energy_image->image(image_energy);
 
 			standby_val = new Fl_Spinner(275, 301, 45, 24, _("Standby:"));
 			standby_val->tooltip(_("Minutes for standby"));
+			standby_val->range(1, 500);
 			if(sp)
 				standby_val->value(sp->dpms_standby);
 			else
-				standby_val->value(0);
+				standby_val->value(1);
 
 			suspend_val = new Fl_Spinner(275, 331, 45, 24, _("Suspend:"));
 			suspend_val->tooltip(_("Minutes for suspend"));
+			suspend_val->range(1, 500);
 			if(sp)
 				suspend_val->value(sp->dpms_suspend);
 			else
-				suspend_val->value(0);
+				suspend_val->value(1);
 
 			off_val = new Fl_Spinner(275, 360, 45, 24, _("Off:"));
 			off_val->tooltip(_("Minutes to turn off the screen"));
+			off_val->range(1, 500);
 			if(sp)
 				off_val->value(sp->dpms_off);
 			else
-				off_val->value(0);
+				off_val->value(1);
 
 			/* execute callback to apply changes before main_window is shown */
 			denabled->do_callback();

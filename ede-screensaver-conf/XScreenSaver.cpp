@@ -260,6 +260,7 @@ static SaverPrefs *guess_config(void) {
 	/* some default values */
 	sp->curr_hack = 0;
 	sp->timeout = 2;
+	sp->mode = SAVER_ONE;
 	sp->dpms_enabled = false;
 	sp->dpms_standby = 20;
 	sp->dpms_suspend = 40;
@@ -341,6 +342,7 @@ SaverPrefs *xscreensaver_read_config(void) {
 	SaverPrefs *ret = new SaverPrefs;
 	ret->curr_hack = 0;
 	ret->timeout = 2;  // in minutes
+	ret->mode = SAVER_ONE;
 	ret->dpms_enabled = false;
 	ret->dpms_standby = ret->dpms_suspend = ret->dpms_off = 30; // in minutes
 
@@ -350,6 +352,18 @@ SaverPrefs *xscreensaver_read_config(void) {
 		 * in the list
 		 */
 		ret->curr_hack = atoi(xrmv.addr);
+	}
+
+	if(XrmGetResource(db, "mode", "*", &type, &xrmv) == True && xrmv.addr != NULL) {
+		const char *v = xrmv.addr;
+		if(!strcasecmp(v, "false") || !strcasecmp(v, "off") || !strcasecmp(v, "no"))
+			ret->mode = SAVER_OFF;
+		else if(!strcasecmp(v, "blank"))
+			ret->mode = SAVER_BLANK;
+		else if(!strcasecmp(v, "random"))
+			ret->mode = SAVER_RANDOM;
+		else
+			ret->mode = SAVER_ONE;
 	}
 
 	if(XrmGetResource(db, "timeout", "*", &type, &xrmv) == True && xrmv.addr != NULL)

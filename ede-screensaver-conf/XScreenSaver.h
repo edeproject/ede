@@ -18,10 +18,18 @@ inline bool saver_hack_cmp(SaverHack* const& s1, SaverHack* const& s2)
 typedef edelib::list<SaverHack*>           HackList;
 typedef edelib::list<SaverHack*>::iterator HackListIter;
 
+enum SaverMode {
+	SAVER_OFF,
+	SAVER_BLANK,
+	SAVER_ONE,
+	SAVER_RANDOM
+};
+
 struct SaverPrefs {
 	HackList     hacks;
 	unsigned int curr_hack;
 	int          timeout;
+	SaverMode    mode;
 
 	bool dpms_enabled;
 	int  dpms_standby;
