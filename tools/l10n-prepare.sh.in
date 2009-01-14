@@ -10,19 +10,19 @@
 pots="ede-@EDE_VERSION@-l10n"
 
 directories="
- eabout 
- ecalc 
+ ede-about
+ ede-calc
  ecolorconf 
- econtrol 
- ecrasher 
- edesktopconf
+ ede-conf
+ ede-crasher 
+ ede-desktop-conf
  edewm 
  edialog 
  edisplayconf 
  efiler 
  efinder 
- ehelp 
- eiconman 
+ ede-help 
+ ede-desktop
  eimage
  einstaller 
  ekeyconf 
@@ -31,9 +31,9 @@ directories="
  emenueditor 
  emountd 
  epanelconf
- esvrconf 
- etimedate 
- etip 
+ ede-screensaver-conf
+ ede-timedate 
+ ede-tip
  evoke 
  evolume 
  ewmconf 
