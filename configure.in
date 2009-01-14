@@ -147,6 +147,12 @@ else
 	AC_MSG_ERROR([You don't have eFLTK installed. To compile EDE, you will need it.])
 fi
 
+EDE_CHECK_LIBXPM
+if test "$have_libxpm" = "yes"; then
+	FLTK_LIBS="$FLTK_LIBS $LIBXPM_LIBS"
+	FLTK_LIBS_NOIMAGES="$FLTK_LIBS_NOIMAGES $LIBXPM_LIBS"
+fi
+
 EDE_INIT_JAM
 
 AC_SUBST(EDE_VERSION)

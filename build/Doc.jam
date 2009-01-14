@@ -21,7 +21,12 @@ MANUALICONS = "images" ;
 rule EdeManual
 {
 	if ! $(ASCIIDOC) {
-		Echo "ASCIIDOC not defined; documentation will not be built !" ;
+		Echo "ASCIIDOC not defined; documentation will not be built!" ;
+		return ;
+	}
+
+	if ! $(PYTHON) {
+		Echo "PYTHON not defined. This means python was not found on your system. Documentation will not be build!" ;
 		return ;
 	}
 
@@ -94,13 +99,13 @@ rule EdeManualWithToc
 
 actions AsciiDoc1
 {
-	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o $(<) $(>)
+	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE $(EDE_VERSION)" -o $(<) $(>)
 }
 
 # version with tidy (utility to clean HTML/XHTML code)
 actions AsciiDoc2
 {
-	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE 2.0" -o "$(<).tmp" $(>)
+	$(ASCIIDOC) $(TOC_FLAG) -a icons -a iconsdir=$(MANUALICONS) -a edeversion="EDE $(EDE_VERSION)" -o "$(<).tmp" $(>)
 	$(TIDY) -q -i "$(<).tmp" > "$(<)"
 	$(RM) "$(<).tmp"
 }
