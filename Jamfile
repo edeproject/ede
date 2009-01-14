@@ -10,7 +10,7 @@
 
 SubDir TOP ;
 
-EdeManual HACKING.txt ;
+EdeManual HACKING ;
 
 Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
