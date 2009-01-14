@@ -17,11 +17,12 @@
 ===================
 :Revision: 0.1
 
-*Bare info*
+Introduction
 
+- link:README.html[Readme First]
 - link:introduction.html[Introduction]
 
-*Programs*
+Programs
 
 - link:ede-calc.html[ede-calc]
 - link:ede-help.html[ede-help]
@@ -29,7 +30,7 @@
 - link:evoke.html[Evoke]
 - link:emountd.html[Emountd]
 
-*Development*
+Development
 
 - link:HACKING.html[Contributing (in your spare time ;-)]
 - link:jambuild.html[Jam build]

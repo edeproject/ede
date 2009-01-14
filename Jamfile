@@ -11,6 +11,7 @@
 SubDir TOP ;
 
 EdeManual HACKING ;
+EdeManual README.alpha ;
 
 Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
