@@ -137,7 +137,7 @@ AC_SUBST(FLTK_LIBS)
 AC_SUBST(FLTK_LIBS_NOIMAGES)
 
 AC_OUTPUT([
- config.jam
+ Jamconfig
  tools/l10n-prepare.sh
 ])
 
