@@ -8,47 +8,11 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-# tools used by jam rules
-XGETTEXT     ?= xgettext ;
-MSGFMT       ?= msgfmt ;
-RMDIR_UNSAFE ?= $(RM) -Rf ;
-RMDIR_SAFE   ?= rmdir ;
-CP           ?= cp ;
-COPYDIR      ?= "cp -R" ;
-MV           ?= mv ;
-MKDIRS       ?= "mkdir -p" ;
-LINKCMD      ?= "ln -s" ;
+include $(TOP)/Jamconfig ;
 
-# directories where data will be installed
-PREFIX        ?= "/opt/ede2" ;
-EDEBINDIR     ?= "$(PREFIX)/bin" ;
-EDECONFIGDIR  ?= "$(PREFIX)/data/config" ;
-EDEICONDIR    ?= "$(PREFIX)/data/icons" ;
-EDEDESKTOPDIR ?= "$(PREFIX)/data/desktop" ;
-EDEMIMEDIR    ?= "$(PREFIX)/share/mime" ;
-EDEDOCDIR     ?= "$(PREFIX)/share/doc/ede-2.0.0" ;
-
-# global flags used to be passed to every target
-GLOBALFLAGS  ?= -Wall -pedantic -g3 -D_DEBUG -I$(TOP) ;
-STDLIB       ?= -lstdc++ ;
-
-# Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
-# edelib is compiled as shared library
-REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
-
-# edelib libraries path
-EDELIBINCLUDE ?= -I/opt/ede/include ;
-EDELIBLIB     ?= -L/opt/ede/lib -ledelib ;
-
-# fltk libraries path
-FLTKINCLUDE      ?= -I/usr/local/include ;
-FLTKLIB          ?= -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk -ldl -lm -lXext -lXft -lX11 -lXpm ;
-FLTKLIB_NOIMAGES ?= -L/usr/local/lib -lfltk -ldl -lm -lXext -lXft -lX11 ;
-
-# backward; efltk libraries path
-EFLTKINCLUDE       ?= -I/usr/local/include ;
-EFLTKLIB           ?= -L/usr/local/lib -lefltk_images -lpng -lz -ljpeg -lefltk -lX11 -lXext -lm ;
-EFLTKLIB_NOIMAGES  ?= -L/usr/local/lib -lefltk -lX11 -lXext -lm ;
+if ! $(JAMCONFIG_READ) {
+	Exit "Can't find Jamconfig. Did you run 'configure' first?" ;
+}
 
 # by default all flags that jam uses directly are cleared
 # here should _not_ be set anything since they are filled per target
@@ -90,3 +54,16 @@ actions quietly Help
 Help help ;
 NotFile help ;
 Always help ;
+
+# a generated junk
+LocalClean distclean : 
+	$(TOP)/edeconf.h
+	$(TOP)/configure 
+	$(TOP)/aclocal.m4 
+	$(TOP)/Jamconfig 
+	$(TOP)/config.log 
+	$(TOP)/config.status 
+	$(JCACHEFILE)
+	$(HCACHEFILE) ;
+
+Cleandir distclean : $(TOP)/autom4te.cache ;
