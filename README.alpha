@@ -46,8 +46,8 @@ Here are the commands:
 - ede : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/ede2'
 - efltk : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/efltk'
 
-Compiling
----------
+Compiling and installing
+------------------------
 
 In order to build and install EDE do the following steps:
 
