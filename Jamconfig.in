@@ -32,6 +32,8 @@ MV           ?= mv ;
 MKDIRS       ?= "mkdir -p" ;
 LINKCMD      ?= "ln -s" ;
 
+EDE_VERSION ?= "@EDE_VERSION@" ;
+
 # directories used by build system
 PREFIX        ?= "$(prefix)" ;
 EDEBINDIR     ?= "$(bindir)" ;
@@ -39,9 +41,7 @@ EDECONFIGDIR  ?= "$(datadir)/config" ;
 EDEICONDIR    ?= "$(datadir)/icons" ;
 EDEDESKTOPDIR ?= "$(datadir)/desktop" ;
 EDEMIMEDIR    ?= "$(datadir)/mime" ;
-EDEDOCDIR     ?= "$(docdir)/ede-2.0.0" ;
-
-EDE_VERSION ?= "@EDE_VERSION@" ;
+EDEDOCDIR     ?= "$(docdir)/ede-$(EDE_VERSION)" ;
 
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
@@ -75,8 +75,8 @@ COMPOSITEINCLUDE ?= @COMPOSITE_CFLAGS@ ;
 COMPOSITELIB     ?= @COMPOSITE_LIBS@ ;
 
 # HAL
-HALINCLUDE ?= @HAL_CFLAGS@
-HALLIB     ?= @HAL_LIBS@
+HALINCLUDE ?= @HAL_CFLAGS@ ;
+HALLIB     ?= @HAL_LIBS@ ;
 
 # do not touch this
 JAMCONFIG_READ = "yes" ;

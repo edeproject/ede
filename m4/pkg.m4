@@ -1,4 +1,7 @@
-
+dnl
+dnl A small modification to remove ending spaces (sz)
+dnl
+	
 dnl PKG_CHECK_MODULES(GSTUFF, gtk+-2.0 >= 1.3 glib = 1.3.4, action-if, action-not)
 dnl defines GSTUFF_LIBS, GSTUFF_CFLAGS, see pkg-config man page
 dnl also defines GSTUFF_PKG_ERRORS on error
@@ -40,6 +43,10 @@ AC_DEFUN(PKG_CHECK_MODULES, [
             $1_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
             ifelse([$4], ,echo $$1_PKG_ERRORS,)
         fi
+
+        dnl remove ending spaces so jam variables could be accessed nicely
+        $1_CFLAGS=`echo $$1_CFLAGS | sed 's/[ ]*$//g'`
+        $1_LIBS=`echo $$1_LIBS | sed 's/[ ]*$//g'`
 
         AC_SUBST($1_CFLAGS)
         AC_SUBST($1_LIBS)

@@ -539,7 +539,7 @@ return i + 1;
 /* The code for doing this is held in a separate file that is also included in
 pcretest.c. It defines a function called print_internals(). */
 
-#ifdef DEBUG
+#ifdef DEBUG_PCRE
 #include "printint.c"
 #endif
 
@@ -5611,7 +5611,9 @@ if ((re->options & PCRE_REQCHSET) != 0)
     else printf("Req char = \\x%02x%s\n", ch, caseless);
   }
 
+#ifdef DEBUG_PCRE
 print_internals(re, stdout);
+#endif
 
 /* This check is done here in the debugging case so that the code that
 was compiled can be seen. */
