@@ -176,7 +176,7 @@ static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 	}
 }
 
-int main() {
+int main(int argc, char** argv) {
 	edelib::Window* win = new edelib::Window(455, 330, _("EDE Configuration Place"));
 	win->init();
 	win->begin();
@@ -219,6 +219,6 @@ int main() {
 		close->callback(close_cb, win);
 		Fl::focus(close);
 	win->end();
-	win->show();
+	win->show(argc, argv);
 	return Fl::run();
 }
