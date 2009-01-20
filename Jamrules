@@ -57,7 +57,8 @@ Always help ;
 
 # a generated junk
 LocalClean distclean : 
-	$(TOP)/edeconf.h
+	$(TOP)/config.h
+	$(TOP)/config.h.in
 	$(TOP)/configure 
 	$(TOP)/aclocal.m4 
 	$(TOP)/Jamconfig 
