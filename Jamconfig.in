@@ -24,6 +24,7 @@ sysconfdir  ?= "@sysconfdir@" ;
 # tools used by jam rules
 XGETTEXT     ?= @XGETTEXT@ ;
 MSGFMT       ?= @MSGFMT@ ;
+PYTHON       ?= @PYTHON@ ;
 RMDIR_UNSAFE ?= $(RM) -Rf ;
 RMDIR_SAFE   ?= rmdir ;
 CP           ?= cp ;
@@ -47,7 +48,7 @@ OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
 
 # global flags used to be passed to every target
-GLOBALFLAGS  ?= -Wall -pedantic -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
+GLOBALFLAGS  ?= -Wall -pedantic -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
 STDLIB       ?= -lstdc++ ;
 
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when

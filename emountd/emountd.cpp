@@ -15,9 +15,15 @@
  * since HAL documentation pretty sucks.
  */
 
-#include <unistd.h>
-#include <string.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#include <string.h>
+
+#ifdef HAVE_HAL
+#include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <libhal-storage.h>
@@ -295,6 +301,8 @@ void device_property_modified(LibHalContext* ctx, const char* udi, const char* k
 		device_info_send(ctx, udi);
 }
 
+#endif // HAVE_HAL
+
 void help(void) {
 	puts("Usage: emountd [--no-daemon]");
 	puts("EDE mount/unmount notify manager");
@@ -311,6 +319,12 @@ int main(int argc, char** argv) {
 		}
 	}
 
+#ifndef HAVE_HAL
+	printf("HAL support not enabled!\n");
+	printf("Make sure you have system supporting HAL and installed HAL package and libraries\n");
+	printf("For more details, please visit: 'http://freedesktop.org/HAL'\n");
+	return 1;
+#else
 	/* run in background */
 	if(go_daemon)
 		daemon(0, 0);
@@ -417,5 +431,7 @@ int main(int argc, char** argv) {
 error:
 	if(!ctx)
 		libhal_ctx_free(ctx);
+
 	return 0;
+#endif // HAVE_HAL
 }
