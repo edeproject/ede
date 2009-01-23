@@ -64,6 +64,8 @@ LocalClean distclean :
 	$(TOP)/Jamconfig 
 	$(TOP)/config.log 
 	$(TOP)/config.status 
+	$(TOP)/data/startede
+	$(TOP)/tools/l10n-prepare.sh
 	$(JCACHEFILE)
 	$(HCACHEFILE) ;
 

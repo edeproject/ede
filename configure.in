@@ -22,7 +22,7 @@ dnl PACKAGE_VERSION is filled from AC_INIT
 EDE_VERSION=$PACKAGE_VERSION
 
 if test "$prefix" = NONE; then
-	EDE_INSTALL_DIR="/opt/ede"
+	EDE_INSTALL_DIR="/usr/local"
 else
 	EDE_INSTALL_DIR="$prefix"
 fi
@@ -167,6 +167,8 @@ AC_SUBST(EFLTK_LIBS)
 AC_OUTPUT([
  Jamconfig
  tools/l10n-prepare.sh
+ data/startede
 ])
 
 chmod +x tools/l10n-prepare.sh
+chmod +x data/startede
