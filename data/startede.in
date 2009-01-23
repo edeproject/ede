@@ -1,47 +1,70 @@
 #!/bin/sh
 #
-# startede.in
-# 
-#######################################################
 # $Id: startede.in,v 1.1.1.1 2005/03/04 15:44:41 karijes Exp $
 #
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2007 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+# Main script responsible for starting and setting needed environment parts.
+# Details about XDG_XXX data and how they are set is at:
+# http://standards.freedesktop.org/basedir-spec/basedir-spec-0.6.html
 
 PREFIX=@prefix@
-XSSAVER=`which xscreensaver 2> /dev/null`
-XSETROOT=`which xsetroot 2> /dev/null`
+
+if [ ! "$XDG_DATA_HOME" ]; then
+	XDG_DATA_HOME="$HOME/.local/share"
+fi
+
+if [ ! "$XDG_CONFIG_HOME" ]; then
+	XDG_CONFIG_HOME="$HOME/.config"
+fi
+
+if [ ! "$XDG_CACHE_HOME" ]; then
+	XDG_CACHE_HOME="$HOME/.cache"
+fi
+
+if [ ! "$XDG_DATA_DIRS" ]; then
+	XDG_DATA_DIRS="/usr/local/share:/usr/share"
+fi
+
+if [ ! "$XDG_CONFIG_DIRS" ]; then
+	XDG_CONFIG_DIRS="/etc/xdg"
+fi
+
+[ -d $XDG_DATA_HOME ];   || mkdir -p $XDG_DATA_HOME
+[ -d $XDG_CONFIG_HOME ]; || mkdir -p $XDG_CONFIG_HOME
+[ -d $XDG_CACHE_HOME ];  || mkdir -p $XDG_CACHE_HOME
+
+export XDG_DATA_HOME
+export XDG_CONFIG_HOME
+export XDG_CACHE_HOME
+export XDG_DATA_DIRS
+export XDG_CONFIG_DIRS
+
+PATH=$PATH:$PREFIX:$PREFIX/bin
+export PATH
 
 userresources=$HOME/.Xdefaults
 sysresources=/usr/X11R6/lib/X11/xinit/.Xresources
 
 if [ -f $sysresources ]; then
-    xrdb -merge $sysresources
+	xrdb -merge $sysresources
 fi
 
 if [ -f $userresources ]; then
-    xrdb -merge $userresources
+	xrdb -merge $userresources
 fi
 
-PATH=$PATH:$PREFIX:$PREFIX/bin
-export PATH
-
-if [ -x $HOME/.ede ]; then
-    echo "EDE home dir exists, ok."
-else 
-    echo "Default EDE home dir for user $HOME does not exist. Creating one..."    
-    cp -R $PREFIX/share/ede/.ede $HOME
-fi
-
-# If we have xsetroot than script shoult run it
+# set background inside X
+XSETROOT=`which xsetroot 2> /dev/null`
 if [ "$XSETROOT" ]; then
 	$XSETROOT -solid black
 fi
 
-# Test if XScreenSaver is somewhere in PATH, if not - don't start it
-if [ "$XSSAVER" ]; then
-	xscreensaver -nosplash &
-fi
+# start session
+evoke --startup --autostart --log stdout
 
-    exec edewm &
-    exec eiconman &    
-    etip &    
-    exec eworkpanel
