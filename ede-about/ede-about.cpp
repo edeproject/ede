@@ -10,6 +10,12 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <string.h> // memset
+
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Group.H>
@@ -21,8 +27,6 @@
 
 #include <edelib/Nls.h>
 #include "icons/ede.xpm"
-
-#include <string.h> // memset
 
 static Fl_Pixmap image_ede(ede_xpm);
 
@@ -61,7 +65,7 @@ const char* content = "\n\
  Hosting provided by Sohlius,Inc. (thanks!)\n\
 \n\
  Bug reports:\n\n\
- http://trac.equinox-project.org/report/1\n\
+ http://equinox-project.org/cgi-bin/trac.cgi\n\
 \n\
  License: \n\n\
  This program is based in part on the work of\n\
@@ -129,11 +133,11 @@ int main(int argc, char **argv) {
 			Fl_Box* image_box = new Fl_Box(5, 5, 60, 55);
 			image_box->image(image_ede);
 
-			Fl_Box* ede_label_box = new Fl_Box(70, 10, 365, 25, "Equinox Deskop Environment 2.0");
+			Fl_Box* ede_label_box = new Fl_Box(70, 10, 365, 25, "Equinox Deskop Environment " PACKAGE_VERSION);
 			ede_label_box->labelfont(1);
 			ede_label_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
-			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 365, 25, "Copyright (c) by EDE Authors 2000-2008");
+			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 365, 25, "Copyright (c) by EDE Authors 2000-2009");
 			ede_copy_box->labelsize(11);
 			ede_copy_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_TOP);
 
