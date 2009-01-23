@@ -1,3 +1,15 @@
+/*
+ * $Id$
+ *
+ * ede-screensaver-conf, a tool to configure screensaver
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2009 Sanel Zukan <karijes@equinox-project.org>
+ *
+ * This program is licensed under the terms of the 
+ * GNU General Public License version 2 or later.
+ * See COPYING for the details.
+ */
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Box.H>

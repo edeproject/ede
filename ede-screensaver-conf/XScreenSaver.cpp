@@ -1,3 +1,20 @@
+/*
+ * $Id$
+ *
+ * ede-screensaver-conf, a tool to configure screensaver
+ * Part of Equinox Desktop Environment (EDE).
+ * Based on some Xine code I found somewhere
+ * Copyright (c) 2009 Sanel Zukan <karijes@equinox-project.org>
+ *
+ * This program is licensed under the terms of the 
+ * GNU General Public License version 2 or later.
+ * See COPYING for the details.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -40,8 +57,8 @@ static int           atoms_loaded = 0;
 static pid_t       xscr_preview_pid = 0;
 static const char* xscr_folder_found = 0;
 
-/* TODO: add PREFIX */
 static const char* xscr_hacks_dirs[] = {
+	PREFIX"/lib/xscreensaver/",
 	"/usr/libexec/xscreensaver/",
 	"/usr/lib/xscreensaver/",
 	"/usr/X11R6/lib/xscreensaver/",
@@ -50,8 +67,8 @@ static const char* xscr_hacks_dirs[] = {
 	0
 };
 
-/* TODO: add PREFIX */
 static const char* xscr_hacks_config_dirs[] = {
+	PREFIX"/share/xscreensaver/config/",
 	"/usr/share/xscreensaver/config/",
 	"/usr/local/share/xscreensaver/config/",
 	0
@@ -102,6 +119,43 @@ static int time_to_min(const char *t) {
 	ret += atoi(nb);
 
 	return ret;
+}
+
+static void min_to_time(unsigned int t, String& ret) {
+	ret.clear(); /* so we can re-use it again */
+
+	unsigned int hour = 0, min = 0;
+	char buf[3];
+	char* fmt;
+
+	/* assure we do not get values that exceedes a day (24 * 60 = 1440) */
+	if(t >= 1440) {
+		min = 2;
+	} else if(t >= 60) {
+		hour = t / 60;
+		min = t % 60;
+	} else {
+		min = t;
+	}
+
+	/* construct 'xx:yy:zz' time format */
+	if(hour >= 10)
+		fmt = "%i";
+	else
+		fmt = "0%i";
+	snprintf(buf, sizeof(buf), fmt, hour);
+
+	ret = buf;
+	ret += ":";
+
+	if(min >= 10)
+		fmt = "%i";
+	else
+		fmt = "0%i";
+	snprintf(buf, sizeof(buf), fmt, min);
+
+	ret += buf;
+	ret += ":00";
 }
 
 static void xscreensaver_init_atoms_once(Display *dpy) {
@@ -501,10 +555,13 @@ void xscreensaver_save_config(SaverPrefs *sp) {
 			break;
 	}
 
+	String tm;
+
 	fprintf(fd, "mode: %s\n", val);
 	fprintf(fd, "selected: %i\n", sp->curr_hack);
-	fprintf(fd, "timeout: 00:%i:00\n", sp->timeout);
 
+	min_to_time(sp->timeout, tm);
+	fprintf(fd, "timeout: %s\n", tm.c_str());
 
 	if(sp->dpms_enabled)
 		val = "yes";
@@ -512,9 +569,15 @@ void xscreensaver_save_config(SaverPrefs *sp) {
 		val = "no";
 
 	fprintf(fd, "dpmsEnabled: %s\n", val);
-	fprintf(fd, "dpmsStandby: 00:%i:00\n", sp->dpms_standby);
-	fprintf(fd, "dpmsSuspend: 00:%i:00\n", sp->dpms_suspend);
-	fprintf(fd, "dpmsOff: 00:%i:00\n", sp->dpms_off);
+
+	min_to_time(sp->dpms_standby, tm);
+	fprintf(fd, "dpmsStandby: %s\n", tm.c_str());
+
+	min_to_time(sp->dpms_suspend, tm);
+	fprintf(fd, "dpmsSuspend: %s\n", tm.c_str());
+
+	min_to_time(sp->dpms_off, tm);
+	fprintf(fd, "dpmsOff: %s\n", tm.c_str());
 	fprintf(fd, "programs:\t\t\\\n");
 
 	HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
