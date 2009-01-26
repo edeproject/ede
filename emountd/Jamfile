@@ -8,25 +8,7 @@
 # GNU General Public License version 2 or later.
 # See COPYING for the details.
  
-
 SubDir TOP emountd ;
-
-rule RemoveFlag
-{
-	local i ;
-	local ret ;
-
-	for i in $(>) {
-		if $(i) != $(<) {
-			ret += $(i) ;
-		}
-	}
-
-	return $(ret) ;
-}
-
-HALFLAGS = -DDBUS_API_SUBJECT_TO_CHANGE -I/usr/include/hal -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include ;
-HALLIBS  = -lhal-storage -lhal -ldbus-1 ;
 
 SOURCE = emountd.cpp ;
 
@@ -34,9 +16,9 @@ ObjectC++Flags $(SOURCE)  : -Wno-long-long
 							# libhal have a bug that fails on C++ with '-pedantic' flag
 							[ RemoveFlag -pedantic : $(GLOBALFLAGS) ]
 							$(EDELIBINCLUDE)
-							$(HALFLAGS) ;
+							$(HALINCLUDE) ;
 
 Main              emountd : $(SOURCE) ;
-LinkAgainst       emountd : $(EDELIBLIB) $(HALLIBS) $(STDLIB) ;
+LinkAgainst       emountd : $(EDELIBLIB) $(HALLIB) $(STDLIB) ;
 InstallEdeProgram emountd ;
 EdeManual         emountd.txt ;

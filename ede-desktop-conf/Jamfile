@@ -10,7 +10,7 @@
 
 SubDir TOP ede-desktop-conf ;
 
-SOURCE = ede-desktop-conf.cpp ;
+SOURCE = ede-desktop-conf.cpp BoxBlur.cpp ;
 
 EdeProgram ede-desktop-conf : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;

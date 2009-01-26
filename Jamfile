@@ -22,6 +22,7 @@ SubInclude TOP ede-conf ;
 SubInclude TOP ede-crasher ;
 SubInclude TOP ede-desktop ;
 SubInclude TOP ede-desktop-conf ;
+SubInclude TOP ede-screensaver-conf ;
 #SubInclude TOP edewm ;
 SubInclude TOP efiler ;
 SubInclude TOP ede-help ;

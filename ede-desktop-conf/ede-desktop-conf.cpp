@@ -42,6 +42,8 @@
 #include <edelib/FontChooser.h>
 #include <edelib/Directory.h>
 
+#include "BoxBlur.h"
+
 #define EDE_DESKTOP_UID    0x10
 #define EDE_DESKTOP_CONFIG "ede/ede-desktop"
 
@@ -128,6 +130,7 @@ void set_wallpaper(const char* path) {
 		case IMG_STRETCH: {
 			Fl_Image* transformed = rel_img->copy(area_w, area_h);
 			wallpaper_img->size(area_w, area_h);
+			transformed = (Fl_RGB_Image*)box_blur((Fl_RGB_Image*)transformed);
 			wallpaper_img->image(transformed);
 			break;
 		}
@@ -276,7 +279,7 @@ void ok_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	apply_cb(0, win);
 	/* a hack so ede-desktop-conf can send a message before it was closed */
-	sleep(1); 
+	usleep(120000); 
 	win->hide();
 }
 
@@ -373,11 +376,13 @@ int main(int argc, char** argv) {
 				g1->hide();
 
 			g1->begin();
+			/*
 				Fl_Box* b1 = new Fl_Box(85, 196, 100, 15);
 				b1->box(FL_BORDER_BOX);
 
 				Fl_Box* b2 = new Fl_Box(30, 43, 210, 158);
 				b2->box(FL_THIN_UP_BOX);
+				*/
 
 				/* box size is intentionaly odd so preserve aspect ratio */
 				wallpaper = new Fl_Box(43, 53, 184, 138);
@@ -392,8 +397,10 @@ int main(int argc, char** argv) {
 				wallpaper_img->box(FL_NO_BOX);
 				wallpaper_img->align(FL_ALIGN_CLIP);
 
+				/*
 				Fl_Box* b4 = new Fl_Box(60, 206, 145, 14);
 				b4->box(FL_THIN_UP_BOX);
+				*/
 
 				desk_background = new Fl_Input(295, 80, 190, 25, _("Image:"));
 
@@ -471,6 +478,6 @@ int main(int argc, char** argv) {
 
 	win->init(edelib::WIN_INIT_IMAGES);
 	load_settings();
-	win->show();
+	win->show(argc, argv);
 	return Fl::run();
 }

@@ -29,7 +29,7 @@ rule FortuneCompile
 	MakeLocate $(<) : $(SUBDIR) ;
 
 	FortuneCompile1 $(<) : $(>) ;
-	Clean clean : $(<) ;
+	LocalClean clean : $(<) ;
 }
 
 actions FortuneCompile1

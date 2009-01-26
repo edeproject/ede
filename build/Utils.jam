@@ -25,6 +25,22 @@ if ! $(INVOCATION_SUBDIR_SET) {
 }
 # Compatibility part ends
 
+# [ RemoveFlag FLAG : FLAGS ] ;
+# Removes FLAG from list of FLAGS
+rule RemoveFlag
+{
+	local i ;
+	local ret ;
+
+	for i in $(>) {
+		if $(i) != $(<) {
+			ret += $(i) ;
+		}
+	}
+
+	return $(ret) ;
+}
+
 # Fltk use .cxx extension for C++ files so it must
 # be registered. This rule is called by jam so final 
 # application must not use it.
