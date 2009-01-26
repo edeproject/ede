@@ -19,6 +19,7 @@ EOF
 
 if aclocal -I m4 && autoheader && autoconf; then
 	#dump_config "Jamconfig.in"
+	rm -f "config.h.in~"
 
 	echo ""
 	echo "Now run ./configure [OPTIONS]"
