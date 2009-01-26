@@ -20,9 +20,6 @@ EOF
 if aclocal -I m4 && autoheader && autoconf; then
 	#dump_config "Jamconfig.in"
 
-	# a junk from autoheader
-	rm -f "edeconf.h.in~"
-
 	echo ""
 	echo "Now run ./configure [OPTIONS]"
 	echo "or './configure --help' to see them"
