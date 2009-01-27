@@ -13,25 +13,25 @@
 # Details about XDG_XXX data and how they are set is at:
 # http://standards.freedesktop.org/basedir-spec/basedir-spec-0.6.html
 
-PREFIX=@prefix@
+PREFIX="@prefix@"
 
-if [ ! "$XDG_DATA_HOME" ]; then
+if [ "x$XDG_DATA_HOME" = "x" ]; then
 	XDG_DATA_HOME="$HOME/.local/share"
 fi
 
-if [ ! "$XDG_CONFIG_HOME" ]; then
+if [ "x$XDG_CONFIG_HOME" = "x" ]; then
 	XDG_CONFIG_HOME="$HOME/.config"
 fi
 
-if [ ! "$XDG_CACHE_HOME" ]; then
+if [ "x$XDG_CACHE_HOME" = "x" ]; then
 	XDG_CACHE_HOME="$HOME/.cache"
 fi
 
-if [ ! "$XDG_DATA_DIRS" ]; then
+if [ "x$XDG_DATA_DIRS" = "x" ]; then
 	XDG_DATA_DIRS="/usr/local/share:/usr/share"
 fi
 
-if [ ! "$XDG_CONFIG_DIRS" ]; then
+if [ "x$XDG_CONFIG_DIRS" = "x" ]; then
 	XDG_CONFIG_DIRS="/etc/xdg"
 fi
 
@@ -67,4 +67,3 @@ fi
 
 # start session
 evoke --startup --autostart --log stdout
-
