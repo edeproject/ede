@@ -1,11 +1,8 @@
 evoke documentation
 ===================
 
-[NOTE]
-.TODO
-=====================
-Add info about splash themes; reorder document
-=====================
+Introduction
+------------
 
 evoke is EDE service responsible for starting and quitting desktop, including
 all needed prerequisites. Also, it will autostart programs (run programs using
@@ -39,19 +36,81 @@ Options
 	Same as '-a' or '--autostart' option, but display dialog with items that should
 	be run.
 
--c, --config [FILE]::
-	Read [FILE] as config file. This file is only used in startup mode to read
-	components to be started.
-
 -h, --help::
 	This help.
 
 
-Details
+evoke can be started with or without options. If started without options, it will behave as
+XSETTINGS manager (more below).
+
+Autostart
+---------
+
+Autostart option is used to run applications from 'autostart' directory. This directory is
+usually located at $HOME/.config/autostart or, if not exists, in /etc/xdg/autostart. 
+
+Of course, both directories can exists and evoke will run applications from both, but with one exception:
+if application with the same .desktop name exists in both (and is valid desktop file), it will
+be run only from prefered directory, which is $HOME/.config/autostart.
+
+If you want some application to be run at EDE startup (implying evoke is started with '-a' option),
+just copy it's .desktop file to autostart directory. Before that, make sure that .desktop file
+conforms to the http://freedesktop.org[freedesktop.org] specification for Desktop Files.
+
+If you want to disable running some application from autostart directory, you can simply delete it's
+.desktop file or set this key in it:
+---------------
+Hidden = true
+---------------
+Make sure that 'Hidden' key is under '[Desktop Entry]' section.
+
+Autostart mode can be run in two ways: safe and unsafe. Safe way ('-u' or '--autostart-safe') will
+popup window with programs that should be started, from where you can chose either to 
+start some of them, start all of them or to start nothing. On other hand, unsafe way ('-a' or '--autostart')
+will simply run all programs without any questioning (should I say that this can be very insecure).
+
+These options are intentionally provided so you can choose startup policy depending on your security
+options.
+
+Startup
 -------
 
-evoke can be started with or without options. If started without options, it will behave
-as XSETTINGS manager, reading options from 'ede-settings.conf'.
+Startup option used when EDE is starting, running each component (or program) from 'ede-startup.conf'.
+This file is in $XDG_CONFIG_DIRS/ede (usually /etc/xdg/ede) and it's main purpose is to run
+EDE parts.
+
+This configuration file is in the following form:
+--------------
+[Startup]
+  # start_order key is used to notify evoke what to start
+  # and program keys must be separated with comma (if multiple ones are given)
+  start_order = program1, program2, program3 
+
+  # theme for starting splash screen
+  splash_theme = name
+
+# now comes each value from Startup key as separate key
+[program1]
+  # icon is icon used in splash screen progress (it is part of splash theme)
+  icon = icon1.png
+
+  # exec is program executable to be run
+  exec = program1
+
+  # description is used to describe what is starting
+  description = my cool program
+
+[program2]
+  icon = icon2.png
+  exec = program2
+  description = my cool second program
+--------------
+
+XSETTINGS
+---------
+
+XSETTINGS is protocol that provides a mechanism for applications to share simple configuration settings and
+it is toolkit neutral.
 
 [NOTE]
 .XSETTINGS support
@@ -59,63 +118,3 @@ as XSETTINGS manager, reading options from 'ede-settings.conf'.
 Not all toolkits supports XSETTINGS protocol; currently only Gtk+ and edelib apps understainds
 it (as I know).
 ==================================
-
-As you can see from options, there are two 'modes' (if parameteres for them are given):
-
-  * autstart mode
-  * startup mode
-
-*Autostart mode* is used to run applications from 'autostart' directory. This directory is
-usually located at $HOME/.config/autostart or if not exists, in /etc/xdg/autostart. Of course,
-both directories can exists and evoke will run applications from both, but with one exception:
-if application with the same .desktop name exists in both (and is valid desktop file), it will
-be run only from prefered directory, which is $HOME/.config/autostart.
-
-If you want some application to be run at EDE startup (implying evoke is started with '-a' option),
-just copy it's .desktop file to autostart directory. Before that, make sure that .desktop file
-confirms to http://freedesktop.org specification for Desktop Files.
-
-On other hand if you want to disable running some application from autostart directory, you can
-simply delete that file, or set this:
----------------
-Hidden = true
----------------
-Make sure that 'Hidden' key is under '[Desktop Entry]' section.
-
-Autostart mode can be run in two ways: safe and unsafe. Safe way ('-u' or '--autostart-safe') will
-popup window with programs that are 'registered' for starting, from where you can choose either to 
-start some of them, start all of them or to start nothing. On other hand, unsafe way ('-a' or '--autostart')
-will simply run all 'registered' items without any questioning (should I say that this can be very insecure).
-
-These options are intentionally provided so you can choose startup policy depending on your security
-options.
-
-*Startup mode* is meant to be used when EDE is starting, running each component (or program)
-from 'ede-startup.conf' (or file specified with '-c' option). This configuration file must be in the following form:
---------------
-[Startup]
-  # start_order key is used to notify evoke what to start
-  # and program keys must be separated with comma (if multiple ones are given)
-  start_order = program1, program2, program3 
-
-  # splash_data is directory with icons used for splash screen
-  splash_data = /some/path/some_dir_name
-
-# now comes each value from Startup key as separate key
-[program1]
-  # Icon is icon used in splash screen progress (searched in ImagesDirectory)
-  Icon = icon1.png
-
-  # Exec is program executable to be run
-  Exec = program1
-
-  # Description is used to describe what is starting
-  Description = my cool program
-
-[program2]
-  Icon = icon2.png
-  Exec = program2
-  Description = my cool second program
-
-...
---------------
