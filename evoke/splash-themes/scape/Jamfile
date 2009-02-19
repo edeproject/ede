@@ -10,5 +10,5 @@
 
 SubDir TOP evoke splash-themes scape ;
 
-DATA = background.png background.xcf edewm.png eiconman.png eworkpanel.png xscreensaver.png ;
+DATA = background.png edewm.png ede-desktop.png eworkpanel.png xscreensaver.png ;
 InstallData $(datarootdir)/splash-themes/scape : $(DATA) ;
