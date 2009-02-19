@@ -1,0 +1,33 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open selected
+} {
+  Fl_Window {} {open
+    xywh {344 264 370 305} type Double visible
+  } {
+    Fl_Box {} {
+      label {The following applications are registered to be started. Please choose what to do next}
+      xywh {80 10 280 61} align 148
+    }
+    Fl_Check_Browser {} {
+      xywh {10 75 350 185} labelsize 14
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {270 270 90 25}
+    }
+    Fl_Button {} {
+      label {&Run all}
+      xywh {175 270 90 25}
+    }
+    Fl_Button {} {
+      label {Run &selected}
+      xywh {45 270 125 25}
+    }
+    Fl_Box {} {
+      image {../icons/warning.xpm} xywh {10 10 65 61} labelsize 14
+    }
+  }
+} 

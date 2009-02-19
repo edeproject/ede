@@ -1,0 +1,30 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {open
+    xywh {479 284 335 180} type Double visible
+  } {
+    Fl_Box {} {
+      label {How do you want to quit?}
+      xywh {10 9 315 25} labelfont 1 align 212
+    }
+    Fl_Choice {} {open
+      xywh {10 45 315 25} down_box BORDER_BOX labelsize 14 textsize 14
+    } {}
+    Fl_Box {} {
+      label {This option will close all programs and logs out from the current session}
+      xywh {10 80 315 55} align 213
+    }
+    Fl_Button {} {
+      label {&OK} selected
+      xywh {140 145 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {235 145 90 25}
+    }
+  }
+} 
