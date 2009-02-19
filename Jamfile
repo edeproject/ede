@@ -34,4 +34,3 @@ SubInclude TOP ede-tip ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
-SubInclude TOP tools ;
