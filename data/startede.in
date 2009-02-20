@@ -28,7 +28,7 @@ if [ "x$XDG_CACHE_HOME" = "x" ]; then
 fi
 
 if [ "x$XDG_DATA_DIRS" = "x" ]; then
-	XDG_DATA_DIRS="/usr/local/share:/usr/share"
+	XDG_DATA_DIRS="/usr/local/share:/usr/share:$PREFIX/share"
 fi
 
 if [ "x$XDG_CONFIG_DIRS" = "x" ]; then
