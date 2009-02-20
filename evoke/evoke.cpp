@@ -42,9 +42,9 @@ static void help(void) {
 	puts("(including various bits and pieces desktop needs)");
 	puts("Options:");
 	puts("  -h, --help            this help");
-	puts("  -s, --startup         run in starup mode");
-	puts("  -n, --no-splash       do not show splash screen in starup mode");
-	puts("  -d, --dry-run         run in starup mode, but don't execute anything");
+	puts("  -s, --startup         run in startup mode");
+	puts("  -n, --no-splash       do not show splash screen in startup mode");
+	puts("  -d, --dry-run         run in startup mode, but don't execute anything");
 	puts("  -a, --autostart       read autostart directory and run all items");
 	puts("  -u, --autostart-safe  read autostart directory and display dialog what will be run\n");
 }
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 				help();
 				return 0;
 			}
-			else if(CHECK_ARGV(a, "-s", "--starup"))
+			else if(CHECK_ARGV(a, "-s", "--startup"))
 				do_startup = true;
 			else if(CHECK_ARGV(a, "-d", "--dry-run"))
 				do_dryrun = true;
