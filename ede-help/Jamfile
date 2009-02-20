@@ -38,7 +38,7 @@ rule MakeScript
 
 actions existing MakeScript1
 {
-	cat "$(>)" | $(SED) -e 's|@ededocdir@|$(EDEDOCDIR)|' > "$(<)"
+	cat "$(>)" | $(SED) -e 's|@ededocdir@|$(EDE_DOC_DIR)|' > "$(<)"
 }
 
 MakeScript ede-help : ede-help.in ;

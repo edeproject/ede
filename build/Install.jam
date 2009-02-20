@@ -84,29 +84,35 @@ rule InstallData
 # InstallEdeProgram [targets] ;
 rule InstallEdeProgram
 {
-	InstallProgram $(EDEBINDIR) : $(<) ;
+	InstallProgram $(EDE_BIN_DIR) : $(<) ;
 }
 
 # InstallEdeIcons [app-dir:] [targets] ;
 rule InstallEdeIcons
 {
 	if $(2) {
-		InstallData [ FDirName $(EDEICONDIR) $(1) ] : $(2) ;
+		InstallData [ FDirName $(EDE_ICON_DIR) $(1) ] : $(2) ;
 	} else {
-		InstallData $(EDEICONDIR) : $(1) ;
+		InstallData $(EDE_ICON_DIR) : $(1) ;
 	}
 }
 
 # InstallEdeDesktopFiles [targets] ;
 rule InstallEdeDesktopFiles
 {
-	InstallData $(EDEDESKTOPDIR) : $(<) ;
+	InstallData $(EDE_DESKTOP_FILE_DIR) : $(<) ;
 }
 
-# InstallEdeDesktopFiles [targets] ;
+# InstallEdeConfigFilesOld [targets] ;
+rule InstallEdeConfigFilesOld
+{
+	InstallData $(EDE_CONFIG_DIR_OLD) : $(<) ;
+}
+
+# InstallEdeConfigFiles [targets] ;
 rule InstallEdeConfigFiles
 {
-	InstallData $(EDECONFIGDIR) : $(<) ;
+	InstallData $(EDE_CONFIG_DIR) : $(<) ;
 }
 
 # InstallEdeMimeFiles [targets] ;
@@ -124,28 +130,28 @@ rule InstallEdeMimeFiles
 
 		update_cmd = $(matches[1]) ;
 
-		# Files must be instaled in $(EDEMIMEDIR)/packages or
+		# Files must be instaled in $(EDE_MIME_DIR)/packages or
 		# update-mime-database will not see it
-		pakdir = [ FDirName $(EDEMIMEDIR) packages ] ;
+		pakdir = [ FDirName $(EDE_MIME_DIR) packages ] ;
 		InstallData $(pakdir) : $(<) ;
 
 		MIME_UPDATE_DATABASE = $(update_cmd) ;
 
 		# Shut up jam warning
-		NotFile $(EDEMIMEDIR) ;
+		NotFile $(EDE_MIME_DIR) ;
 
 		# Call update-mime-database after install/uninstall
 		# Just hoping this will be executed after files are copied/removed...
-		MimeUpdater install : $(EDEMIMEDIR) ;
-		MimeUpdater uninstall : $(EDEMIMEDIR) ;
+		MimeUpdater install : $(EDE_MIME_DIR) ;
+		MimeUpdater uninstall : $(EDE_MIME_DIR) ;
 	}
 }
 
 # InstallEdeDoc [targets] ;
-# Installs targets to EDEDOCDIR directory
+# Installs targets to EDE_DOC_DIR directory
 rule InstallEdeDoc
 {
-	InstallData $(EDEDOCDIR) : $(1) ;
+	InstallData $(EDE_DOC_DIR) : $(1) ;
 }
 
 actions Install1

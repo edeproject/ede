@@ -36,13 +36,13 @@ LINKCMD      ?= "ln -s" ;
 EDE_VERSION ?= "@EDE_VERSION@" ;
 
 # directories used by build system
-PREFIX        ?= "$(prefix)" ;
-EDEBINDIR     ?= "$(bindir)" ;
-EDECONFIGDIR  ?= "$(datadir)/config" ;
-EDEICONDIR    ?= "$(datadir)/icons" ;
-EDEDESKTOPDIR ?= "$(datadir)/desktop" ;
-EDEMIMEDIR    ?= "$(datadir)/mime" ;
-EDEDOCDIR     ?= "$(docdir)/ede-$(EDE_VERSION)" ;
+PREFIX               ?= "$(prefix)" ;
+EDE_BIN_DIR          ?= "$(bindir)" ;
+EDE_CONFIG_DIR       ?= "$(datadir)/config" ;
+EDE_ICON_DIR         ?= "$(datadir)/icons" ;
+EDE_DESKTOP_FILE_DIR ?= "$(datadir)/desktop" ;
+EDE_MIME_DIR         ?= "$(datadir)/mime" ;
+EDE_DOC_DIR          ?= "$(docdir)/ede-$(EDE_VERSION)" ;
 
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
