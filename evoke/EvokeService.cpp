@@ -66,8 +66,6 @@ EvokeService::EvokeService() : lock_name(NULL), xsm(NULL), is_running(false) {
 }
 
 EvokeService::~EvokeService() { 
-	E_DEBUG(E_STRLOC ": EvokeService::~EvokeService()\n");	
-
 	clear_startup_items();
 	stop_xsettings_manager(true);
 	remove_lock();
@@ -101,8 +99,6 @@ void EvokeService::remove_lock(void) {
 }
 
 void EvokeService::clear_startup_items(void) {
-	E_DEBUG(E_STRLOC ": EvokeService::clear_startup_items()\n");
-
 	if(startup_items.empty())
 		return;
 

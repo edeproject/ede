@@ -123,11 +123,11 @@ void settings_changed_cb(void* data) {
 }
 
 void background_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("../ede-desktop-conf/ede-desktop-conf");
+	Desktop::instance()->execute("ede-desktop-conf");
 }
 
 void icons_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("../ede-desktop-conf/ede-desktop-conf --icons");
+	Desktop::instance()->execute("ede-desktop-conf --icons");
 }
 
 int desktop_xmessage_handler(int event) { 
