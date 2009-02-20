@@ -13,3 +13,4 @@ SubDir TOP ede-conf ;
 SOURCE = ede-conf.cpp ;
 
 EdeProgram ede-conf : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
