@@ -120,7 +120,7 @@ void Splash::run(void) {
 #ifdef USE_LOCAL_CONFIG
 	splash_theme_path = "splash-themes/";
 #else
-	splash_theme_path = Resource::find_data("ede/splash-themes", RES_SYS_ONLY);
+	splash_theme_path = Resource::find_data("themes/splash-themes", RES_SYS_ONLY);
 	if(splash_theme_path.empty()) {
 		E_WARNING(E_STRLOC ": Unable to locate splash themes in $XDG_DATA_DIRS directories\n");
 		return;
