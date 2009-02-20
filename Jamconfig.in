@@ -52,8 +52,8 @@ GLOBALFLAGS  ?= -Wall -pedantic -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFL
 STDLIB       ?= -lstdc++ ;
 
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
-# edelib is compiled as shared library
-REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
+# edelib is compiled as shared library (or when is linked with some shared library)
+#REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
 
 # edelib libraries path
 EDELIBINCLUDE       ?= @EDELIB_CFLAGS@ ;
