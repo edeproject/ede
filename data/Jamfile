@@ -18,6 +18,7 @@ CONFS   = [ Wildcard *.conf ] ;
 InstallEdeIcons icons-16 : $(ICONS16) ;
 InstallEdeIcons icons-48 : $(ICONS48) ;
 
+InstallEdeProgram      startede ;
 InstallEdeConfigFiles  $(CONFS) ;
 InstallEdeDesktopFiles $(PLINKS) ;
 
