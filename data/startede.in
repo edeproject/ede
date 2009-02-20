@@ -65,5 +65,5 @@ if [ "$XSETROOT" ]; then
 	$XSETROOT -solid black
 fi
 
-# start session
-evoke --startup --autostart --log stdout
+# start the session
+evoke --startup --autostart-safe
