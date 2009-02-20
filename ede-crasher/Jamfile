@@ -13,3 +13,4 @@ SubDir TOP ede-crasher ;
 SOURCE = ede-crasher.cpp CrashDialog.cpp ;
 
 EdeProgram ede-crasher : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
