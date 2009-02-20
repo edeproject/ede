@@ -141,7 +141,7 @@ if test -n "$EFLTK_CONFIG"; then
 
 	EFLTK_CFLAGS=`$EFLTK_CONFIG --cxxflags`
 	EFLTK_LIBS_NOIMAGES=`$EFLTK_CONFIG --ldflags`
-	EFLTK_LIBS=`$EFLTK_CONFIG --use-images --ldflags`
+	EFLTK_LIBS=`$EFLTK_CONFIG --use-xml --use-images --ldflags`
 else
 	AC_MSG_ERROR([You don't have eFLTK installed. To compile EDE, you will need it.])
 fi
