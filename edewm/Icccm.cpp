@@ -1,9 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "Icccm.h"
 #include "Frame.h"
 #include "Winhints.h"
 #include "Windowmanager.h"
-
-#include <edeconf.h>
 
 static void icccm_send_state(Window wid, long state)
 {

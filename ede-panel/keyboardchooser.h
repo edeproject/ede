@@ -21,9 +21,6 @@
 #include <efltk/fl_draw.h>
 #include <efltk/Fl_Locale.h>
 
-#include "icons/keyboard.xpm"
-
-
 class KeyboardChooser : public Fl_Menu_Button 
 {
 public:

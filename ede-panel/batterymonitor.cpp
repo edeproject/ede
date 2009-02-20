@@ -346,15 +346,15 @@ void battery_check(void)
 
 typedef struct apm_info {
    char driver_version[10];
-   int        apm_version_major;
-   int        apm_version_minor;
-   int        apm_flags;
-   int        ac_line_status;
-   int        battery_status;
-   int        battery_flags;
-   int        battery_percentage;
-   int        battery_time;
-   int        using_minutes;
+   int          apm_version_major;
+   int          apm_version_minor;
+   unsigned int apm_flags;
+   unsigned int ac_line_status;
+   unsigned int battery_status;
+   unsigned int battery_flags;
+   int          battery_percentage;
+   int          battery_time;
+   int          using_minutes;
 } apm_info;
 
 

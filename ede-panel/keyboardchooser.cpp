@@ -4,6 +4,7 @@
 // See COPYING for details.
 
 #include "keyboardchooser.h"
+#include "icons/keyboard.xpm"
 
 #define MAX_KEYBOARDS 5
 

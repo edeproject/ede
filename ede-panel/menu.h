@@ -1,4 +1,7 @@
-#include <edeconf.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 static const char default_menu[] =
 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n\
 <Menu>\n\

@@ -26,6 +26,6 @@ extern void unload_theme();
 extern Fl_Image *image(int which);
 extern Fl_Color frame_color();
 
-};
+}
 
 #endif

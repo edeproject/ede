@@ -1,7 +1,10 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "mainmenu.h"
 #include "menu.h"
 
-#include <edeconf.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <locale.h>

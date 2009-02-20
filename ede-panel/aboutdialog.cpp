@@ -10,6 +10,10 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <efltk/Fl.h>
 #include <efltk/Fl_Window.h>
 #include <efltk/Fl_Box.h>
@@ -18,7 +22,6 @@
 #include <efltk/Fl_Locale.h>
 #include <efltk/Fl_Image.h>
 #include <efltk/Fl_Text_Buffer.h>
-#include <edeconf.h>
 
 #include "aboutdialog.h"
 #include "icons/ede.xpm"

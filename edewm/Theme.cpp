@@ -113,5 +113,5 @@ Fl_Color frame_color()
     return _frame_color;
 }
 
-}; /* namespace Theme */
+}  /* namespace Theme */
 

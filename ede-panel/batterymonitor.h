@@ -1,7 +1,9 @@
 #ifndef _batterymonitor_h_
 #define _batterymonitor_h_
 
-#include <edeconf.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <efltk/Fl_Widget.h>
 #include <efltk/Fl_Locale.h>

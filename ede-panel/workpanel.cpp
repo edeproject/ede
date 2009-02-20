@@ -415,7 +415,6 @@ void FL_WM_handler(Fl_Widget *w, void *d)
 	}
 }
 
-#define DEBUG
 void terminationHandler(int signum)
 {
 #ifndef DEBUG

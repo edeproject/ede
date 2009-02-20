@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "Frame.h"
 #include "Desktop.h"
 #include "Windowmanager.h"
@@ -11,7 +15,6 @@
 
 #include "config.h"
 #include "debug.h"
-#include <edeconf.h>
 
 #include <signal.h>
 

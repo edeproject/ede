@@ -89,7 +89,7 @@ enum {
 // values for state_flags:
 // These change over time
 enum {
-    IGNORE_UNMAP	= 0x01,	// we did something that echos an UnmapNotify
+    IGNORE_UNMAP	= 0x01 	// we did something that echos an UnmapNotify
 };
 
 class Icon;

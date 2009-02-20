@@ -1,7 +1,9 @@
 #ifndef _CPUMONITOR_H_
 #define _CPUMONITOR_H_
 
-#include <edeconf.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #ifdef HAVE_KSTAT_H
 #include <kstat.h>
