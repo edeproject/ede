@@ -17,6 +17,7 @@
 #include <FL/fl_draw.H>
 
 #include <edelib/Config.h>
+#include <edelib/Resource.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Debug.h>
 #include <edelib/ExpandableGroup.h>
@@ -43,20 +44,20 @@ static bool file_can_execute(const edelib::String& f) {
 }
 
 class ControlButton : public Fl_Button {
-	private:
-		Fl_Box* tipbox;
-		edelib::String tipstr;
-		edelib::String exec;
-	public:
-		ControlButton(Fl_Box* t, const edelib::String& ts, const edelib::String& e, int x, int y, int w, int h, const char* l = 0) : 
-		Fl_Button(x, y, w, h, l), tipbox(t), tipstr(ts), exec(e) {
-			box(FL_FLAT_BOX);
-			align(FL_ALIGN_WRAP);
-			color(FL_BACKGROUND2_COLOR);
-		}
+private:
+	Fl_Box* tipbox;
+	edelib::String tipstr;
+	edelib::String exec;
+public:
+	ControlButton(Fl_Box* t, const edelib::String& ts, const edelib::String& e, int x, int y, int w, int h, const char* l = 0) : 
+	Fl_Button(x, y, w, h, l), tipbox(t), tipstr(ts), exec(e) {
+		box(FL_FLAT_BOX);
+		align(FL_ALIGN_WRAP);
+		color(FL_BACKGROUND2_COLOR);
+	}
 
-		~ControlButton() { }
-		int handle(int event);
+	~ControlButton() { }
+	int handle(int event);
 };
 
 int ControlButton::handle(int event) {
@@ -101,12 +102,11 @@ static void close_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
-static void fetch_icon(ControlButton* btn, const char* path, bool abs) {
-	Fl_Image* img = NULL;
+static void fetch_icon(ControlButton* btn, const char* path) {
+	// see if path is absolute and if not, fetch icon from icon theme
+	Fl_Image* img = Fl_Shared_Image::get(path);
 
-	if(abs) {
-		img = Fl_Shared_Image::get(path);
-	} else {
+	if(!img) {
 		edelib::String p = edelib::IconTheme::get(path, edelib::ICON_SIZE_LARGE);
 		if(!p.empty()) {
 			img = Fl_Shared_Image::get(p.c_str());
@@ -123,15 +123,22 @@ static void fetch_icon(ControlButton* btn, const char* path, bool abs) {
 }
 
 static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
+#if 0
 	edelib::Config c;
 
 	if(!c.load("ede-conf.conf")) {
 		E_WARNING("Can't load config\n");
 		return;
 	}
+#endif
+	edelib::Resource c;
+	if(!c.load("ede-conf")) {
+		E_WARNING("Can't load config\n");
+		return;
+	}
 
 	char buff[1024];
-	if(!c.get("edeconf", "Items", buff, sizeof(buff))) {
+	if(!c.get("EdeConf", "items", buff, sizeof(buff))) {
 		E_WARNING("Can't find Items key\n");
 		return;
 	}
@@ -142,7 +149,6 @@ static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 	if(spl.empty())
 		return;
 
-	bool abspath;
 	const char* section;
 	//ControlIcon cicon;
 	StrListIter it = spl.begin(), it_end = spl.end();
@@ -152,25 +158,23 @@ static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 		section = (*it).c_str();
 		edelib::str_trim((char*)section);
 
-		if(c.get(section, "Name", buff, sizeof(buff)))
+		if(c.get(section, "name", buff, sizeof(buff)))
 			name = buff;
 		else {
 			E_WARNING("No %s, skipping...\n", section);
 			continue;
 		}
 
-		if(c.get(section, "Tip", buff, sizeof(buff)))
+		if(c.get(section, "tip", buff, sizeof(buff)))
 			tip = buff;
-		if(c.get(section, "Exec", buff, sizeof(buff)))
+		if(c.get(section, "exec", buff, sizeof(buff)))
 			exec = buff;
 
 		ControlButton* cb = new ControlButton(tipbox, tip, exec, 0, 0, 100, 100);
 		cb->copy_label(name.c_str());
 
-		c.get(section, "IconPathAbsolute", abspath, false);
-
-		if(c.get(section, "Icon", buff, sizeof(buff)))
-			fetch_icon(cb, buff, abspath);
+		c.get(section, "icon", buff, sizeof(buff));
+		fetch_icon(cb, buff);
 
 		g->add(cb);
 	}

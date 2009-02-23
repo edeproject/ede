@@ -14,3 +14,5 @@ SOURCE = ede-conf.cpp ;
 
 EdeProgram ede-conf : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
+
+InstallEdeConfigFiles ede-conf.conf ;
