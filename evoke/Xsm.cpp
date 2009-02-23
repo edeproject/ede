@@ -210,7 +210,7 @@ bool Xsm::load_serialized(void) {
 	String file = SETTINGS_FILENAME".conf";
 #else
 	/* try to find it in home directory, then will scan for the system one */
-	String file = Resource::find_config("ede/"SETTINGS_FILENAME);
+	String file = Resource::find_config(SETTINGS_FILENAME);
 	if(file.empty()) {
 		E_WARNING(E_STRLOC ": Unable to load XSETTINGS data from '%s'\n", file.c_str());
 		return false;

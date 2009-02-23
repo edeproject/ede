@@ -120,7 +120,7 @@ void EvokeService::read_startup(void) {
 #else
 	/* only system resource will be loaded; use ede-startup will be skipped */
 	Resource c;
-	int ret = c.load("ede/ede-startup");
+	int ret = c.load("ede-startup");
 #endif
 	if(!ret) {
 		E_WARNING(E_STRLOC ": Unable to load EDE startup file\n");
