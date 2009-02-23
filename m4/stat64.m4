@@ -18,7 +18,6 @@ AC_DEFUN([EDE_CHECK_STAT64], [
 		#define _LARGEFILE64_SOURCE 1
 		#include <sys/stat.h>
 	],[
-
 		struct stat64 s;
 		stat64("/", &s);
 	],[have_stat64=yes],[have_stat64=no])
