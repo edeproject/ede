@@ -45,7 +45,7 @@
 #include "BoxBlur.h"
 
 #define EDE_DESKTOP_UID    0x10
-#define EDE_DESKTOP_CONFIG "ede/ede-desktop"
+#define EDE_DESKTOP_CONFIG "ede-desktop"
 
 Fl_Menu_Item mode_menu[] = {
 	{_("Center"), 0, 0},
