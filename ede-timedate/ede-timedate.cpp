@@ -18,6 +18,7 @@
 #include <edelib/StrUtil.h>
 #include <edelib/Config.h>
 #include <edelib/IconTheme.h>
+#include <edelib/Debug.h>
 
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Shared_Image.H>
@@ -241,6 +242,8 @@ char* strdupcat(char* dest, char* src) {
 // Apply all changes
 
 void apply_all() {
+	edelib::alert("Not implemented yet");
+#if 0
 	// Combine results into a single string so that we can run all those commands as root
 	char *cmd = 0;
 
@@ -265,6 +268,7 @@ void apply_all() {
 	// Funcs should reset *_changed to false
 	else if (!time_changed && !format_changed && !tz_changed && !date_changed)
 		applyButton->deactivate();
+#endif
 }
 
 
@@ -275,6 +279,8 @@ void apply_all() {
 // --------------------------------------------
 
 void synchronize(const char* server) {
+	edelib::alert("Not implemented yet");
+#if 0
 	char buffer[1024];
 	snprintf(buffer, 1024, "ntpdate %s", server);
 fprintf(stderr, "run: %s\n", buffer);
@@ -285,6 +291,7 @@ fprintf(stderr, "run: %s\n", buffer);
 		edelib::alert(_("Internal error: %d."), ret);
 	else if (ret != 0)
 		edelib::alert(_("ntpdate failed with the following return value: %d\nPlease consult ntpdate manual for details."), ret);
+#endif
 }
 
 void populate_servers() {
