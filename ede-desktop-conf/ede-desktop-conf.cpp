@@ -42,8 +42,6 @@
 #include <edelib/FontChooser.h>
 #include <edelib/Directory.h>
 
-#include "BoxBlur.h"
-
 #define EDE_DESKTOP_UID    0x10
 #define EDE_DESKTOP_CONFIG "ede-desktop"
 
@@ -130,7 +128,6 @@ void set_wallpaper(const char* path) {
 		case IMG_STRETCH: {
 			Fl_Image* transformed = rel_img->copy(area_w, area_h);
 			wallpaper_img->size(area_w, area_h);
-			// transformed = (Fl_RGB_Image*)box_blur((Fl_RGB_Image*)transformed);
 			wallpaper_img->image(transformed);
 			break;
 		}
