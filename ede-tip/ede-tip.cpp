@@ -23,7 +23,7 @@
 #include <FL/Fl_Pixmap.H>
 
 #include <edelib/Nls.h>
-#include <edelib/Config.h>
+#include <edelib/Resource.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/File.h>
 #include <edelib/StrUtil.h>
@@ -34,6 +34,14 @@
 #include "icons/hint.xpm"
 #include "Fortune.h"
 
+EDELIB_NS_USING(String)
+EDELIB_NS_USING(DesktopFile)
+EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(dir_create_with_parents)
+EDELIB_NS_USING(user_config_dir)
+EDELIB_NS_USING(alert)
+EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
+
 static Fl_Pixmap image_hint(hint_xpm);
 
 Fl_Window* win;
@@ -43,14 +51,13 @@ Fl_Box* tip_box;
 int curr_tip = 0;
 
 FortuneFile* ffile = 0;
-edelib::String fstring;
+String fstring;
 
-#define TITLE_TIPS_NUM 4
+#define TITLE_TIPS_NUM 3
 const char* title_tips[TITLE_TIPS_NUM] = {
-	_("Did you know ?"),
+	_("Did you know?"),
 	_("Tip of the Day"),
-	_("A tip..."),
-	_("Boring \"Did you know ?\"")
+	_("Always good to know"),
 };
 
 const char* random_title(const char** lst, unsigned int max) {
@@ -66,34 +73,15 @@ const char* random_fortune(void) {
 }
 
 FortuneFile* load_fortune_file(void) {
-	edelib::Config conf;
-	if(!conf.load("ede-tip.conf"))
+	String path = Resource::find_data("tips");
+	if(path.empty())
 		return NULL;
 
-	char path[1024];
-	if(!conf.get("etip", "Path", path, sizeof(path)))
-		return NULL;
-
-	// check if file exists and at the same place we have .dat file
-	if(!edelib::file_exists(path))
-		return NULL;
-
-	edelib::String dat = path;
+	path += "/ede";
+	String dat = path;
 	dat += ".dat";
 
-	if(!edelib::file_exists(dat.c_str()))
-		return NULL;
-
-	return fortune_open(path, dat.c_str());
-}
-
-bool create_directory_if_needed(const edelib::String& path) {
-	if(!edelib::dir_exists(path.c_str()) && !edelib::dir_create(path.c_str())) {
-		edelib::alert(_("I'm not able to create %s. This error is probably since the path is too long or I don't have permission to do so"));
-		return false;
-	}
-
-	return true;
+	return fortune_open(path.c_str(), dat.c_str());
 }
 
 /* 
@@ -101,32 +89,23 @@ bool create_directory_if_needed(const edelib::String& path) {
  * Autostart resides in ~/.config/autostart and directory does not
  * exists, it will be created (only /autostart/, not full path).
  *
- * TODO: edelib should have some dir_create function that should
- * create full path
- *
  * Saving/creating inside /etc/xdg/autostart is not done since 
  * ~/.config/autostart is prefered (see autostart specs) and all 
  * application will be looked there first.
  */
 void write_autostart_stuff(void) {
-	edelib::String path = edelib::user_config_dir();
-
-	if(!create_directory_if_needed(path))
-		return;
-
-	// now try with autostart part
+	String path = user_config_dir();
 	path += "/autostart";
-	if(!create_directory_if_needed(path))
-		return;
+	dir_create_with_parents(path.c_str());
 
 	// now see if ede-tip.desktop exists, and update it if do
 	path += "/ede-tip.desktop";
-	edelib::DesktopFile conf;
+	DesktopFile conf;
 
 	bool show_at_startup = check_button->value();
 
 	if(!conf.load(path.c_str()))
-		conf.create_new(edelib::DESK_FILE_TYPE_APPLICATION);
+		conf.create_new(DESK_FILE_TYPE_APPLICATION);
 
 	// always write these values so someone does not try to play with us
 	conf.set_hidden(show_at_startup);
@@ -134,14 +113,14 @@ void write_autostart_stuff(void) {
 	conf.set_exec("ede-tip");
 
 	if(conf.save(path.c_str()) == false)
-		edelib::alert(_("I'm not able to save %s. Probably I don't have enough permissions to do that ?"), path.c_str());
+		alert(_("I'm not able to save %s. Probably I don't have enough permissions to do that ?"), path.c_str());
 }
 
 void read_autostart_stuff(void) {
-	edelib::String path = edelib::user_config_dir();
+	String path = user_config_dir();
 	path += "/autostart/ede-tip.desktop";
 
-	edelib::DesktopFile conf;
+	DesktopFile conf;
 	if(!conf.load(path.c_str())) {
 		check_button->value(0);
 		return;
