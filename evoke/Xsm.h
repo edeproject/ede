@@ -20,17 +20,17 @@
  * Also it will write/undo to xrdb (X Resource database).
  */
 class Xsm : public edelib::XSettingsManager {
-	public:
-		Xsm();
-		~Xsm();
+public:
+	Xsm();
+	~Xsm();
 
-		bool load_serialized(void);
-		bool save_serialized(void);
+	bool load_serialized(void);
+	bool save_serialized(void);
 
-		/* replace XResource values from one from XSETTINGS */
-		void xresource_replace(void);
-		/* undo old XResource values */
-		void xresource_undo(void);
+	/* replace XResource values from one from XSETTINGS */
+	void xresource_replace(void);
+	/* undo old XResource values */
+	void xresource_undo(void);
 };
 
 #endif

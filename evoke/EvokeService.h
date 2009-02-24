@@ -29,32 +29,32 @@ typedef edelib::list<StartupItem*>::iterator StartupItemListIter;
 class Xsm;
 
 class EvokeService {
-	private:
-		char*           lock_name;
-		Xsm*            xsm;
-		bool            is_running;
-		StartupItemList startup_items;
-		edelib::String  splash_theme;
+private:
+	char*           lock_name;
+	Xsm*            xsm;
+	bool            is_running;
+	StartupItemList startup_items;
+	edelib::String  splash_theme;
 
-		void clear_startup_items(void);
-	public:
-		EvokeService();
-		~EvokeService();
-		static EvokeService* instance(void);
+	void clear_startup_items(void);
+public:
+	EvokeService();
+	~EvokeService();
+	static EvokeService* instance(void);
 
-		bool setup_lock(const char* name);
-		void remove_lock(void);
+	bool setup_lock(const char* name);
+	void remove_lock(void);
 
-		void start(void)   { is_running = true; }
-		void stop(void)    { is_running = false; }
-		bool running(void) { return is_running; }
+	void start(void)   { is_running = true; }
+	void stop(void)    { is_running = false; }
+	bool running(void) { return is_running; }
 
-		void read_startup(void);
-		void run_startup(bool splash, bool dryrun);
-		int handle(const XEvent* xev);
+	void read_startup(void);
+	void run_startup(bool splash, bool dryrun);
+	int handle(const XEvent* xev);
 
-		void start_xsettings_manager(void);
-		void stop_xsettings_manager(bool serialize);
+	void start_xsettings_manager(void);
+	void stop_xsettings_manager(bool serialize);
 };
 
 #endif

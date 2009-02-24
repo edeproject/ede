@@ -20,6 +20,7 @@
 #include <edelib/StrUtil.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
+#include <edelib/Run.h>
 
 #include "EvokeService.h"
 #include "Splash.h"
@@ -39,8 +40,8 @@ EDELIB_NS_USING(str_trim)
  #define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff), RES_SYS_ONLY)
 #endif
 
-static Atom XA_EDE_EVOKE_SHUTDOWN_ALL;
-static Atom XA_EDE_EVOKE_QUIT;
+static Atom   XA_EDE_EVOKE_SHUTDOWN_ALL;
+static Atom   XA_EDE_EVOKE_QUIT;
 
 static int get_int_property_value(Atom at) {
 	Atom real;

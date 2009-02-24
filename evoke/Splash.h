@@ -19,29 +19,29 @@
 #include "EvokeService.h"
 
 class Splash : public Fl_Double_Window {
-	private:
-		StartupItemList*     slist;
-		StartupItemListIter  slist_it;
-		edelib::String*      splash_theme;      
+private:
+	StartupItemList*     slist;
+	StartupItemListIter  slist_it;
+	edelib::String*      splash_theme;      
 
-		unsigned int counter;
-		bool         show_splash;
-		bool         dryrun;
+	unsigned int counter;
+	bool         show_splash;
+	bool         dryrun;
 
-		Fl_Box*      msgbox;
-		Fl_Box**     icons;
+	Fl_Box*      msgbox;
+	Fl_Box**     icons;
 
-	public:
-		Splash(StartupItemList& s, edelib::String& theme, bool show_it, bool dr);
-		~Splash();
+public:
+	Splash(StartupItemList& s, edelib::String& theme, bool show_it, bool dr);
+	~Splash();
 
-		bool next_client(void);
-		bool next_client_nosplash(void);
+	bool next_client(void);
+	bool next_client_nosplash(void);
 
-		void run(void);
+	void run(void);
 
 #if EDEWM_HAVE_NET_SPLASH
-		virtual void show(void);
+	virtual void show(void);
 #endif
 };
 
