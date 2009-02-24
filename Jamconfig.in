@@ -38,17 +38,24 @@ EDE_VERSION ?= "@EDE_VERSION@" ;
 # directories used by build system
 PREFIX               ?= "$(prefix)" ;
 EDE_BIN_DIR          ?= "$(bindir)" ;
-EDE_CONFIG_DIR       ?= "$(datadir)/config" ;
+EDE_CONFIG_DIR       ?= "/etc/xdg/ede" ; # use XDG default for config dir
+EDE_CONFIG_DIR_OLD   ?= "$(datadir)/config" ;
 EDE_ICON_DIR         ?= "$(datadir)/icons" ;
 EDE_DESKTOP_FILE_DIR ?= "$(datadir)/desktop" ;
 EDE_MIME_DIR         ?= "$(datadir)/mime" ;
 EDE_DOC_DIR          ?= "$(docdir)/ede-$(EDE_VERSION)" ;
+EDE_THEMES_DIR       ?= "$(datadir)/themes" ;
+EDE_TIPS_DIR         ?= "$(datadir)/tips" ;
 
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
 
+# some C libraries have issues with C++ when given '-pedantic' flag, so
+# setting 'jam -sPEDANTIC=""' will allow compilation
+PEDANTIC = "-pedantic" ;
+
 # global flags used to be passed to every target
-GLOBALFLAGS  ?= -Wall -pedantic -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
+GLOBALFLAGS  ?= -Wall $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
 STDLIB       ?= -lstdc++ ;
 
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when

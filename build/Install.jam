@@ -115,6 +115,12 @@ rule InstallEdeConfigFiles
 	InstallData $(EDE_CONFIG_DIR) : $(<) ;
 }
 
+# InstallEdeTips [targets] ;
+rule InstallEdeTips
+{
+	InstallData $(EDE_TIPS_DIR) : $(<) ;
+}
+
 # InstallEdeMimeFiles [targets] ;
 # Installs XDG mime files and run update-mime-database
 rule InstallEdeMimeFiles

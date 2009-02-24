@@ -37,4 +37,7 @@ actions FortuneCompile1
 	$(TOP)/ede-tip/ede-tip-compiler -s "$(>)" "$(<)"
 }
 
-FortuneCompile tips/ede.dat      : tips/ede ;
+FortuneCompile tips/ede.dat : tips/ede ;
+
+InstallEdeTips tips/ede.dat ;
+InstallEdeTips tips/ede ;
