@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 	}
 
 	int scr = DefaultScreen(dpy);
-	Atom ede_quit = XInternAtom(dpy, "_EDE_EVOKE_QUIT", False);
+	Atom ede_quit = XInternAtom(dpy, "_EDE_EVOKE_SHUTDOWN_ALL", False);
 	int dummy = 1;
 
 	XChangeProperty(dpy, RootWindow(dpy, scr),
