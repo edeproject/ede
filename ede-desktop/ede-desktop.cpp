@@ -45,8 +45,8 @@
 #include "Wallpaper.h"
 
 #define EDE_DESKTOP_UID    0x10
-#define CONFIG_NAME        "ede/ede-desktop"
-#define ICONS_CONFIG_NAME  "ede/ede-desktop-icons"
+#define CONFIG_NAME        "ede-desktop"
+#define ICONS_CONFIG_NAME  "ede-desktop-icons"
 
 #define EDE_DESKTOP_INTERFACE "org.equinoxproject.Desktop"
 #define EDE_DESKTOP_OBJECT    "/org/equinoxproject/Desktop"
