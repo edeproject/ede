@@ -10,4 +10,7 @@
 
 SubDir TOP ede-launch ;
 
-EdeProgram ede-launch : ede-launch.cpp ;
+SOURCE = ede-launch.cpp ;
+
+EdeProgram ede-launch : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
