@@ -27,5 +27,6 @@ int main(int argc, char** argv) {
 
 	XChangeProperty(dpy, RootWindow(dpy, scr),
             ede_quit, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&dummy, sizeof(int));
+	XSync(dpy, False);
 	return 0;
 }
