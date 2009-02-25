@@ -4,8 +4,9 @@ header_name {.h}
 code_name {.cxx}
 Function {} {open
 } {
-  Fl_Window {} {open
-    xywh {433 276 370 160} type Double visible
+  Fl_Window {} {
+    label {Run Command} open
+    xywh {433 276 370 195} type Double visible
   } {
     Fl_Box {} {
       image {../icons/run.xpm} xywh {10 10 55 55} labelsize 14
@@ -18,13 +19,17 @@ Function {} {open
       label {Open:}
       xywh {70 90 290 25}
     }
-    Fl_Button {} {
-      label {&OK}
-      xywh {175 125 90 25}
+    Fl_Check_Button {} {
+      label {Run in terminal} selected
+      xywh {70 125 290 25} down_box DOWN_BOX
     }
     Fl_Button {} {
-      label {&Cancel} selected
-      xywh {270 125 90 25}
+      label {&OK}
+      xywh {175 160 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {270 160 90 25}
     }
   }
 } 

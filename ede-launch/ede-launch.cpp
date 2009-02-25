@@ -15,6 +15,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Pixmap.H>
 #include <edelib/Run.h>
@@ -31,9 +32,11 @@
 
 EDELIB_NS_USING(run_program_fmt)
 
-static Fl_Pixmap image_run(run_xpm);
-static Fl_Input* dialog_input;
-static int       ret;
+static Fl_Pixmap        image_run(run_xpm);
+static Fl_Input*        dialog_input;
+static Fl_Check_Button* in_term;
+
+static int ret;
 
 void help(void) {
 	puts("Usage: ede-launch [OPTIONS] program");
@@ -183,12 +186,22 @@ static void ok_cb(Fl_Widget*, void* w) {
 	/* do not block dialog when program is starting */
 	Fl::check();
 
-	/* TODO: is 'cmd' safe to use here? */
-	start_child_process_with_core(cmd);
+	/* TODO: is 'cmd' safe after hide? */
+	if(in_term->value()) {
+		char buff[128];
+		char* term = getenv("TERM");
+		if(!term)
+			term = "xterm";
+
+		snprintf(buff, sizeof(buff), "%s -e %s", term, cmd);
+		start_child_process_with_core(buff);
+	} else {
+		start_child_process_with_core(cmd);
+	}
 }
 
 static void start_dialog(int argc, char** argv) {
-	LaunchWindow* win = new LaunchWindow(370, 160, _("Run Command"));
+	LaunchWindow* win = new LaunchWindow(370, 195, _("Run Command"));
 	win->begin();
 		Fl_Box* icon = new Fl_Box(10, 10, 55, 55);
 		icon->image(image_run);
@@ -198,9 +211,12 @@ static void start_dialog(int argc, char** argv) {
 
 		dialog_input = new Fl_Input(70, 90, 290, 25, _("Open:"));
 
-		Fl_Button* ok = new Fl_Button(175, 125, 90, 25, _("&OK"));
+		in_term = new Fl_Check_Button(70, 125, 290, 25, _("Run in terminal"));
+		in_term->down_box(FL_DOWN_BOX);
+
+		Fl_Button* ok = new Fl_Button(175, 160, 90, 25, _("&OK"));
 		ok->callback(ok_cb, win);
-		Fl_Button* cancel = new Fl_Button(270, 125, 90, 25, _("&Cancel"));
+		Fl_Button* cancel = new Fl_Button(270, 160, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb, win);
 	win->end();
 	win->show(argc, argv);
