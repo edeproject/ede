@@ -1,0 +1,30 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {open
+    xywh {433 276 370 160} type Double visible
+  } {
+    Fl_Box {} {
+      image {../icons/run.xpm} xywh {10 10 55 55} labelsize 14
+    }
+    Fl_Box {} {
+      label {Enter the name of the application you would like to run or the URL you would like to view}
+      xywh {70 10 290 69} align 148
+    }
+    Fl_Input {} {
+      label {Open:}
+      xywh {70 90 290 25}
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {175 125 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel} selected
+      xywh {270 125 90 25}
+    }
+  }
+} 
