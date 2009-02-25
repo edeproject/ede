@@ -25,10 +25,10 @@ static const char default_menu[] =
   <Item Type=\"Exec\" Icon=\"efinder.png\" Exec=\"efinder\">\n\
     <Name>Find</Name>\n\
   </Item>\n\
-  <Item Type=\"Exec\" Icon=\"ehelpbook.png\" Exec=\"file:"PREFIX"/share/ede/doc/index.html\">\n\
+  <Item Type=\"Exec\" Icon=\"ehelpbook.png\" Exec=\"ede-help\">\n\
     <Name>Help</Name>\n\
   </Item>\n\
-  <Item Type=\"Exec\" Icon=\"about.png\" Exec=\"$ABOUT\">\n\
+  <Item Type=\"Exec\" Icon=\"about.png\" Exec=\"ede-about\">\n\
     <Name>About</Name>\n\
   </Item>\n\
   <Item Type=\"Exec\" Icon=\"erun.png\" Exec=\"ede-launch\">\n\
