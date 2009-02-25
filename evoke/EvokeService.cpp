@@ -26,6 +26,7 @@
 #include "Splash.h"
 #include "Logout.h"
 #include "Xsm.h"
+#include "Xshutdown.h"
 
 EDELIB_NS_USING(Config)
 EDELIB_NS_USING(Resource)
@@ -220,7 +221,11 @@ int EvokeService::handle(const XEvent* xev) {
 			int dw = DisplayWidth(fl_display, fl_screen);
 			int dh = DisplayHeight(fl_display, fl_screen);
 
-			logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
+			int ret = logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
+			if(ret != -1) {
+				x_shutdown();
+				stop();
+			}
 		}
 	}
 
