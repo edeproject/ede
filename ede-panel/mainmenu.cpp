@@ -200,12 +200,12 @@ void MainMenu::clear_favourites()
  %v the name of the Device entry in the desktop file
  */
  
-// This function is now implemented in elauncher
+// This function is now implemented in ede-launch
 void MainMenu::resolve_program(Fl_String cmd)
 {
     char pRun[FL_PATH_MAX];
 
-    snprintf(pRun, sizeof(pRun)-1, "elauncher \"%s\"", cmd.c_str());
+    snprintf(pRun, sizeof(pRun)-1, "ede-launch \"%s\"", cmd.c_str());
     fl_start_child_process(pRun, false);
 }
 

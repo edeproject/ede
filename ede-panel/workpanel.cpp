@@ -188,7 +188,7 @@ void clockRefresh(void *)
 void runUtility(Fl_Widget *, char *pCommand)
 {
 	char cmd[256];
-	snprintf (cmd, sizeof(cmd)-1, "elauncher %s", pCommand);
+	snprintf (cmd, sizeof(cmd)-1, "ede-launch %s", pCommand);
 	fl_start_child_process(cmd, false);
 }
 
@@ -355,7 +355,7 @@ void startUtility(Fl_Button *, void *pName)
 	pGlobalConfig.get("Panel", (char*)pName, value, "");
 
 	if(!pGlobalConfig.error() && !value.empty()) {
-		value = "elauncher \""+value;
+		value = "ede-launch \""+value;
 		value += "\"";
 		fl_start_child_process(value, false);
 	}
@@ -432,7 +432,7 @@ void cb_run_app(Fl_Input *i, void*)
 	Fl_String exec(i->value());
 	if ((exec == "") || (exec == " ")) 
 		return;
-	exec = "elauncher \""+exec;
+	exec = "ede-launch \""+exec;
 	exec += "\"";
 	fl_start_child_process(exec, false);
 	
