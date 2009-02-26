@@ -25,7 +25,7 @@ SubInclude TOP ede-desktop ;
 SubInclude TOP ede-desktop-conf ;
 SubInclude TOP ede-screensaver-conf ;
 SubInclude TOP ede-help ;
-SubInclude TOP eimage ;
+SubInclude TOP ede-image-view ;
 SubInclude TOP elma ;
 SubInclude TOP ede-launch ;
 SubInclude TOP emountd ;

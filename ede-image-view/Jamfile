@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP eimage ;
+SubDir TOP ede-image-view ;
 
-FltkProgram eimage : eimage.cpp ;
-TranslationStrings locale : eimage.cpp ;
+FltkProgram ede-image-view : ede-image-view.cpp ;
+TranslationStrings locale  : ede-image-view.cpp ;

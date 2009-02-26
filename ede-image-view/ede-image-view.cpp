@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * EImage - EDE Image Viewer
+ * ede-image-view, EDE image viewer
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2006-2007 EDE Authors.
  *
@@ -373,7 +373,7 @@ int main (int argc, char **argv) {
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
 			printf(_("EImage - EDE Image Viewer\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
-			printf(_("Usage:\n\teimage [OPTIONS] [IMAGE_FILE]\n\n"));
+			printf(_("Usage: ede-image-view [OPTIONS] [IMAGE_FILE]\n\n"));
 			printf(_("Available options:\n%s\n"),Fl::help);
 			return 1;
 		}
