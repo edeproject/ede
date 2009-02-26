@@ -17,14 +17,13 @@ Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
 # SubInclude goes after local rules
 SubInclude TOP ede-about ;
+SubInclude TOP ede-bell-conf ;
 SubInclude TOP ede-calc ;
 SubInclude TOP ede-conf ;
 SubInclude TOP ede-crasher ;
 SubInclude TOP ede-desktop ;
 SubInclude TOP ede-desktop-conf ;
 SubInclude TOP ede-screensaver-conf ;
-#SubInclude TOP edewm ;
-SubInclude TOP efiler ;
 SubInclude TOP ede-help ;
 SubInclude TOP eimage ;
 SubInclude TOP elma ;
@@ -37,3 +36,8 @@ SubInclude TOP edewm ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
+
+# efile is not compileable on FreeBSD
+if $(OS) != FREEBSD {
+	SubInclude TOP efiler ;
+}

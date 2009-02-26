@@ -97,79 +97,79 @@ typedef edelib::list<edelib::String>::iterator StringListIter;
 #endif
 
 class Desktop : public DESKTOP_WINDOW {
-	private:
-		static Desktop* pinstance;
+private:
+	static Desktop* pinstance;
 
-		int selection_x, selection_y;
-		bool moving;
-		bool do_dirwatch;
+	int selection_x, selection_y;
+	bool moving;
+	bool do_dirwatch;
 
-		SelectionOverlay*  selbox;
+	SelectionOverlay*  selbox;
 
-		GlobalIconSettings* gisett;
-		DesktopSettings*    dsett;
+	GlobalIconSettings* gisett;
+	DesktopSettings*    dsett;
 
-		Fl_Menu_Button*  dmenu;
-		Wallpaper*       wallpaper;
-		edelib::EdbusConnection* dbus;
+	Fl_Menu_Button*  dmenu;
+	Wallpaper*       wallpaper;
+	edelib::EdbusConnection* dbus;
 
-		DesktopIconList icons;
-		DesktopIconList selectionbuff;
+	DesktopIconList icons;
+	DesktopIconList selectionbuff;
 
-		edelib::String trash_path;
+	edelib::String trash_path;
 
-		void init_internals(void);
+	void init_internals(void);
 
-		void load_icons(const char* path);
-		void save_icons_positions(void);
-		bool read_desktop_file(const char* path, IconSettings& is);
+	void load_icons(const char* path);
+	void save_icons_positions(void);
+	bool read_desktop_file(const char* path, IconSettings& is);
 
-		void add_icon(DesktopIcon* ic);
-		bool add_icon_by_path(const char* path, edelib::Resource* conf);
-		DesktopIcon* find_icon_by_path(const char* path);
-		bool remove_icon_by_path(const char* path);
-		bool update_icon_by_path(const char* path);
+	void add_icon(DesktopIcon* ic);
+	bool add_icon_by_path(const char* path, edelib::Resource* conf);
+	DesktopIcon* find_icon_by_path(const char* path);
+	bool remove_icon_by_path(const char* path);
+	bool update_icon_by_path(const char* path);
 
-		void unfocus_all(void);
+	void unfocus_all(void);
 
-		void select(DesktopIcon* ic, bool do_redraw = true);
-		void select_only(DesktopIcon* ic);
-		bool in_selection(const DesktopIcon* ic);
-		void move_selection(int x, int y, bool apply);
+	void select(DesktopIcon* ic, bool do_redraw = true);
+	void select_only(DesktopIcon* ic);
+	bool in_selection(const DesktopIcon* ic);
+	void move_selection(int x, int y, bool apply);
 
-		void select_in_area(void);
+	void select_in_area(void);
 
-		void dnd_drop_source(const char* src, int src_len, int x, int y);
+	void dnd_drop_source(const char* src, int src_len, int x, int y);
 
-		DesktopIcon* below_mouse(int px, int py);
+	DesktopIcon* below_mouse(int px, int py);
 
-	public:
-		Desktop();
-		~Desktop();
+public:
+	Desktop();
+	~Desktop();
 
-		virtual void show(void);
-		virtual void hide(void);
-		virtual void draw(void);
-		virtual int handle(int event);
+	virtual void show(void);
+	virtual void hide(void);
+	virtual void draw(void);
+	virtual int handle(int event);
 
-		static void init(void);
-		static void shutdown(void);
-		static Desktop* instance(void);
+	static void init(void);
+	static void shutdown(void);
+	static Desktop* instance(void);
 
-		void read_config(void);
+	void read_config(void);
 
-		void update_workarea(void);
-		void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
+	void update_workarea(void);
+	void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
 
-		void set_bg_color(int c, bool do_redraw = true);
+	void set_bg_color(int c, bool do_redraw = true);
 
-		void notify_desktop_changed(void);
+	void notify_desktop_changed(void);
 
-		void dir_watch(const char* dir, const char* changed, int flags);
-		void dir_watch_on(void) { do_dirwatch = true; }
-		void dir_watch_off(void) { do_dirwatch = false; }
+	void dir_watch(const char* dir, const char* changed, int flags);
+	void dir_watch_on(void) { do_dirwatch = true; }
+	void dir_watch_off(void) { do_dirwatch = false; }
 
-		void execute(const char* cmd);
+	void execute(const char* cmd);
 };
 
 #endif

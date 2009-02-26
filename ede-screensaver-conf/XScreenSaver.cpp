@@ -57,6 +57,8 @@ static int           atoms_loaded = 0;
 static pid_t       xscr_preview_pid = 0;
 static const char* xscr_folder_found = 0;
 
+extern char** environ;
+
 static const char* xscr_hacks_dirs[] = {
 	PREFIX"/lib/xscreensaver/",
 	"/usr/libexec/xscreensaver/",

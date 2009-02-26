@@ -17,7 +17,7 @@ MANUAL_FILES       = [ Wildcard manual : *.html : manual ] ;
 MANUAL_IMGS        = [ FDirName $(SUBDIR) manual images ] ;
 
 # where will be installed
-MANUAL_INSTALL_DIR = [ FDirName $(EDEDOCDIR) manual ] ;
+MANUAL_INSTALL_DIR = [ FDirName $(EDE_DOC_DIR) manual ] ;
 
 # install generated documents
 InstallData $(MANUAL_INSTALL_DIR) : $(MANUAL_FILES) ;

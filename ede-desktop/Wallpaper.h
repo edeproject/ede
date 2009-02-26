@@ -18,22 +18,22 @@
 
 /*
  * Class responsible for displaying images at background
- * their scaling (TODO), caching(TODO) and making coffee at the spear time.
+ * their scaling (TODO), caching(TODO) and making coffee at the spare time.
  */
 class Wallpaper : public Fl_Box { 
-	private:
-		Pixmap    rootpmap_pixmap;
-		bool tiled;
-		void set_rootpmap(void);
+private:
+	Pixmap    rootpmap_pixmap;
+	bool tiled;
+	void set_rootpmap(void);
 
-	public:
-		Wallpaper(int X, int Y, int W, int H);
-		~Wallpaper();
+public:
+	Wallpaper(int X, int Y, int W, int H);
+	~Wallpaper();
 
-		bool set(const char* path);
-		bool set_tiled(const char* path);
-		virtual void draw(void);
-		virtual int handle(int event);
+	bool set(const char* path);
+	bool set_tiled(const char* path);
+	virtual void draw(void);
+	virtual int handle(int event);
 };
 
 #endif

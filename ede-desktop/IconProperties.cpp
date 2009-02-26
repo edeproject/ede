@@ -54,8 +54,6 @@ static void ok_cb(Fl_Widget*, void* w) {
 }
 
 static void icon_change_cb(Fl_Button* b, void* d) {
-	DesktopIconData* data = (DesktopIconData*)d;
-
 	edelib::String ret = edelib::icon_chooser(edelib::ICON_SIZE_HUGE);
 	if(ret.empty())
 		return;

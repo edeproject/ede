@@ -151,7 +151,7 @@ void BatteryMonitor::update_status()
 #include <machine/apmioctl.h>
 
 int first = 1;
-void battery_check(void)
+void BatteryMonitor::battery_check(void)
 {
   int fd;
   struct apmreq ar ;
@@ -213,7 +213,7 @@ void battery_check(void)
 #define        APM_STAT_BATT_CHARGING  3
 
 int first = 1;
-void battery_check(void)
+void BatteryMonitor::battery_check(void)
 {
   int fd, r;
   bool p;
@@ -284,7 +284,7 @@ void battery_check(void)
 #define _PATH_APM_NORMAL       "/dev/apm"
 
 int first = 1;
-void battery_check(void)
+void BatteryMonitor::battery_check(void)
 {
        int fd, r;
        bool p;

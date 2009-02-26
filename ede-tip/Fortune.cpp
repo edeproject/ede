@@ -10,11 +10,16 @@
  * See COPYING for the details.
  */
 
-#include "Fortune.h"
-
 #include <netinet/in.h>
 #include <ctype.h>
 #include <stdio.h>
+
+#include "Fortune.h"
+
+/* FreeBSD does not have off_t, not sure about others */
+#ifndef __GLIBC__
+typedef unsigned int off_t;
+#endif
 
 struct FortuneFile {
 	FILE* str_file;
