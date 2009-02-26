@@ -10,20 +10,68 @@
  * See COPYING for details.
  */
 
+#ifndef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <string.h>
+
 #include <FL/x.H>
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Value_Slider.H>
+
 #include <edelib/Window.h>
 #include <edelib/Nls.h>
+#include <edelib/XSettingsClient.h>
+
+EDELIB_NS_USING(XSettingsClient)
+EDELIB_NS_USING(XSettingsAction)
+EDELIB_NS_USING(XSettingsSetting)
+EDELIB_NS_USING(XSETTINGS_ACTION_NEW)
+EDELIB_NS_USING(XSETTINGS_ACTION_CHANGED)
+EDELIB_NS_USING(XSETTINGS_ACTION_DELETED)
+EDELIB_NS_USING(XSETTINGS_TYPE_INT)
 
 static Fl_Value_Slider* vol_slide;
 static Fl_Value_Slider* pitch_slide;
 static Fl_Value_Slider* dur_slide;
-static edelib::Window*  win;
 
-static void set_values(void) {
+static edelib::Window*  win;
+static XSettingsClient* xsc;
+
+static bool block_xsettings_cb = false;
+
+#define CHECK_SETTING(n, setting, action) (strcmp(setting->name, n) == 0) && \
+		(action == XSETTINGS_ACTION_NEW) || (action == XSETTINGS_ACTION_CHANGED)
+
+#define KEY_VOLUME   "Bell/Volume"
+#define KEY_PITCH    "Bell/Pitch"
+#define KEY_DURATION "Bell/Duration"
+
+static int xevent_handler(int e) {
+	if(xsc)
+		xsc->process_xevent(fl_xevent);
+	return 1;
+}
+
+static void xsettings_cb(const char* name, XSettingsAction a, XSettingsSetting* s, void* data) {
+	if(s->type != XSETTINGS_TYPE_INT)
+		return;
+
+	if(block_xsettings_cb)
+		return;
+
+	if(CHECK_SETTING(KEY_VOLUME, s, a))
+		vol_slide->value(s->data.v_int);
+	if(CHECK_SETTING(KEY_PITCH, s, a))
+		pitch_slide->value(s->data.v_int);
+	if(CHECK_SETTING(KEY_DURATION, s, a))
+		dur_slide->value(s->data.v_int);
+}
+
+static void set_values(bool save) {
 	unsigned long v = KBBellPercent | KBBellPitch | KBBellDuration;
 	XKeyboardControl kc;
 	kc.bell_percent  = (unsigned int)vol_slide->value();
@@ -31,6 +79,18 @@ static void set_values(void) {
 	kc.bell_duration = (unsigned int)dur_slide->value();
 
 	XChangeKeyboardControl(fl_display, v, &kc);
+
+	if(save && xsc) {
+		/* disable callback, since modifying the value will trigger it */
+		block_xsettings_cb = true;
+
+		xsc->set(KEY_VOLUME, (unsigned int)vol_slide->value());
+		xsc->set(KEY_PITCH,  (unsigned int)pitch_slide->value());
+		xsc->set(KEY_DURATION, (unsigned int)dur_slide->value());
+		xsc->manager_notify();
+
+		block_xsettings_cb = false;
+	}
 }
 
 static void cancel_cb(Fl_Widget*, void*) {
@@ -38,12 +98,12 @@ static void cancel_cb(Fl_Widget*, void*) {
 }
 
 static void ok_cb(Fl_Widget*, void*) {
-	set_values();
+	set_values(true);
 	win->hide();
 }
 
 static void test_cb(Fl_Widget*, void*) {
-	set_values();
+	set_values(false);
 	XBell(fl_display, 0);
 }
 
@@ -80,5 +140,13 @@ int main(int argc, char **argv) {
 		test->callback(test_cb);
 	win->end();
 	win->show(argc, argv);
+
+	XSettingsClient x;
+	if(!x.init(fl_display, fl_screen, xsettings_cb, NULL))
+		xsc = NULL;
+	else
+		xsc = &x;
+
+	Fl::add_handler(xevent_handler);
 	return Fl::run();
 }
