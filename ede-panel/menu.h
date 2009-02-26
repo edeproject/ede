@@ -54,7 +54,7 @@ static const char default_menu[] =
   <Item Type=\"Exec\" Icon=\"lock.png\" Exec=\"xlock\">\n\
     <Name>Lock</Name>\n\
   </Item>\n\
-  <Item Type=\"Exec\" Icon=\"logout.png\" Exec=\"$LOGOUT\">\n\
+  <Item Type=\"Exec\" Icon=\"logout.png\" Exec=\"ede-shutdown\">\n\
     <Name>Logout</Name>\n\
   </Item>\n\
 </Menu>\n";

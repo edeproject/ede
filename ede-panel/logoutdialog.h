@@ -13,9 +13,6 @@
 #include <efltk/Fl_Box.h>
 #include <efltk/Fl_Divider.h>
 
-#include "icons/penguin.xpm"
-
-
 // which of these can be safely removed? what should be extern and
 // what shouldn't?
 

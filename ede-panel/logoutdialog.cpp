@@ -13,6 +13,8 @@
 #include <signal.h>
 #include <efltk/Fl_Image.h>						  // icons
 
+#include "icons/penguin.xpm"
+
 // widgets
 Fl_Window* windowLogoutDialog;
 Fl_Round_Button* logoutRadioItemLogoutDialog;
