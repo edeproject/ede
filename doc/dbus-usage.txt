@@ -158,3 +158,10 @@ are send in 'drive_type' and 'cdrom_type' (device_info struct).
  VOLUME_DISC_TYPE_MO          = 0x10
 -------------------------------------------------------------
 
+org.equinoxproject.Shutdown
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A general signal emitted when EDE is starting to shut down
+
+Shutdown()
+^^^^^^^^^^
+The only member of 'org.equinoxproject.Shutdown' signal.
