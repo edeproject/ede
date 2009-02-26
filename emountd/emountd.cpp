@@ -35,6 +35,9 @@
 #define EMOUNTD_INTERFACE   "org.equinoxproject.Emountd"
 #define EMOUNTD_OBJECT_PATH "/org/equinoxproject/Emountd"
 
+#define EDE_SHUTDOWN_INTERFACE "org.equinoxproject.Shutdown"
+#define EDE_SHUTDOWN_MEMBER    "Shutdown"
+
 struct DeviceInfo {
 	unsigned int udi_hash;
 	const char*  label;
@@ -328,6 +331,7 @@ int main(int argc, char** argv) {
 
 	DBusError err;
 	DBusConnection* conn = NULL, *session_conn = NULL;
+	DBusMessage* down_msg = NULL;
 
 	LibHalContext* ctx = NULL;
 	LibHalDrive*   hd;
@@ -421,9 +425,30 @@ int main(int argc, char** argv) {
 		libhal_free_string_array(drive_udis);
 	}
 
-	/* loop to receive/send messages */
-	while(dbus_connection_read_write_dispatch(conn, 1000) && !quit_signaled)
-		;
+	/* add matcher for quit dbus signal */
+	dbus_bus_add_match(bus_connection, "type='signal',interface='"EDE_SHUTDOWN_INTERFACE"'", 0);
+
+	/* 
+	 * Now handle both system and session bus messages: system messages
+	 * are to receive HAL notifications and bus messages are to dispatch them to EDE clients
+	 * and to receive Shutdown signal
+	 */
+	while(1) {
+		if(quit_signaled)
+			break;
+
+		/* fetch and dispatch system bus messages */
+		dbus_connection_read_write_dispatch(conn, 10);
+
+		/* but only fetch session bus messages; they are processed here */
+		dbus_connection_read_write(bus_connection, 10);
+
+		down_msg = dbus_connection_pop_message(bus_connection);
+		if(down_msg && dbus_message_is_signal(down_msg, EDE_SHUTDOWN_INTERFACE, EDE_SHUTDOWN_MEMBER))
+			break;
+
+		sleep(1);
+	}
 
 error:
 	if(!ctx)
