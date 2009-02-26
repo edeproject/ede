@@ -10,9 +10,6 @@
 
 SubDir TOP evoke ;
 
-# use SIGHUP for now as default
-ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
-
 SOURCE = evoke.cpp 
          EvokeService.cpp 
          Splash.cpp 
@@ -25,6 +22,12 @@ CONFIG = ede-settings.conf
          ede-startup.conf ;
 
 #ObjectC++Flags $(SOURCE) : -DUSE_LOCAL_CONFIG ;
+
+# use SIGHUP for now as default
+ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
+
+ObjectC++Flags EvokeService.cpp : $(EDELIB_DBUS_INCLUDE) ;
+LinkAgainstAsFirst evoke : $(EDELIB_DBUS_LIB) ;
 
 EdeProgram evoke : $(SOURCE) ;
 ProgramBare ede-shutdown : ede-shutdown.cpp ; 

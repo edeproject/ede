@@ -21,6 +21,8 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
+#include <edelib/EdbusMessage.h>
+#include <edelib/EdbusConnection.h>
 
 #include "EvokeService.h"
 #include "Splash.h"
@@ -30,6 +32,9 @@
 
 EDELIB_NS_USING(Config)
 EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(EdbusMessage)
+EDELIB_NS_USING(EdbusConnection)
+EDELIB_NS_USING(EDBUS_SESSION)
 EDELIB_NS_USING(RES_SYS_ONLY)
 EDELIB_NS_USING(file_exists)
 EDELIB_NS_USING(file_remove)
@@ -59,6 +64,16 @@ static int get_int_property_value(Atom at) {
 	ret = int(*(long*)prop);
 	XFree(prop);
 	return ret;
+}
+
+static void send_dbus_ede_quit(void) {
+	EdbusConnection c;
+	E_RETURN_IF_FAIL(c.connect(EDBUS_SESSION));
+
+	EdbusMessage msg;
+	msg.create_signal("/org/equinoxproject/Shutdown", "org.equinoxproject.Shutdown", "Shutdown");
+
+	c.send(msg);
 }
 
 EvokeService::EvokeService() : lock_name(NULL), xsm(NULL), is_running(false) { 
@@ -223,6 +238,7 @@ int EvokeService::handle(const XEvent* xev) {
 
 			int ret = logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
 			if(ret != -1) {
+				send_dbus_ede_quit();
 				x_shutdown();
 				stop();
 			}
