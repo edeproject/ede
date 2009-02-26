@@ -35,7 +35,7 @@
 #define EMOUNTD_INTERFACE   "org.equinoxproject.Emountd"
 #define EMOUNTD_OBJECT_PATH "/org/equinoxproject/Emountd"
 
-struct _DeviceInfo {
+struct DeviceInfo {
 	unsigned int udi_hash;
 	const char*  label;
 	const char*  mount_point;
@@ -48,14 +48,11 @@ struct _DeviceInfo {
 };
 
 /* audio CD are special */
-struct _DeviceAudioInfo {
+struct DeviceAudioInfo {
 	unsigned int udi_hash;
 	const char*  label;
 	const char*  device_file;
 };
-
-typedef struct _DeviceInfo      DeviceInfo;
-typedef struct _DeviceAudioInfo DeviceAudioInfo;
 
 typedef edelib::list<unsigned int>           UIntList;
 typedef edelib::list<unsigned int>::iterator UIntListIter;
