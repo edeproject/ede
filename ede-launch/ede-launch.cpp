@@ -21,7 +21,8 @@
 #include <edelib/Run.h>
 #include <edelib/Window.h>
 #include <edelib/Nls.h>
-
+#include <edelib/Debug.h>
+#include <edelib/MessageBox.h>
 #include "icons/run.xpm"
 
 /* 
@@ -30,13 +31,12 @@
  */
 #define LaunchWindow edelib::Window
 
-EDELIB_NS_USING(run_program_fmt)
+EDELIB_NS_USING(run_sync)
+EDELIB_NS_USING(alert)
 
 static Fl_Pixmap        image_run(run_xpm);
 static Fl_Input*        dialog_input;
 static Fl_Check_Button* in_term;
-
-static int ret;
 
 void help(void) {
 	puts("Usage: ede-launch [OPTIONS] program");
@@ -69,7 +69,7 @@ static void start_crasher(const char* cmd, int sig) {
 	 * call edelib implementation instead start_child_process()
 	 * to prevents loops if 'ede-crasher' crashes
 	 */
-	run_program_fmt(true, "ede-crasher --apppath %s --signal %i", cmd, sig);
+	run_sync("ede-crasher --apppath %s --signal %i", cmd, sig);
 }
 
 static int start_child_process(const char* cmd) {
@@ -106,13 +106,14 @@ static int start_child_process(const char* cmd) {
 			/* start it */
 			execvp(params[0], params);
 
+			/* some programs use value 2 (tar) */
 			if(errno == 2)
 				_exit(199);
 			else
 				_exit(errno);
 			break;
 		case -1:
-			fprintf(stderr, "ede-launcher: fork() failed\n");
+			E_WARNING(E_STRLOC ": fork() failed\n");
 			/* close the pipes */
 			close(in[0]);
 			close(in[1]);
@@ -131,46 +132,50 @@ static int start_child_process(const char* cmd) {
 			break;
 	}
 
-	int status;
+	int status, ret;
+	errno = 0;
 	if(waitpid(pid, &status, 0) < 0) {
-		fprintf(stderr, "ede-launcher: waitpid() failed\n");
+		E_WARNING(E_STRLOC ": waitpid() failed with '%s'\n", strerror(errno));
 		return 1;
 	}
 
 	if(WIFEXITED(status)) {
-		/*int v = WEXITSTATUS(status);
-		fprintf(stderr, "ede-launcher: child exited with '%i'\n", v); */
+		ret = WEXITSTATUS(status);
 	} else if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV) {
 		start_crasher(cmd, SIGSEGV);
 	} else {
-		fprintf(stderr, "ede-launcher: child '%s' killed!\n", cmd);
+		E_WARNING(E_STRLOC ": child '%s' killed\n", cmd);
 	}
 
-	return 0;
+	return ret;
 }
 
-static void start_child_process_with_core(const char* cmd) {
+static int start_child_process_with_core(const char* cmd) {
 	struct rlimit r;
+	errno = 0;
+
 	if(getrlimit(RLIMIT_CORE, &r) == -1) {
-		ret = -1; /* TODO: core dump error message */
-		return;
+		E_WARNING(E_STRLOC ": gerlimit() failed with '%s'\n", strerror(errno));
+		return -1;
 	}
 
 	rlim_t old = r.rlim_cur;
 	r.rlim_cur = RLIM_INFINITY;
 
 	if(setrlimit(RLIMIT_CORE, &r) == -1) {
-		ret = -1; /* TODO: core dump error message */
-		return;
+		E_WARNING(E_STRLOC ": setrlimit() failed with '%s'\n", strerror(errno));
+		return -1;
 	}
 
-	ret = start_child_process(cmd);
+	int ret = start_child_process(cmd);
 
 	r.rlim_cur = old;
 	if(setrlimit(RLIMIT_CORE, &r) == -1) {
-		ret = -1; /* TODO: core dump error message */
-		return;
+		E_WARNING(E_STRLOC ": setrlimit() failed with '%s'\n", strerror(errno));
+		return -1;
 	}
+
+	return ret;
 }
 
 static void cancel_cb(Fl_Widget*, void* w) {
@@ -181,6 +186,8 @@ static void cancel_cb(Fl_Widget*, void* w) {
 static void ok_cb(Fl_Widget*, void* w) {
 	LaunchWindow* win = (LaunchWindow*)w;
 	const char* cmd = dialog_input->value();
+	int ret = 0;
+
 	win->hide();
 
 	/* do not block dialog when program is starting */
@@ -194,9 +201,19 @@ static void ok_cb(Fl_Widget*, void* w) {
 			term = "xterm";
 
 		snprintf(buff, sizeof(buff), "%s -e %s", term, cmd);
-		start_child_process_with_core(buff);
+		ret = start_child_process_with_core(buff);
 	} else {
-		start_child_process_with_core(cmd);
+		ret = start_child_process_with_core(cmd);
+	}
+
+	if(ret == 199) {
+		alert(_("Program '%s' not found"), cmd);
+		/* show dialog again */
+		win->show();
+	} else if(ret == EACCES) {
+		alert(_("You do not have enough permissions to execute '%s'"), cmd);
+		/* show dialog again */
+		win->show();
 	}
 }
 
@@ -235,5 +252,5 @@ int main(int argc, char** argv) {
 		start_child_process_with_core(argv[1]);
 	}
 
-	return ret;
+	return 0;
 }
