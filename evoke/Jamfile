@@ -16,7 +16,8 @@ SOURCE = evoke.cpp
          Xsm.cpp 
 		 Logout.cpp 
 		 Autostart.cpp 
-		 Xshutdown.cpp ;
+		 Xshutdown.cpp 
+		 SettingsApplicator.cpp ;
 
 CONFIG = ede-settings.conf 
          ede-startup.conf ;
