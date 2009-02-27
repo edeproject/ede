@@ -29,7 +29,7 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(build_filename)
 EDELIB_NS_USING(dir_exists)
-EDELIB_NS_USING(run_program)
+EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(RES_SYS_ONLY)
 
 #ifndef EDEWM_HAVE_NET_SPLASH
@@ -272,7 +272,7 @@ bool Splash::next_client(void) {
 
 	/* run command */
 	if(!dryrun)
-		run_program(cmd, false);
+		run_async(cmd);
 
 	++slist_it;
 	++counter;
@@ -303,7 +303,7 @@ bool Splash::next_client_nosplash(void) {
 
 	/* run command */
 	if(!dryrun)
-		run_program(cmd, false);
+		run_async(cmd);
 
 	++slist_it;
 	++counter;

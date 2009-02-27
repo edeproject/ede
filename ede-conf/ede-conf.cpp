@@ -84,7 +84,7 @@ int ControlButton::handle(int event) {
 				else if(!file_can_execute(exec.c_str()))
 					edelib::alert(_("Unable to run program '%s'. Program not found"), exec.c_str());
 				else
-					edelib::run_program(exec.c_str(), false);
+					edelib::run_async(exec.c_str());
 			}
 			return 1;
 

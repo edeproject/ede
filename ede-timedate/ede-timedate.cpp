@@ -115,11 +115,11 @@ void fill_timezones(const char* current) {
 	
 	struct stat s;
 	if(stat("/usr/share/zoneinfo/zone.tab",&s)==0) {
-		edelib::run_program("cat /usr/share/zoneinfo/zone.tab | grep -e  ^[^#] | cut -f 3 |sort > /tmp/_tzone_.txt");
+		edelib::run_sync("cat /usr/share/zoneinfo/zone.tab | grep -e  ^[^#] | cut -f 3 |sort > /tmp/_tzone_.txt");
 		zonetab_dir = "/usr/share/zoneinfo/";
 	}
 	else if(stat("/usr/local/share/zoneinfo/zone.tab",&s)==0) {
-		edelib::run_program("cat /usr/local/share/zoneinfo/zone.tab | grep -e  ^[^#] | cut -f 3 | sort > /tmp/_tzone_.txt");
+		edelib::run_sync("cat /usr/local/share/zoneinfo/zone.tab | grep -e  ^[^#] | cut -f 3 | sort > /tmp/_tzone_.txt");
 		zonetab_dir = "/usr/local/share/zoneinfo/";
 	} else {
 		timeZonesList->add(_("Zone information not found."));

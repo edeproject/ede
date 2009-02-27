@@ -956,7 +956,7 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 
 void Desktop::execute(const char* cmd) {
 	E_ASSERT(cmd != NULL);
-	edelib::run_program(cmd, false);
+	edelib::run_async(cmd);
 }
 
 int Desktop::handle(int event) {

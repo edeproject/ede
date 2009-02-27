@@ -40,7 +40,7 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_rename)
-EDELIB_NS_USING(run_program)
+EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(dir_home)
 EDELIB_NS_USING(dir_exists)
 EDELIB_NS_USING(dir_empty)
@@ -362,9 +362,7 @@ bool xscreensaver_run_daemon(Display *dpy) {
 			return false;
  
 		/* run 'xscreensaver -nosplash' */
-		p += " -nosplash";
-		run_program(p.c_str(), false);
-
+		run_async("%s -nosplash", p.c_str());
 		usleep(250000);
 
 		/* check again */

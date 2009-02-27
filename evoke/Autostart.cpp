@@ -39,12 +39,12 @@ EDELIB_NS_USING(dir_list)
 EDELIB_NS_USING(system_config_dirs)
 EDELIB_NS_USING(user_config_dir)
 EDELIB_NS_USING(str_ends)
-EDELIB_NS_USING(run_program)
+EDELIB_NS_USING(run_async)
 
 #ifdef DEBUG_AUTOSTART_RUN
  #define AUTOSTART_RUN(s) E_DEBUG("Executing %s\n", s)
 #else
- #define AUTOSTART_RUN(s) run_program(s, false)
+ #define AUTOSTART_RUN(s) run_async(s)
 #endif
 
 struct DialogEntry {
