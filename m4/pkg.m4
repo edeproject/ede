@@ -1,11 +1,14 @@
 dnl
-dnl A small modification to remove ending spaces (sz)
+dnl $Id$
 dnl
-	
+dnl Modified a little bit so returned values does not have ending spaces. (Sanel)
+dnl Note: if you do not set 'action-not', if package not found, it will stop configure
+dnl script with "Library XY requirements not met..." message
+dnl	
 dnl PKG_CHECK_MODULES(GSTUFF, gtk+-2.0 >= 1.3 glib = 1.3.4, action-if, action-not)
 dnl defines GSTUFF_LIBS, GSTUFF_CFLAGS, see pkg-config man page
 dnl also defines GSTUFF_PKG_ERRORS on error
-AC_DEFUN(PKG_CHECK_MODULES, [
+AC_DEFUN([PKG_CHECK_MODULES], [
   succeeded=no
 
   if test -z "$PKG_CONFIG"; then
@@ -35,9 +38,12 @@ AC_DEFUN(PKG_CHECK_MODULES, [
             ## -Wl,--export-dynamic
             $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
             AC_MSG_RESULT($$1_LIBS)
+
+			$1_VERSION=`$PKG_CONFIG --modversion "$2"`
         else
             $1_CFLAGS=""
             $1_LIBS=""
+			$1_VERSION=""
             ## If we have a custom action on failure, don't print errors, but 
             ## do set a variable so people can do so.
             $1_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2"`
@@ -50,6 +56,7 @@ AC_DEFUN(PKG_CHECK_MODULES, [
 
         AC_SUBST($1_CFLAGS)
         AC_SUBST($1_LIBS)
+        AC_SUBST($1_VERSION)
      else
         echo "*** Your version of pkg-config is too old. You need version $PKG_CONFIG_MIN_VERSION or newer."
         echo "*** See http://www.freedesktop.org/software/pkgconfig"

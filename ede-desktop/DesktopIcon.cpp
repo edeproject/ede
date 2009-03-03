@@ -20,6 +20,7 @@
 #include <edelib/IconTheme.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
+#include <edelib/Run.h>
 
 #ifdef USE_SHAPE
 	#include <X11/extensions/shape.h>
@@ -430,7 +431,7 @@ int DesktopIcon::handle(int event) {
 			return 1;
 		case FL_RELEASE:
 			if(Fl::event_clicks() > 0)
-				E_DEBUG(E_STRLOC ": EXECUTE: %s\n", settings->cmd.c_str());
+				edelib::run_async("ede-launch %s", settings->cmd.c_str());
 			return 1;
 
 		case FL_DND_ENTER:

@@ -26,6 +26,7 @@ struct StartupItem {
 
 typedef edelib::list<StartupItem*>           StartupItemList;
 typedef edelib::list<StartupItem*>::iterator StartupItemListIter;
+
 class Xsm;
 
 class EvokeService {

@@ -27,21 +27,9 @@
 #include <edelib/Window.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
-#include <edelib/File.h>
 
 typedef edelib::list<edelib::String> StrList;
 typedef edelib::list<edelib::String>::iterator StrListIter;
-
-static bool file_can_execute(const edelib::String& f) {
-	if(edelib::file_executable(f.c_str()))
-		return true;
-
-	/* find full path then */
-	edelib::String fp = edelib::file_path(f.c_str());
-	if(fp.empty())
-		return false;
-	return edelib::file_executable(fp.c_str());
-}
 
 class ControlButton : public Fl_Button {
 private:
@@ -81,10 +69,8 @@ int ControlButton::handle(int event) {
 			if(Fl::event_clicks()) {
 				if(exec.empty())
 					edelib::alert(_("Unable to execute command for '%s'. Command value is not set"), label());
-				else if(!file_can_execute(exec.c_str()))
-					edelib::alert(_("Unable to run program '%s'. Program not found"), exec.c_str());
 				else
-					edelib::run_async(exec.c_str());
+					edelib::run_async("ede-launch %s", exec.c_str());
 			}
 			return 1;
 

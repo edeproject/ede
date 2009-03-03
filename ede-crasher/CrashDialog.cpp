@@ -10,6 +10,10 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "icons/core.xpm"
 #include "CrashDialog.h"
 
@@ -166,7 +170,7 @@ void CrashDialog::show_details(void) {
 			trace_buff->append("\n\n");
 
 			trace_buff->append("---------- short summary ----------\n"); 
-			trace_buff->append("\nEDE version: 2.0");
+			trace_buff->append("\nEDE version: " PACKAGE_VERSION);
 			trace_buff->append("\nSystem info: ");
 			trace_buff->append(get_uname().c_str());
 
@@ -271,9 +275,9 @@ void CrashDialog::run(void) {
 
 	if(appname || apppath) {
 		const char* p = (appname ? appname : apppath);
-		l.printf(_("Program '%s' just crashed !"), p);
+		l.printf(_("Program '%s' just crashed!"), p);
 	} else
-		l += _("Program just crashed !");
+		l += _("Program just crashed!");
 	l += _("\n\nYou can inspect details about this crash by clicking on 'Show details' below");
 
 	txt_box->copy_label(l.c_str());

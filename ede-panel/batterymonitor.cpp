@@ -198,6 +198,8 @@ void BatteryMonitor::battery_check(void)
 #ifdef __FreeBSD__
 
 #include <machine/apm_bios.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define APMDEV21       "/dev/apm0"
 #define APMDEV22       "/dev/apm"

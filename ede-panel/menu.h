@@ -31,7 +31,7 @@ static const char default_menu[] =
   <Item Type=\"Exec\" Icon=\"about.png\" Exec=\"ede-about\">\n\
     <Name>About</Name>\n\
   </Item>\n\
-  <Item Type=\"Exec\" Icon=\"erun.png\" Exec=\"ede-launch\">\n\
+  <Item Type=\"Exec\" Icon=\"erun.png\" Exec=\"$ABOUT\">\n\
     <Name>Run</Name>\n\
   </Item>\n\
   <Item Type=\"Divider\"/>\n\

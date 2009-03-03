@@ -14,6 +14,16 @@
 #include <config.h>
 #endif
 
+#include <efltk/Fl_Widget.h>
+#include <efltk/Fl_Util.h>
+#include "aboutdialog.h"
+
+void AboutDialog(Fl_Widget*, void*)
+{
+	fl_start_child_process("ede-launch ede-about", false);
+}
+
+#if 0
 #include <efltk/Fl.h>
 #include <efltk/Fl_Window.h>
 #include <efltk/Fl_Box.h>
@@ -109,3 +119,4 @@ the GNU General Public Licence version 2 or newer.\nSee Details for more."));
 	win->set_modal();
 	win->show();
 }
+#endif

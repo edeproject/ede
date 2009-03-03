@@ -16,8 +16,7 @@ SOURCE = evoke.cpp
          Xsm.cpp 
 		 Logout.cpp 
 		 Autostart.cpp 
-		 Xshutdown.cpp 
-		 SettingsApplicator.cpp ;
+		 Xshutdown.cpp ;
 
 CONFIG = ede-settings.conf 
          ede-startup.conf ;
@@ -31,8 +30,12 @@ ObjectC++Flags EvokeService.cpp : $(EDELIB_DBUS_INCLUDE) ;
 LinkAgainstAsFirst evoke : $(EDELIB_DBUS_LIB) ;
 
 EdeProgram evoke : $(SOURCE) ;
+
+ObjectC++Flags ede-startup : $(X_CFLAGS) ;
 ProgramBare ede-shutdown : ede-shutdown.cpp ; 
-LinkAgainst ede-shutdown : -lX11 ;
+LinkAgainst ede-shutdown : $(X_LIBS) -lX11 ;
+
+InstallEdeProgram ede-settings-apply ;
 
 EdeManualWithToc [ FFileName doc evoke.txt ] ;
 TranslationStrings locale : $(SOURCE) ;

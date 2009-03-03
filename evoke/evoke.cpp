@@ -19,9 +19,12 @@
 #include <stdio.h>
 #include <FL/Fl.H>
 #include <FL/x.H>
+#include <edelib/Run.h>
 
 #include "EvokeService.h"
 #include "Autostart.h"
+
+EDELIB_NS_USING(run_async)
 
 #define FOREVER   1e20
 #define LOCK_FILE "/tmp/.evoke.lock"
@@ -104,8 +107,8 @@ int main(int argc, char** argv) {
 		return 0;
 
 	if(!service->setup_lock(LOCK_FILE)) {
-		printf("Either another evoke instance is running or I can't create lock file\n");
-		printf("If program abnormaly crashed before, just remove '%s' and start it again\n", LOCK_FILE);
+		printf("*** Either another evoke instance is running or I can't create lock file.\n");
+		printf("*** If program abnormaly crashed before, just remove '%s' and start it again.\n", LOCK_FILE);
 		return 1;
 	}
 
@@ -133,6 +136,10 @@ int main(int argc, char** argv) {
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), 
 			PropertyChangeMask | SubstructureNotifyMask | ClientMessage);
 	Fl::add_handler(xmessage_handler);
+
+	/* run applicator for settings; it must be done after manager is fully on */
+	if(do_startup)
+		run_async("ede-settings-apply");
 
 	service->start();
 

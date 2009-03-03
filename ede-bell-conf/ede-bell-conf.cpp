@@ -34,12 +34,16 @@ EDELIB_NS_USING(XSETTINGS_ACTION_CHANGED)
 EDELIB_NS_USING(XSETTINGS_ACTION_DELETED)
 EDELIB_NS_USING(XSETTINGS_TYPE_INT)
 
-static Fl_Value_Slider* vol_slide;
-static Fl_Value_Slider* pitch_slide;
-static Fl_Value_Slider* dur_slide;
+static Fl_Value_Slider* vol_slide   = NULL;
+static Fl_Value_Slider* pitch_slide = NULL;
+static Fl_Value_Slider* dur_slide   = NULL;
 
 static edelib::Window*  win;
 static XSettingsClient* xsc;
+
+static unsigned int vol_val;
+static unsigned int pitch_val;
+static unsigned int dur_val;
 
 static bool block_xsettings_cb = false;
 
@@ -53,7 +57,8 @@ static bool block_xsettings_cb = false;
 static int xevent_handler(int e) {
 	if(xsc)
 		xsc->process_xevent(fl_xevent);
-	return 1;
+	/* make sure to return 0 so other events could be processed */
+	return 0;
 }
 
 static void xsettings_cb(const char* name, XSettingsAction a, XSettingsSetting* s, void* data) {
@@ -63,30 +68,49 @@ static void xsettings_cb(const char* name, XSettingsAction a, XSettingsSetting* 
 	if(block_xsettings_cb)
 		return;
 
-	if(CHECK_SETTING(KEY_VOLUME, s, a))
-		vol_slide->value(s->data.v_int);
-	if(CHECK_SETTING(KEY_PITCH, s, a))
-		pitch_slide->value(s->data.v_int);
-	if(CHECK_SETTING(KEY_DURATION, s, a))
-		dur_slide->value(s->data.v_int);
+	if(CHECK_SETTING(KEY_VOLUME, s, a)) {
+		vol_val = s->data.v_int;
+		if(vol_slide)
+			vol_slide->value(vol_val);
+	}
+
+	if(CHECK_SETTING(KEY_PITCH, s, a)) {
+		pitch_val = s->data.v_int;
+		if(pitch_slide)
+			pitch_slide->value(pitch_val);
+	}
+
+	if(CHECK_SETTING(KEY_DURATION, s, a)) {
+		dur_val = s->data.v_int;
+		if(dur_slide)
+			dur_slide->value(dur_val);
+	}
+}
+
+static void apply_values(void) {
+	unsigned long v = KBBellPercent | KBBellPitch | KBBellDuration;
+	XKeyboardControl kc;
+	kc.bell_percent  = vol_val;
+	kc.bell_pitch    = pitch_val;
+	kc.bell_duration = dur_val;
+
+	XChangeKeyboardControl(fl_display, v, &kc);
 }
 
 static void set_values(bool save) {
-	unsigned long v = KBBellPercent | KBBellPitch | KBBellDuration;
-	XKeyboardControl kc;
-	kc.bell_percent  = (unsigned int)vol_slide->value();
-	kc.bell_pitch    = (unsigned int)pitch_slide->value();
-	kc.bell_duration = (unsigned int)dur_slide->value();
+	vol_val = (unsigned int)vol_slide->value();
+	pitch_val = (unsigned int)pitch_slide->value();
+	dur_val = (unsigned int)dur_slide->value();
 
-	XChangeKeyboardControl(fl_display, v, &kc);
+	apply_values();
 
 	if(save && xsc) {
 		/* disable callback, since modifying the value will trigger it */
 		block_xsettings_cb = true;
 
-		xsc->set(KEY_VOLUME, (unsigned int)vol_slide->value());
-		xsc->set(KEY_PITCH,  (unsigned int)pitch_slide->value());
-		xsc->set(KEY_DURATION, (unsigned int)dur_slide->value());
+		xsc->set(KEY_VOLUME, vol_val);
+		xsc->set(KEY_PITCH,  pitch_val);
+		xsc->set(KEY_DURATION, dur_val);
 		xsc->manager_notify();
 
 		block_xsettings_cb = false;
@@ -107,7 +131,7 @@ static void test_cb(Fl_Widget*, void*) {
 	XBell(fl_display, 0);
 }
 
-int main(int argc, char **argv) {
+static void window_create(int argc, char** argv) {
 	win = new edelib::Window(330, 210, _("System bell configuration"));
 	win->begin();
 		vol_slide = new Fl_Value_Slider(10, 30, 310, 25, _("Volume"));
@@ -140,13 +164,37 @@ int main(int argc, char **argv) {
 		test->callback(test_cb);
 	win->end();
 	win->show(argc, argv);
+}
 
+int main(int argc, char **argv) {
+	bool win_show = true;
+
+	if(argc > 1 && strcmp(argv[1], "--apply") == 0)
+		win_show = false;
+
+	if(win_show) {
+		window_create(argc, argv);
+		Fl::add_handler(xevent_handler);
+	} else {
+		/* if window is not going to be shown, we still have to open display */
+		fl_open_display();
+	}
+
+	/* if window is not shown, xsettings_cb will be triggered anyway */
 	XSettingsClient x;
 	if(!x.init(fl_display, fl_screen, xsettings_cb, NULL))
 		xsc = NULL;
 	else
 		xsc = &x;
 
-	Fl::add_handler(xevent_handler);
+	if(!win_show) {
+		if(xsc) {
+			apply_values();
+			XSync(fl_display, False);
+		}
+
+		return 0;
+	}
+
 	return Fl::run();
 }

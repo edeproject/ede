@@ -86,5 +86,11 @@ COMPOSITELIB     ?= @COMPOSITE_LIBS@ ;
 HALINCLUDE ?= @HAL_CFLAGS@ ;
 HALLIB     ?= @HAL_LIBS@ ;
 
+# X libraries (could be empty if are on standard paths)
+X_CFLAGS     ?= @X_CFLAGS@ ;
+X_LIBS       ?= @X_LIBS@ ;
+X_PRE_LIBS   ?= @X_PRE_LIBS@ ;
+X_EXTRA_LIBS ?= @X_EXTRA_LIBS@ ;
+
 # do not touch this
 JAMCONFIG_READ = "yes" ;
