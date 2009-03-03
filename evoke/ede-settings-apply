@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ede-bell-conf --apply
