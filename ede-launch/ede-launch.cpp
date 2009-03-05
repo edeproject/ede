@@ -178,6 +178,22 @@ static int start_child_process_with_core(const char* cmd) {
 	return ret;
 }
 
+static bool start_child(const char* cmd) {
+	int ret = start_child_process_with_core(cmd);
+
+	if(ret == 199) {
+		alert(_("Program '%s' not found"), cmd);
+		return false;
+	}
+
+	if(ret == EACCES) {
+		alert(_("You do not have enough permissions to execute '%s'"), cmd);
+		return false;
+	}
+
+	return true;
+}
+
 static void cancel_cb(Fl_Widget*, void* w) {
 	LaunchWindow* win = (LaunchWindow*)w;
 	win->hide();
@@ -186,7 +202,7 @@ static void cancel_cb(Fl_Widget*, void* w) {
 static void ok_cb(Fl_Widget*, void* w) {
 	LaunchWindow* win = (LaunchWindow*)w;
 	const char* cmd = dialog_input->value();
-	int ret = 0;
+	bool started = false;
 
 	win->hide();
 
@@ -201,17 +217,12 @@ static void ok_cb(Fl_Widget*, void* w) {
 			term = "xterm";
 
 		snprintf(buff, sizeof(buff), "%s -e %s", term, cmd);
-		ret = start_child_process_with_core(buff);
+		started = start_child(buff);
 	} else {
-		ret = start_child_process_with_core(cmd);
+		started = start_child(cmd);
 	}
 
-	if(ret == 199) {
-		alert(_("Program '%s' not found"), cmd);
-		/* show dialog again */
-		win->show();
-	} else if(ret == EACCES) {
-		alert(_("You do not have enough permissions to execute '%s'"), cmd);
+	if(!started) {
 		/* show dialog again */
 		win->show();
 	}
@@ -249,7 +260,7 @@ int main(int argc, char** argv) {
 		help();
 		return 0;
 	} else {
-		start_child_process_with_core(argv[1]);
+		start_child(argv[1]);
 	}
 
 	return 0;
