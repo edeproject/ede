@@ -90,10 +90,10 @@ rule EdeProgram
 	}
 }
 
-# EdeProgramBare [target] : [sources] : [noinstall] ;
+# EdeProgramAsFltkBare [target] : [sources] : [noinstall] ;
 # Creates EDE specific programs. They will be linked with EDELIBLIB
 # and FLTKLIB. If [noinstall] is given, [target] will not be installed wit 'jam install'.
-rule EdeProgramBare
+rule EdeProgramAsFltkBare
 {
 	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
 		Echo "EDELIBINCLUDE or EDELIBLIB not defined; $(1) will not be built" ;
