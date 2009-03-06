@@ -36,6 +36,7 @@ SubInclude TOP edewm ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
+SubInclude TOP services ;
 
 # efile is not compileable on FreeBSD
 if $(OS) != FREEBSD {
