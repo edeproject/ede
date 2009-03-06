@@ -165,7 +165,8 @@ fi
 EDE_CHECK_STATFS
 EDE_CHECK_STAT64
 
-EDE_CHECK_DIR(DBUS_SERVICE_DIR, [/usr/share/dbus-1/services /usr/local/share/dbus-1/services /opt/share/dbus-1/services])
+EDE_CHECK_DIR(DBUS_SERVICE_DIR, 
+			  [/usr/share/dbus-1/services /usr/local/share/dbus-1/services "$datarootdir/dbus-1/services"])
 
 ac_bindir="$bindir"
 
