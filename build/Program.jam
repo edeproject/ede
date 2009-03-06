@@ -90,6 +90,27 @@ rule EdeProgram
 	}
 }
 
+# EdeProgramBare [target] : [sources] : [noinstall] ;
+# Creates EDE specific programs. They will be linked with EDELIBLIB
+# and FLTKLIB. If [noinstall] is given, [target] will not be installed wit 'jam install'.
+rule EdeProgramBare
+{
+	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
+		Echo "EDELIBINCLUDE or EDELIBLIB not defined; $(1) will not be built" ;
+		return ;
+	}
+
+	MakeProgramPrivate $(1) : $(2) 
+		: $(EDELIBLIB) $(FLTKLIB_NOIMAGES) $(STDLIB) 
+		: $(GLOBALFLAGS) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
+
+	if $(3) != "noinstall" {
+		InstallEdeProgram $(1) ;
+	}
+}
+
+
+
 # EfltkProgram [target] : [sources] : [noinstall] ;
 # Creates programs that will be linked with efltk. If [noinstall] is given, 
 # [target] will not be installed wit 'jam install'.

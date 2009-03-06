@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <FL/x.H>
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
@@ -22,7 +23,9 @@
 #include <edelib/Window.h>
 #include <edelib/Nls.h>
 #include <edelib/Debug.h>
+#include <edelib/Missing.h>
 #include <edelib/MessageBox.h>
+
 #include "icons/run.xpm"
 
 /* 
@@ -32,6 +35,7 @@
 #define LaunchWindow edelib::Window
 
 EDELIB_NS_USING(run_sync)
+EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
 
 static Fl_Pixmap        image_run(run_xpm);
@@ -179,15 +183,22 @@ static int start_child_process_with_core(const char* cmd) {
 }
 
 static bool start_child(const char* cmd) {
+	run_async("ede-launch-sn --program %s --icon applications-order", cmd);
+
 	int ret = start_child_process_with_core(cmd);
 
 	if(ret == 199) {
-		alert(_("Program '%s' not found"), cmd);
+		alert(_("Program '%s' not found.\n\nPlease check if given path to the executable was correct or adjust $PATH environment variable to point to the directory where target executable exists"), cmd);
 		return false;
 	}
 
 	if(ret == EACCES) {
-		alert(_("You do not have enough permissions to execute '%s'"), cmd);
+		/* now check the if file is executable since EACCES is common error if not so */
+		if(access(cmd, X_OK) != 0)
+			alert(_("You are trying to execute '%s', but it is not executable file"), cmd);
+		else
+			alert(_("You do not have enough permissions to execute '%s'"), cmd);
+
 		return false;
 	}
 
@@ -211,13 +222,13 @@ static void ok_cb(Fl_Widget*, void* w) {
 
 	/* TODO: is 'cmd' safe after hide? */
 	if(in_term->value()) {
-		char buff[128];
+		char buf[128];
 		char* term = getenv("TERM");
 		if(!term)
 			term = "xterm";
 
-		snprintf(buff, sizeof(buff), "%s -e %s", term, cmd);
-		started = start_child(buff);
+		snprintf(buf, sizeof(buf), "%s -e %s", term, cmd);
+		started = start_child(buf);
 	} else {
 		started = start_child(cmd);
 	}

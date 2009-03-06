@@ -65,5 +65,8 @@ if [ "$XSETROOT" ]; then
 	$XSETROOT -solid black
 fi
 
+# remove leftovers if evoke crashed
+rm -f /tmp/.evoke.lock
+
 # start the session
 evoke --startup --autostart-safe

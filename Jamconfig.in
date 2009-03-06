@@ -86,6 +86,10 @@ COMPOSITELIB     ?= @COMPOSITE_LIBS@ ;
 HALINCLUDE ?= @HAL_CFLAGS@ ;
 HALLIB     ?= @HAL_LIBS@ ;
 
+# startup-notification
+STARTUP_NOTIFICATION_INCLUDE ?= @LIBSTARTUP_NOTIFICATION_CFLAGS@ ;
+STARTUP_NOTIFICATION_LIB     ?= @LIBSTARTUP_NOTIFICATION_LIBS@ ;
+
 # X libraries (could be empty if are on standard paths)
 X_CFLAGS     ?= @X_CFLAGS@ ;
 X_LIBS       ?= @X_LIBS@ ;

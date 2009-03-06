@@ -95,6 +95,15 @@ if test "$enable_hal" = "yes"; then
 	fi
 fi
 
+PKG_CHECK_MODULES(LIBSTARTUP_NOTIFICATION, [libstartup-notification-1.0], 
+				  [have_libstartup_notification=yes], [have_libstartup_notification=no])
+if test "$have_libstartup_notification" = "yes"; then
+	AC_DEFINE(HAVE_LIBSTARTUP_NOTIFICATION, 1, [Define to 1 if you have libstartup-notification libraries])
+else
+	AC_MSG_RESULT(no)
+fi
+
+
 PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
 if test "$have_edelib" = "no"; then
 	AC_MSG_ERROR(edelib not found! You must install it first)
