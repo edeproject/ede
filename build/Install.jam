@@ -160,6 +160,13 @@ rule InstallEdeDoc
 	InstallData $(EDE_DOC_DIR) : $(1) ;
 }
 
+# InstallDbusService [targets] ;
+# Installs D-BUS service targets to D-BUS known directory
+rule InstallDbusService
+{
+	InstallData $(DBUS_SERVICE_DIR) : $(1) ;
+}
+
 actions Install1
 {
 	$(CP) "$(>)" "$(<)"
