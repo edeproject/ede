@@ -19,6 +19,7 @@
 #include <edelib/Config.h>
 #include <edelib/IconTheme.h>
 #include <edelib/Debug.h>
+#include <edelib/Window.h>
 
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Shared_Image.H>
@@ -33,7 +34,7 @@
 
 #include "icons/world2.xpm"
 
-static Fl_Double_Window *timedateWindow=(Fl_Double_Window *)0;
+static edelib::Window *timedateWindow = (edelib::Window*)0;
 EDE_Calendar *calendar=(EDE_Calendar *)0;
 Fl_Time_Input *timeBox=(Fl_Time_Input*)0;
 Fl_Choice *timeFormat=(Fl_Choice *)0;
@@ -430,18 +431,11 @@ static void tick(void *v) {
 
 int main(int argc, char **argv) {
 
-fl_register_images();
-edelib::IconTheme::init("crystalsvg");
-
 FL_NORMAL_SIZE=12;
-
-// Required by the new edelib::MessageBox class
-edelib::themed_dialog_icons(MSGBOX_ICON_INFO, MSGBOX_ICON_WARNING, MSGBOX_ICON_QUESTION, MSGBOX_ICON_QUESTION, MSGBOX_ICON_PASSWORD);
-
 time_changed = format_changed = tz_changed = date_changed = false;
 
 
-  { timedateWindow = new Fl_Double_Window(415, 320, _("Time and date"));
+  { timedateWindow = new edelib::Window(415, 320, _("Time and date"));
     { Fl_Tabs* o = new Fl_Tabs(5, 5, 405, 270);
       { Fl_Group* o = new Fl_Group(5, 30, 405, 245, _("&Time/date"));
         { calendar = new EDE_Calendar(10, 35, 220, 202);
