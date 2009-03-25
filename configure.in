@@ -114,6 +114,10 @@ if test "$have_edelib_dbus" = "no"; then
 	AC_MSG_ERROR(edelib-dbus not found! You must install it first)
 fi
 
+dnl find edelib documentation
+EDELIB_API_INDEX=`$PKG_CONFIG --variable=edelibdocdir edelib`
+EDELIB_API_INDEX="$EDELIB_API_INDEX/html/index.html"
+
 AC_PATH_PROG(FLTK_CONFIG, fltk-config)
 if test -n "$FLTK_CONFIG"; then
 	fltk_version=`$FLTK_CONFIG --version`
@@ -168,10 +172,7 @@ EDE_CHECK_STAT64
 EDE_CHECK_DIR(DBUS_SERVICE_DIR, 
 			  [/usr/share/dbus-1/services /usr/local/share/dbus-1/services "$datarootdir/dbus-1/services"])
 
-ac_bindir="$bindir"
-
 EDE_INIT_JAM
-bindir="$ac_bindir"
 
 AC_SUBST(EDE_VERSION)
 AC_SUBST(EDE_OPTIM_FLAGS)
@@ -182,12 +183,15 @@ AC_SUBST(FLTK_LIBS_NOIMAGES)
 AC_SUBST(EFLTK_CFLAGS)
 AC_SUBST(EFLTK_LIBS_NOIMAGES)
 AC_SUBST(EFLTK_LIBS)
+AC_SUBST(EDELIB_API_INDEX)
 
 AC_OUTPUT([
  Jamconfig
  tools/l10n-prepare.sh
  data/startede
+ doc/index.txt
  services/org.equinoxproject.Launch.service
+ services/org.equinoxproject.StartupNotify.service
 ])
 
 chmod +x tools/l10n-prepare.sh
