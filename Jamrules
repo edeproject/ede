@@ -65,6 +65,7 @@ LocalClean distclean :
 	$(TOP)/config.log 
 	$(TOP)/config.status 
 	$(TOP)/data/startede
+	$(TOP)/doc/index.txt
 	$(TOP)/tools/l10n-prepare.sh
 	$(JCACHEFILE)
 	$(HCACHEFILE) ;
