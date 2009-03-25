@@ -16,61 +16,67 @@
 #include <FL/Fl_Shared_Image.H>
 #include <FL/fl_draw.H>
 
-#include <edelib/Config.h>
 #include <edelib/Resource.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Debug.h>
 #include <edelib/ExpandableGroup.h>
 #include <edelib/String.h>
-#include <edelib/IconTheme.h>
+#include <edelib/IconLoader.h>
 #include <edelib/Nls.h>
 #include <edelib/Window.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
 
-typedef edelib::list<edelib::String> StrList;
-typedef edelib::list<edelib::String>::iterator StrListIter;
+EDELIB_NS_USING(list)
+EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(ExpandableGroup)
+EDELIB_NS_USING(String)
+EDELIB_NS_USING(IconLoader)
+EDELIB_NS_USING(alert)
+EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(stringtok)
+EDELIB_NS_USING(str_trim)
+EDELIB_NS_USING(ICON_SIZE_LARGE)
+
+typedef list<String> StrList;
+typedef list<String>::iterator StrListIter;
 
 class ControlButton : public Fl_Button {
 private:
-	Fl_Box* tipbox;
-	edelib::String tipstr;
-	edelib::String exec;
+	String tipstr;
+	String exec;
 public:
-	ControlButton(Fl_Box* t, const edelib::String& ts, const edelib::String& e, int x, int y, int w, int h, const char* l = 0) : 
-	Fl_Button(x, y, w, h, l), tipbox(t), tipstr(ts), exec(e) {
-		box(FL_FLAT_BOX);
-		align(FL_ALIGN_WRAP);
-		color(FL_BACKGROUND2_COLOR);
-	}
-
-	~ControlButton() { }
+	ControlButton(const String& ts, const String& e, int x, int y, int w, int h, const char* l = 0);
 	int handle(int event);
 };
 
+ControlButton::ControlButton(const String& ts, const String& e, int x, int y, int w, int h, const char* l) : 
+	Fl_Button(x, y, w, h, l), 
+	tipstr(ts), 
+	exec(e) 
+{
+	box(FL_FLAT_BOX);
+	align(FL_ALIGN_WRAP);
+	color(FL_BACKGROUND2_COLOR);
+
+	if(!tipstr.empty())
+		tooltip(tipstr.c_str());
+}
+
 int ControlButton::handle(int event) {
 	switch(event) {
-		case FL_ENTER:
-			tipbox->label(tipstr.c_str());
-			return 1;
-
-		case FL_LEAVE:
-			tipbox->label("");
-			return 1;
-
-		case FL_DRAG:
-			return 1;
-
 		case FL_PUSH:
 			if(Fl::visible_focus() && handle(FL_FOCUS))
 				Fl::focus(this);
 
 			box(FL_DOWN_BOX);
+			redraw();
+
 			if(Fl::event_clicks()) {
 				if(exec.empty())
-					edelib::alert(_("Unable to execute command for '%s'. Command value is not set"), label());
+					alert(_("Unable to execute command for '%s'. Command value is not set"), label());
 				else
-					edelib::run_async("ede-launch %s", exec.c_str());
+					run_async("ede-launch %s", exec.c_str());
 			}
 			return 1;
 
@@ -88,79 +94,52 @@ static void close_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
-static void fetch_icon(ControlButton* btn, const char* path) {
-	// see if path is absolute and if not, fetch icon from icon theme
-	Fl_Image* img = Fl_Shared_Image::get(path);
-
-	if(!img) {
-		edelib::String p = edelib::IconTheme::get(path, edelib::ICON_SIZE_LARGE);
-		if(!p.empty()) {
-			img = Fl_Shared_Image::get(p.c_str());
-		} else {
-			// nothing found, try "empty" icon
-			p = edelib::IconTheme::get("empty", edelib::ICON_SIZE_LARGE);
-			if(!p.empty())
-				img = Fl_Shared_Image::get(p.c_str());
-		}
-	}
-
-	if(img)
-		btn->image(img);
-}
-
-static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
-#if 0
-	edelib::Config c;
-
-	if(!c.load("ede-conf.conf")) {
-		E_WARNING("Can't load config\n");
-		return;
-	}
-#endif
+static void load_buttons(Fl_Group* g) {
 	edelib::Resource c;
+
 	if(!c.load("ede-conf")) {
-		E_WARNING("Can't load config\n");
+		E_WARNING(E_STRLOC ": Can't load config\n");
 		return;
 	}
 
-	char buff[1024];
-	if(!c.get("EdeConf", "items", buff, sizeof(buff))) {
+	char buf[256];
+
+	if(!c.get("EdeConf", "items", buf, sizeof(buf))) {
 		E_WARNING("Can't find Items key\n");
 		return;
 	}
 
 	StrList spl;
-	// get sections
-	edelib::stringtok(spl, buff, ",");
+	/* get sections */
+	stringtok(spl, buf, ",");
 	if(spl.empty())
 		return;
 
 	const char* section;
-	//ControlIcon cicon;
 	StrListIter it = spl.begin(), it_end = spl.end();
 	edelib::String name, tip, exec;
 
 	for(; it != it_end; ++it) {
 		section = (*it).c_str();
-		edelib::str_trim((char*)section);
+		str_trim((char*)section);
 
-		if(c.get(section, "name", buff, sizeof(buff)))
-			name = buff;
+		if(c.get_localized(section, "name", buf, sizeof(buf)))
+			name = buf;
 		else {
-			E_WARNING("No %s, skipping...\n", section);
+			E_WARNING(E_STRLOC ": No %s, skipping...\n", section);
 			continue;
 		}
 
-		if(c.get(section, "tip", buff, sizeof(buff)))
-			tip = buff;
-		if(c.get(section, "exec", buff, sizeof(buff)))
-			exec = buff;
+		if(c.get_localized(section, "tip", buf, sizeof(buf)))
+			tip = buf;
+		if(c.get(section, "exec", buf, sizeof(buf)))
+			exec = buf;
 
-		ControlButton* cb = new ControlButton(tipbox, tip, exec, 0, 0, 100, 100);
+		ControlButton* cb = new ControlButton(tip, exec, 0, 0, 100, 100);
 		cb->copy_label(name.c_str());
 
-		c.get(section, "icon", buff, sizeof(buff));
-		fetch_icon(cb, buff);
+		c.get(section, "icon", buf, sizeof(buf));
+		IconLoader::set(cb, buf, ICON_SIZE_LARGE);
 
 		g->add(cb);
 	}
@@ -168,13 +147,11 @@ static void load_buttons(Fl_Group* g, Fl_Box* tipbox) {
 
 int main(int argc, char** argv) {
 	edelib::Window* win = new edelib::Window(455, 330, _("EDE Configuration Place"));
-	win->init();
 	win->begin();
 
 		/* 
-		 * Resizable invisible box.
-		 * It is created first so (due stacking order) does not steal FL_ENTER/FL_LEAVE 
-		 * events from ControlButton children
+		 * Resizable invisible box. It is created first so (due stacking order) does not steal 
+		 * FL_ENTER/FL_LEAVE events from ControlButton children
 		 */
 		Fl_Box* rbox = new Fl_Box(10, 220, 120, 65);
 		win->resizable(rbox);
@@ -192,19 +169,22 @@ int main(int argc, char** argv) {
 		titlegrp->end();
 		titlegrp->resizable(title);
 
-		edelib::ExpandableGroup* icons = new edelib::ExpandableGroup(10, 60, 435, 225);
+		ExpandableGroup* icons = new ExpandableGroup(10, 60, 435, 225);
 		icons->box(FL_DOWN_BOX);
 		icons->color(FL_BACKGROUND2_COLOR);
 		icons->begin();
 		icons->end();
 
+		/*
 		Fl_Box* tipbox = new Fl_Box(10, 295, 240, 25, _("Double click on a desired item"));
 		tipbox->box(FL_FLAT_BOX);
 		tipbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE | FL_ALIGN_CLIP);
+		tipbox->hide();
+		*/
 
-		load_buttons(icons, tipbox);
+		load_buttons(icons);
 
-		// Fl_Button* options = new Fl_Button(260, 295, 90, 25, _("&Options"));
+		/* Fl_Button* options = new Fl_Button(260, 295, 90, 25, _("&Options")); */
 		Fl_Button* close = new Fl_Button(355, 295, 90, 25, _("&Close"));
 		close->callback(close_cb, win);
 		Fl::focus(close);
