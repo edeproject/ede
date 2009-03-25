@@ -17,13 +17,13 @@
 #include <FL/x.H>
 
 #include <edelib/Debug.h>
-#include <edelib/IconTheme.h>
+#include <edelib/IconLoader.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 
 #ifdef USE_SHAPE
-	#include <X11/extensions/shape.h>
+#include <X11/extensions/shape.h>
 #endif
 
 #include "ede-desktop.h"
@@ -157,37 +157,25 @@ void DesktopIcon::load_icon(int face) {
 	if(!ic)
 		return;
 
-	edelib::String ipath = edelib::IconTheme::get(ic, edelib::ICON_SIZE_HUGE);
-	if(ipath.empty()) {
-		ipath = edelib::IconTheme::get("empty", edelib::ICON_SIZE_HUGE);
-		E_DEBUG(E_STRLOC ": Didn't find '%s' icon, ", ic);
-
-		if(!ipath.empty()) {
-			E_DEBUG("loaded 'empty' instead\n");
-		} else {
-			E_DEBUG("balling out\n");
-			return;
-		}
-	}
-
-	Fl_Image* img = Fl_Shared_Image::get(ipath.c_str());
-	if(!img) {
-		E_DEBUG(E_STRLOC ": Unable to load %s\n", ipath.c_str());
+	if(!edelib::IconLoader::set(this, ic, edelib::ICON_SIZE_HUGE)) {
+		E_DEBUG(E_STRLOC ": Unable to load %s icon\n", ic);
 		return;
-	}
+	}	
+
+	/* fetch image object for sizes */
+	Fl_Image* img = image();
 
 	int img_w = img->w();
 	int img_h = img->h();
 
-	// resize box if icon is larger
+	/* resize box if icon is larger */
 	if(img_w > ICON_SIZE_MIN_W || img_h > ICON_SIZE_MIN_H)
 		size(img_w + OFFSET_W, img_h + OFFSET_H);
 
-	image(img);
-	
-	// darker icon version for selection
+	/* darker icon version for selection */
 	delete darker_img;
-	darker_img = image()->copy(image()->w(), image()->h());
+
+	darker_img = img->copy(img->w(), img->h());
 	darker_img->color_average(FL_BLUE, 0.6);
 }
 

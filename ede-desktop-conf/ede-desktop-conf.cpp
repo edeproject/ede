@@ -269,7 +269,7 @@ void apply_cb(Fl_Widget*, void* w) {
 	conf.set("Icons", "one_click_exec", engage_with_one_click->value());
 
 	if(conf.save(EDE_DESKTOP_CONFIG))
-		edelib::Window::update_settings(EDE_DESKTOP_UID);
+		edelib::Window::do_foreign_callback(EDE_DESKTOP_UID);
 }
 
 void ok_cb(Fl_Widget*, void* w) {
@@ -363,7 +363,7 @@ int main(int argc, char** argv) {
 			show_group = 3;
 	}
 
-	edelib::Window* win = new edelib::Window(550, 285, _("Desktop options"));
+	edelib::Window* win = new edelib::Window(550, 285, _("Desktop options"), edelib::WIN_INIT_IMAGES);
 	win->begin();
 		Fl_Tabs* tabs = new Fl_Tabs(10, 10, 530, 230);
 		tabs->begin();
@@ -472,8 +472,6 @@ int main(int argc, char** argv) {
 		Fl_Button* cancel = new Fl_Button(450, 250, 90, 25, _("&Cancel"));
 		cancel->callback(close_cb, win);
 	win->end();
-
-	win->init(edelib::WIN_INIT_IMAGES);
 	load_settings();
 	win->show(argc, argv);
 	return Fl::run();

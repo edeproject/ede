@@ -26,7 +26,7 @@
 
 #include <edelib/Nls.h>
 #include <edelib/Window.h>
-#include <edelib/IconTheme.h>
+#include <edelib/IconLoader.h>
 #include <edelib/MimeType.h>
 #include <edelib/IconChooser.h>
 
@@ -165,17 +165,9 @@ void show_icon_properties_dialog(DesktopIcon* dicon) {
 				Fl_Button* prog_browse = new Fl_Button(270, 65, 25, 25);
 				prog_browse->tooltip(_("Browse location"));
 
-				// find icon for browse button
-				edelib::String ii = edelib::IconTheme::get("document-open", edelib::ICON_SIZE_TINY);
-				if(ii.empty())
+				// set icon for browse button
+				if(!edelib::IconLoader::set(prog_browse, "document-open", edelib::ICON_SIZE_TINY))
 					prog_browse->label("...");
-				else {
-					Fl_Image* ii_img = Fl_Shared_Image::get(ii.c_str());
-					if(ii_img)
-						prog_browse->image(ii_img);
-					else
-						prog_browse->label("...");
-				}
 
 			g2->end();
 		tabs->end();
@@ -185,8 +177,6 @@ void show_icon_properties_dialog(DesktopIcon* dicon) {
 		Fl_Button* cancel_button = new Fl_Button(215, 360, 90, 25, _("&Cancel"));
 		cancel_button->callback(close_cb, win);
     win->end();
-
-	win->init(edelib::WIN_INIT_ALL);
 	win->show();
 
 	while(win->shown())

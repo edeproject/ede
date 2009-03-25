@@ -34,7 +34,7 @@
 #include <edelib/DirWatch.h>
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
-#include <edelib/IconTheme.h>
+#include <edelib/IconLoader.h>
 #include <edelib/Run.h>
 #include <edelib/Util.h>
 #include <edelib/Nls.h>
@@ -152,9 +152,8 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	do_dirwatch = true;
 
 #ifdef USE_EDELIB_WINDOW
-	DESKTOP_WINDOW::init();
-	settings_uid(EDE_DESKTOP_UID);
-	settings_callback(settings_changed_cb);
+	window_id(EDE_DESKTOP_UID);
+	foreign_callback(settings_changed_cb);
 	//DESKTOP_WINDOW::single_buffer(true);
 #endif
 
@@ -1157,7 +1156,7 @@ int main() {
 
 #ifndef USE_EDELIB_WINDOW
 	fl_register_images();
-	edelib::IconTheme::init("edeneu");
+	edelib::IconLoader::init();
 #endif
 
 	Desktop::init();
@@ -1177,7 +1176,7 @@ int main() {
 	Desktop::shutdown();
 
 #ifndef USE_EDELIB_WINDOW
-	edelib::IconTheme::shutdown();
+	edelib::IconLoader::shutdown();
 #endif
 	return 0;
 }
