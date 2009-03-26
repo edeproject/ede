@@ -10,6 +10,10 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
@@ -22,7 +26,7 @@
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 
-#ifdef USE_SHAPE
+#ifdef HAVE_SHAPE
 #include <X11/extensions/shape.h>
 #endif
 
@@ -219,7 +223,7 @@ void DesktopIcon::fix_position(int X, int Y) {
 void DesktopIcon::drag(int x, int y, bool apply) {
 	if(!micon) {
 		micon = new MovableIcon(this);
-#if USE_SHAPE
+#if HAVE_SHAPE
 		/* 
 		 * This is used to calculate correct window startup/ending
 		 * position since icon is placed in the middle of the box.
@@ -243,7 +247,7 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 	}
 
 	if(apply) {
-#if USE_SHAPE
+#if HAVE_SHAPE
 		int ix, iy;
 		ix = iy = 0;
 		if(image()) {
@@ -259,7 +263,7 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 	}
 }
 
-// Used only in Desktop::move_selection
+/* used only in Desktop::move_selection */
 int DesktopIcon::drag_icon_x(void) {
 	if(!micon)
 		return x();
@@ -267,7 +271,7 @@ int DesktopIcon::drag_icon_x(void) {
 		return micon->x();
 }
 
-// Used only in Desktop::move_selection
+/* used only in Desktop::move_selection */
 int DesktopIcon::drag_icon_y(void) {
 	if(!micon)
 		return y();
@@ -315,7 +319,7 @@ void DesktopIcon::fast_redraw(void) {
 		xpos = x() - 4;
 	}
 
-	// LABEL_OFFSET + 2 include selection box line height too; same for xpos
+	/* LABEL_OFFSET + 2 include selection box line height too; same for xpos */
 	parent()->damage(FL_DAMAGE_ALL, xpos, y(), wsz, h() + lheight + LABEL_OFFSET + 2);
 }
 
@@ -325,13 +329,13 @@ void DesktopIcon::draw(void) {
 	if(image() && (damage() & FL_DAMAGE_ALL)) {
 		Fl_Image* im = image();
 
-		// center image in the box
+		/* center image in the box */
 		int ix = (w()/2) - (im->w()/2);
 		int iy = (h()/2) - (im->h()/2);
 		ix += x();
 		iy += y();
 
-		// darker_img is always present if image() is present
+		/* darker_img is always present if image() is present */
 		if(is_focused())
 			darker_img->draw(ix, iy);
 		else
@@ -354,44 +358,40 @@ void DesktopIcon::draw(void) {
 		int old_font = fl_font();
 		int old_font_sz = fl_size();
 
-		// draw with icon's font
+		/* draw with icon's font */
 		fl_font(labelfont(), labelsize());
 
-		// pseudo-shadow
+		/* pseudo-shadow */
 		fl_color(FL_BLACK);
 		fl_draw(label(), X+1, Y+1, lwidth, lheight, align(), 0, 0);
 
 		fl_color(globals->label_foreground);
 		fl_draw(label(), X, Y, lwidth, lheight, align(), 0, 0);
 
-		// restore old font
+		/* restore old font */
 		fl_font(old_font, old_font_sz);
 
 		if(is_focused()) {
-			/* 
-			 * draw focused box on our way so later
-			 * this can be used to draw customised boxes
-			 */
+			/* draw focused box on our way so later this can be used to draw customised boxes */
 			fl_color(globals->label_foreground);
 			fl_line_style(FL_DOT);
 
 			fl_push_matrix();
 			fl_begin_loop();
-				fl_vertex(X,Y);
-				fl_vertex(X+lwidth,Y);
-				fl_vertex(X+lwidth,Y+lheight);
-				fl_vertex(X,Y+lheight);
-				fl_vertex(X,Y);
+				fl_vertex(X, Y);
+				fl_vertex(X + lwidth, Y);
+				fl_vertex(X + lwidth, Y + lheight);
+				fl_vertex(X, Y + lheight);
+				fl_vertex(X, Y);
 			fl_end_loop();
 			fl_pop_matrix();
 
-			// revert to default line style
+			/* revert to default line style */
 			fl_line_style(0);
 		}
 
-		// revert to old color whatever that be
+		/* revert to old color whatever that be */
 		fl_color(old);
-
 		E_DEBUG(E_STRLOC ": DesktopIcon label redraw\n");
 	}
 }
@@ -403,16 +403,14 @@ int DesktopIcon::handle(int event) {
 		case FL_ENTER:
 		case FL_LEAVE:
 			return 1;
-		/* 
-		 * We have to handle FL_MOVE too, if want to get only once 
-		 * FL_ENTER when entered or FL_LEAVE when leaved.
-		 */
+		/* We have to handle FL_MOVE too, if want to get only once FL_ENTER when entered or FL_LEAVE when leaved */
 		case FL_MOVE:
 			return 1;
 		case FL_PUSH:
 			if(Fl::event_button() == 3) {
-				// Fl_Menu_Item::popup() by default does not call callbacks
+				/* Fl_Menu_Item::popup() by default does not call callbacks */
 				const Fl_Menu_Item* m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
+
 				if(m && m->callback())
 					m->do_callback(0, this);
 			}
@@ -451,7 +449,7 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(),
 		 * Force box be same width/height as icon so it
 		 * can fit inside masked window.
 		 */
-#ifdef USE_SHAPE 
+#ifdef HAVE_SHAPE 
 		Fl_Image* img = ic->icon_image();
 		if(img)
 			icon_box = new Fl_Box(0, 0, img->w(), img->h());
@@ -473,7 +471,7 @@ void MovableIcon::show(void) {
 	if(!shown())
 		Fl_X::make_xid(this);
 
-#ifdef USE_SHAPE
+#ifdef HAVE_SHAPE
 	if(icon->icon_image()) {
 		mask = create_mask(icon->icon_image());
 		if(mask) {
@@ -485,6 +483,7 @@ void MovableIcon::show(void) {
 			 */
 			Atom opacity_atom = XInternAtom(fl_display, "_NET_WM_WINDOW_OPACITY", False);
 			unsigned int opacity = 0xc0000000;
+
 			XChangeProperty(fl_display, fl_xid(this), opacity_atom, XA_CARDINAL, 32, PropModeReplace,
 					(unsigned char*)&opacity, 1L);
 		}

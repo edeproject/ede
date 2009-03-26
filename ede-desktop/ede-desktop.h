@@ -108,7 +108,7 @@ private:
 	edelib::EdbusConnection* dbus;
 
 	DesktopIconList icons;
-	DesktopIconList selectionbuff;
+	DesktopIconList selectionbuf;
 
 	edelib::String trash_path;
 

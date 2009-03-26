@@ -199,7 +199,6 @@ void Desktop::init_internals(void) {
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
 
-
 	dbus = new edelib::EdbusConnection();
 	if(!dbus->connect(edelib::EDBUS_SESSION)) {
 		E_WARNING(E_STRLOC ": Unable to connect to session bus. Disabling dbus interface...\n");
@@ -565,7 +564,7 @@ void Desktop::select(DesktopIcon* ic, bool do_redraw) {
 	if(in_selection(ic))
 		return;
 
-	selectionbuff.push_back(ic);
+	selectionbuf.push_back(ic);
 
 	if(!ic->is_focused()) {
 		ic->do_focus();
@@ -579,8 +578,8 @@ void Desktop::select_only(DesktopIcon* ic) {
 	E_ASSERT(ic != NULL);
 
 	unfocus_all();
-	selectionbuff.clear();
-	selectionbuff.push_back(ic);
+	selectionbuf.clear();
+	selectionbuf.push_back(ic);
 
 	ic->do_focus();
 	ic->fast_redraw();
@@ -589,12 +588,12 @@ void Desktop::select_only(DesktopIcon* ic) {
 bool Desktop::in_selection(const DesktopIcon* ic) { 
 	E_ASSERT(ic != NULL);
 
-	if(selectionbuff.empty())
+	if(selectionbuf.empty())
 		return false;
 
 	DesktopIconListIter it, it_end;
 
-	for(it = selectionbuff.begin(), it_end = selectionbuff.end(); it != it_end; ++it) {
+	for(it = selectionbuf.begin(), it_end = selectionbuf.end(); it != it_end; ++it) {
 		if((*it) == ic)
 			return true;
 	}
@@ -603,7 +602,7 @@ bool Desktop::in_selection(const DesktopIcon* ic) {
 }
 
 void Desktop::move_selection(int x, int y, bool apply) { 
-	if(selectionbuff.empty())
+	if(selectionbuf.empty())
 		return;
 
 	int prev_x, prev_y, tmp_x, tmp_y;
@@ -611,7 +610,7 @@ void Desktop::move_selection(int x, int y, bool apply) {
 
 	DesktopIconListIter it, it_end;
 
-	for(it = selectionbuff.begin(), it_end = selectionbuff.end(); it != it_end; ++it) {
+	for(it = selectionbuf.begin(), it_end = selectionbuf.end(); it != it_end; ++it) {
 		ic = (*it);
 
 		prev_x = ic->drag_icon_x();
@@ -946,13 +945,13 @@ int Desktop::handle(int event) {
 			
 			if(NOT_SELECTABLE(clicked)) {
 				E_DEBUG(E_STRLOC ": DESKTOP CLICK !!!\n");
-				if(!selectionbuff.empty()) {
+				if(!selectionbuf.empty()) {
 					/*
-					 * Only focused are in selectionbuff, so this is fine to do; also will prevent 
+					 * Only focused are in selectionbuf, so this is fine to do; also will prevent 
 					 * full redraw when is clicked on desktop
 					 */
 					unfocus_all();
-					selectionbuff.clear();
+					selectionbuf.clear();
 				}
 
 				// track position so moving can be deduced
@@ -1005,7 +1004,7 @@ int Desktop::handle(int event) {
 
 		case FL_DRAG:
 			moving = true;
-			if(!selectionbuff.empty()) {
+			if(!selectionbuf.empty()) {
 				E_DEBUG(E_STRLOC ": DRAG icon from desktop\n");
 				move_selection(Fl::event_x_root(), Fl::event_y_root(), false);
 			} else {
@@ -1045,8 +1044,8 @@ int Desktop::handle(int event) {
 				 * Possible flickers due overlay will be later removed when is called move_selection(), which 
 				 * will in turn redraw icons again after position them.
 				 */
-				if(!selectionbuff.empty())
-					selectionbuff.clear();
+				if(!selectionbuf.empty())
+					selectionbuf.clear();
 
 				DesktopIconListIter it, it_end;
 				for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
@@ -1057,16 +1056,15 @@ int Desktop::handle(int event) {
 				return 1;
 			}
 
-			if(!selectionbuff.empty() && moving)
+			if(!selectionbuf.empty() && moving)
 				move_selection(Fl::event_x_root(), Fl::event_y_root(), true);
 
 			/* 
 			 * Do not send FL_RELEASE during move
-			 *
 			 * TODO: should be alowed FL_RELEASE to multiple icons? (aka. run command for all selected icons)?
 			 */
-			if(selectionbuff.size() == 1 && !moving)
-				(*selectionbuff.begin())->handle(FL_RELEASE);
+			if(selectionbuf.size() == 1 && !moving)
+				(*selectionbuf.begin())->handle(FL_RELEASE);
 
 			moving = false;
 			return 1;

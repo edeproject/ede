@@ -10,7 +10,6 @@
 
 SubDir TOP ede-desktop ;
 
-ObjectC++Flags DesktopIcon.cpp : -DUSE_SHAPE ;
 ObjectC++Flags ede-desktop.cpp : -DUSE_EDELIB_WINDOW ;
 
 SOURCE = ede-desktop.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
