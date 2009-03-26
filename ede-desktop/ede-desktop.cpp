@@ -69,12 +69,8 @@ static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
 
 Fl_Menu_Item desktop_menu[] = {
-	{_("    &New desktop item    "), 0, 0, 0, FL_SUBMENU},
-		{_("    &Application...    "), 0, 0},
-		{_("    &Directory...    "), 0, 0},
-		{_("    &URL...    "), 0, 0},
-		{_("    &Link...    "), 0, 0},
-		{0},
+	{_("    Create &launcher...    "), 0, 0},
+	{_("    Create &folder...    "), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("    &Arrange    "), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
 		{_("    &Vertical line up    "), 0, 0},
 		{_("    &Horizontal line up   "), 0, 0},
