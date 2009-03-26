@@ -30,11 +30,6 @@
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
 
-struct DesktopSettings {
-	int  color;                   // background color
-	bool wp_use;                  // use wallpaper or not
-};
-
 struct GlobalIconSettings {
 	int  label_background;
 	int  label_foreground;
@@ -107,7 +102,6 @@ private:
 	SelectionOverlay*  selbox;
 
 	GlobalIconSettings* gisett;
-	DesktopSettings*    dsett;
 
 	Fl_Menu_Button*  dmenu;
 	Wallpaper*       wallpaper;
@@ -160,8 +154,6 @@ public:
 
 	void update_workarea(void);
 	void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
-
-	void set_bg_color(int c, bool do_redraw = true);
 
 	void notify_desktop_changed(void);
 

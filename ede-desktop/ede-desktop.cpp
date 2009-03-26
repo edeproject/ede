@@ -25,7 +25,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_Menu_Button.H>
-#include <FL/fl_ask.H>
 
 #include <edelib/Debug.h>
 #include <edelib/File.h>
@@ -38,6 +37,7 @@
 #include <edelib/Run.h>
 #include <edelib/Util.h>
 #include <edelib/Nls.h>
+#include <edelib/MessageBox.h>
 
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
@@ -65,8 +65,8 @@
  */
 #define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == dmenu))
 
-void background_conf_cb(Fl_Widget*, void*);
-void icons_conf_cb(Fl_Widget*, void*);
+static void background_conf_cb(Fl_Widget*, void*);
+static void icons_conf_cb(Fl_Widget*, void*);
 
 Fl_Menu_Item desktop_menu[] = {
 	{_("    &New desktop item    "), 0, 0, 0, FL_SUBMENU},
@@ -98,39 +98,33 @@ inline bool intersects(int x1, int y1, int w1, int h1, int x2, int y2, int w2, i
 			MAX(y1, y2) <= MIN(h1, h2));
 }
 
-// assume fl_open_display() is called before
-inline void dpy_sizes(int& width, int& height) {
-	width = DisplayWidth(fl_display, fl_screen);
-	height = DisplayHeight(fl_display, fl_screen);
-}
-
-void exit_signal(int signum) {
+static void exit_signal(int signum) {
     E_DEBUG(E_STRLOC ": Exiting (got signal %d)\n", signum);
     running = false;
 }
 
-void restart_signal(int signum) {
+static void restart_signal(int signum) {
 	E_DEBUG(E_STRLOC ": Restarting (got signal %d)\n", signum);
 }
 
-void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
+static void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
 	Desktop::instance()->dir_watch(dir, changed, flags);
 }
 
-void settings_changed_cb(void* data) {
+static void settings_changed_cb(void* data) {
 	Desktop::instance()->read_config();
 	Desktop::instance()->redraw();
 }
 
-void background_conf_cb(Fl_Widget*, void*) {
+static void background_conf_cb(Fl_Widget*, void*) {
 	Desktop::instance()->execute("ede-desktop-conf");
 }
 
-void icons_conf_cb(Fl_Widget*, void*) {
+static void icons_conf_cb(Fl_Widget*, void*) {
 	Desktop::instance()->execute("ede-desktop-conf --icons");
 }
 
-int desktop_xmessage_handler(int event) { 
+static int desktop_xmessage_handler(int event) { 
 	if(fl_xevent->type == PropertyNotify) {
 		if(fl_xevent->xproperty.atom == _XA_NET_CURRENT_DESKTOP) {
 			Desktop::instance()->notify_desktop_changed();
@@ -154,7 +148,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 #ifdef USE_EDELIB_WINDOW
 	window_id(EDE_DESKTOP_UID);
 	foreign_callback(settings_changed_cb);
-	//DESKTOP_WINDOW::single_buffer(true);
+	/* DESKTOP_WINDOW::single_buffer(true); */
 #endif
 
 	selbox = new SelectionOverlay;
@@ -162,7 +156,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selbox->show = false;
 
 	gisett = new GlobalIconSettings;
-	// gnome light blue
+	/* gnome light blue */
 	gisett->label_background = 138;
 	gisett->label_foreground = FL_WHITE;
 	gisett->label_fontsize = 12;
@@ -172,9 +166,8 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	gisett->one_click_exec = false;
 	gisett->auto_arrange = true;
 
-	dsett = new DesktopSettings;
-	dsett->color = FL_GRAY;
-	dsett->wp_use = false;
+	/* default background color */
+	color(FL_GRAY);
 }
 
 Desktop::~Desktop() { 
@@ -183,7 +176,6 @@ Desktop::~Desktop() {
 	save_icons_positions();
 
 	delete gisett;
-	delete dsett;
 	delete selbox;
 	delete dbus;
 
@@ -207,23 +199,22 @@ void Desktop::init_internals(void) {
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
 
-	set_bg_color(dsett->color, false);
 
 	dbus = new edelib::EdbusConnection();
 	if(!dbus->connect(edelib::EDBUS_SESSION)) {
-		E_WARNING("Unable to connecto to session bus. Disabling dbus interface...\n");
+		E_WARNING(E_STRLOC ": Unable to connect to session bus. Disabling dbus interface...\n");
 		delete dbus;
 		dbus = NULL;
 	}
 
-	// read main config
+	/* read main config */
 	read_config();
 
-	// now try to load icons, looking inside ~/Desktop directory
+	/* now try to load icons from "Desktop" directory */
 	p = edelib::dir_home();
 	edelib::String desktop_path = edelib::build_filename(p.c_str(), "Desktop");
 
-	// setup watcher used for Desktop and Trash directories
+	/* setup watcher used for Desktop and Trash directories */
 	edelib::DirWatch::init();
 
 	if(edelib::dir_exists(desktop_path.c_str())) {
@@ -276,8 +267,7 @@ Desktop* Desktop::instance(void) {
 }
 
 /*
- * This function must be overriden so window can inform
- * wm to see it as desktop. It will send data when window
+ * This function must be overriden so window can inform wm to see it as desktop. It will send data when window
  * is created, but before is shown.
  */
 void Desktop::show(void) {
@@ -287,10 +277,7 @@ void Desktop::show(void) {
 	}
 }
 
-/*
- * If someone intentionaly hide desktop
- * then quit from it.
- */
+/* If someone intentionaly hide desktop then quit from it */
 void Desktop::hide(void) {
 	running = false;
 }
@@ -298,53 +285,35 @@ void Desktop::hide(void) {
 void Desktop::update_workarea(void) {
 	int X, Y, W, H;
 	if(!net_get_workarea(X, Y, W, H)) {
-		E_WARNING(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
+		E_DEBUG(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
 		X = Y = 0;
-		dpy_sizes(W, H);
+
+		W = DisplayWidth(fl_display, fl_screen);
+		H = DisplayHeight(fl_display, fl_screen);
 	}
 
 	resize(X, Y, W, H);
 }
 
-void Desktop::set_bg_color(int c, bool do_redraw) {
-	if(color() == c)
-		return;
-
-	dsett->color = c;
-	color(c);
-	if(do_redraw)
-		redraw();
-}
-
 void Desktop::read_config(void) {
 	edelib::Resource conf;
+
 	if(!conf.load(CONFIG_NAME)) {
-		E_WARNING(E_STRLOC ": Can't load %s, using default...\n", CONFIG_NAME);
+		E_WARNING(E_STRLOC ": Can't load %s, using default values\n", CONFIG_NAME);
 		return;
 	}
 
-	/*
-	 * TODO:
-	 * Add IconArea[X,Y,W,H] so icons can live
-	 * inside that area only (aka margins).
-	 */
-	int  default_bg_color = FL_BLUE;
-	int  default_wp_use   = false;
+	bool wuse;
 	char wpath[256];
+	int  bcolor, wmode;
 
-	conf.get("Desktop", "color", dsett->color, default_bg_color);
-	conf.get("Desktop", "wallpaper_use", dsett->wp_use, default_wp_use);
+	conf.get("Desktop", "color", bcolor, FL_GRAY);
+	conf.get("Desktop", "wallpaper_use", wuse, false);
 	conf.get("Desktop", "wallpaper", wpath, sizeof(wpath));
+	conf.get("Desktop", "wallpaper_mode", wmode, WALLPAPER_CENTER);
 
-	// keep path but disable wallpaper if file does not exists
-	if(!edelib::file_exists(wpath)) {
-		E_DEBUG(E_STRLOC ": %s as wallpaper does not exists\n", wpath);
-		dsett->wp_use = false;
-	}
-
-	// '138' is gnome light blue
+	/* '138' is gnome light blue */
 	conf.get("Icons", "label_background", gisett->label_background, 138);
-
 	conf.get("Icons", "label_foreground", gisett->label_foreground, FL_WHITE);
 	conf.get("Icons", "label_fontsize",   gisett->label_fontsize, 12);
 	conf.get("Icons", "label_maxwidth",   gisett->label_maxwidth, 75);
@@ -353,8 +322,15 @@ void Desktop::read_config(void) {
 	conf.get("Icons", "one_click_exec",   gisett->one_click_exec, false);
 	conf.get("Icons", "auto_arrange",     gisett->auto_arrange, true);
 
-	if(dsett->wp_use)
-		wallpaper->set(wpath);
+	/* prevent wild values */
+	if(wmode != WALLPAPER_CENTER && wmode != WALLPAPER_TILE && wmode != WALLPAPER_STRETCH)
+		wmode = WALLPAPER_CENTER;
+
+	if(wuse && !wallpaper->load(wpath, (WallpaperState)wmode))
+		E_WARNING(E_STRLOC ": unable to load wallpaper '%s'\n", wpath);
+
+	/* change background color too */
+	color(bcolor);
 }
 
 void Desktop::load_icons(const char* path) {
@@ -368,7 +344,7 @@ void Desktop::load_icons(const char* path) {
 
 	StringList lst;
 
-	// list with full path; icon basename is extracted in add_icon_by_path()
+	/* list with full path; icon basename is extracted in add_icon_by_path() */
 	if(!dir_list(path, lst, true)) {
 		E_DEBUG(E_STRLOC ": Can't read %s\n", path);
 		return;
@@ -389,9 +365,8 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	/*
 	 * see is possible .desktop file; icon, name fields are filled from read_desktop_file()
 	 *
-	 * FIXME: maybe the good thing is to use MimeType to check .desktop; 
-	 * extension does not have to be always present, or .desktop does not have to be
-	 * Desktop File at all
+	 * FIXME: maybe the good thing is to use MimeType to check .desktop; extension does not have 
+	 * to be always present, or .desktop does not have to be Desktop File at all
 	 */
 	if(edelib::str_ends(path, ".desktop")) {
 		if(read_desktop_file(path, is))
@@ -399,11 +374,11 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	} else {
 		edelib::MimeType mt;
 
-		// then try to figure out it's mime; if fails, ignore it
+		/* then try to figure out it's mime; if fails, ignore it */
 		if(mt.set(path)) {
 			E_DEBUG(E_STRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
 			is.icon = mt.icon_name();
-			// icon label path's basename
+			/* icon label path's basename */
 			is.name = base;
 			is.type = ICON_FILE;
 
@@ -421,12 +396,12 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 		 */
 		is.key_name = base;
 
-		// random_pos() is used if X/Y keys are not found
+		/* random_pos() is used if X/Y keys are not found */
 		int icon_x = random_pos(w() - 10);
 		int icon_y = random_pos(w() - 10);
 
 		if(conf) {
-			// we load positions from used ede-desktop-icos.conf only
+			/* we load positions from used ede-desktop-icos.conf only */
 			conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
 			conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
 		}
@@ -436,7 +411,7 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 		is.y = icon_y;
 		is.full_path = path;
 
-		DesktopIcon* dic = new DesktopIcon(gisett, &is, dsett->color);
+		DesktopIcon* dic = new DesktopIcon(gisett, &is, color());
 		add_icon(dic);
 	}
 
@@ -495,7 +470,7 @@ bool Desktop::remove_icon_by_path(const char* path) {
 	if(found) {
 		DesktopIcon* ic = (*it);
 		icons.erase(it);
-		// Fl_Group::remove() does not delete child, just pops it out
+		/* Fl_Group::remove() does not delete child, just pops it out */
 		remove(ic);
 		delete ic;
 	}
@@ -503,7 +478,6 @@ bool Desktop::remove_icon_by_path(const char* path) {
 	return found;
 }
 
-// read .desktop files
 bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	E_ASSERT(path != NULL);
 
@@ -522,8 +496,9 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	int buffsz = sizeof(buff);
 
 	/*
-	 * Check for 'EmptyIcon' key since via it is determined
-	 * is icon trash type or not (in case of trash, 'Icon' key is used for full trash).
+	 * Check for 'EmptyIcon' key since via it is determined is icon trash type or not 
+	 * (in case of trash, 'Icon' key is used for full trash).
+	 *
 	 * FIXME: any other way to check for trash icons ???
 	 */
 	if(dconf.get("Desktop Entry", "EmptyIcon", buff, buffsz)) {
@@ -646,19 +621,17 @@ void Desktop::move_selection(int x, int y, bool apply) {
 		tmp_y = y - selection_y;
 
 		ic->drag(prev_x + tmp_x, prev_y + tmp_y, apply);
-
+#if 0
 		// very slow if not checked
-		//if(apply == true)
-		//	ic->fast_redraw();
+		if(apply == true)
+			ic->fast_redraw();
+#endif
 	}
 
 	selection_x = x;
 	selection_y = y;
 
-	/*
-	 * Redraw whole screen so it reflects
-	 * new icon position
-	 */
+	/* Redraw whole screen so it reflects new icon position */
 	if(apply)
 		redraw();
 }
@@ -798,7 +771,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 		sptr = src_copy;
 
 	if(!edelib::file_exists(sptr) && !edelib::dir_exists(sptr)) {
-		fl_message("Droping file content is not implemented yet. Soon, soon... :)");
+		edelib::message("Droping file content is not implemented yet. Soon, soon... :)");
 		delete [] src_copy;
 		return;
 	}
@@ -838,7 +811,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	}
 
 	if(!is_read) {
-		// absolute path is (for now) seen as non-url
+		/* absolute path is (for now) seen as non-url */
 		if(sptr[0] == '/')
 			is.cmd_is_url = false;
 		else
@@ -872,8 +845,7 @@ void Desktop::draw(void) {
 
 	if(damage() & (FL_DAMAGE_ALL | FL_DAMAGE_EXPOSE)) {
 		/*
-		 * If any overlay was previously visible during full
-		 * redraw, it will not be cleared because of fast flip.
+		 * If any overlay was previously visible during full redraw, it will not be cleared because of fast flip.
 		 * This will assure that does not happened.
 		 */
 		clear_xoverlay();
@@ -967,8 +939,7 @@ int Desktop::handle(int event) {
 
 		case FL_PUSH: {
 			/*
-			 * First check where we clicked. If we do it on desktop
-			 * unfocus any possible focused childs, and handle
+			 * First check where we clicked. If we do it on desktop unfocus any possible focused childs, and handle
 			 * specific clicks. Otherwise, do rest for childs.
 			 */
 			Fl_Widget* clicked = Fl::belowmouse();
@@ -977,8 +948,8 @@ int Desktop::handle(int event) {
 				E_DEBUG(E_STRLOC ": DESKTOP CLICK !!!\n");
 				if(!selectionbuff.empty()) {
 					/*
-					 * Only focused are in selectionbuff, so this is 
-					 * fine to do; also will prevent full redraw when is clicked on desktop
+					 * Only focused are in selectionbuff, so this is fine to do; also will prevent 
+					 * full redraw when is clicked on desktop
 					 */
 					unfocus_all();
 					selectionbuff.clear();
@@ -1012,18 +983,10 @@ int Desktop::handle(int event) {
 				return 1;
 			} else if(SELECTION_SINGLE) {
 				if(!in_selection(tmp_icon)) {
-					/*
-					 * for testing:
-					 * notify_box(tmp_icon->label());
-					 */
 					select_only(tmp_icon);
 				}
 			} else if(Fl::event_button() == 3) {
 				select_only(tmp_icon);
-				/*
-				 * for testing:
-				 * notify_box(tmp_icon->label());
-				 */
 			}
 
 			/* 
@@ -1057,10 +1020,10 @@ int Desktop::handle(int event) {
 
 					selbox->show = true;
 
-					// see if there some icons inside selection area
+					/* see if there some icons inside selection area */
 					select_in_area();
 
-					// redraw selection box
+					/* redraw selection box */
 					damage(EDAMAGE_OVERLAY);
 				}
 			}
@@ -1079,9 +1042,8 @@ int Desktop::handle(int event) {
 				/*
 				 * Now pickup those who are in is_focused() state.
 				 *
-				 * Possible flickers due overlay will be later removed when is
-				 * called move_selection(), which will in turn redraw icons again
-				 * after position them.
+				 * Possible flickers due overlay will be later removed when is called move_selection(), which 
+				 * will in turn redraw icons again after position them.
 				 */
 				if(!selectionbuff.empty())
 					selectionbuff.clear();
@@ -1101,8 +1063,7 @@ int Desktop::handle(int event) {
 			/* 
 			 * Do not send FL_RELEASE during move
 			 *
-			 * TODO: should be alowed FL_RELEASE to multiple icons? (aka. run 
-			 * command for all selected icons ?
+			 * TODO: should be alowed FL_RELEASE to multiple icons? (aka. run command for all selected icons)?
 			 */
 			if(selectionbuff.size() == 1 && !moving)
 				(*selectionbuff.begin())->handle(FL_RELEASE);
@@ -1151,7 +1112,7 @@ int main() {
 
 	srand(time(NULL));
 
-	// a lot of preparing code depends on this
+	/* a lot of preparing code depends on this */
 	fl_open_display();
 
 #ifndef USE_EDELIB_WINDOW
@@ -1162,10 +1123,7 @@ int main() {
 	Desktop::init();
 	Desktop::instance()->show();
 
-	/*
-	 * XSelectInput will redirect PropertyNotify messages, which
-	 * are listened for
-	 */
+	/* XSelectInput will redirect PropertyNotify messages, which are listened for */
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask | ClientMessage);
 
 	Fl::add_handler(desktop_xmessage_handler);

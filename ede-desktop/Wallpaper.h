@@ -3,7 +3,7 @@
  *
  * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
+ * Copyright (c) 2006-2009 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -16,22 +16,24 @@
 #include <X11/Xlib.h>  // XImage, Pixmap
 #include <FL/Fl_Box.H>
 
-/*
- * Class responsible for displaying images at background
- * their scaling (TODO), caching(TODO) and making coffee at the spare time.
- */
+enum WallpaperState {
+	WALLPAPER_CENTER,
+	WALLPAPER_STRETCH,
+	WALLPAPER_TILE
+};
+
 class Wallpaper : public Fl_Box { 
 private:
-	Pixmap    rootpmap_pixmap;
-	bool tiled;
-	void set_rootpmap(void);
+	Pixmap         rootpmap_pixmap;
+	WallpaperState state;
 
+	void set_rootpmap(void);
 public:
-	Wallpaper(int X, int Y, int W, int H);
+	Wallpaper(int X, int Y, int W, int H) : Fl_Box(X, Y, W, H), rootpmap_pixmap(0), state(WALLPAPER_CENTER) { }
 	~Wallpaper();
 
-	bool set(const char* path);
-	bool set_tiled(const char* path);
+	bool load(const char* path, WallpaperState s);
+
 	virtual void draw(void);
 	virtual int handle(int event);
 };

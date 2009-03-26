@@ -320,7 +320,7 @@ void DesktopIcon::fast_redraw(void) {
 }
 
 void DesktopIcon::draw(void) { 
-	//draw_box(FL_UP_BOX, FL_BLACK);
+	// draw_box(FL_UP_BOX, FL_BLACK);
 
 	if(image() && (damage() & FL_DAMAGE_ALL)) {
 		Fl_Image* im = image();

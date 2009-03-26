@@ -3,7 +3,7 @@
  *
  * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
+ * Copyright (c) 2006-2009 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -41,7 +41,7 @@
 		tmp |= (((int)b >> (-bshift)) & bmask);
 
 
-static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, int wp_h) {
+static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, int wp_h) {
 	if(!img)
 		return 0;
 
@@ -103,7 +103,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 		return 0;
 	}
 
-	xim = XCreateImage(fl_display, fl_visual->visual, fl_visual->depth, ZPixmap, 0, 0, img->w(), img->h(), bitmap_pad, 0);
+	*xim = XCreateImage(fl_display, fl_visual->visual, fl_visual->depth, ZPixmap, 0, 0, img->w(), img->h(), bitmap_pad, 0);
 
 	int iw = img->w();
 	int ih = img->h();
@@ -120,7 +120,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)img->data()[0];
 
-	if(xim->bits_per_pixel == 32) {
+	if((*xim)->bits_per_pixel == 32) {
 		if(id == 3 || id == 4) {
 			for(int j = 0; j < ih; j++) {
 				for(int i = 0; i < iw; i++) {
@@ -173,7 +173,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 				}
 			}
 		}
-	} else if(xim->bits_per_pixel == 24) {
+	} else if((*xim)->bits_per_pixel == 24) {
 		if(id == 3 || id == 4) {
 			for(int j = 0; j < ih; j++) {
 				for(int i = 0; i < iw; i++) {
@@ -221,7 +221,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 				}
 			}
 		} 
-	} else if(xim->bits_per_pixel == 16) {
+	} else if((*xim)->bits_per_pixel == 16) {
 		if(id == 3 || id == 4) {
 			for(int j = 0; j < ih; j++) {
 				for(int i = 0; i < iw; i++) {
@@ -259,7 +259,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 		}
 	}
 
-	xim->data = (char*)dest;
+	(*xim)->data = (char*)dest;
 
 	/*
 	 * Creating another window as drawable is needed since fl_window (as drawable) can't be
@@ -274,15 +274,12 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 
 	pix = XCreatePixmap(fl_display, drawable, wp_w, wp_h, fl_visual->depth);
 
-	/*
-	 * The same applies as above;
-	 * fl_gc can't be used here.
-	 */
+	/* The same applies as above; fl_gc can't be used here */
 	XGCValues gcv;
 	gcv.graphics_exposures = False;
 	GC dgc = XCreateGC(fl_display, pix, GCGraphicsExposures, &gcv);
 
-	XPutImage(fl_display, pix, dgc, xim, 0, 0, 0, 0, iw, ih);
+	XPutImage(fl_display, pix, dgc, *xim, 0, 0, 0, 0, iw, ih);
 
 	XDestroyWindow(fl_display, drawable);
 	XFreeGC(fl_display, dgc);
@@ -290,11 +287,14 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 	return pix;
 }
 
-#define PIXEL_POS(x, y, w, d) ((( (y) * (w)) + (x) ) * (d))
+#define PIXEL_POS(x, y, w, d) ((((y) * (w)) + (x)) * (d))
 
-static bool create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int W, int H) {
-	if(orig->w() >= W && orig->h() >= H)
-		return false;
+static void create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int W, int H) {
+	/* don't tile large image */
+	if(orig->w() >= W && orig->h() >= H) {
+		*copied = (Fl_RGB_Image*) orig;
+		return;
+	}
 
 	int iw = orig->w();
 	int ih = orig->h();
@@ -308,7 +308,7 @@ static bool create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)orig->data()[0];
 	int ppos = 0;
-	// for bounds checks
+	/* for bounds checks */
 	int imax = iw * ih * idepth;
 
 	if(idepth == 3 || idepth == 4) {
@@ -358,12 +358,6 @@ static bool create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int
 	Fl_RGB_Image* c = new Fl_RGB_Image(dest, tw, th, idepth, orig->ld());
 	c->alloc_array = 1;
 	*copied = c;
-
-	return true;
-}
-
-Wallpaper::Wallpaper(int X, int Y, int W, int H) : 
-	Fl_Box(X, Y, W, H, 0), rootpmap_pixmap(0), tiled(false) { 
 }
 
 Wallpaper::~Wallpaper() { 
@@ -371,50 +365,12 @@ Wallpaper::~Wallpaper() {
 		XFreePixmap(fl_display, rootpmap_pixmap);
 }
 
-bool Wallpaper::set(const char* path) {
-	E_ASSERT(path != NULL);
-
-	tiled = false;
-
-	Fl_Image* i = Fl_Shared_Image::get(path);
-	if(!i)
-		return false;
-
-	image(i);
-	set_rootpmap();
-
-	return true;
-}
-
-bool Wallpaper::set_tiled(const char* path) {
-	E_ASSERT(path != NULL);
-
-	Fl_Image* i = Fl_Shared_Image::get(path);
-	if(!i)
-		return false;
-
-	Fl_RGB_Image* res = 0;
-	if(create_tile(i, &res, x(), y(), w(), h())) {
-		image(res);
-		tiled = true;
-
-		set_rootpmap();
-
-		return true;
-	} else {
-		E_WARNING(E_STRLOC ": Unable to create tiles for %s\n", path);
-		tiled = false;
-	}
-
-	return false;
-}
-
 void Wallpaper::set_rootpmap(void) {
 	if(!image())
 		return;
 
 	XImage* rootpmap_image = 0;
-	rootpmap_pixmap = create_xpixmap(image(), rootpmap_image, rootpmap_pixmap, w(), h());
+	rootpmap_pixmap = create_xpixmap(image(), &rootpmap_image, rootpmap_pixmap, w(), h());
 
 	if(!rootpmap_pixmap)
 		return;
@@ -425,33 +381,40 @@ void Wallpaper::set_rootpmap(void) {
 
 	XChangeProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			_XA_XROOTPMAP_ID, XA_PIXMAP, 32, PropModeReplace, (unsigned char *)&rootpmap_pixmap, 1);	
+}
 
-#if 0
-	XGCValues gcv;
-	gcv.graphics_exposures = False;
-	GC dgc = XCreateGC(fl_display, pix, GCGraphicsExposures, &gcv);
+bool Wallpaper::load(const char* path, WallpaperState s) {
+	E_ASSERT(path != NULL);
 
-	XImage img;
-	img.byte_order = LSBFirst; // TODO: check
-	img.format = ZPixmap;
-	img.depth = fl_visual->depth; // depth of screen or depth of image() ?
+	Fl_Shared_Image* i = Fl_Shared_Image::get(path);
+	if(!i)
+		return false;
 
-	// find out bits_per_pixel field
-	int num_pfv;
-	XPixmapFormatValues* pfv = 0;
-	XPixmapFormatValues* pfvlst = 0;
-	pfvlst = XListPixmapFormats(fl_display, &num_pfv);
-	for(pfv = pfvlst; pfv < pfvlst + num_pfv; pfv++) {
-		if(pfv->depth == fl_visual->depth)
-			break;
+	if(s == WALLPAPER_TILE) {
+		Fl_RGB_Image* tiled;
+
+		create_tile((Fl_Image*)i, &tiled, x(), y(), w(), h());
+		image(tiled);
+	} else if(s == WALLPAPER_STRETCH) {
+		Fl_Image* stretched;
+
+		if(i->w() == w() && i->h() == h())
+			stretched = i;
+		else {
+			stretched = i->copy(w(), h());
+			i->release();
+		}
+
+		image(stretched);
+	} else {
+		image(i);
 	}
 
-	img.bits_per_pixel = pfv->bits_per_pixel;
-	if(img.bits_per_pixel & 7) {
-		EWARNING("Can't work with %i bpp !!!\n", img.bits_per_pixel);
-		return;
-	}
-#endif
+	state = s;
+
+	/* set root pixmap for pseudo transparency */
+	set_rootpmap();
+	return true;
 }
 
 void Wallpaper::draw(void) {
@@ -467,8 +430,7 @@ void Wallpaper::draw(void) {
 	if(iw == 0 || ih == 0)
 		return;
 
-	if(!tiled) {
-		// center image in the box
+	if(state == WALLPAPER_CENTER) {
 		ix = (w()/2) - (iw/2);
 		iy = (h()/2) - (ih/2);
 		ix += x();
@@ -478,18 +440,14 @@ void Wallpaper::draw(void) {
 		iy = y();
 	}
 
-	ix = x();
-	iy = y();
-
 	im->draw(ix, iy);
 
+#if 0
 	/*
 	 * For debugging purposes :)
-	 * Uncommenting this (and removing GC/Window creation in create_xpixmap
-	 * will draw _XA_XROOTPMAP_ID Pixmap directly in Wallpaper widget. 
-	 * It is used to check Fl_Image->Image conversion.
+	 * Uncommenting this (and removing GC/Window creation in create_xpixmap will draw _XA_XROOTPMAP_ID 
+	 * Pixmap directly in Wallpaper widget. Used to check Fl_Image->Image conversion.
 	 */
-#if 0
 	if(global_xim) {
 		Pixmap pix = fl_create_offscreen(image()->w(), image()->h());
 		fl_begin_offscreen(pix);
@@ -507,10 +465,7 @@ void Wallpaper::draw(void) {
 
 int Wallpaper::handle(int event) {
 	switch(event) {
-		/* 
-		 * Route all DND events to parent (desktop), otherwise
-		 * desktop will not get them if Wallpaper is visible
-		 */
+		/* Route all DND events to parent (desktop), otherwise desktop will not get them if Wallpaper is visible */
 		case FL_DND_ENTER:
 		case FL_DND_DRAG:
 		case FL_DND_LEAVE:
