@@ -99,7 +99,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 	else if(fl_visual->depth > 8)
 		bitmap_pad = 16;
 	else {
-		EWARNING(ESTRLOC ": Visual %i not supported\n", fl_visual->depth);
+		E_WARNING(E_STRLOC ": Visual %i not supported\n", fl_visual->depth);
 		return 0;
 	}
 
@@ -292,7 +292,7 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage*& xim, Pixmap pix, int wp_w, 
 
 #define PIXEL_POS(x, y, w, d) ((( (y) * (w)) + (x) ) * (d))
 
-bool create_tile(Fl_Image* orig, Fl_RGB_Image*& copied, int X, int Y, int W, int H) {
+static bool create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int W, int H) {
 	if(orig->w() >= W && orig->h() >= H)
 		return false;
 
@@ -357,7 +357,7 @@ bool create_tile(Fl_Image* orig, Fl_RGB_Image*& copied, int X, int Y, int W, int
 
 	Fl_RGB_Image* c = new Fl_RGB_Image(dest, tw, th, idepth, orig->ld());
 	c->alloc_array = 1;
-	copied = c;
+	*copied = c;
 
 	return true;
 }
@@ -372,7 +372,7 @@ Wallpaper::~Wallpaper() {
 }
 
 bool Wallpaper::set(const char* path) {
-	EASSERT(path != NULL);
+	E_ASSERT(path != NULL);
 
 	tiled = false;
 
@@ -387,23 +387,22 @@ bool Wallpaper::set(const char* path) {
 }
 
 bool Wallpaper::set_tiled(const char* path) {
-	EASSERT(path != NULL);
+	E_ASSERT(path != NULL);
 
 	Fl_Image* i = Fl_Shared_Image::get(path);
 	if(!i)
 		return false;
 
 	Fl_RGB_Image* res = 0;
-	if(create_tile(i, res, x(), y(), w(), h())) {
+	if(create_tile(i, &res, x(), y(), w(), h())) {
 		image(res);
 		tiled = true;
 
 		set_rootpmap();
 
 		return true;
-	}
-	else {
-		EWARNING(ESTRLOC ": Unable to create tiles for %s\n", path);
+	} else {
+		E_WARNING(E_STRLOC ": Unable to create tiles for %s\n", path);
 		tiled = false;
 	}
 
@@ -417,16 +416,12 @@ void Wallpaper::set_rootpmap(void) {
 	XImage* rootpmap_image = 0;
 	rootpmap_pixmap = create_xpixmap(image(), rootpmap_image, rootpmap_pixmap, w(), h());
 
-	if(rootpmap_image) {
-		/* 
-		 * XDestroyImage function calls frees both the image structure and the 
-		 * data pointed to by the image structure.
-		 */
-		XDestroyImage(rootpmap_image);
-	}
-
 	if(!rootpmap_pixmap)
 		return;
+
+	/* XDestroyImage function calls frees both the image structure and the data pointed to by the image structure */
+	if(rootpmap_image)
+		XDestroyImage(rootpmap_image);
 
 	XChangeProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			_XA_XROOTPMAP_ID, XA_PIXMAP, 32, PropModeReplace, (unsigned char *)&rootpmap_pixmap, 1);	
