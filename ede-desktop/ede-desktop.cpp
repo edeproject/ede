@@ -325,8 +325,15 @@ void Desktop::read_config(void) {
 	if(wmode != WALLPAPER_CENTER && wmode != WALLPAPER_TILE && wmode != WALLPAPER_STRETCH)
 		wmode = WALLPAPER_CENTER;
 
-	if(wuse && !wallpaper->load(wpath, (WallpaperState)wmode))
-		E_WARNING(E_STRLOC ": unable to load wallpaper '%s'\n", wpath);
+	if(wuse) {
+		if(!wallpaper->load(wpath, (WallpaperState)wmode))
+			E_WARNING(E_STRLOC ": unable to load wallpaper '%s'\n", wpath);
+		else
+			wallpaper->show();
+	}
+
+	if(!wuse && wallpaper->visible())
+		wallpaper->hide();
 
 	/* change background color too */
 	color(bcolor);
