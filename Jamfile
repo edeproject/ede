@@ -10,7 +10,6 @@
 
 SubDir TOP ;
 
-EdeManual HACKING ;
 EdeManualWithToc README.alpha ;
 
 Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
