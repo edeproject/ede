@@ -10,7 +10,7 @@
 
 SubDir TOP doc ;
 
-EdeManual index.txt introduction.txt jambuild.txt ;
+EdeManual index.txt introduction.txt jambuild.txt hacking.txt ;
 EdeManualWithToc dbus-usage.txt ;
 
 MANUAL_FILES       = [ Wildcard manual : *.html : manual ] ;
