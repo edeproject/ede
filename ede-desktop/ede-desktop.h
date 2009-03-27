@@ -30,6 +30,15 @@
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
 
+#define ICON_NORMAL  1     // .desktop file
+#define ICON_TRASH   2     // trash.desktop (specific since have two icons for empty/full)
+#define ICON_FILE    3     // real file
+#define ICON_SYMLINK 4     // symbolic link
+
+#define ICON_FACE_ONE 1    // use icon
+#define ICON_FACE_TWO 2    // use icon2
+
+
 struct GlobalIconSettings {
 	int  label_background;
 	int  label_foreground;
@@ -41,14 +50,6 @@ struct GlobalIconSettings {
 	bool auto_arrange;
 	bool same_size;
 };
-
-#define ICON_NORMAL  1     // .desktop file
-#define ICON_TRASH   2     // trash.desktop (specific since have two icons for empty/full)
-#define ICON_FILE    3     // real file
-#define ICON_SYMLINK 4     // symbolic link
-
-#define ICON_FACE_ONE 1    // use icon
-#define ICON_FACE_TWO 2    // use icon2
 
 /*
  * Settings representing related to icon on desktop. To complicate our lives
@@ -70,7 +71,7 @@ struct IconSettings {
 	edelib::String full_path; // for tracking changes
 };
 
-// Selection overlay
+/* selection overlay */
 struct SelectionOverlay {
 	int x, y, w, h;
 	bool show;
@@ -80,9 +81,10 @@ class Wallpaper;
 class DesktopIcon;
 class Fl_Menu_Button;
 
-typedef edelib::list<DesktopIcon*> DesktopIconList;
+typedef edelib::list<DesktopIcon*>           DesktopIconList;
 typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
-typedef edelib::list<edelib::String> StringList;
+
+typedef edelib::list<edelib::String>           StringList;
 typedef edelib::list<edelib::String>::iterator StringListIter;
 
 #ifdef USE_EDELIB_WINDOW
@@ -119,10 +121,12 @@ private:
 	bool read_desktop_file(const char* path, IconSettings& is);
 
 	void add_icon(DesktopIcon* ic);
+
 	bool add_icon_by_path(const char* path, edelib::Resource* conf);
-	DesktopIcon* find_icon_by_path(const char* path);
+	DesktopIcon* find_icon_by_path(const char* path, DesktopIconListIter* pos);
 	bool remove_icon_by_path(const char* path);
-	bool update_icon_by_path(const char* path);
+
+	void update_trash_icons(void);
 
 	void unfocus_all(void);
 

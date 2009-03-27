@@ -144,7 +144,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 #ifdef USE_EDELIB_WINDOW
 	window_id(EDE_DESKTOP_UID);
 	foreign_callback(settings_changed_cb);
-	/* DESKTOP_WINDOW::single_buffer(true); */
+	/* DESKTOP_WINDOW::single_bufer(true); */
 #endif
 
 	selbox = new SelectionOverlay;
@@ -225,8 +225,6 @@ void Desktop::init_internals(void) {
 	/*
 	 * For watching Trash, we will check Trash/files only with create/delete flags and
 	 * in callback will be checked if directory is empty (trash empty) or not (trash full).
-	 *
-	 * FIXME: at startup it should be checked is Trash empty and update icons for that
 	 */
 	p = edelib::user_data_dir();
 	trash_path = edelib::build_filename(p.c_str(), "Trash/files");
@@ -235,6 +233,9 @@ void Desktop::init_internals(void) {
 		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))
 			E_WARNING(E_STRLOC ": Unable to watch %s\n", trash_path.c_str());
 	}
+
+	/* draw appropriate trash icon */
+	update_trash_icons();
 
 	edelib::DirWatch::callback(dir_watch_cb);
 	running = true;
@@ -357,6 +358,84 @@ void Desktop::load_icons(const char* path) {
 		add_icon_by_path((*it).c_str(), conf_ptr);
 }
 
+void Desktop::save_icons_positions(void) {
+	edelib::Resource conf;
+	char* icon_base;
+	DesktopIconListIter it = icons.begin(), it_end = icons.end();
+
+	for(; it != it_end; ++it) {
+		if((*it)->path().empty())
+			continue;
+
+		icon_base = get_basename((*it)->path().c_str());
+		conf.set(icon_base, "X", (*it)->x());
+		conf.set(icon_base, "Y", (*it)->y());
+	}
+
+	if(!conf.save(ICONS_CONFIG_NAME))
+		E_WARNING(E_STRLOC ": Unable to store icons positions\n");
+}
+
+bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
+	E_ASSERT(path != NULL);
+
+	if(!edelib::file_exists(path)) {
+		E_DEBUG(E_STRLOC ": %s don't exists\n");
+		return false;
+	}
+
+	edelib::DesktopFile dconf;
+	if(!dconf.load(path)) {
+		E_WARNING(E_STRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
+		return false;
+	}
+
+	char buf[128];
+	int bufsz = sizeof(buf);
+
+	/*
+	 * Check for 'EmptyIcon' key since via it is determined is icon trash type or not 
+	 * (in case of trash, 'Icon' key is used for full trash).
+	 *
+	 * FIXME: any other way to check for trash icons ???
+	 */
+	if(dconf.get("Desktop Entry", "EmptyIcon", buf, bufsz)) {
+		is.type = ICON_TRASH;
+		is.icon = buf;
+	} else
+		is.type = ICON_NORMAL;
+	
+	if(!dconf.icon(buf, bufsz)) {
+		E_WARNING(E_STRLOC ": No Icon key, balling out\n");
+		return false;
+	}
+
+	if(is.type == ICON_TRASH)
+		is.icon2 = buf;
+	else
+		is.icon = buf;
+
+	edelib::DesktopFileType dtype = dconf.type();
+	if(dtype == edelib::DESK_FILE_TYPE_LINK) {
+		is.cmd_is_url = true;
+		dconf.url(buf, bufsz);
+	}
+	else {
+		is.cmd_is_url = false;
+		dconf.exec(buf, bufsz);
+	}
+
+	is.cmd = buf;
+
+	if(!dconf.name(buf, bufsz)) {
+		E_DEBUG(E_STRLOC ": No Name key\n");
+		is.name = "(none)";
+	} else
+		is.name = buf;
+
+	return true;
+}
+
 bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	E_ASSERT(path != NULL);
 
@@ -420,124 +499,58 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	return can_add;
 }
 
-void Desktop::save_icons_positions(void) {
-	edelib::Resource conf;
-	char* icon_base;
-	DesktopIconListIter it = icons.begin(), it_end = icons.end();
-
-	for(; it != it_end; ++it) {
-		if((*it)->path().empty())
-			continue;
-
-		icon_base = get_basename((*it)->path().c_str());
-		conf.set(icon_base, "X", (*it)->x());
-		conf.set(icon_base, "Y", (*it)->y());
-	}
-
-	if(!conf.save(ICONS_CONFIG_NAME))
-		E_WARNING(E_STRLOC ": Unable to store icons positions\n");
-}
-
-DesktopIcon* Desktop::find_icon_by_path(const char* path) {
+DesktopIcon* Desktop::find_icon_by_path(const char* path, DesktopIconListIter* ret) {
 	E_ASSERT(path != NULL);
 
 	if(icons.empty())
 		return NULL;
 
 	DesktopIconListIter it, it_end;
+
 	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
-		if((*it)->path() == path)
+		if((*it)->path() == path) {
+			/* store iterator */
+			if(ret)
+				*ret = it;
+
+			/* return iterator value */
 			return (*it);
+		}
 	}
 
 	return NULL;
 }
 
 bool Desktop::remove_icon_by_path(const char* path) {
-	E_ASSERT(path != NULL);
+	DesktopIconListIter pos;
+	DesktopIcon* ic = find_icon_by_path(path, &pos);
 
-	if(icons.empty())
-		return false;
-
-	DesktopIconListIter it, it_end;
-	bool found = false;
-
-	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
-		if((*it)->path() == path) {
-			found = true;
-			break;
-		}
-	}
-
-	if(found) {
-		DesktopIcon* ic = (*it);
-		icons.erase(it);
-		/* Fl_Group::remove() does not delete child, just pops it out */
-		remove(ic);
-		delete ic;
-	}
-
-	return found;
-}
-
-bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
-	E_ASSERT(path != NULL);
-
-	if(!edelib::file_exists(path)) {
-		E_DEBUG(E_STRLOC ": %s don't exists\n");
+	if(!ic) {
+		E_DEBUG(">>> Didn't find %s\n", path);
 		return false;
 	}
 
-	edelib::DesktopFile dconf;
-	if(!dconf.load(path)) {
-		E_WARNING(E_STRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
-		return false;
-	}
+	icons.erase(pos);
 
-	char buff[128];
-	int buffsz = sizeof(buff);
-
-	/*
-	 * Check for 'EmptyIcon' key since via it is determined is icon trash type or not 
-	 * (in case of trash, 'Icon' key is used for full trash).
-	 *
-	 * FIXME: any other way to check for trash icons ???
-	 */
-	if(dconf.get("Desktop Entry", "EmptyIcon", buff, buffsz)) {
-		is.type = ICON_TRASH;
-		is.icon = buff;
-	} else
-		is.type = ICON_NORMAL;
-	
-	if(!dconf.icon(buff, buffsz)) {
-		E_WARNING(E_STRLOC ": No Icon key, balling out\n");
-		return false;
-	}
-
-	if(is.type == ICON_TRASH)
-		is.icon2 = buff;
-	else
-		is.icon = buff;
-
-	edelib::DesktopFileType dtype = dconf.type();
-	if(dtype == edelib::DESK_FILE_TYPE_LINK) {
-		is.cmd_is_url = true;
-		dconf.url(buff, buffsz);
-	}
-	else {
-		is.cmd_is_url = false;
-		dconf.exec(buff, buffsz);
-	}
-
-	is.cmd = buff;
-
-	if(!dconf.name(buff, buffsz)) {
-		E_DEBUG(E_STRLOC ": No Name key\n");
-		is.name = "(none)";
-	} else
-		is.name = buff;
+	/* Fl_Group::remove() does not delete child, just pops it out */
+	remove(ic);
+	delete ic;
 
 	return true;
+}
+
+void Desktop::update_trash_icons(void) {
+	bool is_empty = edelib::dir_empty(trash_path.c_str());
+	DesktopIconListIter it = icons.begin(), it_end = icons.end();
+
+	for(; it != it_end; ++it) {
+		if((*it)->icon_type() == ICON_TRASH) {
+			if(is_empty)
+				(*it)->use_icon1();
+			else
+				(*it)->use_icon2();
+		}
+	}
 }
 
 void Desktop::add_icon(DesktopIcon* ic) {
@@ -639,10 +652,9 @@ void Desktop::move_selection(int x, int y, bool apply) {
 }
 
 /*
- * Tries to figure out icon below mouse. It is alternative to
- * Fl::belowmouse() since with this we hunt only icons, not other
- * childs (wallpaper, menu), which can be returned by Fl::belowmouse()
- * and bad things be hapened.
+ * Tries to figure out icon below mouse. It is alternative to Fl::belowmouse() since with this we hunt 
+ * only icons, not other childs (wallpaper, menu), which can be returned by Fl::belowmouse() and bad 
+ * things be hapened.
  */
 DesktopIcon* Desktop::below_mouse(int px, int py) {
 	DesktopIcon* ic = NULL;
@@ -726,7 +738,7 @@ void Desktop::notify_desktop_changed(void) {
 
 	if(dbus) {
 		edelib::EdbusMessage msg;
-		// send org.equinoxproject.Desktop.DesktopChanged(int32, string) signal
+		/* send org.equinoxproject.Desktop.DesktopChanged(int32, string) signal */
 		msg.create_signal(EDE_DESKTOP_OBJECT, EDE_DESKTOP_INTERFACE, "DesktopChanged");
 		msg << num << names[num];
 		dbus->send(msg);
@@ -791,22 +803,23 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 		edelib::DesktopFile dfile;
 
 		if(dfile.load(path.c_str())) {
-			char buff[256];
+			char buf[256];
+
 			if(dfile.type() == edelib::DESK_FILE_TYPE_LINK) {
-				dfile.url(buff, 256);
+				dfile.url(buf, 256);
 				is.cmd_is_url = true;
 			}
 			else {
-				dfile.exec(buff, 256);
+				dfile.exec(buf, 256);
 				is.cmd_is_url = false;
 			}
-			is.cmd = buff;
+			is.cmd = buf;
 			is.type = ICON_NORMAL;
 
-			dfile.name(buff, 256);
-			is.name = buff;
-			dfile.icon(buff, 256);
-			is.icon = buff;
+			dfile.name(buf, 256);
+			is.name = buf;
+			dfile.icon(buf, 256);
+			is.icon = buf;
 
 			is_read = true;
 		}
@@ -882,34 +895,20 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	if(!do_dirwatch || !changed || flags == edelib::DW_REPORT_NONE)
 		return;
 
-	// skip temporary files
+	/* skip temporary files */
 	if(is_temp_filename(changed))
 		return;
 
 	if(trash_path == dir) {
-		bool is_empty = edelib::dir_empty(trash_path.c_str());
-
-		DesktopIconListIter it, it_end;
-		for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
-			if((*it)->icon_type() == ICON_TRASH) {
-				if(is_empty)
-					(*it)->use_icon1();
-				else
-					(*it)->use_icon2();
-			}
-		}
-
+		update_trash_icons();
 		E_DEBUG(E_STRLOC ": event on trash dir %s\n", dir);
-
 		return;
 	}
-
-	sleep(1);
 
 	if(flags == edelib::DW_REPORT_CREATE) {
 		E_DEBUG(E_STRLOC ": adding %s\n", changed);
 
-		if(find_icon_by_path(changed)) {
+		if(find_icon_by_path(changed, 0)) {
 			E_DEBUG(E_STRLOC ": %s already registered; skipping...\n", changed);
 			return;
 		}
