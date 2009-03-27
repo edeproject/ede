@@ -12,3 +12,6 @@ SubDir TOP services ;
 
 InstallDbusService org.equinoxproject.Launch.service ;
 Clean distclean : org.equinoxproject.Launch.service ;
+
+InstallDbusService org.equinoxproject.StartupNotify.service ;
+Clean distclean : org.equinoxproject.StartupNotify.service ;

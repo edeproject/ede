@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name = org.equinoxproject.StartupNotify
+Exec = @prefix@/bin/ede-launch-sn
