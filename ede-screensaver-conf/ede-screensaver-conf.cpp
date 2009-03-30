@@ -27,7 +27,7 @@
 #include "XScreenSaver.h"
 #include "icons/energy.xpm"
 
-static Fl_Pixmap image_energy(energy_star_xpm);
+static Fl_Pixmap image_energy((const char**)energy_star_xpm);
 
 static Fl_Spinner*       standby_val;
 static Fl_Spinner*       suspend_val;

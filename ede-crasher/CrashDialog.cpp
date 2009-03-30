@@ -113,7 +113,7 @@ CrashDialog::CrashDialog() : Fl_Window(DIALOG_W, DIALOG_H, _("EDE crash handler"
 	details_shown = false;
 
 	begin();
-		pix = new Fl_Pixmap(core_xpm);
+		pix = new Fl_Pixmap((const char**)core_xpm);
 
 		icon_box = new Fl_Box(10, 10, 70, 75);
 		icon_box->image(pix);

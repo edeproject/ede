@@ -38,7 +38,7 @@ EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
 
-static Fl_Pixmap        image_run(run_xpm);
+static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
 static Fl_Check_Button* in_term;
 

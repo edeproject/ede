@@ -28,16 +28,16 @@ SubInclude TOP ede-image-view ;
 SubInclude TOP elma ;
 SubInclude TOP ede-launch ;
 SubInclude TOP emountd ;
-SubInclude TOP ede-panel ;
+#SubInclude TOP ede-panel ;
 SubInclude TOP ede-timedate ;
 SubInclude TOP ede-tip ;
-SubInclude TOP edewm ;
+#SubInclude TOP edewm ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
 SubInclude TOP services ;
 
 # efile is not compileable on FreeBSD
-if $(OS) != FREEBSD {
-	SubInclude TOP efiler ;
-}
+#if $(OS) != FREEBSD {
+#	SubInclude TOP efiler ;
+#}

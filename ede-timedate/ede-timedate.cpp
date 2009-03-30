@@ -44,7 +44,7 @@ Fl_Menu_Item menu_timeFormat[] = {
  {0}
 };
 
-static Fl_Pixmap image_world(world2_xpm);
+static Fl_Pixmap image_world((const char**)world2_xpm);
 
 Fl_Choice* timeZonesList=(Fl_Choice *)0;
 Fl_Button* applyButton;

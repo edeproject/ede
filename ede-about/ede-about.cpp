@@ -28,7 +28,7 @@
 #include <edelib/Nls.h>
 #include "icons/ede.xpm"
 
-static Fl_Pixmap image_ede(ede_xpm);
+static Fl_Pixmap image_ede((const char**)ede_xpm);
 
 Fl_Window* win;
 Fl_Text_Buffer* stylebuff;

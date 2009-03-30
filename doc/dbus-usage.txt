@@ -4,8 +4,8 @@ D-BUS usage in EDE
 Introduction
 ------------
 This document describes link:http://freedesktop.org/wiki/Software/dbus/[D-BUS] usage in EDE applications.
-It is not meant to describe D-BUS protocol nor how to use it either via libdbus nor edelib, but
-to document and explain what programs listen or send data via D-BUS protocol.
+It is not meant to describe D-BUS protocol nor how to use it via libdbus nor edelib, but to document and 
+explain what programs listen or what data are send via D-BUS protocol.
 
 Naming convention
 -----------------
@@ -16,10 +16,9 @@ EDE uses 'org.equinoxproject' as main namespace for interfaces and object paths,
   /org/equinoxproject/Desktop  # ede-desktop object path
 -----------------------------------------------------------
 
-rest of the name will be application name and method or signal name. If application name
-is not suitable or could not be represented as D-BUS name or could be ambiguous, it can be replaced 
-with application functionality (e.g. 'org.equinoxproject.Desktop' sounds much better than
-'org.equinoxproject.Ede_Desktop').
+Rest of the name will be application name with method or signal name. If application name
+is not suitable or could not be represented as D-BUS name (or could be ambiguous), it can be replaced 
+with applications functionality ('org.equinoxproject.Desktop' sounds much better than 'org.equinoxproject.Ede_Desktop').
 
 Sample:
 -----------------------------------------------------------
@@ -31,8 +30,7 @@ Interfaces
 
 org.equinoxproject.Desktop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Used by ede-destkop and access object is '/org/eqiunoxproject/Desktop'. Provided
-signals are:
+Used by ede-desktop and access object is '/org/eqiunoxproject/Desktop'. Provided signals are:
 
 DesktopChanged(int32 n, string name)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

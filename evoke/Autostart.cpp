@@ -60,7 +60,7 @@ typedef list<DialogEntry*>::iterator       DialogEntryListIter;
 
 static Fl_Window*        dialog_win;
 static Fl_Check_Browser* cbrowser;
-static Fl_Pixmap         warnpix(warning_xpm);
+static Fl_Pixmap         warnpix((const char**)warning_xpm);
 
 static char* get_basename(const char* path) {
 	char* p = strrchr(path, '/');

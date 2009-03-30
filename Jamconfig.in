@@ -21,6 +21,11 @@ mandir      ?= "@mandir@" ;
 srcdir      ?= "@abs_srcdir@" ;
 sysconfdir  ?= "@sysconfdir@" ;
 
+# compiler
+CC           = @CC@ ;
+C++          = @CXX@ ;
+LINK         = $(CC) ;
+
 # tools used by jam rules
 XGETTEXT     ?= @XGETTEXT@ ;
 MSGFMT       ?= @MSGFMT@ ;

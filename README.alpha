@@ -15,36 +15,32 @@ Build requirements
 ------------------
 
 EDE 2.0 is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time 
-of this writing, last released version was 1.1.7 and 1.1.8 was coming really soon. We 
-recommend using the latest daily snapshot - they are extremely stable and 
-that's what we use internally - although 1.1.7 should work too.
+of this writing, latest stable version is 1.1.9.
 
-Since fltk lacks many things needed for developing a full *nix desktop 
+Since FLTK lacks many things needed for developing a full *nix desktop 
 environment, we have developed a small add-on library called 'edelib'. This 
-library is also required for compiling EDE 2.0 and should be released together 
-with EDE.
+library is also required for compiling EDE 2.0 and should be released together with EDE.
 
 We *strongly* recommend that you use matching versions of ede and 
-edelib (e.g. released at the same time) or that you do SVN checkout at the 
-same time.
+edelib (e.g. released at the same time) or that you do SVN checkout at the same time due
+their frequent changes.
 
 Make sure you have eFLTK installed too, because some packages still requires it.
 
-Also you will need a Jam tool. Jam is a make replacement and removes a lot 
-of its limitations and you can find it on our repository.
+Also you will need a Jam tool. Jam is a make replacement and you can find it on our repository.
 
 Downloading the code
 --------------------
 
-The best way to download latest code is checking it out from our repository. Make sure
-you checkout jam (if you already don't have it installed), edelib, ede2 and efltk modules.
-
-Here are the commands:
+The best way to download latest code is checking it out from our repository. These modules
+you should checkout (with their paths):
 
 - jam : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/jam'
 - edelib : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/edelib'
 - ede : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/ede2'
 - efltk : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/efltk'
+
+If you already have Jam installed, there is no need to download it.
 
 Compiling and installing
 ------------------------
@@ -52,7 +48,7 @@ Compiling and installing
 In order to build and install EDE do the following steps:
 
 1. compile and install jam first; going to jam source directory and runnig 'make' will do 
-   the job; after that you should get 'bin.YOUR_PLATFORM' directory (on linux it will be 
+   the job; after that you should get 'bin.YOUR_PLATFORM' directory (on Linux it will be 
    bin.linux) and copy 'jam' executable in your $PATH, e.g. /usr/local/bin
 
 2. compile and install edelib; please read README file in edelib directory
@@ -60,7 +56,7 @@ In order to build and install EDE do the following steps:
 3. compile and install efltk; './configure --disable-mysql --disable-unixODBC && make && make install'
    will do the job
 
-4. then go in ede2 directory and run './autogen.sh'
+4. go in ede2 directory and run './autogen.sh'
 
 5. after that, goes './configure --enable-debug'
 
@@ -68,47 +64,10 @@ In order to build and install EDE do the following steps:
 
 7. jam install
 
-Important stuff that isn't updated (requires efltk)
----------------------------------------------------
+Used programs that requires eFLTK
+---------------------------------
 
 - edewm
-- eworkpanel
+- ede-panel
 
-We are in the process of rewriting these modules from scratch so older versions
-will be provided
-
-- efinder
-It will be ported to fltk1 as soon as we finish efiler (see below) cause we 
-would like to use same widgets for displaying file list.
-
-- emenueditor
-It will either be completely rewritten or removed, because EDE 2 will use XDG menus
-(FreeDesktop.org).
-
-New modules in EDE 2.0
-----------------------
-
-- edialog
-Command line utility for displaying dialogs (useful for scripting). It is very
-UNFINISHED.
-
-- efiler
-Simple and lightweight file manager. Currently it's fully functional, but we 
-plan some more features.
-
-- eimage
-Small image viewer. Likewise, functional but a few features will be added.
-
-- ede-calc
-Scientific calculator.
-
-TODO: to be filled
-
-Contributors wanted
--------------------
-
-As usualy, every help is very appreciated :)
-
-Also, EDE code is sparkled with comments starting with TODO and FIXME - 
-please see what of that you can do (just type e.g. "grep TODO . -R" or "grep FIXME . -R"). 
-EDE coding standards and EDE HIG documents are being prepared.
+These programs are planned to be replaced with the new ones.

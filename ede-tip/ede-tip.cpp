@@ -42,7 +42,7 @@ EDELIB_NS_USING(user_config_dir)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
 
-static Fl_Pixmap image_hint(hint_xpm);
+static Fl_Pixmap image_hint((const char**)hint_xpm);
 
 Fl_Window* win;
 Fl_Check_Button* check_button;

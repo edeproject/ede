@@ -16,7 +16,7 @@
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
-const char* next_param(int curr, char** argv, int argc) {
+static const char* next_param(int curr, char** argv, int argc) {
 	int j = curr + 1;
 	if(j >= argc)
 		return NULL;
@@ -25,7 +25,7 @@ const char* next_param(int curr, char** argv, int argc) {
 	return argv[j];
 }
 
-void help(void) {
+static void help(void) {
 	puts("Usage: ede-crasher [OPTIONS]");
 	puts("EDE crash handler\n");
 	puts("Options:");
