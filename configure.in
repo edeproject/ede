@@ -39,6 +39,11 @@ AC_ARG_ENABLE(shape, AC_HELP_STRING([--enable-shape], [enable XShape extension (
 AC_ARG_ENABLE(composite, AC_HELP_STRING([--enable-composite], [enable XComposite extension (default=yes)]),, enable_composite=yes)
 AC_ARG_ENABLE(hal, AC_HELP_STRING([--enable-hal], [enable HAL support (default=yes)]),, enable_hal=yes)
 
+dnl set 'with_fltk_path'
+AC_ARG_WITH(fltk_path, AC_HELP_STRING([--with-fltk-path=[DIR]], [alternative directory where FLTK is installed]))
+dnl set 'with_efltk_path'
+AC_ARG_WITH(efltk_path, AC_HELP_STRING([--with-efltk-path=[DIR]], [alternative directory where eFLTK is installed]))
+
 AC_PROG_CXX
 AC_PROG_CPP
 EDE_PROG_JAM
@@ -48,8 +53,7 @@ AC_PATH_PROG(XGETTEXT, xgettext)
 AC_PATH_PROG(GDB, gdb)
 AC_PATH_PROG(PYTHON, python)
 
-dnl X_CFLAGS, X_PRE_LIBS, X_LIBS, X_EXTRA_LIBS are replaced iff
-dnl X are on nonstandard paths
+dnl X_CFLAGS, X_PRE_LIBS, X_LIBS, X_EXTRA_LIBS are replaced iff are X on nonstandard paths
 AC_PATH_XTRA
 
 AC_HEADER_STDC
@@ -103,7 +107,6 @@ else
 	AC_MSG_RESULT(no)
 fi
 
-
 PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
 if test "$have_edelib" = "no"; then
 	AC_MSG_ERROR(edelib not found! You must install it first)
@@ -118,7 +121,12 @@ dnl find edelib documentation
 EDELIB_API_INDEX=`$PKG_CONFIG --variable=edelibdocdir edelib`
 EDELIB_API_INDEX="$EDELIB_API_INDEX/html/index.html"
 
-AC_PATH_PROG(FLTK_CONFIG, fltk-config)
+if test "x$with_fltk_path" = "x"; then
+	AC_PATH_PROG(FLTK_CONFIG, fltk-config)
+else
+	AC_PATH_PROG(FLTK_CONFIG, fltk-config,, "$with_fltk_path/bin")
+fi
+
 if test -n "$FLTK_CONFIG"; then
 	fltk_version=`$FLTK_CONFIG --version`
 
@@ -140,7 +148,12 @@ else
 	AC_MSG_ERROR([You don't have FLTK installed. To compile EDE, you will need it.])
 fi
 
-AC_PATH_PROG(EFLTK_CONFIG, efltk-config)
+if test "x$with_efltk_path" = "x"; then
+	AC_PATH_PROG(EFLTK_CONFIG, efltk-config)
+else
+	AC_PATH_PROG(EFLTK_CONFIG, efltk-config,, "$with_efltk_path/bin")
+fi
+
 if test -n "$EFLTK_CONFIG"; then
 	efltk_version=`$EFLTK_CONFIG --version`
 
