@@ -28,16 +28,18 @@ SubInclude TOP ede-image-view ;
 SubInclude TOP elma ;
 SubInclude TOP ede-launch ;
 SubInclude TOP emountd ;
-SubInclude TOP ede-panel ;
 SubInclude TOP ede-timedate ;
 SubInclude TOP ede-tip ;
-SubInclude TOP edewm ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;
 SubInclude TOP services ;
 
+# they will not be compiled if eFLTK wasn't found
+SubInclude TOP edewm ;
+SubInclude TOP ede-panel ;
+
 # efile is not compileable on FreeBSD
-if $(OS) != FREEBSD {
+if $(OS) != FREEBSD || $(FORCE_EFILER) = 1 {
 	SubInclude TOP efiler ;
 }
