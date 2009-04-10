@@ -28,7 +28,6 @@ else
 fi
 AC_DEFINE_UNQUOTED(PREFIX, "$EDE_INSTALL_DIR", [Default installation place])
 
-PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
 
 EDE_OPTIM_FLAGS=""
 EDE_DEBUG_FLAGS=""
@@ -43,6 +42,8 @@ dnl set 'with_fltk_path'
 AC_ARG_WITH(fltk_path, AC_HELP_STRING([--with-fltk-path=[DIR]], [alternative directory where FLTK is installed]))
 dnl set 'with_efltk_path'
 AC_ARG_WITH(efltk_path, AC_HELP_STRING([--with-efltk-path=[DIR]], [alternative directory where eFLTK is installed]))
+dnl set 'with_edelib_path'
+AC_ARG_WITH(edelib_path, AC_HELP_STRING([--with-edelib-path=[DIR]], [alternative directory where edelib is installed]))
 
 AC_PROG_CXX
 AC_PROG_CPP
@@ -105,6 +106,13 @@ if test "$have_libstartup_notification" = "yes"; then
 	AC_DEFINE(HAVE_LIBSTARTUP_NOTIFICATION, 1, [Define to 1 if you have libstartup-notification libraries])
 else
 	AC_MSG_RESULT(no)
+fi
+
+if test -n "$with_edelib_path"; then
+	PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$with_edelib_path"
+else
+	dnl TODO: remove this in release
+	PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
 fi
 
 PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
