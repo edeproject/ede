@@ -22,5 +22,8 @@ InstallEdeProgram      startede ;
 InstallEdeConfigFiles  $(CONFS) ;
 InstallEdeDesktopFiles $(PLINKS) ;
 
+# install entry for login/desktop managers
+InstallData /usr/share/xsessions : ede.desktop ;
+
 SubInclude TOP data mime-types ;
 SubInclude TOP data icon-themes ;
