@@ -39,7 +39,7 @@ SubInclude TOP services ;
 SubInclude TOP edewm ;
 SubInclude TOP ede-panel ;
 
-# efile is not compileable on FreeBSD
-if $(OS) != FREEBSD || $(FORCE_EFILER) = 1 {
+# efiler is not compileable at all
+if ! $(WITHOUT_EFILER) {
 	SubInclude TOP efiler ;
 }
