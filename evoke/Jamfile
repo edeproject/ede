@@ -31,9 +31,9 @@ LinkAgainstAsFirst evoke : $(EDELIB_DBUS_LIB) ;
 
 EdeProgram evoke : $(SOURCE) ;
 
-ObjectC++Flags ede-startup : $(X_CFLAGS) ;
-ProgramBare ede-shutdown : ede-shutdown.cpp ; 
-LinkAgainst ede-shutdown : $(X_LIBS) -lX11 ;
+ObjectC++Flags ede-shutdown : $(X_CFLAGS) ;
+ProgramBare    ede-shutdown : ede-shutdown.cpp ; 
+LinkAgainst    ede-shutdown : $(X_LIBS) -lX11 ;
 
 InstallEdeProgram ede-settings-apply ;
 
