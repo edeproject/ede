@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <edelib/File.h>
+#include <edelib/FileTest.h>
 #include <edelib/Debug.h>
 #include <edelib/Config.h>
 #include <edelib/Resource.h>
@@ -36,9 +37,10 @@ EDELIB_NS_USING(EdbusMessage)
 EDELIB_NS_USING(EdbusConnection)
 EDELIB_NS_USING(EDBUS_SESSION)
 EDELIB_NS_USING(RES_SYS_ONLY)
-EDELIB_NS_USING(file_exists)
 EDELIB_NS_USING(file_remove)
+EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(str_trim)
+EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
 
 #ifdef USE_LOCAL_CONFIG
  #define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
@@ -94,7 +96,7 @@ EvokeService* EvokeService::instance(void) {
 }
 
 bool EvokeService::setup_lock(const char* name) {
-	if(file_exists(name))
+	if(file_test(name, FILE_TEST_IS_REGULAR))
 		return false;
 
 	FILE* f = fopen(name, "w");

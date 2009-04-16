@@ -17,6 +17,7 @@
 #include <edelib/Nls.h>
 #include <edelib/Util.h>
 #include <edelib/Directory.h>
+#include <edelib/FileTest.h>
 #include <edelib/Resource.h>
 #include <edelib/Run.h>
 
@@ -28,9 +29,10 @@
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(build_filename)
-EDELIB_NS_USING(dir_exists)
+EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(RES_SYS_ONLY)
+EDELIB_NS_USING(FILE_TEST_IS_DIR)
 
 #ifndef EDEWM_HAVE_NET_SPLASH
 static Splash* global_splash = NULL;
@@ -129,7 +131,7 @@ void Splash::run(void) {
 	splash_theme_path += E_DIR_SEPARATOR;
 	splash_theme_path += *splash_theme;
 
-	if(!dir_exists(splash_theme_path.c_str())) {
+	if(!file_test(splash_theme_path.c_str(), FILE_TEST_IS_DIR)) {
 		E_WARNING(E_STRLOC ": Unable to locate '%s' in '%s' theme directory\n", 
 				splash_theme->c_str(), splash_theme_path.c_str());
 		return;
