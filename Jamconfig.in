@@ -55,13 +55,23 @@ EDE_TIPS_DIR         ?= "$(datadir)/tips" ;
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
 
-# some C libraries have issues with C++ when given '-pedantic' flag, so
-# setting 'jam -sPEDANTIC=""' will allow compilation
-PEDANTIC = "-pedantic" ;
+# FIXME: a quick hack to work everything on SunStudio
+if $(SUN_COMPILER) {
+	WALL          ?= "+w2" ;
+	PEDANTIC      ?= ;
+	WNO_LONG_LONG ?= ;
+} else {
+	# gcc assumed
+	WALL          ?= "-Wall" ;
+	# some C libraries have issues with C++ when given '-pedantic' flag, so
+	# setting 'jam -sPEDANTIC=""' will allow compilation
+	PEDANTIC      ?= "-pedantic" ;
+	WNO_LONG_LONG ?= "-Wno-long-long" ;
+}
 
 # global flags used to be passed to every target
-GLOBALFLAGS  ?= -Wall $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
-STDLIB       ?= -lstdc++ ;
+GLOBALFLAGS ?= $(WALL) $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
+STDLIB      ?= -lstdc++ ;
 
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
 # edelib is compiled as shared library (or when is linked with some shared library)

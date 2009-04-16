@@ -51,6 +51,12 @@ actions quietly Help
 	echo ""
 }
 
+# a hack for Sun compiler
+# FIXME: let configure figure these things
+if $(SUN_COMPILER) {
+	GLOBALFLAGS = [ RemoveFlag "-g3" : $(GLOBALFLAGS) ] ;
+}
+
 Help help ;
 NotFile help ;
 Always help ;
