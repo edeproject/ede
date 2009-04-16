@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef unsigned int uint;
+
 
 // TODO: replace this with a simple loop when operator++ is implemented in edelib::Date
 long date_distance(edelib::Date da1, edelib::Date da2) {
