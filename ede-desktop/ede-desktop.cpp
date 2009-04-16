@@ -27,9 +27,9 @@
 #include <FL/Fl_Menu_Button.H>
 
 #include <edelib/Debug.h>
-#include <edelib/File.h>
-#include <edelib/DesktopFile.h>
+#include <edelib/FileTest.h>
 #include <edelib/Directory.h>
+#include <edelib/DesktopFile.h>
 #include <edelib/DirWatch.h>
 #include <edelib/MimeType.h>
 #include <edelib/StrUtil.h>
@@ -212,7 +212,7 @@ void Desktop::init_internals(void) {
 	/* setup watcher used for Desktop and Trash directories */
 	edelib::DirWatch::init();
 
-	if(edelib::dir_exists(desktop_path.c_str())) {
+	if(edelib::file_test(desktop_path.c_str(), edelib::FILE_TEST_IS_DIR)) {
 		load_icons(desktop_path.c_str());
 
 		if(!edelib::DirWatch::add(desktop_path.c_str(), 
@@ -229,7 +229,7 @@ void Desktop::init_internals(void) {
 	p = edelib::user_data_dir();
 	trash_path = edelib::build_filename(p.c_str(), "Trash/files");
 
-	if(edelib::dir_exists(trash_path.c_str())) {
+	if(edelib::file_test(trash_path.c_str(), edelib::FILE_TEST_IS_DIR)) {
 		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))
 			E_WARNING(E_STRLOC ": Unable to watch %s\n", trash_path.c_str());
 	}
@@ -378,11 +378,6 @@ void Desktop::save_icons_positions(void) {
 
 bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	E_ASSERT(path != NULL);
-
-	if(!edelib::file_exists(path)) {
-		E_DEBUG(E_STRLOC ": %s don't exists\n");
-		return false;
-	}
 
 	edelib::DesktopFile dconf;
 	if(!dconf.load(path)) {
@@ -784,7 +779,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	else
 		sptr = src_copy;
 
-	if(!edelib::file_exists(sptr) && !edelib::dir_exists(sptr)) {
+	if(!edelib::file_test(sptr, edelib::FILE_TEST_IS_REGULAR) || !edelib::file_test(sptr, edelib::FILE_TEST_IS_DIR)) {
 		edelib::message("Droping file content is not implemented yet. Soon, soon... :)");
 		delete [] src_copy;
 		return;
