@@ -463,11 +463,11 @@ int main(int ac, char **av)
     last_off = 0;
     do
     {
-	sp = fgets(string, 256, inf);
+	sp = (unsigned char*)fgets(string, 256, inf);
 	if (sp == NULL || STR_ENDSTRING(sp, Tbl))
 	{
 	    pos = ftell(inf);
-	    length = pos - last_off - (sp ? strlen(sp) : 0);
+	    length = pos - last_off - (sp ? strlen((const char*)sp) : 0);
 	    if (!length)
 		/* Here's where we go back and fix things, if the
 		 * 'fortune' just read was the null string.
@@ -490,7 +490,7 @@ int main(int ac, char **av)
 	}
 	else if (first)
 	{
-	    for (nsp = sp; !isalnum(*nsp); nsp++)
+	    for (nsp = (char*)sp; !isalnum(*nsp); nsp++)
 		continue;
 	    ALLOC(Firstch, Num_pts);
 	    fp = &Firstch[Num_pts - 1];
@@ -529,9 +529,9 @@ int main(int ac, char **av)
 		puts("There was 1 string");
 	    else
 		printf("There were %ld strings\n", Num_pts - 1);
-	    printf("Longest string: %lu byte%s\n", Tbl.str_longlen, 
+	    printf("Longest string: %u byte%s\n", Tbl.str_longlen, 
 		Tbl.str_longlen == 1 ? "" : "s");
-	    printf("Shortest string: %lu byte%s\n", Tbl.str_shortlen,
+	    printf("Shortest string: %u byte%s\n", Tbl.str_shortlen,
 		Tbl.str_shortlen == 1 ? "" : "s");
 	}
     }
