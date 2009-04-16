@@ -347,7 +347,7 @@ void BatteryMonitor::battery_check(void)
 #define        APM_STAT_LINE_ON        1
 
 typedef struct apm_info {
-   char driver_version[10];
+   char         driver_version[10];
    int          apm_version_major;
    int          apm_version_minor;
    unsigned int apm_flags;
@@ -383,7 +383,7 @@ void BatteryMonitor::battery_check(void)
   fgets( buf, sizeof( buf ) - 1, pt );
   buf[ sizeof( buf ) - 1 ] = '\0';
   sscanf( buf, "%s %d.%d %x %x %x %x %d%% %d %d\n",
-	  &i.driver_version,
+	  (char*)&i.driver_version,
 	  &i.apm_version_major,
 	  &i.apm_version_minor,
 	  &i.apm_flags,
