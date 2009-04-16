@@ -30,8 +30,8 @@
 
 #include <edelib/Nls.h>
 #include <edelib/File.h>
-#include <edelib/Directory.h>
 #include <edelib/MessageBox.h>
+#include <edelib/FileTest.h>
 
 #define DIALOG_W 380
 #define DIALOG_H 130 
@@ -42,14 +42,14 @@ int spawn_backtrace(const char* gdb_path, const char* program, const char* core,
 	const char* gdb_script = "bt\nquit\n";
 	const int gdb_script_len = 8;
 
-	// file with gdb commands
+	/* file with gdb commands */
 	int sfd = open(script, O_WRONLY | O_TRUNC | O_CREAT, 0770);
 	if(sfd == -1)
 		return -1;
 	write(sfd, gdb_script, gdb_script_len);
 	close(sfd);
 
-	// output file with gdb backtrace
+	/* output file with gdb backtrace */
 	int ofd = open(output, O_WRONLY | O_TRUNC | O_CREAT, 0770);
 	if(ofd == -1)
 		return -1;
@@ -129,7 +129,7 @@ CrashDialog::CrashDialog() : Fl_Window(DIALOG_W, DIALOG_H, _("EDE crash handler"
 		details->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
 		details->callback(show_details_cb, this);
 
-		// widgets for expanded dialog
+		/* widgets for expanded dialog */
 		trace_log = new Fl_Text_Display(10, 130, 360, 165);
 		trace_buff = new Fl_Text_Buffer();
 		trace_log->buffer(trace_buff);
@@ -141,7 +141,7 @@ CrashDialog::CrashDialog() : Fl_Window(DIALOG_W, DIALOG_H, _("EDE crash handler"
 }
 
 CrashDialog::~CrashDialog() {
-	// looks like fltk does not clean image() assigned data
+	/* looks like fltk does not clean image() assigned data */
 	delete pix;
 }
 
@@ -164,7 +164,7 @@ void CrashDialog::show_details(void) {
 			if(bugaddress)
 				address += bugaddress;
 			else
-				address += "bugs@equinox-project.org";
+				address += "http://bugs.equinox-project.org";
 
 			trace_buff->append(address.c_str());
 			trace_buff->append("\n\n");
@@ -198,11 +198,14 @@ void CrashDialog::show_details(void) {
 			else
 				trace_buff->append("(unknown)");
 
-			// try backtrace via gdb
+			/* try backtrace via gdb */
 			trace_buff->append("\n\n---------- backtrace ----------\n"); 
-			const char* core_file = "core";
 
-			if(!edelib::file_exists(core_file)) {
+			const char* core_file = "core";
+			const char* gdb_output = "/tmp/.gdb_output";
+			const char* gdb_script = "/tmp/.gdb_script";
+
+			if(!edelib::file_test(core_file, edelib::FILE_TEST_IS_REGULAR)) {
 				trace_buff->append("\nUnable to find 'core' file. Backtrace will not be done.");
 				details_shown = false;
 				return;
@@ -210,48 +213,29 @@ void CrashDialog::show_details(void) {
 
 			edelib::String gdb_path = edelib::file_path("gdb");
 			if(gdb_path.empty()) {
-				trace_buff->append("\nUnable to find gdb. Is it installed ?");
-				// set to false so next 'Show Details' click can try again with the debugger
+				trace_buff->append("\nUnable to find gdb. Please install it first.");
+				/* set to false so next 'Show Details' click can try again with the debugger */
 				details_shown = false;
 				return;
 			}
 
-			// check if we can write in /tmp; if not, try with $HOME
-			edelib::String dir = "/tmp";
-			if(!edelib::dir_writeable(dir.c_str())) {
-				dir = edelib::dir_home();
-
-				if(!edelib::dir_writeable(dir.c_str())) {
-					trace_buff->append("\nDon't have permissions to write either to /tmp or $HOME");
-					details_shown = false;
-					return;
-				}
-			}
-
-			edelib::String gdb_output, gdb_script;
-			gdb_output = gdb_script = dir;
-			// TODO: these files should be unique per session
-			gdb_output += "/.gdb_output";
-			gdb_script += "/.gdb_script";
-
-			if(spawn_backtrace(gdb_path.c_str(), cmd.c_str(), core_file, gdb_output.c_str(), gdb_script.c_str()) == -1) {
+			/* TODO: these files should be unique per session */
+			if(spawn_backtrace(gdb_path.c_str(), cmd.c_str(), core_file, gdb_output, gdb_script) == -1) {
 				trace_buff->append("\nUnable to properly execute gdb");
 				details_shown = false;
 				return;
 			}
 
-			if(!edelib::file_exists(gdb_output.c_str())) {
-				trace_buff->append("\nStrange, can't find gdb output that I was just wrote to");
+			trace_buff->append("\n");
+			if(trace_buff->appendfile(gdb_output) != 0) {
+				trace_buff->append("Unable to read gdb output file");
 				details_shown = false;
 				return;
 			}
 
-			trace_buff->appendfile(gdb_output.c_str());
-
-			edelib::file_remove(gdb_output.c_str());
-			edelib::file_remove(gdb_script.c_str());
+			edelib::file_remove(gdb_output);
+			edelib::file_remove(gdb_script);
 			edelib::file_remove(core_file);
-
 
 			details_shown = true;
 		}
