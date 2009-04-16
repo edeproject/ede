@@ -29,8 +29,8 @@ rule MakeProgramPrivate
 	objects = [ FGristFiles $(2:S=$(SUFOBJ)) ] ;
 
 	# Pick up values if someone set flags outside (via ObjectCcFlags and etc.)
-	CCFLAGS on $(objects) += $(4) ;
-	C++FLAGS on $(objects) += $(4) ;
+	CCFLAGS on $(objects)  = [ on $(objects) return $(CCFLAGS) ] $(4) ;
+	C++FLAGS on $(objects) = [ on $(objects) return $(C++FLAGS) ] $(4) ;
 
 	if $(REMOVE_UNUSED_DEPENDENCIES_TRICK) = 1 {
 		# remove unused dependencies in binaries, as U.Drepper prescribed ;-)
