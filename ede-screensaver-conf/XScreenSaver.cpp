@@ -30,6 +30,7 @@
 #include <X11/Xresource.h>
 
 #include <edelib/File.h>
+#include <edelib/FileTest.h>
 #include <edelib/Run.h>
 #include <edelib/Directory.h>
 #include <edelib/TiXml.h>
@@ -40,9 +41,10 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_rename)
+EDELIB_NS_USING(file_test)
+EDELIB_NS_USING(FILE_TEST_IS_DIR)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(dir_home)
-EDELIB_NS_USING(dir_exists)
 EDELIB_NS_USING(dir_empty)
 
 static Atom XA_SCREENSAVER;
@@ -250,7 +252,7 @@ static const char *find_hacks_dir_once(void) {
 		return xscr_folder_found;
 
 	for(int i = 0; xscr_hacks_dirs[i]; i++) {
-		if(dir_exists(xscr_hacks_dirs[i])) {
+		if(file_test(xscr_hacks_dirs[i], FILE_TEST_IS_DIR)) {
 			xscr_folder_found = xscr_hacks_dirs[i];
 			break;
 		}
@@ -291,7 +293,7 @@ static SaverPrefs *guess_config(void) {
 	const char* config_dir = NULL, *hacks_dir;
 
 	for(int i = 0; xscr_hacks_config_dirs[i]; i++) {
-		if(dir_exists(xscr_hacks_config_dirs[i]) && !dir_empty(xscr_hacks_config_dirs[i])) {
+		if(file_test(xscr_hacks_config_dirs[i], FILE_TEST_IS_DIR) && !dir_empty(xscr_hacks_config_dirs[i])) {
 			config_dir = xscr_hacks_config_dirs[i];
 			break;
 		}
