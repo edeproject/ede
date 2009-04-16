@@ -14,8 +14,8 @@ ObjectC++Flags ede-desktop.cpp : -DUSE_EDELIB_WINDOW ;
 
 SOURCE = ede-desktop.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
 
-ObjectC++Flags $(SOURCE) : -Wno-long-long -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include ;
+ObjectC++Flags $(SOURCE) : $(EDELIB_DBUS_INCLUDE) ;
 
 EdeProgram  ede-desktop : $(SOURCE) ;
-LinkAgainst ede-desktop : -L/opt/ede/lib -ledelib_dbus -ldbus-1 ;
+LinkAgainst ede-desktop : $(EDELIB_DBUS_LIB) ;
 TranslationStrings locale : $(SOURCE) ;
