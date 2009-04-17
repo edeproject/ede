@@ -34,12 +34,17 @@ AC_DEFUN([PKG_CHECK_MODULES], [
             AC_MSG_RESULT($$1_CFLAGS)
 
             AC_MSG_CHECKING($1_LIBS)
-            ## don't use --libs since that can do evil things like add
-            ## -Wl,--export-dynamic
-            $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
-            AC_MSG_RESULT($$1_LIBS)
+            ## don't use --libs since that can do evil things like add -Wl,--export-dynamic
+            if test "$SHELL" = "/bin/ksh"; then
+                ## ksh does not do escaping properly
+                $1_LIBS="`$PKG_CONFIG --libs-only-L "$2"` `$PKG_CONFIG --libs-only-l "$2"`"
+            else
+                $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
+            fi
 
-			$1_VERSION=`$PKG_CONFIG --modversion "$2"`
+            $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
+            $1_VERSION=`$PKG_CONFIG --modversion "$2"`
+            AC_MSG_RESULT($$1_LIBS)
         else
             $1_CFLAGS=""
             $1_LIBS=""
