@@ -42,7 +42,6 @@ AC_DEFUN([PKG_CHECK_MODULES], [
                 $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
             fi
 
-            $1_LIBS="`$PKG_CONFIG --libs-only-L \"$2\"` `$PKG_CONFIG --libs-only-l \"$2\"`"
             $1_VERSION=`$PKG_CONFIG --modversion "$2"`
             AC_MSG_RESULT($$1_LIBS)
         else
