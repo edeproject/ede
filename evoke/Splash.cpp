@@ -24,7 +24,7 @@
 #include "Splash.h"
 
 #define TIMEOUT_START    0.5  /* timeout when splash is first time shown (also for first client) */
-#define TIMEOUT_CONTINUE 2.0  /* timeout between starting rest of the cliens */
+#define TIMEOUT_CONTINUE 1.0  /* timeout between starting rest of the cliens */
 
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)

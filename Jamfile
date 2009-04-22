@@ -40,6 +40,6 @@ SubInclude TOP edewm ;
 SubInclude TOP ede-panel ;
 
 # efiler is not compileable at all
-if ! $(WITHOUT_EFILER) {
+if $(WITH_EFILER) = 1 {
 	SubInclude TOP efiler ;
 }
