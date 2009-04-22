@@ -2,7 +2,7 @@
 
 #include "Main.h"
 
-int main(int ac,char *av) {
+int main(int ac,char **av) {
   SciCalc *calc = new SciCalc();
 
 	calc->run();
