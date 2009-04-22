@@ -44,7 +44,7 @@ rule InstallIconTheme
 	}
 
 	# install index.theme
-	InstallData [ FDirName $(EDEICONDIR) $(1) ] : [ FFileName $(1) index.theme ] ;
+	InstallData [ FDirName $(EDE_ICON_DIR) $(1) ] : [ FFileName $(1) index.theme ] ;
 }
 
 ICON_SIZES = 16 22 32 48 64 128 ;
