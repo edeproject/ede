@@ -3,23 +3,22 @@
  *
  * Etip, show some tips!
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2008 EDE Authors.
+ * Copyright (c) 2009 EDE Authors.
  *
  * This program is licensed under the terms of the 
  * GNU General Public License version 2 or newer.
  * See COPYING for the details.
  */
 
-#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <stdio.h>
 
-#include "Fortune.h"
-
-/* FreeBSD does not have off_t, not sure about others */
-#ifndef __GLIBC__
-typedef unsigned int off_t;
+#ifdef __FreeBSD__
+# include <sys/types.h> /* FreeBSD keeps off_t here */
 #endif
+
+#include "Fortune.h"
 
 struct FortuneFile {
 	FILE* str_file;
