@@ -120,6 +120,11 @@ if test "$have_edelib" = "no"; then
 	AC_MSG_ERROR(edelib not found! You must install it first)
 fi
 
+PKG_CHECK_MODULES(EDELIB_GUI, [edelib-gui],, [have_edelib_gui=no])
+if test "$have_edelib_gui" = "no"; then
+	AC_MSG_ERROR(edelib-gui not found! You must install it first)
+fi
+
 PKG_CHECK_MODULES(EDELIB_DBUS, [edelib-dbus],, [have_edelib_dbus=no])
 if test "$have_edelib_dbus" = "no"; then
 	AC_MSG_ERROR(edelib-dbus not found! You must install it first)

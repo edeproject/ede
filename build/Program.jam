@@ -82,7 +82,7 @@ rule EdeProgram
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
+		: $(EDELIB_GUI_LIB) $(EDELIBLIB) $(FLTKLIB) $(STDLIB) 
 		: $(GLOBALFLAGS) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
 
 	if $(3) != "noinstall" {
@@ -101,15 +101,13 @@ rule EdeProgramAsFltkBare
 	}
 
 	MakeProgramPrivate $(1) : $(2) 
-		: $(EDELIBLIB) $(FLTKLIB_NOIMAGES) $(STDLIB) 
+		: $(EDELIB_GUI_LIB) $(EDELIBLIB) $(FLTKLIB_NOIMAGES) $(STDLIB) 
 		: $(GLOBALFLAGS) $(EDELIBINCLUDE) $(FLTKINCLUDE) ;
 
 	if $(3) != "noinstall" {
 		InstallEdeProgram $(1) ;
 	}
 }
-
-
 
 # EfltkProgram [target] : [sources] : [noinstall] ;
 # Creates programs that will be linked with efltk. If [noinstall] is given, 
