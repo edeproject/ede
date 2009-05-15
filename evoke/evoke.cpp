@@ -22,7 +22,6 @@
 #include <edelib/Run.h>
 
 #include "EvokeService.h"
-#include "Autostart.h"
 
 EDELIB_NS_USING(run_async)
 
@@ -48,16 +47,12 @@ static void help(void) {
 	puts("  -s, --startup         run in startup mode");
 	puts("  -n, --no-splash       do not show splash screen in startup mode");
 	puts("  -d, --dry-run         run in startup mode, but don't execute anything");
-	puts("  -a, --autostart       read autostart directory and run all items");
-	puts("  -u, --autostart-safe  read autostart directory and display dialog what will be run\n");
 }
 
 int main(int argc, char** argv) {
 	bool do_startup         = false;
 	bool do_dryrun          = false;
 	bool show_splash        = true;
-	bool do_autostart       = false;
-	bool do_autostart_safe  = false;
 
 	if(argc > 1) {
 		const char* a;
@@ -73,10 +68,6 @@ int main(int argc, char** argv) {
 				do_dryrun = true;
 			else if(CHECK_ARGV(a, "-n", "--no-splash"))
 				show_splash = false;
-			else if(CHECK_ARGV(a, "-a", "--autostart"))
-				do_autostart = true;
-			else if(CHECK_ARGV(a, "-u", "--autostart-safe"))
-				do_autostart_safe = true;
 			else {
 				printf("Unknown parameter '%s'. Run 'evoke -h' for options\n", a);
 				return 1;
@@ -126,9 +117,6 @@ int main(int argc, char** argv) {
 	 */
 	signal(SIGHUP,  quit_signal);
 #endif
-
-	if(do_autostart || do_autostart_safe)
-		perform_autostart(do_autostart_safe);
 
 	service->start_xsettings_manager();
 

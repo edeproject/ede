@@ -15,7 +15,6 @@ SOURCE = evoke.cpp
          Splash.cpp 
          Xsm.cpp 
 		 Logout.cpp 
-		 Autostart.cpp 
 		 Xshutdown.cpp ;
 
 CONFIG = ede-settings.conf 
@@ -34,6 +33,9 @@ EdeProgram evoke : $(SOURCE) ;
 ObjectC++Flags ede-shutdown : $(X_CFLAGS) ;
 ProgramBare    ede-shutdown : ede-shutdown.cpp ; 
 LinkAgainst    ede-shutdown : $(X_LIBS) -lX11 ;
+
+EdeProgram ede-autostart : ede-autostart.cpp ;
+ObjectC++Flags ede-autostart : -DDEBUG_AUTOSTART_RUN ;
 
 InstallEdeProgram ede-settings-apply ;
 

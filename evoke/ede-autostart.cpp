@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Evoke, head honcho of everything
+ * ede-autostart
  * Part of Equinox Desktop Environment (EDE).
  * Copyright (c) 2007-2009 EDE Authors.
  *
@@ -10,8 +10,14 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Check_Browser.H>
 #include <FL/Fl_Button.H>
@@ -29,7 +35,6 @@
 #include <edelib/Debug.h>
 #include <edelib/Run.h>
 
-#include "Autostart.h"
 #include "icons/warning.xpm"
 
 EDELIB_NS_USING(String)
@@ -41,11 +46,15 @@ EDELIB_NS_USING(user_config_dir)
 EDELIB_NS_USING(str_ends)
 EDELIB_NS_USING(run_async)
 
+#define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
+
 #ifdef DEBUG_AUTOSTART_RUN
  #define AUTOSTART_RUN(s) E_DEBUG("Executing %s\n", s)
 #else
  #define AUTOSTART_RUN(s) run_async(s)
 #endif
+
+#define AUTOSTART_DIRNAME "/autostart/"
 
 struct DialogEntry {
 	String name;
@@ -178,32 +187,9 @@ static void run_autostart_dialog(DialogEntryList& l) {
 		Fl::wait();
 }
 
-/*
- * This is implementation of Autostart Spec 
- * (http://standards.freedesktop.org/autostart-spec/autostart-spec-0.5.html).
- *
- * The Autostart Directories are $XDG_CONFIG_DIRS/autostart.
- * If the same filename is located under multiple Autostart Directories only the file under 
- * the most important directory should be used.
- *
- * Example: If $XDG_CONFIG_HOME is not set the Autostart Directory in the user's home directory 
- * is ~/.config/autostart/
- * Example: If $XDG_CONFIG_DIRS is not set the system wide Autostart Directory is /etc/xdg/autostart/
- * Example: If $XDG_CONFIG_HOME and $XDG_CONFIG_DIRS are not set and the two files 
- * /etc/xdg/autostart/foo.desktop and ~/.config/autostart/foo.desktop exist then only the file 
- * ~/.config/autostart/foo.desktop will be used because ~/.config/autostart/ is more important 
- * than /etc/xdg/autostart/.
- *
- * If Hidden key is set true in .desktop file, file MUST be ignored.
- * OnlyShowIn and NotShowIn (list of strings identifying desktop environments) if (or if not)
- * contains environment name, MUST not be started/not started.
- * TryExec is same as for .desktop spec.
- */
-void perform_autostart(bool safe) {
-	const char* autostart_dirname = "/autostart/";
-
+static void perform_autostart(bool safe) {
 	String adir = edelib::user_config_dir();
-	adir += autostart_dirname;
+	adir += AUTOSTART_DIRNAME;
 
 	StringList dfiles, sysdirs, tmp;
 	StringListIter it, it_end, tmp_it, tmp_it_end;
@@ -213,7 +199,7 @@ void perform_autostart(bool safe) {
 	system_config_dirs(sysdirs);
 	if(!sysdirs.empty()) {
 		for(it = sysdirs.begin(), it_end = sysdirs.end(); it != it_end; ++it) {
-			*it += autostart_dirname;
+			*it += AUTOSTART_DIRNAME;
 
 			/*
 			 * append content
@@ -243,7 +229,7 @@ void perform_autostart(bool safe) {
 	unique_by_basename(dfiles);
 
 	const char* name;
-	char buff[1024];
+	char buf[1024];
 	DesktopFile df;
 	DialogEntryList entry_list;
 
@@ -265,15 +251,15 @@ void perform_autostart(bool safe) {
 		if(df.hidden())
 			continue;
 
-		if(!(df.try_exec(buff, sizeof(buff)) || df.exec(buff, sizeof(buff))))
+		if(!(df.try_exec(buf, sizeof(buf)) || df.exec(buf, sizeof(buf))))
 			continue;
 
 		DialogEntry* en = new DialogEntry;
-		en->exec = buff;
+		en->exec = buf;
 
 		/* figure out the name */
-		if(df.name(buff, sizeof(buff)))
-			en->name = buff;
+		if(df.name(buf, sizeof(buf)))
+			en->name = buf;
 		else
 			en->name = name;
 
@@ -284,4 +270,57 @@ void perform_autostart(bool safe) {
 		run_autostart_dialog(entry_list);
 	else
 		entry_list_run_clear(entry_list, true);
+}
+
+static void help(void) {
+	puts("Usage: ede-autostart [OPTIONS]");
+	puts("EDE autostart utility");
+	puts("Options:");
+	puts("  -h, --help         this help");
+	puts("  -s, --safe         show dialog of commands to be executed");
+	puts("  -m, --media [DEST] execute autostart scripts from mounted [DEST]");
+}
+
+static const char* next_param(int curr, char** argv, int argc) {
+	int j = curr + 1;
+	if(j >= argc)
+		return NULL;
+	if(argv[j][0] == '-')
+		return NULL;
+	return argv[j];
+}
+
+int main(int argc, char** argv) {
+	if(argc == 1) {
+		perform_autostart(false);
+		return 0;
+	}
+
+	const char *a, *media = NULL;
+	bool safe = false;
+
+	for(int i = 1; i < argc; i++) {
+		a = argv[i];
+		if(CHECK_ARGV(a, "-h", "--help")) {
+			help();
+			return 0;
+		}
+
+		if(CHECK_ARGV(a, "-s", "--safe")) {
+			safe = true;
+		} else if(CHECK_ARGV(a, "-m", "--media")) {
+			media = next_param(i, argv, argc);
+			if(!media) {
+				puts("Missing media parameter");
+				return 1;
+			}
+		} else {
+			printf("Unknown '%s' parameter. Run 'ede-autostart -h' for options\n", a);
+			return 1;
+		}
+	}
+
+	if(media == NULL)
+		perform_autostart(safe);
+	return 0;
 }
