@@ -69,4 +69,4 @@ fi
 rm -f /tmp/.evoke.lock
 
 # start the session
-evoke --startup --autostart-safe
+evoke --startup
