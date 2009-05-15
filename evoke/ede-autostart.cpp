@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Check_Browser.H>
@@ -34,6 +35,8 @@
 #include <edelib/Nls.h>
 #include <edelib/Debug.h>
 #include <edelib/Run.h>
+#include <edelib/FileTest.h>
+#include <edelib/MessageBox.h>
 
 #include "icons/warning.xpm"
 
@@ -45,6 +48,10 @@ EDELIB_NS_USING(system_config_dirs)
 EDELIB_NS_USING(user_config_dir)
 EDELIB_NS_USING(str_ends)
 EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(ask)
+EDELIB_NS_USING(file_test)
+EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
+EDELIB_NS_USING(FILE_TEST_IS_EXECUTABLE)
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
@@ -55,6 +62,14 @@ EDELIB_NS_USING(run_async)
 #endif
 
 #define AUTOSTART_DIRNAME "/autostart/"
+
+/* ordered names that will be searched */
+static const char* autostart_names[] = {
+	".autorun",
+	"autorun",
+	"autorun.sh",
+	0
+};
 
 struct DialogEntry {
 	String name;
@@ -272,6 +287,31 @@ static void perform_autostart(bool safe) {
 		entry_list_run_clear(entry_list, true);
 }
 
+static void perform_autostart_scripts(const char* path) {
+	int i;
+	String name;
+
+	for(i = 0; autostart_names[i]; i++) {
+		name = path;
+		name += E_DIR_SEPARATOR_STR;
+		name += autostart_names[i];
+
+		if(file_test(name.c_str(), FILE_TEST_IS_REGULAR | FILE_TEST_IS_EXECUTABLE)) {
+			if(ask(_("Mounted media at '%s' would like to start some files. "
+					 "Content of these files is not checked and could be malicious. "
+					 "Would you like to start them?"), path))
+			{
+				/* spec said how we must chdir to the root of the medium */
+				chdir(path);
+				AUTOSTART_RUN(name.c_str());
+			}
+
+			/* we only match the one file */
+			break;
+		}
+	}
+}
+
 static void help(void) {
 	puts("Usage: ede-autostart [OPTIONS]");
 	puts("EDE autostart utility");
@@ -314,6 +354,8 @@ int main(int argc, char** argv) {
 				puts("Missing media parameter");
 				return 1;
 			}
+
+			i++;
 		} else {
 			printf("Unknown '%s' parameter. Run 'ede-autostart -h' for options\n", a);
 			return 1;
@@ -322,5 +364,7 @@ int main(int argc, char** argv) {
 
 	if(media == NULL)
 		perform_autostart(safe);
+	else
+		perform_autostart_scripts(media);
 	return 0;
 }
