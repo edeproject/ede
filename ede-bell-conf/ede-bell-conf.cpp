@@ -132,7 +132,7 @@ static void test_cb(Fl_Widget*, void*) {
 }
 
 static void window_create(int argc, char** argv) {
-	win = new edelib::Window(330, 210, _("System bell configuration"));
+	win = new edelib::Window(330, 210, _("System bell configuration"), edelib::WIN_INIT_NONE);
 	win->begin();
 		vol_slide = new Fl_Value_Slider(10, 30, 310, 25, _("Volume"));
 		vol_slide->type(5);
