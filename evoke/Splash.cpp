@@ -10,9 +10,9 @@
  * See COPYING for details.
  */
 
-#include <stdio.h> // snprintf
-#include <FL/Fl_Shared_Image.H>
+#include <stdio.h>
 #include <FL/Fl.H>
+#include <FL/Fl_Shared_Image.H>
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
 #include <edelib/Util.h>
@@ -263,13 +263,11 @@ bool Splash::next_client(void) {
 
 	E_ASSERT(counter < slist->size() && "Internal error; 'counter' out of bounds");
 
-	char buff[1024];
 	const char* msg = (*slist_it)->description.c_str();
 	const char* cmd = (*slist_it)->exec.c_str();
-	snprintf(buff, sizeof(buff), _("Starting %s..."), msg);
 
 	icons[counter]->show();
-	msgbox->copy_label(buff);
+	msgbox->label(msg);
 	redraw();
 
 	/* run command */
@@ -296,12 +294,10 @@ bool Splash::next_client_nosplash(void) {
 
 	E_ASSERT(counter < slist->size() && "Internal error; 'counter' out of bounds");
 
-	char buff[1024];
 	const char* msg = (*slist_it)->description.c_str();
 	const char* cmd = (*slist_it)->exec.c_str();
-	snprintf(buff, sizeof(buff), _("Starting %s..."), msg);
 
-	printf("%s\n", buff);
+	printf("%s\n", msg);
 
 	/* run command */
 	if(!dryrun)
