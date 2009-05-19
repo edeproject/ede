@@ -22,14 +22,19 @@ enum WallpaperState {
 	WALLPAPER_TILE
 };
 
+class Fl_Image;
+
 class Wallpaper : public Fl_Box { 
 private:
 	Pixmap         rootpmap_pixmap;
 	WallpaperState state;
+	Fl_Image*      stretched_alloc; /* FLTK issue */
 
 	void set_rootpmap(void);
 public:
-	Wallpaper(int X, int Y, int W, int H) : Fl_Box(X, Y, W, H), rootpmap_pixmap(0), state(WALLPAPER_CENTER) { }
+	Wallpaper(int X, int Y, int W, int H) : Fl_Box(X, Y, W, H), 
+	rootpmap_pixmap(0), state(WALLPAPER_CENTER), stretched_alloc(NULL) { }
+
 	~Wallpaper();
 
 	bool load(const char* path, WallpaperState s);

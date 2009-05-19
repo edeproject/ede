@@ -3,7 +3,7 @@
  *
  * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
+ * Copyright (c) 2006-2009 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -37,7 +37,6 @@
 
 #define ICON_FACE_ONE 1    // use icon
 #define ICON_FACE_TWO 2    // use icon2
-
 
 struct GlobalIconSettings {
 	int  label_background;
@@ -118,7 +117,7 @@ private:
 
 	void load_icons(const char* path);
 	void save_icons_positions(void);
-	bool read_desktop_file(const char* path, IconSettings& is);
+	IconSettings* read_desktop_file(const char* path);
 
 	void add_icon(DesktopIcon* ic);
 

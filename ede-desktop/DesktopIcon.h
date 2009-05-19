@@ -31,8 +31,8 @@ class Fl_Menu_Button;
 
 class DesktopIcon : public Fl_Widget {
 private:
-	IconSettings* settings;
-	const GlobalIconSettings* globals;
+	IconSettings*             settings;
+	const GlobalIconSettings* gsettings;
 
 	int  lwidth;
 	int  lheight;

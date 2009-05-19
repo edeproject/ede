@@ -376,17 +376,19 @@ void Desktop::save_icons_positions(void) {
 		E_WARNING(E_STRLOC ": Unable to store icons positions\n");
 }
 
-bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
+IconSettings* Desktop::read_desktop_file(const char* path) {
 	E_ASSERT(path != NULL);
 
 	edelib::DesktopFile dconf;
 	if(!dconf.load(path)) {
 		E_WARNING(E_STRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
-		return false;
+		return NULL;
 	}
 
 	char buf[128];
-	int bufsz = sizeof(buf);
+	int  bufsz = sizeof(buf);
+
+	IconSettings* is = new IconSettings;
 
 	/*
 	 * Check for 'EmptyIcon' key since via it is determined is icon trash type or not 
@@ -395,47 +397,48 @@ bool Desktop::read_desktop_file(const char* path, IconSettings& is) {
 	 * FIXME: any other way to check for trash icons ???
 	 */
 	if(dconf.get("Desktop Entry", "EmptyIcon", buf, bufsz)) {
-		is.type = ICON_TRASH;
-		is.icon = buf;
+		is->type = ICON_TRASH;
+		is->icon = buf;
 	} else
-		is.type = ICON_NORMAL;
+		is->type = ICON_NORMAL;
 	
 	if(!dconf.icon(buf, bufsz)) {
 		E_WARNING(E_STRLOC ": No Icon key, balling out\n");
-		return false;
+
+		delete is;
+		return NULL;
 	}
 
-	if(is.type == ICON_TRASH)
-		is.icon2 = buf;
+	if(is->type == ICON_TRASH)
+		is->icon2 = buf;
 	else
-		is.icon = buf;
+		is->icon = buf;
 
 	edelib::DesktopFileType dtype = dconf.type();
 	if(dtype == edelib::DESK_FILE_TYPE_LINK) {
-		is.cmd_is_url = true;
+		is->cmd_is_url = true;
 		dconf.url(buf, bufsz);
 	}
 	else {
-		is.cmd_is_url = false;
+		is->cmd_is_url = false;
 		dconf.exec(buf, bufsz);
 	}
 
-	is.cmd = buf;
+	is->cmd = buf;
 
 	if(!dconf.name(buf, bufsz)) {
 		E_DEBUG(E_STRLOC ": No Name key\n");
-		is.name = "(none)";
+		is->name = "(none)";
 	} else
-		is.name = buf;
+		is->name = buf;
 
-	return true;
+	return is;
 }
 
 bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	E_ASSERT(path != NULL);
 
-	IconSettings is;
-	bool can_add = false;
+	IconSettings* is = NULL;
 	const char* base = get_basename(path);
 
 	/*
@@ -445,53 +448,50 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	 * to be always present, or .desktop does not have to be Desktop File at all
 	 */
 	if(edelib::str_ends(path, ".desktop")) {
-		if(read_desktop_file(path, is))
-			can_add = true;
+		is = read_desktop_file(path);
 	} else {
 		edelib::MimeType mt;
 
 		/* then try to figure out it's mime; if fails, ignore it */
 		if(mt.set(path)) {
 			E_DEBUG(E_STRLOC ": Loading icon as mime-type %s\n", mt.icon_name().c_str());
-			is.icon = mt.icon_name();
+
+			is = new IconSettings;
+			is->icon = mt.icon_name();
 			/* icon label path's basename */
-			is.name = base;
-			is.type = ICON_FILE;
-
-			can_add = true;
-		} else {
-			E_DEBUG(E_STRLOC ": Failed mime-type for %s, ignoring...\n", path);
-			can_add = false;
+			is->name = base;
+			is->type = ICON_FILE;
 		}
 	}
 
-	if(can_add) {
-		/*
-		 * key_name is section in config file with icon X/Y values
-		 * FIXME: this should be named 'section_name'
-		 */
-		is.key_name = base;
+	if(!is)
+		return false;
 
-		/* random_pos() is used if X/Y keys are not found */
-		int icon_x = random_pos(w() - 10);
-		int icon_y = random_pos(w() - 10);
+	/*
+	 * key_name is section in config file with icon X/Y values
+	 * FIXME: this should be named 'section_name'
+	 */
+	is->key_name = base;
 
-		if(conf) {
-			/* we load positions from used ede-desktop-icos.conf only */
-			conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
-			conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
-		}
+	/* random_pos() is used if X/Y keys are not found */
+	int icon_x = random_pos(w() - 10);
+	int icon_y = random_pos(w() - 10);
 
-		E_DEBUG(E_STRLOC ": %s found with: %i %i\n", base, icon_x, icon_y);
-		is.x = icon_x;
-		is.y = icon_y;
-		is.full_path = path;
-
-		DesktopIcon* dic = new DesktopIcon(gisett, &is, color());
-		add_icon(dic);
+	if(conf) {
+		/* we load positions from used ede-desktop-icos.conf only */
+		conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
+		conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
 	}
 
-	return can_add;
+	E_DEBUG(E_STRLOC ": %s found with: %i %i\n", base, icon_x, icon_y);
+	is->x = icon_x;
+	is->y = icon_y;
+	is->full_path = path;
+
+	DesktopIcon* dic = new DesktopIcon(gisett, is, color());
+	add_icon(dic);
+
+	return true;
 }
 
 DesktopIcon* Desktop::find_icon_by_path(const char* path, DesktopIconListIter* ret) {

@@ -363,6 +363,8 @@ static void create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int
 Wallpaper::~Wallpaper() { 
 	if(rootpmap_pixmap)
 		XFreePixmap(fl_display, rootpmap_pixmap);
+
+	delete stretched_alloc;
 }
 
 void Wallpaper::set_rootpmap(void) {
@@ -396,13 +398,18 @@ bool Wallpaper::load(const char* path, WallpaperState s) {
 		create_tile((Fl_Image*)i, &tiled, x(), y(), w(), h());
 		image(tiled);
 	} else if(s == WALLPAPER_STRETCH) {
-		Fl_Image* stretched;
+		Fl_Image* stretched = NULL;
 
 		if(i->w() == w() && i->h() == h())
 			stretched = i;
 		else {
+			/* valgrind reports it as possible lost, but FLTK should free it */
+			delete stretched_alloc;
+
 			stretched = i->copy(w(), h());
 			i->release();
+
+			stretched_alloc = stretched;
 		}
 
 		image(stretched);

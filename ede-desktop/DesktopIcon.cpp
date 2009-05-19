@@ -46,7 +46,6 @@
 // label offset from icon y()+h(), so selection box can be drawn nicely
 #define LABEL_OFFSET 2
 
-
 static void rename_cb(Fl_Widget*, void* d);
 static void props_cb(Fl_Widget*, void* d);
 
@@ -93,25 +92,10 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	micon = NULL;
 	darker_img = NULL;
 
-	/*
-	 * GlobalIconSettings is shared from desktop so we only
-	 * reference it. On other hand IconSettings is not shared
-	 * and we must construct a copy from given parameter
-	 */
-	globals = gs;
+	gsettings = gs;
+	settings = is;
 
-	settings = new IconSettings;
-	settings->name = is->name;
-	settings->cmd  = is->cmd;
-	settings->icon = is->icon;
-	settings->icon2 = is->icon2;
-	settings->type = is->type;
-	settings->key_name= is->key_name;
-	settings->full_path = is->full_path;
-
-	// x,y are not needed since x(), y() are filled with it
-	
-	// setting fonts is TODO :P
+	/* setting fonts is TODO :P */
 #if 0	
 	Fl::set_font((Fl_Font)20, "-windows-*-medium-r-*-*-14-*-*-*-*-*-*-*");
 	labelfont((Fl_Font)20);
@@ -128,7 +112,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	load_icon(ICON_FACE_ONE);
 	fix_position(x(), y());
 
-	//Use desktop color as color for icon background
+	/* use desktop color as color for icon background */
 	color(bg);
 
 	align(FL_ALIGN_WRAP);
@@ -138,11 +122,8 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 DesktopIcon::~DesktopIcon() { 
 	E_DEBUG("DesktopIcon::~DesktopIcon()\n");
 
-	if(settings)
-		delete settings;
-	if(micon)
-		delete micon;
-
+	delete settings;
+	delete micon;
 	delete darker_img;
 	delete imenu;
 }
@@ -184,8 +165,8 @@ void DesktopIcon::load_icon(int face) {
 }
 
 void DesktopIcon::update_label_size(void) {
-	labelsize(globals->label_fontsize);
-    lwidth = globals->label_maxwidth;
+	labelsize(gsettings->label_fontsize);
+    lwidth = gsettings->label_maxwidth;
     lheight= 0;
 
 	/*
@@ -344,14 +325,14 @@ void DesktopIcon::draw(void) {
 		E_DEBUG(E_STRLOC ": DesktopIcon icon redraw\n");
 	}
 
-	if(globals->label_draw && (damage() & (FL_DAMAGE_ALL | EDAMAGE_CHILD_LABEL))) {
+	if(gsettings->label_draw && (damage() & (FL_DAMAGE_ALL | EDAMAGE_CHILD_LABEL))) {
 		int X = x() + w()-(w()/2)-(lwidth/2);
 		int Y = y() + h() + LABEL_OFFSET;
 
 		Fl_Color old = fl_color();
 
-		if(!globals->label_transparent) {
-			fl_color(globals->label_background);
+		if(!gsettings->label_transparent) {
+			fl_color(gsettings->label_background);
 			fl_rectf(X, Y, lwidth, lheight);
 		}
 
@@ -365,7 +346,7 @@ void DesktopIcon::draw(void) {
 		fl_color(FL_BLACK);
 		fl_draw(label(), X+1, Y+1, lwidth, lheight, align(), 0, 0);
 
-		fl_color(globals->label_foreground);
+		fl_color(gsettings->label_foreground);
 		fl_draw(label(), X, Y, lwidth, lheight, align(), 0, 0);
 
 		/* restore old font */
@@ -373,7 +354,7 @@ void DesktopIcon::draw(void) {
 
 		if(is_focused()) {
 			/* draw focused box on our way so later this can be used to draw customised boxes */
-			fl_color(globals->label_foreground);
+			fl_color(gsettings->label_foreground);
 			fl_line_style(FL_DOT);
 
 			fl_push_matrix();
