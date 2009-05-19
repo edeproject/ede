@@ -373,6 +373,15 @@ int main(int argc, char** argv) {
 
 	bus_connection = session_conn;
 
+	/* 
+	 * make sure we are running only one instance; this is done by requesting ownership
+	 * of the interface name
+	 */
+	if(dbus_bus_request_name(bus_connection, EMOUNTD_INTERFACE, 0, 0) != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
+		printf("One instance of emountd is already running! Balling out...\n");
+		goto error;
+	}
+
 	/* let libhal use our system bus connection */
 	libhal_ctx_set_dbus_connection(ctx, conn);
 
