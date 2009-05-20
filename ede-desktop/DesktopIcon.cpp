@@ -69,10 +69,6 @@ static void rename_cb(Fl_Widget*, void* d) {
 	E_ASSERT(di != NULL);
 
 	const char* new_name = edelib::input(_("New name"), di->label());
-	if(!new_name)
-		return;
-	if(new_name[0] == '\0')
-		return;
 	di->rename(new_name);
 }
 
@@ -261,7 +257,7 @@ int DesktopIcon::drag_icon_y(void) {
 }
 
 void DesktopIcon::rename(const char* str) {
-	if(!str)
+	if(!str ||(str[0] == '\0'))
 		return;
 
 	if(settings->name == str)
