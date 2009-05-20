@@ -414,8 +414,7 @@ IconSettings* Desktop::read_desktop_file(const char* path) {
 	else
 		is->icon = buf;
 
-	edelib::DesktopFileType dtype = dconf.type();
-	if(dtype == edelib::DESK_FILE_TYPE_LINK) {
+	if(dconf.type() == edelib::DESK_FILE_TYPE_LINK) {
 		is->cmd_is_url = true;
 		dconf.url(buf, bufsz);
 	}
@@ -428,7 +427,7 @@ IconSettings* Desktop::read_desktop_file(const char* path) {
 
 	if(!dconf.name(buf, bufsz)) {
 		E_DEBUG(E_STRLOC ": No Name key\n");
-		is->name = "(none)";
+		is->name = _("(none)");
 	} else
 		is->name = buf;
 
