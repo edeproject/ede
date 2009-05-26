@@ -74,6 +74,7 @@ static const char* autostart_names[] = {
 struct DialogEntry {
 	String name;
 	String exec;
+	String comment;
 };
 
 typedef list<String>           StringList;
@@ -183,8 +184,16 @@ static void run_autostart_dialog(DialogEntryList& l) {
 		cbrowser = new Fl_Check_Browser(10, 75, 350, 185);
 
 		DialogEntryListIter it = l.begin(), it_end = l.end();
-		for(; it != it_end; ++it)
-			cbrowser->add((*it)->name.c_str());
+		for(; it != it_end; ++it) {
+			if((*it)->comment.empty())
+				cbrowser->add((*it)->name.c_str());
+			else {
+				char buf[256];
+				
+				snprintf(buf, sizeof(buf), "%s (%s)", (*it)->name.c_str(), (*it)->comment.c_str());
+				cbrowser->add(buf);
+			}
+		}
 
 		Fl_Button* rsel = new Fl_Button(45, 270, 125, 25, _("Run &selected"));
 		rsel->callback(dialog_runsel_cb, ptr);
@@ -277,6 +286,10 @@ static void perform_autostart(bool safe) {
 			en->name = buf;
 		else
 			en->name = name;
+
+		/* get the comment */
+		if(df.comment(buf, sizeof(buf)))
+			en->comment = buf;
 
 		entry_list.push_back(en);
 	}
