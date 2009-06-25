@@ -113,6 +113,14 @@ X_LIBS       ?= @X_LIBS@ ;
 X_PRE_LIBS   ?= @X_PRE_LIBS@ ;
 X_EXTRA_LIBS ?= @X_EXTRA_LIBS@ ;
 
+# curl libraries
+CURL_CFLAGS  ?= @CURL_CFLAGS@ ;
+CURL_LIBS    ?= @CURL_LIBS@ ;
+
+# platform specific pthread flags
+PTHREAD_CFLAGS ?= @PTHREAD_CFLAGS@ ;
+PTHREAD_LIBS   ?= @PTHREAD_LIBS@ ;
+
 DBUS_SERVICE_DIR ?= @DBUS_SERVICE_DIR@ ;
 
 # do not touch this
