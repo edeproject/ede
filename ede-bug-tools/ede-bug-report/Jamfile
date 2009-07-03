@@ -8,10 +8,10 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-bug-report ;
+SubDir TOP ede-bug-tools ede-bug-report ;
 
 # needed paths
-XMLRPC_C_SRC_PATH = [ FDirName $(TOP) ede-bug-report xmlrpc-c ] ;
+XMLRPC_C_SRC_PATH = [ FDirName $(TOP) ede-bug-tools ede-bug-report xmlrpc-c ] ;
 XMLRPC_C_TOP      = $(XMLRPC_C_SRC_PATH) ;
 XMLRPC_C_LIB_DIR  = [ FDirName $(XMLRPC_C_SRC_PATH) lib ] ;
 

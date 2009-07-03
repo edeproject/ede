@@ -1,0 +1,14 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-bug-tools ;
+
+SubInclude TOP ede-bug-tools ede-bug-report ;
+SubInclude TOP ede-bug-tools ede-crasher ;

@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-crasher ;
+SubDir TOP ede-bug-tools ede-crasher ;
 
 SOURCE = ede-crasher.cpp CrashDialog.cpp ;
 
