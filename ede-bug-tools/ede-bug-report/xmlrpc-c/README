@@ -1,0 +1,3 @@
+This directory contains customized xmlrpc-c (http://xmlrpc-c.sourceforge.net)
+library suitable only for EDE usage. Besides that, some things are removed because
+they are not used (abyss server and C++ wrapper).

@@ -1,0 +1,45 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0108 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {
+    label {EDE Bug Reporting Tool} open
+    xywh {369 205 480 365} type Double visible
+  } {
+    Fl_Box {} {selected
+      image {../icons/bug.png} xywh {10 10 60 59}
+    }
+    Fl_Box {} {
+      label {EDE Bug Reporting Tool}
+      xywh {80 10 390 30} labelfont 1 labelsize 14 align 20
+    }
+    Fl_Box {} {
+      label {To help us to improve the future EDE versions, please describe the problem with much details as possible.
+
+Note: valid email address is required, so developers could contact you for more informations if necessary.}
+      xywh {80 45 390 95} align 149
+    }
+    Fl_Input {} {
+      label {Short and descriptive title:}
+      xywh {10 165 225 25} align 5
+    }
+    Fl_Input {} {
+      label {Your email address:}
+      xywh {240 165 230 25} align 5
+    }
+    Fl_Text_Editor {} {
+      label {Detail description of the problem:}
+      xywh {10 215 460 105} align 5
+    }
+    Fl_Button {} {
+      label {&Send}
+      xywh {285 330 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {380 330 90 25}
+    }
+  }
+} 

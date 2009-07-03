@@ -1,0 +1,2 @@
+
+#define XMLRPC_DEFAULT_TRANSPORT "curl"
