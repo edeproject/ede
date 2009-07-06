@@ -143,7 +143,10 @@ int main(int argc, char** argv) {
 		title_box->labelsize(14);
 		title_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
-		Fl_Box *description_box = new Fl_Box(80, 45, 390, 95, _("To help us to improve the future EDE versions, please describe the problem with much details as possible.\n\nNote: valid email address is required, so developers could contact you for more informations if necessary."));
+		Fl_Box *description_box = new Fl_Box(80, 45, 390, 95, _("To help us to improve the future EDE versions, "
+		"please describe the problem with much details as possible.\n\nNote: valid email address is required, so "
+		"developers could contact you for more informations if necessary."));
+
 		description_box->align(133|FL_ALIGN_INSIDE);
 
 		bug_title_input = new Fl_Input(10, 165, 225, 25, _("Short and descriptive title:"));

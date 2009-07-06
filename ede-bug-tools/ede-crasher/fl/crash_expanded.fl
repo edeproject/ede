@@ -2,33 +2,37 @@
 version 1.0108 
 header_name {.h} 
 code_name {.cxx}
-Function {} {open selected
+Function {} {open
 } {
   Fl_Window {} {open
-    xywh {354 160 380 340} type Double visible
+    xywh {404 188 380 340} type Double visible
   } {
     Fl_Box {} {
-      image {../icons/core.xpm} xywh {10 10 70 75} labelsize 14
+      image {../icons/core.png} xywh {10 10 65 60} labelsize 14
     }
     Fl_Box {} {
-      label {Program foo just crashed !!!
+      label {Program foo quit unexpectedly.
 
-You can inspect details about this crash by clicking on 'Show details' below}
+You can inspect the details about this crash by clicking on 'Show details' below}
       xywh {85 10 285 75} align 148
+    }
+    Fl_Button {} {
+      label {@< Hide details}
+      xywh {10 95 165 25} box FLAT_BOX align 20
+    }
+    Fl_Button {} {
+      label {&Report...}
+      xywh {185 95 90 25}
     }
     Fl_Button {} {
       label {&Close}
       xywh {280 95 90 25}
     }
-    Fl_Button {} {
-      label {@< Hide details}
-      xywh {10 95 265 25} box FLAT_BOX align 20
-    }
     Fl_Text_Display {} {
       xywh {10 130 360 165} labelsize 14 textsize 14
     }
     Fl_Button {} {
-      label {&Save As...}
+      label {&Save As...} selected
       xywh {280 305 90 25}
     }
   }

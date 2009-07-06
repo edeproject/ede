@@ -10,7 +10,7 @@
 
 SubDir TOP ede-bug-tools ede-crasher ;
 
-SOURCE = ede-crasher.cpp CrashDialog.cpp ;
+SOURCE = ede-crasher.cpp GdbOutput.cpp CrashDialog.cpp ;
 
 EdeProgram ede-crasher : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
