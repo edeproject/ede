@@ -23,98 +23,106 @@ XMLRPC_C_FLAGS =
 		-I [ FDirName $(XMLRPC_C_SRC_PATH) deps expat xmltok ] ;
 
 # ede-bug-report related builds
-SOURCE = Bugzilla.cpp BugzillaSender.cpp PulseProgress.cpp ede-bug-report.cpp ;
+SOURCE = ede-bug-report.cpp ;
 BINARY = ede-bug-report ;
+
+# with curl compile the rest
+if $(CURL_CFLAGS) || $(CURL_LIBS) {
+	SOURCE += Bugzilla.cpp BugzillaSender.cpp PulseProgress.cpp ;
+}
 
 ObjectC++Flags $(SOURCE) : $(WNO_LONG_LONG) $(XMLRPC_C_FLAGS) $(CURL_CFLAGS) ;
 EdeProgram $(BINARY) : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
 
-# link against xmlrpc-c libraries 
-LinkAgainst $(BINARY) : -L$(XMLRPC_C_LIB_DIR) 
-	-lxmlrpc_local 
-	-lcurl_transport_local 
-	-lxmlrpc_util_local 
-	-lxmlrpc_obj_local 
-	-lxmlparse_local
-	-lxmltok_local
-	$(CURL_LIBS)
-	$(PTHREAD_CFLAGS)
-	$(PTHREAD_LIBS) ;
+if $(CURL_CFLAGS) || $(CURL_LIBS) {
+	# link against xmlrpc-c libraries 
+	LinkAgainst $(BINARY) : -L$(XMLRPC_C_LIB_DIR) 
+		-lxmlrpc_local 
+		-lcurl_transport_local 
+		-lxmlrpc_util_local 
+		-lxmlrpc_obj_local 
+		-lxmlparse_local
+		-lxmltok_local
+		$(CURL_LIBS)
+		$(PTHREAD_CFLAGS)
+		$(PTHREAD_LIBS) ;
 
-# xmlrpc-c related builds
-rule XmlrpcLibrary {
-	local lib = [ FDirName $(XMLRPC_C_LIB_DIR) $(<) ] ;
+	# xmlrpc-c related builds
+	rule XmlrpcLibrary {
+		local lib = [ FDirName $(XMLRPC_C_LIB_DIR) $(<) ] ;
 
-	# compile it with OPTIMFLAGS got from top Jamconfig
-	ObjectCcFlags $(>) : $(XMLRPC_C_FLAGS) $(OPTIMFLAGS) ;
-	StaticLibrary $(lib) : $(>) ;
+		# compile it with OPTIMFLAGS got from top Jamconfig
+		ObjectCcFlags $(>) : $(XMLRPC_C_FLAGS) $(OPTIMFLAGS) ;
+		StaticLibrary $(lib) : $(>) ;
 
-	# make sure libraries are build first
-	LocalDepends $(BINARY) : $(lib:S=$(SUFLIB)) ;
-}
+		# make sure libraries are build first
+		LocalDepends $(BINARY) : $(lib:S=$(SUFLIB)) ;
+	}
 
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) src ] ;
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps util ] ;
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps libutil ] ;
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps curl-transport ] ;
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps expat xmlparse ] ;
-SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps expat xmltok ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) src ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps util ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps libutil ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps curl-transport ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps expat xmlparse ] ;
+	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) deps expat xmltok ] ;
 
-XMLRPC_C_SRC = 
-	double.c
-	parse_value.c
-	resource.c 
-	trace.c 
-	version.c 
-	xmlrpc_data.c 
-	xmlrpc_datetime.c 
-	xmlrpc_string.c 
-	xmlrpc_array.c 
-	xmlrpc_struct.c 
-	xmlrpc_build.c 
-	xmlrpc_decompose.c 
-	xmlrpc_parse.c 
-	xmlrpc_serialize.c 
-	xmlrpc_base64.c 
-	xmlrpc_authcookie.c
-	xmlrpc_client.c 
-	xmlrpc_client_global.c 
-	xmlrpc_expat.c 
-	xmlrpc_server_info.c ;
+	XMLRPC_C_SRC = 
+		double.c
+		parse_value.c
+		resource.c 
+		trace.c 
+		version.c 
+		xmlrpc_data.c 
+		xmlrpc_datetime.c 
+		xmlrpc_string.c 
+		xmlrpc_array.c 
+		xmlrpc_struct.c 
+		xmlrpc_build.c 
+		xmlrpc_decompose.c 
+		xmlrpc_parse.c 
+		xmlrpc_serialize.c 
+		xmlrpc_base64.c 
+		xmlrpc_authcookie.c
+		xmlrpc_client.c 
+		xmlrpc_client_global.c 
+		xmlrpc_expat.c 
+		xmlrpc_server_info.c ;
 
-ObjectCcFlags $(XMLRPC_C_SRC) : -DMUST_BUILD_CURL_CLIENT ;
+	ObjectCcFlags $(XMLRPC_C_SRC) : -DMUST_BUILD_CURL_CLIENT ;
 
-CURL_TRANSPORT_SRC = 
-	xmlrpc_curl_transport.c 
-	curltransaction.c 
-	curlmulti.c 
-	lock_pthread.c ;
+	CURL_TRANSPORT_SRC = 
+		xmlrpc_curl_transport.c 
+		curltransaction.c 
+		curlmulti.c 
+		lock_pthread.c ;
 
-UTIL_SRC = 
-	casprintf.c 
-	cmdline_parser.c 
-	getoptx.c 
-	string_parser.c 
-	stripcaseeq.c ;
+	UTIL_SRC = 
+		casprintf.c 
+		cmdline_parser.c 
+		getoptx.c 
+		string_parser.c 
+		stripcaseeq.c ;
 
-LIBUTIL_SRC = 
-	asprintf.c 
-	error.c 
-	make_printable.c 
-	memblock.c 
-	select.c 
-	sleep.c 
-	time.c 
-	utf8.c ;
+	LIBUTIL_SRC = 
+		asprintf.c 
+		error.c 
+		make_printable.c 
+		memblock.c 
+		select.c 
+		sleep.c 
+		time.c 
+		utf8.c ;
 
-XMLPARSE_SRC = xmlparse.c ;
+	XMLPARSE_SRC = xmlparse.c ;
 
-XMLTOK_SRC = xmltok.c xmlrole.c ;
+	XMLTOK_SRC = xmltok.c xmlrole.c ;
 
-XmlrpcLibrary libxmlrpc_local         : $(XMLRPC_C_SRC) ;
-XmlrpcLibrary libxmlrpc_obj_local     : $(UTIL_SRC) ;
-XmlrpcLibrary libxmlrpc_util_local    : $(LIBUTIL_SRC) ;
-XmlrpcLibrary libxmlparse_local       : $(XMLPARSE_SRC) ;
-XmlrpcLibrary libxmltok_local         : $(XMLTOK_SRC) ;
-XmlrpcLibrary libcurl_transport_local : $(CURL_TRANSPORT_SRC) ;
+	XmlrpcLibrary libxmlrpc_local         : $(XMLRPC_C_SRC) ;
+	XmlrpcLibrary libxmlrpc_obj_local     : $(UTIL_SRC) ;
+	XmlrpcLibrary libxmlrpc_util_local    : $(LIBUTIL_SRC) ;
+	XmlrpcLibrary libxmlparse_local       : $(XMLPARSE_SRC) ;
+	XmlrpcLibrary libxmltok_local         : $(XMLTOK_SRC) ;
+	XmlrpcLibrary libcurl_transport_local : $(CURL_TRANSPORT_SRC) ;
+
+} # CURL_CFLAGS || CURL_LIBS

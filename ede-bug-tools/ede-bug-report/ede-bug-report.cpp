@@ -31,10 +31,12 @@
 #include <edelib/Regex.h>
 #include <edelib/Debug.h>
 
-#include "BugzillaSender.h"
+#ifdef HAVE_CURL
+ #include "BugzillaSender.h"
 
-#include "BugImage.h"
-#include "icons/bug.xpm"
+ #include "BugImage.h"
+ #include "icons/bug.xpm"
+#endif
 
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(Regex)
@@ -42,6 +44,7 @@ EDELIB_NS_USING(alert)
 EDELIB_NS_USING(message)
 EDELIB_NS_USING(RX_CASELESS)
 
+#ifdef HAVE_CURL
 static Fl_Input        *bug_title_input;
 static Fl_Input        *email_input;
 static Fl_Text_Buffer  *text_buf;
@@ -125,8 +128,15 @@ static void send_cb(Fl_Widget*, void *w) {
 	if(bugzilla_send_with_progress(title.c_str(), content.c_str()))
 		close_cb(0, w);
 }
+#endif /* HAVE_CURL */
 
 int main(int argc, char** argv) {
+#ifndef HAVE_CURL
+	alert(_("ede-bug-report was compiled without cURL support.\n"
+			"You can install cURL either via your distribution package management system, or download "
+			"it from http://curl.haxx.se. After this, you'll have to recompile ede-bug-report again"));
+	return 1;
+#else
 	/* in case if debugger output was given */
 	const char *gdb_output = NULL;
 
@@ -181,4 +191,5 @@ int main(int argc, char** argv) {
 	/* win->show(argc, argv); */
 	win->show();
 	return Fl::run();
+#endif /* HAVE_CURL */
 }
