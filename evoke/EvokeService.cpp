@@ -73,8 +73,8 @@ static void send_dbus_ede_quit(void) {
 	E_RETURN_IF_FAIL(c.connect(EDBUS_SESSION));
 
 	EdbusMessage msg;
-	msg.create_signal("/org/equinoxproject/Shutdown", "org.equinoxproject.Shutdown", "Shutdown");
 
+	msg.create_signal("/org/equinoxproject/Shutdown", "org.equinoxproject.Shutdown", "Shutdown");
 	c.send(msg);
 }
 

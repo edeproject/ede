@@ -1,3 +1,15 @@
+/*
+ * $Id$
+ *
+ * ede-launch, launch external application
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2008-2009 EDE Authors.
+ *
+ * This program is licensed under terms of the 
+ * GNU General Public License version 2 or newer.
+ * See COPYING for details.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -19,7 +31,9 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Pixmap.H>
+
 #include <edelib/Run.h>
+#include <edelib/Resource.h>
 #include <edelib/Window.h>
 #include <edelib/Nls.h>
 #include <edelib/Debug.h>
@@ -29,11 +43,13 @@
 #include "icons/run.xpm"
 
 /* 
- * Window from X11 is alread included with Fl.H so we can't use 
- * EDELIB_NS_USING(Window) here. Stupid C++ namespaces
+ * Window from X11 is alread included with Fl.H so we can't use EDELIB_NS_USING(Window) here. 
+ * Stupid C++ namespaces
  */
 #define LaunchWindow edelib::Window
 
+EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(RES_USER_ONLY)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
@@ -42,9 +58,17 @@ static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
 static Fl_Check_Button* in_term;
 
-void help(void) {
-	puts("Usage: ede-launch [OPTIONS] program");
+static void help(void) {
+	puts("Usage: ede-launch program");
 	puts("EDE program launcher");
+}
+
+static char* get_basename(const char* path) {
+	char *p = strrchr(path, '/');
+	if(p)
+		return (p + 1);
+
+	return (char*)p;
 }
 
 static char** cmd_split(const char* cmd) {
@@ -69,11 +93,22 @@ static char** cmd_split(const char* cmd) {
 }
 
 static void start_crasher(const char* cmd, int sig) {
+	const char* base = get_basename(cmd);
+	const char* ede_app_flag = "";
+
+	/* this means the app was called without full path */
+	if(!base)
+		base = cmd;
+
 	/* 
-	 * call edelib implementation instead start_child_process()
-	 * to prevents loops if 'ede-crasher' crashes
+	 * determine is our app by checking the prefix; we don't want user to send bug reports about crashes 
+	 * of foreign applications
 	 */
-	run_sync("ede-crasher --apppath %s --signal %i", cmd, sig);
+	if(strncmp(base, "ede-", 4) == 0)
+		ede_app_flag = "--edeapp";
+
+	/* call edelib implementation instead start_child_process() to prevents loops if 'ede-crasher' crashes */
+	run_sync("ede-crasher %s --appname %s --apppath %s --signal %i", ede_app_flag, base, cmd, sig);
 }
 
 static int start_child_process(const char* cmd) {
@@ -183,12 +218,17 @@ static int start_child_process_with_core(const char* cmd) {
 }
 
 static bool start_child(const char* cmd) {
+#ifdef HAVE_LIBSTARTUP_NOTIFICATION
 	run_async("ede-launch-sn --program %s --icon applications-order", cmd);
+#endif
 
 	int ret = start_child_process_with_core(cmd);
 
 	if(ret == 199) {
-		alert(_("Program '%s' not found.\n\nPlease check if given path to the executable was correct or adjust $PATH environment variable to point to the directory where target executable exists"), cmd);
+		alert(_("Program '%s' not found.\n\nPlease check if given path to the "
+				"executable was correct or adjust $PATH environment variable to "
+				"point to the directory where target executable exists"), cmd);
+
 		return false;
 	}
 
@@ -236,19 +276,37 @@ static void ok_cb(Fl_Widget*, void* w) {
 	if(!started) {
 		/* show dialog again */
 		win->show();
+
+		if(cmd) 
+			dialog_input->position(0, dialog_input->size());
+	} else {
+		Resource rc;
+		rc.set("History", "open", cmd);
+		rc.save("ede-launch-history");
 	}
 }
 
-static void start_dialog(int argc, char** argv) {
+static int start_dialog(int argc, char** argv) {
 	LaunchWindow* win = new LaunchWindow(370, 195, _("Run Command"));
 	win->begin();
 		Fl_Box* icon = new Fl_Box(10, 10, 55, 55);
 		icon->image(image_run);
 
-		Fl_Box* txt = new Fl_Box(70, 10, 290, 69, _("Enter the name of the application you would like to run or the URL you would like to view"));
+		Fl_Box* txt = new Fl_Box(70, 10, 290, 69, _("Enter the name of the application "
+													"you would like to run or the URL you would like to view"));
 		txt->align(132|FL_ALIGN_INSIDE);
 
 		dialog_input = new Fl_Input(70, 90, 290, 25, _("Open:"));
+
+		Resource rc;
+		char     buf[128];
+
+		if(rc.load("ede-launch-history") && rc.get("History", "open", buf, sizeof(buf))) {
+			dialog_input->value(buf);
+
+			/* make text appear selected */
+			dialog_input->position(0, dialog_input->size());
+		}
 
 		in_term = new Fl_Check_Button(70, 125, 290, 25, _("Run in terminal"));
 		in_term->down_box(FL_DOWN_BOX);
@@ -258,21 +316,20 @@ static void start_dialog(int argc, char** argv) {
 		Fl_Button* cancel = new Fl_Button(270, 160, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb, win);
 	win->end();
+	win->window_icon(run_xpm);
 	win->show(argc, argv);
 
-	while(win->shown())
-		Fl::wait();
+	return Fl::run();
 }
 
 int main(int argc, char** argv) {
 	if(argc == 1)
-		start_dialog(argc, argv);
-	else if(argc != 2) {
-		help();
-		return 0;
-	} else {
+		return start_dialog(argc, argv);
+
+	if(argc == 2)
 		start_child(argv[1]);
-	}
+	else 
+		help();
 
 	return 0;
 }

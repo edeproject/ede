@@ -1,8 +1,19 @@
 /*
+ * $Id$
+ *
+ * ede-launch, launch external application
+ * Part of Equinox Desktop Environment (EDE).
+ * Copyright (c) 2008-2009 EDE Authors.
+ *
+ * This program is licensed under terms of the 
+ * GNU General Public License version 2 or newer.
+ * See COPYING for details.
+ *
  * This is an helper program for startup notification system, and
  * is run from ede-launch. To simplify things, it was written as separate
  * program, but it does not mean that will stay ;) (Sanel)
  */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

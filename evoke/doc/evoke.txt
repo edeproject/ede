@@ -28,14 +28,6 @@ Options
 	Only useful in startup mode (if '-s' or '--startup' are given). Mainly to test
 	splash screen themes
 
--a, --autostart::
-	Run in autostart mode. It will check 'autostart' directory and run .desktop
-	files from it. This will be done according to freedesktop.org autostart specification.
-
--u, --autostart-safe::
-	Same as '-a' or '--autostart' option, but display dialog with items that should
-	be run.
-
 -h, --help::
 	This help.
 
