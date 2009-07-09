@@ -163,8 +163,6 @@ public:
 	void dir_watch(const char* dir, const char* changed, int flags);
 	void dir_watch_on(void) { do_dirwatch = true; }
 	void dir_watch_off(void) { do_dirwatch = false; }
-
-	void execute(const char* cmd);
 };
 
 #endif

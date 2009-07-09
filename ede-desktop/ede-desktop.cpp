@@ -113,11 +113,11 @@ static void settings_changed_cb(void* data) {
 }
 
 static void background_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("ede-desktop-conf");
+	edelib::run_async("ede-launch ede-desktop-conf");
 }
 
 static void icons_conf_cb(Fl_Widget*, void*) {
-	Desktop::instance()->execute("ede-desktop-conf --icons");
+	edelib::run_async("ede-launch \"ede-desktop-conf --icons\"");
 }
 
 static int desktop_xmessage_handler(int event) { 
@@ -921,11 +921,6 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 			redraw();
 	} else
 		E_DEBUG(E_STRLOC ": %s changed with %i\n", changed, flags);
-}
-
-void Desktop::execute(const char* cmd) {
-	E_ASSERT(cmd != NULL);
-	edelib::run_async(cmd);
 }
 
 int Desktop::handle(int event) {
