@@ -54,11 +54,12 @@ EDELIB_NS_USING(ICON_SIZE_TINY)
 EDELIB_NS_USING(input)
 EDELIB_NS_USING(run_async)
 
+static void open_cb(Fl_Widget*, void* d);
 static void rename_cb(Fl_Widget*, void* d);
 static void props_cb(Fl_Widget*, void* d);
 
 static MenuItem icon_menu[] = {
-	{_("&Open"),   0, 0},
+	{_("&Open"),   0, open_cb, 0},
 	{_("&Rename"), 0, rename_cb, 0},
 	{_("&Delete"), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("&Properties"), 0, props_cb, 0},
@@ -71,6 +72,13 @@ static MenuItem icon_trash_menu[] = {
 	{_("&Empty"),      0, 0},
 	{0}
 };
+
+static void open_cb(Fl_Widget*, void* d) {
+	DesktopIcon* di = (DesktopIcon*)d;
+	IconSettings* s = di->get_settings();
+
+	run_async("ede-launch %s", s->cmd.c_str());
+}
 
 static void rename_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;

@@ -57,6 +57,8 @@ public:
 	int  drag_icon_x(void);
 	int  drag_icon_y(void);
 
+	IconSettings* get_settings(void) { return settings; }
+
 	/*
 	 * This is 'enhanced' (in some sense) redraw(). Redrawing
 	 * icon will not fully redraw label nor focus box, which laid outside 
