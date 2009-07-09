@@ -22,12 +22,11 @@
 #include <FL/Fl_Image.H>
 
 #include <edelib/String.h>
+#include <edelib/MenuButton.h>
 
 class GlobalIconSettings;
 class IconSettings;
 class MovableIcon;
-
-class Fl_Menu_Button;
 
 class DesktopIcon : public Fl_Widget {
 private:
@@ -40,8 +39,8 @@ private:
 
 	MovableIcon* micon;
 
-	Fl_Image*       darker_img;
-	Fl_Menu_Button* imenu;
+	Fl_Image*           darker_img;
+	edelib::MenuButton* imenu;
 
 	void load_icon(int face);
 	void update_label_size(void);

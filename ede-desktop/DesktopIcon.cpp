@@ -17,7 +17,6 @@
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
-#include <FL/Fl_Menu_Button.H>
 #include <FL/x.H>
 
 #include <edelib/Debug.h>
@@ -27,7 +26,7 @@
 #include <edelib/Run.h>
 
 #ifdef HAVE_SHAPE
-#include <X11/extensions/shape.h>
+# include <X11/extensions/shape.h>
 #endif
 
 #include "ede-desktop.h"
@@ -35,46 +34,54 @@
 #include "IconProperties.h"
 #include "Utils.h"
 
-// minimal icon sizes
+/* minimal icon sizes */
 #define ICON_SIZE_MIN_W 48
 #define ICON_SIZE_MIN_H 48
 
-// spaces around box in case of large/small icons
+/* spaces around box in case of large/small icons */
 #define OFFSET_W 16
 #define OFFSET_H 16
 
-// label offset from icon y()+h(), so selection box can be drawn nicely
+/* label offset from icon y()+h(), so selection box can be drawn nicely */
 #define LABEL_OFFSET 2
+
+EDELIB_NS_USING(String)
+EDELIB_NS_USING(IconLoader)
+EDELIB_NS_USING(MenuItem)
+EDELIB_NS_USING(MenuButton)
+EDELIB_NS_USING(ICON_SIZE_HUGE)
+EDELIB_NS_USING(ICON_SIZE_TINY)
+EDELIB_NS_USING(input)
+EDELIB_NS_USING(run_async)
 
 static void rename_cb(Fl_Widget*, void* d);
 static void props_cb(Fl_Widget*, void* d);
 
-static Fl_Menu_Item icon_menu[] = {
-	{_("    &Open    "),   0, 0},
-	{_("    &Rename    "), 0, rename_cb, 0},
-	{_("    &Delete    "), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("    &Properties    "), 0, props_cb, 0},
+static MenuItem icon_menu[] = {
+	{_("&Open"),   0, 0},
+	{_("&Rename"), 0, rename_cb, 0},
+	{_("&Delete"), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("&Properties"), 0, props_cb, 0},
 	{0}
 };
 
-static Fl_Menu_Item icon_trash_menu[] = {
-	{_("    &Open    "),       0, 0},
-	{_("    &Properties    "), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("    &Empty    "),      0, 0},
+static MenuItem icon_trash_menu[] = {
+	{_("&Open"),       0, 0},
+	{_("&Properties"), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("&Empty"),      0, 0},
 	{0}
 };
 
 static void rename_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
-	E_ASSERT(di != NULL);
 
-	const char* new_name = edelib::input(_("New name"), di->label());
+	const char* new_name = input(_("New name"), di->label());
 	di->rename(new_name);
 }
 
 static void props_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
-	E_ASSERT(di != NULL);
+
 	show_icon_properties_dialog(di);
 }
 
@@ -99,11 +106,13 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 
 	label(settings->name.c_str());
 
-	imenu = new Fl_Menu_Button(0, 0, 0, 0);
+	imenu = new MenuButton(0, 0, 0, 0);
 	if(settings->type == ICON_TRASH)
 		imenu->menu(icon_trash_menu);
-	else
+	else {
+		icon_menu[2].image(IconLoader::get("edit-delete", ICON_SIZE_TINY));
 		imenu->menu(icon_menu);
+	}
 
 	load_icon(ICON_FACE_ONE);
 	fix_position(x(), y());
@@ -138,7 +147,7 @@ void DesktopIcon::load_icon(int face) {
 	if(!ic)
 		return;
 
-	if(!edelib::IconLoader::set(this, ic, edelib::ICON_SIZE_HUGE)) {
+	if(!IconLoader::set(this, ic, ICON_SIZE_HUGE)) {
 		E_DEBUG(E_STRLOC ": Unable to load %s icon\n", ic);
 		return;
 	}	
@@ -208,8 +217,7 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 		 * Opposite, window (shaped) will have small but noticeable 'jump off' and
 		 * dropped icon position will not be at the exact place where was dropped.
 		 */
-		int ix, iy;
-		ix = iy = 0;
+		int ix = 0, iy = 0;
 		if(image()) {
 			ix = (w()/2) - (image()->w()/2);
 			iy = (h()/2) - (image()->h()/2);
@@ -225,8 +233,7 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 
 	if(apply) {
 #if HAVE_SHAPE
-		int ix, iy;
-		ix = iy = 0;
+		int ix = 0, iy = 0;
 		if(image()) {
 			ix = (w()/2) - (image()->w()/2);
 			iy = (h()/2) - (image()->h()/2);
@@ -269,7 +276,7 @@ void DesktopIcon::rename(const char* str) {
 	redraw();
 }
 
-const edelib::String& DesktopIcon::path(void) {
+const String& DesktopIcon::path(void) {
 	return settings->full_path;
 }
 
@@ -385,8 +392,8 @@ int DesktopIcon::handle(int event) {
 			return 1;
 		case FL_PUSH:
 			if(Fl::event_button() == 3) {
-				/* Fl_Menu_Item::popup() by default does not call callbacks */
-				const Fl_Menu_Item* m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
+				/* MenuItem::popup() by default does not call callbacks */
+				const MenuItem* m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
 
 				if(m && m->callback())
 					m->do_callback(0, this);
@@ -394,7 +401,7 @@ int DesktopIcon::handle(int event) {
 			return 1;
 		case FL_RELEASE:
 			if(Fl::event_clicks() > 0)
-				edelib::run_async("ede-launch %s", settings->cmd.c_str());
+				run_async("ede-launch %s", settings->cmd.c_str());
 			return 1;
 
 		case FL_DND_ENTER:
