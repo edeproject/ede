@@ -5,8 +5,8 @@ code_name {.cxx}
 Function {} {open
 } {
   Fl_Window {} {
-    label {About EDE} open selected
-    xywh {292 190 440 335} type Double visible
+    label {About EDE} open
+    xywh {393 141 440 335} type Double resizable visible
   } {
     Fl_Group {} {open
       xywh {0 0 440 65} box FLAT_BOX color 7 labelsize 14
@@ -16,15 +16,22 @@ Function {} {open
       }
       Fl_Box {} {
         label {Equinox Desktop Environment}
-        xywh {70 10 365 25} labelfont 1 align 20
+        xywh {70 10 300 25} labelfont 1 align 20
       }
       Fl_Box {} {
         label {Copyright (c) by EDE Authors 2000-2008}
-        xywh {70 35 365 25} labelsize 11 align 21
+        xywh {70 35 300 25} labelsize 11 align 21
+      }
+      Fl_Box {} {
+        xywh {385 10 40 50} labelsize 14 resizable
       }
     }
     Fl_Text_Display {} {
       xywh {10 78 420 212} labelsize 14 textsize 14
+    }
+    Fl_Box {} {selected
+      xywh {270 238 50 37} labelsize 14 resizable
+      code0 {/* resizable box */}
     }
     Fl_Button {} {
       label {&Close}

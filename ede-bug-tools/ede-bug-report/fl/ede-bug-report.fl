@@ -6,9 +6,9 @@ Function {} {open
 } {
   Fl_Window {} {
     label {EDE Bug Reporting Tool} open
-    xywh {369 205 480 365} type Double visible
+    xywh {357 193 480 365} type Double resizable visible
   } {
-    Fl_Box {} {selected
+    Fl_Box {} {
       image {../icons/bug.png} xywh {10 10 60 59}
     }
     Fl_Box {} {
@@ -40,6 +40,10 @@ Note: valid email address is required, so developers could contact you for more 
     Fl_Button {} {
       label {&Cancel}
       xywh {380 330 90 25}
+    }
+    Fl_Box {} {selected
+      xywh {180 273 55 37} labelsize 14 resizable
+      code0 {/* resizable box */}
     }
   }
 } 

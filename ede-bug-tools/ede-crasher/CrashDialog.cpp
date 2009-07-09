@@ -34,6 +34,7 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
 #include <edelib/File.h>
+#include <edelib/TempFile.h>
 
 #include "CrashDialog.h"
 #include "GdbOutput.h"
@@ -44,6 +45,7 @@
 #define WIN_H_EXPANDED 340
 
 EDELIB_NS_USING(String)
+EDELIB_NS_USING(TempFile)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(file_remove)
@@ -54,7 +56,6 @@ static Fl_Text_Display      *txt_display;
 static Fl_Text_Buffer       *txt_buf;
 static Fl_Button            *save_as;
 static Fl_Button            *show_details;
-static GdbOutput            *gdb;
 static bool                  info_was_collected;
 static const ProgramDetails *pdetails;
 
@@ -121,8 +122,11 @@ static void collect_info_once(void) {
 
 	write_host_info();
 
-	if(gdb->fds_opened() && gdb->run())
-		txt_buf->appendfile(gdb->output_path());
+	TempFile tmp;
+	tmp.set_auto_delete(true);
+
+	if(gdb_output_generate(pdetails->path, tmp))
+		txt_buf->appendfile(tmp.name());
 
 	info_was_collected = true;
 }
@@ -154,32 +158,29 @@ static void report_cb(Fl_Widget*, void*) {
 
 	collect_info_once();
 
-	errno = 0;
-	int  fd;
-	char tmp[] = "/tmp/.ecrash-dump.XXXXXX";
-
-	if((fd = mkstemp(tmp)) == -1) {
-		alert(_("Unable to create temporary file: (%i) %s"), errno, strerror(errno));
+	TempFile tmp;
+	if(!tmp.create("/tmp/.ecrash-dump")) {
+		alert(_("Unable to create temporary file: (%i) %s"), tmp.status(), strerror(tmp.status()));
 		return;
 	}
 
-	close(fd);
-	txt_buf->savefile(tmp);
+	/* close it since we need the file name */
+	tmp.close();
 
-	run_async("%s --gdb-dump %s", bug_tool.c_str(), tmp);
+	txt_buf->savefile(tmp.name());
+
+	run_async("%s --gdb-dump %s", bug_tool.c_str(), tmp.name());
 
 	/* wait some time until the file was read; dumb, I know :( */
 	sleep(1);
-	file_remove(tmp);
+
+	/* remove it */
+	tmp.unlink();
 }
 
 int crash_dialog_show(const ProgramDetails& p) {
 	info_was_collected = false;
 	pdetails = &p;
-
-	gdb = new GdbOutput();
-	gdb->set_program_path(p.path);
-	gdb->fds_open();
 
 	win = new edelib::Window(380, WIN_H_NORMAL, _("EDE Crash Handler"));
 	win->begin();
@@ -224,7 +225,5 @@ int crash_dialog_show(const ProgramDetails& p) {
 	win->window_icon(core_xpm);
 	win->show();
 
-	int ret = Fl::run();
-	delete gdb;
-	return ret;
+	return Fl::run();
 }

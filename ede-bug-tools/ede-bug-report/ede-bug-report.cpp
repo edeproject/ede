@@ -10,7 +10,7 @@
  * See COPYING for details.
  */
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
@@ -32,10 +32,9 @@
 #include <edelib/Debug.h>
 
 #ifdef HAVE_CURL
- #include "BugzillaSender.h"
-
- #include "BugImage.h"
- #include "icons/bug.xpm"
+# include "BugzillaSender.h"
+# include "BugImage.h"
+# include "icons/bug.xpm"
 #endif
 
 EDELIB_NS_USING(String)
@@ -181,12 +180,16 @@ int main(int argc, char** argv) {
 				E_WARNING(E_STRLOC ": Unable to read '%s' as debugger output. Continuing...\n");
 		}
 
+		/* resizable box */
+		Fl_Box *rbox = new Fl_Box(180, 273, 55, 37);
+
 		Fl_Button *send = new Fl_Button(285, 330, 90, 25, _("&Send"));
 		send->callback(send_cb, win);
 
 		Fl_Button *close = new Fl_Button(380, 330, 90, 25, _("&Close"));
 		close->callback(close_cb, win);
 
+		Fl_Group::current()->resizable(rbox);
 	win->window_icon(bug_xpm);
 	/* win->show(argc, argv); */
 	win->show();

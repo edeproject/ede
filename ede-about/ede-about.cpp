@@ -133,14 +133,17 @@ int main(int argc, char **argv) {
 			Fl_Box* image_box = new Fl_Box(5, 5, 60, 55);
 			image_box->image(image_ede);
 
-			Fl_Box* ede_label_box = new Fl_Box(70, 10, 365, 25, "Equinox Deskop Environment " PACKAGE_VERSION);
+			Fl_Box* ede_label_box = new Fl_Box(70, 10, 300, 25, "Equinox Deskop Environment " PACKAGE_VERSION);
 			ede_label_box->labelfont(1);
 			ede_label_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
-			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 365, 25, "Copyright (c) by EDE Authors 2000-2009");
+			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 300, 25, "Copyright (c) by EDE Authors 2000-2009");
 			ede_copy_box->labelsize(11);
 			ede_copy_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_TOP);
 
+			// resizable box
+			Fl_Box* rbox1 = new Fl_Box(385, 10, 40, 50);
+        	Fl_Group::current()->resizable(rbox1);
 		title_group->end();
 
 		Fl_Text_Display* txt_display = new Fl_Text_Display(10, 78, 420, 212);
@@ -163,9 +166,13 @@ int main(int argc, char **argv) {
 		txt_display->highlight_data(stylebuff, style_table, 
 				sizeof(style_table) / sizeof(style_table[0]), 'A', 0, 0);
 
+		// resizable box
+		Fl_Box* rbox2 = new Fl_Box(270, 238, 50, 37);
+
 		Fl_Button* close_button = new Fl_Button(340, 300, 90, 25, _("&Close"));
 		close_button->callback(close_cb);
 
+		Fl_Group::current()->resizable(rbox2);
 	win->end();
 	win->show(argc, argv);
 	return Fl::run();
