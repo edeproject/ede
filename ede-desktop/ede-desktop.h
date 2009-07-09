@@ -26,6 +26,7 @@
 #include <edelib/Resource.h>
 #include <edelib/List.h>
 #include <edelib/EdbusConnection.h>
+#include <edelib/MenuButton.h>
 
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
@@ -78,7 +79,6 @@ struct SelectionOverlay {
 
 class Wallpaper;
 class DesktopIcon;
-class Fl_Menu_Button;
 
 typedef edelib::list<DesktopIcon*>           DesktopIconList;
 typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
@@ -104,7 +104,7 @@ private:
 
 	GlobalIconSettings* gisett;
 
-	Fl_Menu_Button*  dmenu;
+	edelib::MenuButton*  dmenu;
 	Wallpaper*       wallpaper;
 	edelib::EdbusConnection* dbus;
 

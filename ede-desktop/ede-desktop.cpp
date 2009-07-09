@@ -24,7 +24,6 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Shared_Image.H>
-#include <FL/Fl_Menu_Button.H>
 
 #include <edelib/Debug.h>
 #include <edelib/FileTest.h>
@@ -38,6 +37,7 @@
 #include <edelib/Util.h>
 #include <edelib/Nls.h>
 #include <edelib/MessageBox.h>
+#include <edelib/MenuButton.h>
 
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
@@ -68,17 +68,17 @@
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
 
-Fl_Menu_Item desktop_menu[] = {
-	{_("    Create &launcher...    "), 0, 0},
-	{_("    Create &folder...    "), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("    &Arrange    "), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
-		{_("    &Vertical line up    "), 0, 0},
-		{_("    &Horizontal line up   "), 0, 0},
+edelib::MenuItem desktop_menu[] = {
+	{_("Create &launcher..."), 0, 0},
+	{_("Create &folder..."), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("&Arrange"), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
+		{_("&Vertical line up"), 0, 0},
+		{_("&Horizontal line up"), 0, 0},
 		{0},
-	{_("    &Copy    "), 0, 0},
-	{_("    &Paste    "), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("    &Icons settings...    "), 0, icons_conf_cb, 0},
-	{_("    &Background...    "), 0, background_conf_cb, 0},
+	{_("&Copy"), 0, 0},
+	{_("&Paste"), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("&Icons settings..."), 0, icons_conf_cb, 0},
+	{_("&Background..."), 0, background_conf_cb, 0},
 	{0}
 };
 
@@ -189,8 +189,11 @@ void Desktop::init_internals(void) {
 	 * added (wallpaper, menu, ...) then icons, so they can be drawn at top of them.
 	 */
 	begin();
-		dmenu = new Fl_Menu_Button(0, 0, 0, 0);
+		dmenu = new edelib::MenuButton(0, 0, 500, 0);
 		dmenu->menu(desktop_menu);
+		desktop_menu[1].image(edelib::IconLoader::get("folder", edelib::ICON_SIZE_TINY));
+		desktop_menu[6].image(edelib::IconLoader::get("edit-copy", edelib::ICON_SIZE_TINY));
+		desktop_menu[7].image(edelib::IconLoader::get("edit-paste", edelib::ICON_SIZE_TINY));
 
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
@@ -955,7 +958,7 @@ int Desktop::handle(int event) {
 					selbox->x = Fl::event_x();
 					selbox->y = Fl::event_y();
 				} else if(Fl::event_button() == 3) {
-					const Fl_Menu_Item* item = dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
+					const edelib::MenuItem* item = dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
 					dmenu->picked(item);
 				}
 
