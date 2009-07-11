@@ -66,6 +66,8 @@ static void icon_change_cb(Fl_Button* b, void* d) {
 }
 
 static void study_and_fill(DesktopIcon* dicon, DesktopIconData* data) {
+	data->image = NULL;
+
 	// get image and scale it if needed
 	if(dicon->image()) {
 		int iw = dicon->w();
