@@ -24,6 +24,7 @@ InstallEdeDesktopFiles $(PLINKS) ;
 
 # install entry for login/desktop managers
 InstallData /usr/share/xsessions : ede.desktop ;
+Clean distclean : ede.desktop ;
 
 SubInclude TOP data mime-types ;
 SubInclude TOP data icon-themes ;

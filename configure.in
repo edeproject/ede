@@ -228,6 +228,7 @@ AC_OUTPUT([
  Jamconfig
  tools/l10n-prepare.sh
  data/startede
+ data/ede.desktop
  doc/index.txt
  services/org.equinoxproject.Launch.service
  services/org.equinoxproject.StartupNotify.service
