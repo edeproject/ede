@@ -1,0 +1,17 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under the terms of the
+# GNU General Public License version 2 or later.
+# See COPYING for the details.
+ 
+SubDir TOP ede-dialog ;
+
+SOURCE = ede-dialog.cpp ;
+
+EdeProgram ede-dialog : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;
+EdeManual ede-dialog.txt ;

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 help_dir="@ededocdir@/manual"
-browser_list="firefox mozilla konqueror opera navigator dillo"
+browser_list="firefox mozilla chromium-browser konqueror opera navigator dillo"
 
 program="ede-help"
 url=""
@@ -10,9 +10,10 @@ if [ "$1" = "--help" ]; then
 	cat <<EOF
 Usage: $program [OPTIONS] [TITLE]
 Display EDE Manual in the web browser
+
 Options:
-   --help         Show this help
-   --titles       Show known titles
+  --help         this help
+  --titles       show known titles
 
 Example:
    $program evoke - display evoke help
@@ -55,13 +56,12 @@ if [ "x$BROWSER" = "x" ]; then
 fi
 
 if [ "x$BROWSER" = "x" ]; then
-	xmessage -title "$program error" -center -buttons "Close" -file - <<EOF
+	ede-dialog --title "$program error" --error "
 Failed to find any of known browsers!
 
-If you thing that I made mistake, please try to set
-BROWSER environment variable with full path pointing 
-to the browser binary
-EOF
+If you think how this is mistake, please try to set \
+BROWSER environment variable with the full path pointing to the browser binary and run $program again"
+
 	exit 1
 fi
 
@@ -69,13 +69,12 @@ fi
 $BROWSER $url
 
 if [ $? -ne 0 ]; then
-	xmessage -title "$program error" -center -buttons "Close" -file - <<EOF
-Unable to run '$BROWSER'!
+	ede-dialog --title "$program error" --error "
+Unable to run $BROWSER browser!
 
-Please check if program path is correct or 
-adjust BROWSER environment variable pointing
-to the correct binary
-EOF
+Please check if program path is correct or \
+adjust BROWSER environment variable pointing to the correct binary file"
+
 	exit 1
 fi
 

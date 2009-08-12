@@ -22,6 +22,7 @@ SubInclude TOP ede-calc ;
 SubInclude TOP ede-conf ;
 SubInclude TOP ede-desktop ;
 SubInclude TOP ede-desktop-conf ;
+SubInclude TOP ede-dialog ;
 SubInclude TOP ede-screensaver-conf ;
 SubInclude TOP ede-help ;
 SubInclude TOP ede-image-view ;

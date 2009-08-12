@@ -158,7 +158,6 @@ static void dialog_runsel_cb(Fl_Widget*, void* e) {
 
 static void dialog_runall_cb(Fl_Widget*, void* e) {
 	DialogEntryList* lst = (DialogEntryList*)e;
-	E_DEBUG("%i != %i\n", lst->size(), cbrowser->nitems());
 	E_ASSERT(lst->size() == (unsigned int)cbrowser->nitems() && "Size mismatch in local list and browser widget");
 
 	dialog_win->hide();

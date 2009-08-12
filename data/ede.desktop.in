@@ -1,6 +1,7 @@
 [Desktop Entry]
-Encoding=UTF-8
-Exec=startede
-TryExec=startede
 Name=EDE
-Comment=This session logs you into EDE
+Exec=@prefix@/bin/startede
+TryExec=@prefix@/bin/startede
+Comment=This session logs you into EDE Desktop
+Type=Application
+Encoding=UTF-8

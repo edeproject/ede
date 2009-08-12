@@ -1,0 +1,76 @@
+ede-dialog(1)
+=============
+:man version: 0.1 
+:man manual:  ede-dialog manual
+
+Sanel Zukan <karijes@users.sourceforge.net>
+
+
+NAME
+----
+ede-dialog - display GUI dialogs from the shell
+
+
+SYNOPSIS
+--------
+*ede-dialog* ['OPTIONS']
+
+
+DESCRIPTION
+-----------
+ede-dialog(1) is dialog displaying utility, very similar to xmessage, kdialog and such tools and
+it's main purpose it to display messages or query inputs primarily from shell scripts.
+
+This will enable interaction with shell scripts to look very similar to interaction with any
+compiled EDE application.
+
+OPTIONS
+-------
+
+-h, --help::
+	Show help content.
+
+--yesno 'text':: 
+	Display a question dialog with yes/no buttons.
+
+--yesnocancel 'text':: 
+	Display a question dialog with yes/no/cancel buttons.
+
+--error 'text'::
+	Display error message dialog.
+
+--sorry 'text'::
+	Display sorry message dialog.
+
+--msgbox 'text'::
+	Display message box dialog.
+
+--inputbox 'text'::
+	Dialog with input box.
+
+--password 'text'::
+	Dialog with input box for password input (text will be hidden).
+
+--title 'text'::
+	Set dialog title.
+
+
+DETAILS
+-------
+ede-dialog started as 'edialog', initially written by Vedran Ljubovic in 2005 and had been planned to support
+'kdialog' (similar dialog tool from KDE) options. 'edialog' was never finished so I (Sanel) took it and rewrote
+it, using subset of 'kdialog' options, mostly as inspiration for command line names.
+
+Knowing this, ede-dialog does not support additional GUI elements like menus, checkboxes and such: it is meant to
+be used for quick handling from shell scripts; anything advanced from that should use straight C++ and FLTK/edelib 
+combination.
+
+Also, return values will emulate those from 'kdialog'. For example, if you use '--yesnocancel' option, ede-dialog
+will show text with three buttons: 'Yes', 'No' and 'Cancel'. Clicking on 'Yes' will return 0 so it can be picked
+by shell script. Similar, pressing on 'No' will return 1 and on 'Cancel' will return 2.
+
+On other hand, using '--yesno' will show two buttons, 'Yes' and 'No' and pressing on 'Yes' yields 0 and on 'No'
+yields 1. Dialogs with only one button (those with '--error', '--sorry' and '--msgbox') always returns 0.
+
+Input dialogs ('--inputbox' and '--password') prints inserted value to stdout, allowing easy redirection from
+shell. Both dialogs provides 'OK' and 'Cancel' buttons, returning 0 if 'OK' was pressed or 1 if 'Cancel' was pressed.

@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 	win->begin();
 		Fl_Group* main_group = new Fl_Group(10, 10, 515, 205);
 		main_group->box(FL_DOWN_BOX);
-		main_group->color(FL_BACKGROUND2_COLOR);
+		main_group->color(FL_WHITE);
 		main_group->begin();
 			Fl_Box* image_box = new Fl_Box(11, 13, 121, 201);
 			image_box->image(image_hint);
