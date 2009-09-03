@@ -10,13 +10,8 @@
 
 SubDir TOP data ;
 
-ICONS48 = [ Wildcard icons-48 : *.png : icons-48 ] ;
-ICONS16 = [ Wildcard icons-16 : *.png : icons-16 ] ;
 PLINKS  = [ Wildcard programs-links : *.desktop : programs-links ] ;
 CONFS   = [ Wildcard *.conf ] ;
-
-InstallEdeIcons icons-16 : $(ICONS16) ;
-InstallEdeIcons icons-48 : $(ICONS48) ;
 
 InstallEdeProgram      startede ;
 InstallEdeConfigFiles  $(CONFS) ;
