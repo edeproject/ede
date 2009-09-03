@@ -40,17 +40,24 @@ LINKCMD      ?= "ln -s" ;
 
 EDE_VERSION ?= "@EDE_VERSION@" ;
 
+# subdirectory in usual XDG paths; this directory is marked
+# as 'prefix' in some edelib classes, like Resource or Theme
+EDE_PREFIX_SUBDIR ?= "ede" ;
+
 # directories used by build system
 PREFIX               ?= "$(prefix)" ;
 EDE_BIN_DIR          ?= "$(bindir)" ;
 EDE_CONFIG_DIR       ?= "/etc/xdg/ede" ; # use XDG default for config dir
+EDE_DOC_DIR          ?= "$(docdir)/ede-$(EDE_VERSION)" ;
+EDE_THEMES_DIR       ?= "$(datadir)/$(EDE_PREFIX_SUBDIR)/themes" ;
+EDE_TIPS_DIR         ?= "$(datadir)/$(EDE_PREFIX_SUBDIR)/tips" ;
+# do not put EDE_PREFIX_SUBDIR since this is XDG mime path
+EDE_MIME_DIR         ?= "$(datadir)/mime" ; 
+
+# TODO: should be removed; old directory layout
 EDE_CONFIG_DIR_OLD   ?= "$(datadir)/config" ;
 EDE_ICON_DIR         ?= "$(datadir)/icons" ;
 EDE_DESKTOP_FILE_DIR ?= "$(datadir)/desktop" ;
-EDE_MIME_DIR         ?= "$(datadir)/mime" ;
-EDE_DOC_DIR          ?= "$(docdir)/ede-$(EDE_VERSION)" ;
-EDE_THEMES_DIR       ?= "$(datadir)/themes" ;
-EDE_TIPS_DIR         ?= "$(datadir)/tips" ;
 
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
@@ -118,8 +125,14 @@ CURL_CFLAGS  ?= @CURL_CFLAGS@ ;
 CURL_LIBS    ?= @CURL_LIBS@ ;
 
 # platform specific pthread flags
-PTHREAD_CFLAGS ?= @PTHREAD_CFLAGS@ ;
-PTHREAD_LIBS   ?= @PTHREAD_LIBS@ ;
+# FIXME: a quick hack to work everything on SunStudio
+if $(SUN_COMPILER) {
+	PTHREAD_CFLAGS ?= ;
+	PTHREAD_LIBS   ?= -lpthread ;
+} else {
+	PTHREAD_CFLAGS ?= @PTHREAD_CFLAGS@ ;
+	PTHREAD_LIBS   ?= @PTHREAD_LIBS@ ;
+}
 
 DBUS_SERVICE_DIR ?= @DBUS_SERVICE_DIR@ ;
 
