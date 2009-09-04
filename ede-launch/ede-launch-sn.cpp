@@ -26,8 +26,8 @@
 #include <edelib/Debug.h>
 
 #ifdef HAVE_LIBSTARTUP_NOTIFICATION
-#define SN_API_NOT_YET_FROZEN /* required, for now */
-#include <libsn/sn.h>
+# define SN_API_NOT_YET_FROZEN /* required, for now */
+# include <libsn/sn.h>
 #endif
 
 #ifdef HAVE_LIBSTARTUP_NOTIFICATION

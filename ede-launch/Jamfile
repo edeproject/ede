@@ -15,6 +15,6 @@ SOURCE = ede-launch.cpp ;
 EdeProgram     ede-launch : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
 
-ObjectC++Flags       ede-launch-sn.cpp : $(STARTUP_NOTIFICATION_INCLUDE) ;
-EdeProgramAsFltkBare ede-launch-sn     : ede-launch-sn.cpp ;
-LinkAgainst          ede-launch-sn     : $(STARTUP_NOTIFICATION_LIB) ;
+ObjectC++Flags ede-launch-sn.cpp : $(STARTUP_NOTIFICATION_INCLUDE) ;
+EdeProgram     ede-launch-sn     : ede-launch-sn.cpp ;
+LinkAgainst    ede-launch-sn     : $(STARTUP_NOTIFICATION_LIB) ;
