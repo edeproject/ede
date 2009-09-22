@@ -61,11 +61,10 @@ const char* content = "\n\
  and others! Thank you guys! :)\n\
 \n\
  Web:\n\n\
- http://equinox-project.org\n\n\
- Hosting provided by Sohlius,Inc. (thanks!)\n\
+ http://equinox-project.org\n\
 \n\
  Bug reports:\n\n\
- http://equinox-project.org/cgi-bin/trac.cgi\n\
+ http://bugs.equinox-project.org\n\
 \n\
  License: \n\n\
  This program is based in part on the work of\n\
