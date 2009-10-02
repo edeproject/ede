@@ -1,0 +1,109 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" 
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+    <Name>EDE</Name>
+    
+    <DefaultAppDirs/>
+    <DefaultDirectoryDirs/>
+    
+    <Include>
+        <Category>X-EDE-Toplevel</Category>
+    </Include>
+   
+    <Menu>
+        <Name>Accessories</Name>
+        <Directory>ede-accessories.directory</Directory>
+        <Include>
+            <Or>
+                <Category>Accessibility</Category>
+                <Category>Core</Category>
+                <Category>Legacy</Category>
+                <Category>Utility</Category>
+            </Or>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Development</Name>
+        <Directory>ede-development.directory</Directory>
+        <Include>
+            <Category>Development</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Education</Name>
+        <Directory>ede-education.directory</Directory>
+        <Include>
+            <Category>Education</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Games</Name>
+        <Directory>ede-games.directory</Directory>
+        <Include>
+            <Category>Game</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Graphics</Name>
+        <Directory>ede-graphics.directory</Directory>
+        <Include>
+            <Category>Graphics</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Multimedia</Name>
+        <Directory>ede-multimedia.directory</Directory>
+        <Include>
+            <Category>Audio</Category>
+            <Category>Video</Category>
+            <Category>AudioVideo</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Network</Name>
+        <Directory>ede-network.directory</Directory>
+        <Include>
+            <Category>Network</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Office</Name>
+        <Directory>ede-office.directory</Directory>
+        <Include>
+            <Category>Office</Category>
+        </Include>
+    </Menu>
+
+    <Menu>
+        <Name>Settings</Name>
+        <Directory>ede-settings.directory</Directory>
+        <Include>
+            <Category>Settings</Category>
+        </Include>
+    </Menu>
+ 
+    <Menu>
+        <Name>System</Name>
+        <Directory>ede-system.directory</Directory>
+        <Include>
+            <Category>System</Category>
+        </Include>
+    </Menu>
+    
+    <Menu>
+        <Name>Other</Name>
+        <Directory>ede-other.directory</Directory>
+        <OnlyUnallocated/>
+        <Include>
+            <All/>
+        </Include>
+    </Menu>
+</Menu>

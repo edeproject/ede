@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-launch
+Icon=system-run
+StartupNotify=false
+Categories=X-EDE;X-EDE-Toplevel;
+Name=Run Program...
+Comment=Run a program
