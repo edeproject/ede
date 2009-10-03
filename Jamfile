@@ -37,7 +37,7 @@ SubInclude TOP data ;
 SubInclude TOP services ;
 
 # for now it is not compileable on SunStudio
-if !$(SUN_COMPILER) {
+if ! $(SUN_COMPILER) {
 	SubInclude TOP ede-panel ;
 }
 
