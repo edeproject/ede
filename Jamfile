@@ -36,11 +36,13 @@ SubInclude TOP doc ;
 SubInclude TOP data ;
 SubInclude TOP services ;
 
+# for now it is not compileable on SunStudio
+if !$(SUN_COMPILER) {
+	SubInclude TOP ede-panel ;
+}
+
 # they will not be compiled if eFLTK wasn't found
 SubInclude TOP edewm ;
-#SubInclude TOP ede-panel ;
-
-SubInclude TOP ede-panel-new ;
 
 # efiler is not compileable at all
 if $(WITH_EFILER) = 1 {
