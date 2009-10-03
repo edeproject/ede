@@ -399,6 +399,7 @@ void updateWorkspaces(Fl_Widget*,void*)
 void FL_WM_handler(Fl_Widget *w, void *d)
 {
 	int e = Fl_WM::action();
+
 //	printf (" --- eworkpanel handling %d\n",e);
 	if(e==Fl_WM::WINDOW_NAME || e==Fl_WM::WINDOW_ICONNAME) {
 		tasks->update_name(Fl_WM::window());
@@ -874,7 +875,7 @@ int main(int argc, char **argv)
 							   Fl_WM::WINDOW_DESKTOP|
 							   Fl_WM::WINDOW_ACTIVE|
 							   Fl_WM::WINDOW_NAME|
-							   Fl_WM::WINDOW_ICONNAME);
+							    Fl_WM::WINDOW_ICONNAME);
 
 	updateWorkspaces(0,0);
 	tasks->update();

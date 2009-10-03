@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Alsa Player
-  Exec=alsaplayer -i ede
-  Icon=midi.png
-  Name[sk]=Alsa Player
-

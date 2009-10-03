@@ -10,12 +10,10 @@
 
 SubDir TOP data ;
 
-PLINKS  = [ Wildcard programs-links : *.desktop : programs-links ] ;
 CONFS   = [ Wildcard *.conf ] ;
 
 InstallEdeProgram      startede ;
 InstallEdeConfigFiles  $(CONFS) ;
-InstallEdeDesktopFiles $(PLINKS) ;
 
 # install entry for login/desktop managers
 InstallData /usr/share/xsessions : ede.desktop ;
@@ -23,3 +21,4 @@ Clean distclean : ede.desktop ;
 
 SubInclude TOP data mime-types ;
 SubInclude TOP data icon-themes ;
+SubInclude TOP data menu ;

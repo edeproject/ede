@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Volume control
-  Exec=evolume
-  Icon=sound.png
-  Name[sk]=Nastavenie hlasitosti
-

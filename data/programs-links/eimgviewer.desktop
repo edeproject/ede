@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Image Viewer
-  Name[sk]=Prehliadač obrázkov
-  Exec=eimgviewer
-  Icon=gimp.png
-

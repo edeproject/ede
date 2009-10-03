@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=xterm -fn 9x15
+Icon=utilities-terminal
+Categories=Utility;
+Name=X11 Terminal
+Comment=Standard X11 terminal

@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=X Debuger
-  Icon=core.png
-  Exec=xxgdb
-  Name[sk]=X Debuger
-

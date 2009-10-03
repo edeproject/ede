@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name[sk]=Prehliadač Ghostview
-  Name=Ghostview
-  Icon=txt.png
-  Exec=gv
-

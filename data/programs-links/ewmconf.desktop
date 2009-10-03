@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Window manager settings
-  Exec=ewmconf
-  Icon=window_new.png
-  Name[sk]=Nastavenie manažéra okien
-

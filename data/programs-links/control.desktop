@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Control panel
-  Name[sk]=Kontrólny panel
-  Exec=econtrol
-  Icon=kcontrol.png
-

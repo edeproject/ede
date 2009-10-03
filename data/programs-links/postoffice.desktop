@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Email client
-  Name[sk]=Poštový klient
-  Exec=epostoffice
-  Icon=mozilla-mail.png
-

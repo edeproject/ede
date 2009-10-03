@@ -97,18 +97,6 @@ rule InstallEdeIcons
 	}
 }
 
-# InstallEdeDesktopFiles [targets] ;
-rule InstallEdeDesktopFiles
-{
-	InstallData $(EDE_DESKTOP_FILE_DIR) : $(<) ;
-}
-
-# InstallEdeConfigFilesOld [targets] ;
-rule InstallEdeConfigFilesOld
-{
-	InstallData $(EDE_CONFIG_DIR_OLD) : $(<) ;
-}
-
 # InstallEdeConfigFiles [targets] ;
 rule InstallEdeConfigFiles
 {
@@ -119,6 +107,12 @@ rule InstallEdeConfigFiles
 rule InstallEdeTips
 {
 	InstallData $(EDE_TIPS_DIR) : $(<) ;
+}
+
+# InstallEdeMenu [targets] ;
+rule InstallEdeMenu [targets]
+{
+	InstallData $(EDE_MENU_DIR) : $(<) ;
 }
 
 # InstallEdeMimeFiles [targets] ;

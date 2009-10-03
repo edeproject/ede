@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name[sk]=Prehliadač Dvi
-  Name=Dvi Viewer
-  Icon=font_bitmap.png
-  Exec=xdvi
-

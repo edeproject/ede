@@ -1,0 +1,22 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP data menu ;
+
+InstallEdeMenu ede-applications.menu ;
+
+MENU_APPLICATIONS   = [ Wildcard applications        : *.desktop   : applications ] ;
+DESKTOP_DIRECTORIES = [ Wildcard desktop-directories : *.directory : desktop-directories ] ;
+
+# install .desktop files
+InstallData [ FDirName $(EDE_DATA_DIR) applications ] : $(MENU_APPLICATIONS) ;
+
+# install .directory files
+InstallData [ FDirName $(EDE_DATA_DIR) desktop-directories ] : $(DESKTOP_DIRECTORIES) ;

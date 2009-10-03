@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-02-04 11:48+0100\n"
+"POT-Creation-Date: 2009-10-01 01:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,48 +16,171 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: aboutdialog.cpp:14
+#: aboutdialog.cpp:43
+msgid ""
+"This program is based in part on the work of\n"
+"FLTK project (www.fltk.org).\n"
+"\n"
+"This program is free software, you can redistribute\n"
+"it and/or modify it under the terms of GNU General\n"
+"Public License as published by the Free Software\n"
+"Foundation, either version 2 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will\n"
+"be useful, but WITHOUT ANY WARRANTY;\n"
+"without even the implied\n"
+"warranty of MERCHANTABILITY or FITNESS\n"
+"FOR A PARTICULAR PURPOSE.\n"
+"\n"
+"See the GNU General Public License for more details.\n"
+"You should have received a copy of the GNU General\n"
+"Public Licence along with this program; if not, write\n"
+"to the Free Software Foundation, Inc., 675 Mass Ave,\n"
+"Cambridge, MA 02139, USA"
+msgstr ""
+
+#: aboutdialog.cpp:69
+msgid "Details"
+msgstr ""
+
+#: aboutdialog.cpp:72 aboutdialog.cpp:114
+msgid "&Close"
+msgstr ""
+
+#: aboutdialog.cpp:91
 msgid "About Equinox Desktop Environment"
 msgstr ""
 
-#: aboutdialog.cpp:17
-msgid "Equinox Desktop Environment "
+#: aboutdialog.cpp:102
+msgid "version "
 msgstr ""
 
-#: aboutdialog.cpp:25
+#: aboutdialog.cpp:107
 msgid ""
-" This program is based in part on the work of FLTK project (www.fltk.org). "
-"This program is free software, you can redistribute it and/or modify it "
-"under the terms of GNU General Public License as published by the Free "
-"Software Foundation, either version 2 of the License, or (at your option) "
-"any later version. This program is distributed in the hope that it will be "
-"useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
-"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General "
-"Public License for more details. You should have received a copy of the GNU "
-"General Public Licence along with this program; if not, write to the Free "
-"Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA"
+"This program is licenced under terms of the GNU General Public Licence "
+"version 2 or newer.\n"
+"See Details for more."
 msgstr ""
 
-#: aboutdialog.cpp:38 logoutdialog.cpp:220
+#: aboutdialog.cpp:111
+msgid "&Details"
+msgstr ""
+
+#: logoutdialog.cpp:111
+msgid "You are not allowed to restart !"
+msgstr ""
+
+#: logoutdialog.cpp:131
+msgid "You are not allowed to shutdown !"
+msgstr ""
+
+#: logoutdialog.cpp:212
+msgid "Logout"
+msgstr ""
+
+#: logoutdialog.cpp:221
+msgid "&logout from the current session"
+msgstr ""
+
+#: logoutdialog.cpp:224
+msgid "Logout from the current session."
+msgstr ""
+
+#: logoutdialog.cpp:227
+msgid "&restart the computer"
+msgstr ""
+
+#: logoutdialog.cpp:230
+msgid "Restart the computer."
+msgstr ""
+
+#: logoutdialog.cpp:233
+msgid "Restart the computer. You do not have privileges to do that."
+msgstr ""
+
+#: logoutdialog.cpp:238
+msgid "&shut down the computer"
+msgstr ""
+
+#: logoutdialog.cpp:241
+msgid "Shut down the computer."
+msgstr ""
+
+#: logoutdialog.cpp:244
+msgid "Shut down the computer. You do not have privileges to do that."
+msgstr ""
+
+#: logoutdialog.cpp:249
 msgid "&OK"
 msgstr ""
 
-#: aboutdialog.cpp:42
-msgid "label"
+#: logoutdialog.cpp:253
+msgid "&Cancel"
 msgstr ""
 
-#: aboutdialog.cpp:43
-msgid "(C)Copyright 2000-2004 EDE Authors"
+#: logoutdialog.cpp:257
+msgid "Logout, restart or shut down the computer?"
 msgstr ""
 
-#: cpumonitor.cpp:194
+#: keyboardchooser.cpp:87 keyboardchooser.cpp:180
+msgid "More..."
+msgstr ""
+
+#: taskbutton.cpp:233
+msgid " Close   "
+msgstr ""
+
+#: taskbutton.cpp:235
+msgid " Kill"
+msgstr ""
+
+#: taskbutton.cpp:238
+msgid " Maximize        "
+msgstr ""
+
+#: taskbutton.cpp:239
+msgid " Minimize"
+msgstr ""
+
+#: taskbutton.cpp:240
+msgid " Restore"
+msgstr ""
+
+#: workpanel.cpp:179
+msgid "MDY"
+msgstr ""
+
+#: workpanel.cpp:308
 #, c-format
 msgid ""
-"CPU Load:\n"
-"User: %d%%\n"
-"Nice: %d%%\n"
-"Sys:  %d%%\n"
-"Idle: %d%%"
+"Received: %ld kB (%.1f kB/s)\n"
+"Sent:\t\t%ld kB (%.1f  kB/s)\n"
+"Duration: %d min %d sec"
+msgstr ""
+
+#: workpanel.cpp:386
+msgid "Workspace"
+msgstr ""
+
+#: workpanel.cpp:696
+msgid "Show desktop"
+msgstr ""
+
+#: workpanel.cpp:711
+msgid "Workspaces"
+msgstr ""
+
+#: workpanel.cpp:783
+msgid "Settings"
+msgstr ""
+
+#: workpanel.cpp:788
+msgid "About EDE..."
+msgstr ""
+
+#: workpanel.cpp:843
+msgid "Volume control"
 msgstr ""
 
 #: item.cpp:91
@@ -72,114 +195,35 @@ msgstr ""
 msgid "Close Menu"
 msgstr ""
 
-#: keyboardchooser.cpp:86 keyboardchooser.cpp:179
-msgid "More..."
+#: cpumonitor.cpp:283
+#, c-format
+msgid ""
+"CPU Load:\n"
+"User: %d%%\n"
+"Nice: %d%%\n"
+"Sys:  %d%%\n"
+"Idle: %d%%"
 msgstr ""
 
-#: logoutdialog.cpp:92
-msgid "You are not allowed to restart !"
+#: batterymonitor.cpp:125
+#, c-format
+msgid "Power management not detected"
 msgstr ""
 
-#: logoutdialog.cpp:111
-msgid "You are not allowed to shutdown !"
+#: batterymonitor.cpp:127
+#, c-format
+msgid "The power is plugged in"
 msgstr ""
 
-#: logoutdialog.cpp:185
-msgid "Logout"
+#: batterymonitor.cpp:130
+#, c-format
+msgid "Battery is %d%% full (%d minutes remaining)"
 msgstr ""
 
-#: logoutdialog.cpp:194
-msgid "&logout from the current session"
-msgstr ""
-
-#: logoutdialog.cpp:197
-msgid "Logout from the current session."
-msgstr ""
-
-#: logoutdialog.cpp:200
-msgid "&restart the computer"
-msgstr ""
-
-#: logoutdialog.cpp:203
-msgid "Restart the computer."
-msgstr ""
-
-#: logoutdialog.cpp:205
-msgid "Restart the computer. You do not have privileges to do that."
-msgstr ""
-
-#: logoutdialog.cpp:210
-msgid "&shut down the computer"
-msgstr ""
-
-#: logoutdialog.cpp:213
-msgid "Shut down the computer."
-msgstr ""
-
-#: logoutdialog.cpp:215
-msgid "Shut down the computer. You do not have privileges to do that."
-msgstr ""
-
-#: logoutdialog.cpp:224
-msgid "&Cancel"
-msgstr ""
-
-#: logoutdialog.cpp:228
-msgid "Logout, restart or shut down the computer?"
-msgstr ""
-
-#: mainmenu.cpp:45
+#: mainmenu.cpp:48
 msgid "Welcome to the Equinox Desktop Environment."
 msgstr ""
 
 #: mainmenu_scan.cpp:45
 msgid "Open Directory.."
-msgstr ""
-
-#: taskbutton.cpp:165
-msgid " Close   "
-msgstr ""
-
-#: taskbutton.cpp:167
-msgid " Kill"
-msgstr ""
-
-#: taskbutton.cpp:172
-msgid " Minimize"
-msgstr ""
-
-#: taskbutton.cpp:173
-msgid " Restore"
-msgstr ""
-
-#: workpanel.cpp:253
-#, c-format
-msgid ""
-"Received: %ld kB (%.1f kB/s)\n"
-"Sent:     %ld kB (%.1f  kB/s)\n"
-"Duration: %d min %d sec"
-msgstr ""
-
-#: workpanel.cpp:331
-msgid "Workspace"
-msgstr ""
-
-#: workpanel.cpp:465
-msgid "Show desktop"
-msgstr ""
-
-#: workpanel.cpp:479
-msgid "Workspaces"
-msgstr ""
-
-#: workpanel.cpp:523
-msgid "Settings"
-msgstr ""
-
-#: workpanel.cpp:528
-msgid "About EDE..."
-msgstr ""
-
-#: workpanel.cpp:597
-msgid "Volume control"
 msgstr ""

@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Display settings
-  Exec=edisplayconf
-  Icon=konsole3.png
-  Name[sk]=Nastavenie displaya
-

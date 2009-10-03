@@ -38,7 +38,9 @@ SubInclude TOP services ;
 
 # they will not be compiled if eFLTK wasn't found
 SubInclude TOP edewm ;
-SubInclude TOP ede-panel ;
+#SubInclude TOP ede-panel ;
+
+SubInclude TOP ede-panel-new ;
 
 # efiler is not compileable at all
 if $(WITH_EFILER) = 1 {

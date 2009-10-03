@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=XSane
-  Exec=xsane
-  Icon=scanner.png
-  Name[sk]=XSane
-

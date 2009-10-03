@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-conf
+Icon=computer
+Categories=X-EDE;Settings;
+Name=Configure EDE
+Comment=Configure various EDE parts

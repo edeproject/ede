@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-calc
+Icon=empty
+Categories=Utility;
+Name=Calculator
+Comment=Simple Scientific Calculator

@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=Printers management
-  Name[sk]=Nastavenie tlačiarní
-  Exec=eprintconf
-  Icon=klpq.png
-

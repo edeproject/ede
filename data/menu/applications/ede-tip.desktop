@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-tip
+Icon=dialog-information
+Categories=Utility;
+Name=EDE Tips
+Comment=Useful EDE Tips

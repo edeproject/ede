@@ -270,11 +270,11 @@ static void perform_autostart(bool safe) {
 			continue;
 		}
 		
- 		/* if Hidden key is set true in .desktop file, file MUST be ignored */
+ 		/* files marked as hidden must be skipped */
 		if(df.hidden())
 			continue;
 
-		if(!(df.try_exec(buf, sizeof(buf)) || df.exec(buf, sizeof(buf))))
+		if(!df.exec(buf, sizeof(buf)))
 			continue;
 
 		DialogEntry* en = new DialogEntry;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-image-view
+Icon=graphics-image-viewer
+Categories=Graphics;2DGraphics;
+Name=Image Viewer
+Comment=View images and photographs

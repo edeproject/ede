@@ -47,18 +47,15 @@ EDE_PREFIX_SUBDIR ?= "ede" ;
 # directories used by build system
 PREFIX                ?= "$(prefix)" ;
 EDE_BIN_DIR           ?= "$(bindir)" ;
-EDE_CONFIG_DIR        ?= "/etc/xdg/ede" ; # use XDG default for config dir
+EDE_DATA_DIR          ?= "$(datadir)" ;
+EDE_CONFIG_DIR        ?= "/etc/xdg/$(EDE_PREFIX_SUBDIR)" ;
+EDE_MENU_DIR          ?= "/etc/xdg/menus" ; # use XDG default for menu dir
+EDE_ICON_DIR          ?= "$(EDE_DATA_DIR)/icons" ;
+EDE_MIME_DIR          ?= "$(EDE_DATA_DIR)/mime" ; # use XDG mime path
 EDE_DOC_DIR           ?= "$(docdir)/ede-$(EDE_VERSION)" ;
-EDE_THEMES_DIR        ?= "$(datadir)/$(EDE_PREFIX_SUBDIR)/themes" ;
-EDE_TIPS_DIR          ?= "$(datadir)/$(EDE_PREFIX_SUBDIR)/tips" ;
-EDE_PANEL_APPLETS_DIR ?= "$(datadir)/$(EDE_PREFIX_SUBDIR)/panel-applets" ;
-# do not put EDE_PREFIX_SUBDIR since this is XDG mime path
-EDE_MIME_DIR          ?= "$(datadir)/mime" ; 
-
-# TODO: should be removed; old directory layout
-EDE_CONFIG_DIR_OLD   ?= "$(datadir)/config" ;
-EDE_ICON_DIR         ?= "$(datadir)/icons" ;
-EDE_DESKTOP_FILE_DIR ?= "$(datadir)/desktop" ;
+EDE_THEMES_DIR        ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/themes" ;
+EDE_TIPS_DIR          ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/tips" ;
+EDE_PANEL_APPLETS_DIR ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/panel-applets" ;
 
 OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;

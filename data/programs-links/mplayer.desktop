@@ -1,8 +1,0 @@
-# EFLTK Configuration - Version 2,003000
-
-[Desktop Entry]
-  Name=MPlayer
-  Exec=emplayer -gui
-  Icon=noatun.png
-  Name[sk]=Media Player
-
