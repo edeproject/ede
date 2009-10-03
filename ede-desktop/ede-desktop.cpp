@@ -117,7 +117,7 @@ static void background_conf_cb(Fl_Widget*, void*) {
 }
 
 static void icons_conf_cb(Fl_Widget*, void*) {
-	edelib::run_async("ede-launch \"ede-desktop-conf --icons\"");
+	edelib::run_async("ede-launch ede-desktop-conf --icons");
 }
 
 static int desktop_xmessage_handler(int event) { 

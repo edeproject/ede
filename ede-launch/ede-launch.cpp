@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <FL/x.H>
 #include <FL/Fl.H>
@@ -39,6 +40,7 @@
 #include <edelib/Debug.h>
 #include <edelib/Missing.h>
 #include <edelib/MessageBox.h>
+#include <edelib/String.h>
 
 #include "icons/run.xpm"
 
@@ -49,6 +51,7 @@
 #define LaunchWindow edelib::Window
 
 EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(String)
 EDELIB_NS_USING(RES_USER_ONLY)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
@@ -326,10 +329,46 @@ int main(int argc, char** argv) {
 	if(argc == 1)
 		return start_dialog(argc, argv);
 
-	if(argc == 2)
-		start_child(argv[1]);
-	else 
-		help();
+
+
+	if(argc > 1) {
+		/* do not see possible flags as commands */
+		if(argv[1][0] == '-') {
+			help();
+			return 0;
+		}
+
+		String       args;
+		unsigned int alen;
+		for(int i = 1; i < argc; i++) {
+			args += argv[i];
+			args += ' ';
+		}
+
+		alen = args.length();
+
+		/* remove start/ending quotes and spaces */
+		if((args[0] == '"') || isspace(args[0]) || (args[alen - 1] == '"') || isspace(args[alen - 1])) {
+			int i;
+			char *copy = strdup(args.c_str());
+			char *ptr = copy;
+
+			/* remove ending first */
+			for(i = (int)alen - 1; i > 0 && (ptr[i] == '"' || isspace(ptr[i])); i--)
+				;
+
+			ptr[i + 1] = 0;
+
+			/* remove then starting */
+			for(; *ptr && (*ptr == '"' || isspace(*ptr)); ptr++)
+				;
+
+			start_child(ptr);
+			free(copy);
+		} else {
+			start_child(args.c_str());
+		}
+	}
 
 	return 0;
 }
