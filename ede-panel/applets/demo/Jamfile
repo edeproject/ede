@@ -8,6 +8,6 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-panel-new applets demo ;
+SubDir TOP ede-panel applets demo ;
 
 PanelApplet demo : AppletDemo.cpp ;

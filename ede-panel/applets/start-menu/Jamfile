@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-panel-new applets start-menu ;
+SubDir TOP ede-panel applets start-menu ;
 
 MENU_SRC = XdgMenuReader.cpp DesktopEntry.cpp MenuRules.cpp ;
 

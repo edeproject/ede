@@ -8,6 +8,6 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-panel-new applets taskbar ;
+SubDir TOP ede-panel applets taskbar ;
 
 PanelApplet taskbar : TaskButton.cpp Taskbar.cpp ;

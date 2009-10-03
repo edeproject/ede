@@ -8,6 +8,6 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-panel-new applets pager ;
+SubDir TOP ede-panel applets pager ;
 
 PanelApplet pager : Pager.cpp PagerButton.cpp ;

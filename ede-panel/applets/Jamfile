@@ -8,11 +8,11 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-panel-new applets ;
+SubDir TOP ede-panel applets ;
 
-SubInclude TOP ede-panel-new applets demo ;
-SubInclude TOP ede-panel-new applets clock ;
-SubInclude TOP ede-panel-new applets pager ;
-SubInclude TOP ede-panel-new applets quick-launch ;
-SubInclude TOP ede-panel-new applets start-menu ;
-SubInclude TOP ede-panel-new applets taskbar ;
+SubInclude TOP ede-panel applets demo ;
+SubInclude TOP ede-panel applets clock ;
+SubInclude TOP ede-panel applets pager ;
+SubInclude TOP ede-panel applets quick-launch ;
+SubInclude TOP ede-panel applets start-menu ;
+SubInclude TOP ede-panel applets taskbar ;
