@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP ede-autostart;
+SubDir TOP ede-autostart ;
 
 EdeProgram ede-autostart : ede-autostart.cpp ;
 #ObjectC++Flags ede-autostart : -DDEBUG_AUTOSTART_RUN ;

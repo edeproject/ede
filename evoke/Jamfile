@@ -34,9 +34,6 @@ ObjectC++Flags ede-shutdown : $(X_CFLAGS) ;
 ProgramBare    ede-shutdown : ede-shutdown.cpp ; 
 LinkAgainst    ede-shutdown : $(X_LIBS) -lX11 ;
 
-EdeProgram ede-autostart : ede-autostart.cpp ;
-#ObjectC++Flags ede-autostart : -DDEBUG_AUTOSTART_RUN ;
-
 InstallEdeProgram ede-settings-apply ;
 
 EdeManualWithToc [ FFileName doc evoke.txt ] ;
