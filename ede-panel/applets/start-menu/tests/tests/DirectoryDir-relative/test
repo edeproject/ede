@@ -1,0 +1,28 @@
+TEST_PURPOSE="relative <DirectoryDir> tag ..."
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+	<DirectoryDir>${PATH_EXPANSION}desktop-directories</DirectoryDir>
+
+	<Menu>
+		<Name>Applications</Name>
+		<Directory>apps.directory</Directory>
+		<Include>
+			<Category>TextEditor</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications kwrite.desktop KEdit.desktop quanta.desktop kate.desktop kbabel.desktop
+	installData ${XDG_CONFIG_DIR}/menus/desktop-directories apps.directory
+}

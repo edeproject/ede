@@ -1,0 +1,43 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-panel-new ;
+
+# make it as library, so applets can use it too
+ObjectC++Flags Netwm.cpp : -g3 -fPIC  $(EDELIBINCLUDE) ;
+StaticLibrary libnetwm   : Netwm.cpp ;
+NETWMLIB = -L$(SUBDIR) -lnetwm ;
+
+EdeProgram  ede-panel : Panel.cpp AppletManager.cpp ede-panel.cpp ;
+LinkAgainst ede-panel : $(NETWMLIB) ;
+
+# also must use this flag or program will crash
+LINKFLAGS on ede-panel = -rdynamic ;
+
+rule PanelApplet
+{
+	local target ;
+
+	# append default extension
+	target = $(<:S=$(SUFLIB_SHARED)) ;
+
+	Main $(target) : $(>) ;
+	ObjectC++Flags $(>) : -fPIC -I [ FDirName $(TOP) ede-panel-new ] $(EDELIBINCLUDE) ;
+
+	LinkAgainst $(target) : $(NETWMLIB) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
+	LINKFLAGS on $(target) = -shared -rdynamic [ on $(target) return $(LINKFLAGS) ] ;
+	LINKLIBS  on $(target) = [ on $(target) return $(LINKLIBS) ] $(3) ;
+
+	InstallData $(EDE_PANEL_APPLETS_DIR) : $(target) ;
+
+	Clean clean : $(target) ;
+}
+
+SubInclude TOP ede-panel-new applets ;

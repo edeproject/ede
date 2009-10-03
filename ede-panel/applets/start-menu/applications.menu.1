@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+
+  <Name>Applications</Name>
+
+  <!-- Read .desktop file from only this location -->
+  <!-- Or remove and use the two items below      -->
+  <AppDir>/home/ravenlock/.local/share/applications</AppDir>
+
+  <!-- Read standard .directory and .desktop file locations -->
+  <!-- by uncommenting these.                               -->
+  <!-- <DefaultAppDirs/> -->
+  <!-- <DefaultDirectoryDirs/> -->
+
+  <!-- Define a layout                                         -->
+  <!-- The Layout is what gives your menu its sort order.      -->
+  <!-- Without this section the menu is sorted alphabetically. -->
+  <Layout>
+          <Menuname>Testing</Menuname>
+          <Separator/>
+          <Menuname>Testing2</Menuname>
+  </Layout>
+
+  <!-- Testing submenu -->
+  <Menu>
+    <Name>Testing</Name>
+    <Include> <Category>TestingCat</Category> </Include>
+
+        <Menu>
+            <Name>Testing-sub</Name>
+            <Include> <Category>TestingCatSub</Category> </Include>
+        </Menu> <!-- End Testing submenu -->
+
+  </Menu> <!-- End Testing submenu -->
+  
+  <!-- Testing2 submenu -->
+  <Menu>
+    <Name>Testing2</Name>
+    <Include> <Category>TestingCat2</Category> </Include>
+
+        <Menu>
+            <Name>Testing-sub2</Name>
+            <Include> <Category>TestingCatSub2</Category> </Include>
+        </Menu> <!-- End Testing submenu -->
+
+  </Menu> <!-- End Testing2 submenu -->
+
+</Menu> <!-- End Applications -->

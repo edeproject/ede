@@ -1,0 +1,49 @@
+TEST_PURPOSE="Order of <Move> operations ..."
+
+test_code() {
+	# Tests the type attribute in <MergeFile>
+
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<DefaultAppDirs/>
+	<Menu>
+		<Name>Development</Name>
+		<Menu>
+			<Name>Games</Name>
+			<Include>
+				<Category>Game</Category>
+			</Include>
+		</Menu>
+		<Include>
+			<Category>Development</Category>
+		</Include>
+	</Menu>
+	<Move>
+		<Old>Development/Games-New</Old>
+		<New>Games-Correct</New>
+	</Move>
+	<Move>
+		<Old>Development/Games</Old>
+		<New>Games-Wrong</New>
+	</Move>
+	<Menu>
+		<Name>Development</Name>
+		<Move>
+			<Old>Games</Old>
+			<New>Games-New</New>
+		</Move>
+	</Menu>
+</Menu>
+EOF
+
+	# Move operations in sub-menus should be performed first
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications freecell.desktop glines.desktop gideon.desktop 
+}

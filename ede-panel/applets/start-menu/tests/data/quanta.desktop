@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Quanta Plus
+Exec=quanta
+Icon=quanta
+Type=Application
+MimeType=text/html
+DocPath=quanta/index.html
+Comment=Web Development Environment
+Categories=Qt;KDE;Development

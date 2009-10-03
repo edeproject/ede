@@ -1,0 +1,3 @@
+Applications/	KEdit.desktop	${XDG_CONFIG_DIR}/menus/apps/KEdit.desktop
+Applications/	kate.desktop	${XDG_CONFIG_DIR}/menus/apps/kate.desktop
+Applications/	kwrite.desktop	${XDG_CONFIG_DIR}/menus/apps/kwrite.desktop

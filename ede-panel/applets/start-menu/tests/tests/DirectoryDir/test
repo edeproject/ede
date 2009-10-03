@@ -1,0 +1,4 @@
+. tests/DirectoryDir-relative/test
+export PATH_EXPANSION='${XDG_CONFIG_DIR}/menus/'
+TEST_PURPOSE="<DirectoryDir> absolute path"
+

@@ -1,0 +1,3 @@
+Applications/	freecell.desktop	${XDG_DATA_DIR}/applications/freecell.desktop
+Applications/	gataxx.desktop	${XDG_DATA_DIR}/applications/gataxx.desktop
+Applications/	mahjongg.desktop	${XDG_DATA_DIR}/applications/mahjongg.desktop

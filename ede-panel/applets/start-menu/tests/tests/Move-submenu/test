@@ -1,0 +1,32 @@
+TEST_PURPOSE="Move into a new Submenu"
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+
+	<Menu>
+		<Name>Development</Name>
+		<Include>
+			<Filename>gideon-legacy.desktop</Filename>
+		</Include>
+	</Menu>
+	<Move>
+		<Old>Development</Old>
+		<New>A/B/Development</New>
+	</Move>
+</Menu>
+EOF
+
+	# Install .desktop files
+
+	installData ${XDG_DATA_DIR}/applications gideon-legacy.desktop
+}

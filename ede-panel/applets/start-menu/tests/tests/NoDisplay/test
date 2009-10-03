@@ -1,0 +1,37 @@
+TEST_PURPOSE="NoDisplay desktop entry values"
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+
+	<Menu>
+		<Name>Shouldn't see this</Name>
+		<Directory>hidden.directory</Directory>
+		<Include>
+			<Category>TextEditor</Category>
+		</Include>
+	</Menu>
+
+	<Menu>
+		<Name>Other</Name>
+		<OnlyUnallocated/>
+		<Include>
+			<All/>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications kwrite.desktop KEdit.desktop kate.desktop freecell.desktop hidden.desktop
+	installData ${XDG_DATA_DIR}/desktop-directories hidden.directory
+}

@@ -1,0 +1,73 @@
+TEST_PURPOSE="verify all required categories are supported"
+
+base_loc="tests/official-categories"
+
+test_code() 
+{
+	local category
+	for category in $(< "${base_loc}/categories.list"); do
+		CATEGORY="${category}" ./expand "${base_loc}/unique-entry.desktop" > "data/${category}.desktop"
+    	installData "${XDG_DATA_DIR}/applications" "${category}.desktop"
+    	rm "data/${category}.desktop"
+	done
+}
+
+query()
+{
+	echo "$@"
+	ret=''
+	while [ -z "$ret" ]; do
+		echo -n "y/n? :"
+		read ret
+		if ! [ "$ret" == "y" -o "$ret" == "n" ]; then
+			echo "invalid response; must be 'y' or 'n'"
+			ret=''
+		fi
+  	done
+    [ "$ret" == "y" ] && return 0
+    return 1
+}
+
+interpret_results()
+{
+  # inefficient, but works.
+	local missed=''
+	local correct=''
+	for category in $(< "${base_loc}/categories.list"); do
+		if grep "/${category}\.desktop" "${MENUTESTDIR}/run-result" > /dev/null; then
+			correct="${correct} ${category}"
+		else
+			missed="${missed} ${category}"
+		fi
+	done
+	if [ -z "${missed}" ]; then
+    	echo ">>> OK"
+		return 0
+	fi
+	if [ "$(echo $missed)" != "Settings" ]; then
+		# failures.
+		cat "${MENUTESTDIR}/run-result"
+		echo "missed categories $missed"
+		echo "matched ${correct}"
+		echo ">>> Failed (missed $(echo $missed | wc -w) out of $(wc -l "${base_loc}/categories.list")"
+		return 1
+	fi
+	echo ">>> Settings failed; checking interactively"
+	local ret
+	if [ "$(id -u)" != "0" ]; then
+		echo ">>> Cannot go interactive due to test being ran as non-root; re-run as root"
+		return 1;
+	elif ! which xdg-desktop-menu &> /dev/null; then
+		echo ">>> xdg-desktop-menu is not available; cannot do interactive test"
+		return 1;
+	fi
+	xdg-desktop-menu install --mode system --novendor "${XDG_DATA_DIR}/applications/Settings.desktop"
+	(
+	query "Please check for a 'menu-spec-testing' in any gnome/kde system settings panel"
+	)
+	ret=$?
+	xdg-desktop-menu uninstall --mode system "${XDG_DATA_DIR}/applications/Settings.desktop"
+	return $(($ret))
+}
+
+MODE=system_data

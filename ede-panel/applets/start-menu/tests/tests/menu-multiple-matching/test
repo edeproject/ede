@@ -1,0 +1,36 @@
+TEST_PURPOSE="complicated rule ..."
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+
+	<Menu>
+		<Name>Applications</Name>
+		<Include>
+			<And>
+				<Category>Game</Category>
+				<Category>BoardGame</Category>
+			</And>
+			<Or>
+				<Category>TextEditor</Category>
+				<Filename>quanta.desktop</Filename>
+			</Or>
+		</Include>
+		<Exclude>
+			<Filename>mahjongg.desktop</Filename>
+		</Exclude>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications gataxx.desktop mahjongg.desktop freecell.desktop glines.desktop kwrite.desktop KEdit.desktop quanta.desktop kate.desktop kbabel.desktop
+}

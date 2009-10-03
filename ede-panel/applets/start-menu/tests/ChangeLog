@@ -1,0 +1,70 @@
+2005-04-25  Mark McLoughlin  <mark@skynet.ie>
+
+	* tests/u: add test for recursive inclusion of .menu files.
+	Also know as the "get really hosed and eat all the RAM
+	you can find" test.
+
+2005-04-20  Waldo Bastian <bastian@kde.org>
+
+	* tests/s/result,
+	  tests/s/test: Test that .desktop files under $HOME correctly
+	override .desktop files at system level
+
+	* tests/t/result,
+	  tests/t/test: Test order in which <Move> elements are processed
+
+2005-02-18  Mark McLoughlin  <mark@skynet.ie>
+
+	Make it a bit more difficult in order to catch:
+	  http://bugzilla.gnome.org/show_bug.cgi?id=167758
+	Thanks to Chris Lahey for the test case.
+
+	* tests/o/test: put freecell.desktop in a subdirectory.
+
+2005-02-18  Mark McLoughlin  <mark@skynet.ie>
+
+	* tests/o/result,
+	  tests/o/test: test that
+	<And><Category>foo</Category><Not><Category>foo</Category></Not></And>
+	doesn't match anything.
+
+	* README: add bit about how to test the GNOME impl.
+
+2005-02-18  Mark McLoughlin  <mark@skynet.ie>
+
+	Problem pointed out by Waldo.
+
+	* menutest: don't try and run the "CVS" test :)
+	
+	* tests/m/result,
+	  tests/n/result: items in a hidden or deleted menu
+	should be considered allocated.
+
+2004-12-08  Mark McLoughlin  <mark@skynet.ie>
+
+	* tests/2/result,
+	  tests/2/test: test the new <OnlyUnallocated> behaviour.
+
+2004-08-29  Mark McLoughlin  <mark@skynet.ie>
+
+	* tests/m: test for NoDisplay=true behavious in .desktop and
+	.directory files.
+	
+	* data/hidden.desktop,
+	  data/hidden.directory: add.
+	
+	* data/apps.directory: add Type=Directory.
+	
+	* menutest: actually generate a test result if one doesn't
+	exist - makes it easier to write new tests.
+
+2003-10-23  Havoc Pennington  <hp@redhat.com>
+
+	* tests/f/test: remove <OnlyUnallocated/> from inside <Include>
+	statement, not allowed.
+
+2003-10-16  Havoc Pennington  <hp@redhat.com>
+
+	* menutest: cat log file on failure; print list of failed tests
+	when we're done
+

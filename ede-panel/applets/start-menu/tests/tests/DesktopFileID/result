@@ -1,0 +1,4 @@
+Applications/	company-games-freecell.desktop	${XDG_DATA_DIR}/applications/company/games/freecell.desktop
+Applications/	company-games-gataxx.desktop	${XDG_DATA_DIR}/applications/company/games/gataxx.desktop
+Applications/	company-games-glines.desktop	${XDG_DATA_DIR}/applications/company/games/glines.desktop
+Applications/	company-games-mahjongg.desktop	${XDG_DATA_DIR}/applications/company/games/mahjongg.desktop

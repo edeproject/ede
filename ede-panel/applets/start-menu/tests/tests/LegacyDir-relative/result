@@ -1,0 +1,9 @@
+Development/	gideon-legacy.desktop	${LEGACY_DIR}/Development/gideon-legacy.desktop
+Development/	kbabel.desktop	${LEGACY_DIR}/Development/kbabel.desktop
+Development/	quanta.desktop	${LEGACY_DIR}/Development/quanta.desktop
+Editors/	KEdit.desktop	${XDG_DATA_DIR}/applications/KEdit.desktop
+Editors/	kate.desktop	${XDG_DATA_DIR}/applications/kate.desktop
+Editors/	kwrite.desktop	${XDG_DATA_DIR}/applications/kwrite.desktop
+/	Help.desktop	${LEGACY_DIR}/Help.desktop
+/	Home.desktop	${LEGACY_DIR}/Home.desktop
+/	Kfind.desktop	${LEGACY_DIR}/Kfind.desktop

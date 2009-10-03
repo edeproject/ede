@@ -1,0 +1,200 @@
+#!/bin/bash
+# these vars are usable *only* for debugging purposes; they're not allowed as part of the spec, thus don't use them.
+# set MENU_FAKE_PREFIX to a non empty val to force testing for if things would succeed if XDG_MENU_PREFIX were 
+# implemented
+# set MENU_FAKE_APPLICATIONS to force a work around for applications-merged postfixing.
+#
+function installData()
+{
+  local DIR="$1"
+  shift
+  mkdir -p "${DIR}"
+  for file in $*; do 
+    cp "data/${file}" "${DIR}"
+    WIPE[$WIPE_IDX]="${DIR}/${file}"
+    WIPE_IDX=$(( $WIPE_IDX + 1 ))
+  done
+}
+
+function installDataAs()
+{
+  local DIR="$1"
+  mkdir -p "${DIR}"
+  cp "data/$2" "${DIR}/$3"
+  WIPE[${WIPE_IDX}]="${DIR}/${3}"
+  WIPE_IDX=$(( $WIPE_IDX + 1 ))
+}
+
+setup_local_xdg_vars() {
+  export XDG_CONFIG_HOME="${MENUTESTDIR}/xdg_config_home"
+  export XDG_DATA_HOME="${MENUTESTDIR}/xdg_data_home"
+  export XDG_CONFIG_DIR="${MENUTESTDIR}/xdg_config_dir"
+  export XDG_CONFIG_DIRS="$XDG_CONFIG_DIR:${XDG_CONFIG_DIRS}2"
+  export XDG_DATA_DIR="${MENUTESTDIR}/xdg_data_dir"
+  export XDG_DATA_DIRS="$XDG_DATA_DIR:${XDG_DATA_DIR}2"
+  export XDG_CACHE_HOME="${MENUTESTDIR}/xdg_cache_home"
+}
+
+setup_xdg_system_data_vars()
+{
+  export XDG_CACHE_HOME="${XDG_DATA_HOME:-${HOME}/.cache}"
+  export XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+  export XDG_CONFIG_DIR="${XDG_CONFIG_DIR:-/etc/xdg}"
+  if [ -z "${XDG_DATA_DIRS}" ]; then
+    export XDG_DATA_DIRS="/usr/local/share:/usr/share"
+  fi
+  export XDG_DATA_DIRS="${XDG_DATA_DIRS}:${MENUTESTDIR}/xdg_cache_dir"
+  export XDG_DATA_DIR="${XDG_DATA_DIRS//*:}"
+  if [ -z "${XDG_CONFIG_DIRS}" ]; then
+    export XDG_CONFIG_DIRS="/etc/xdg"
+  fi
+  export XDG_CONFIG_DIR="${XDG_CONFIG_DIRS/:*}"
+}    
+
+run_test() {
+  if [ -z "$1" ]; then
+    echo "requires name of test directory to run"
+    exit 1
+  fi
+  local TEST="$1"
+  rm -rf "${MENUTESTDIR}" 2> /dev/null
+  mkdir "${MENUTESTDIR}"
+  RESULT="${TEST}/result"
+
+  (
+    unset WIPE WIPE_IDX
+    declare -a WIPE
+    declare -i WIPE_IDX=0
+    unset MODE
+
+    . ${TEST}/test
+    echo ">>> Running test ${TEST}, purpose $TEST_PURPOSE"
+
+    if [ "${MODE:-local}" == "local" ]; then
+      setup_local_xdg_vars
+    elif [ "${MODE}" == "system_data" ]; then
+      setup_xdg_system_data_vars
+    else
+      echo "!!! unknown MODE from $TEST, bailing"
+      exit -1
+    fi
+
+    test_code
+
+    declare -i IDX=0
+    while [ $WIPE_IDX -gt $IDX ]; do
+      echo "${WIPE[$IDX]}" >> "${MENUTESTDIR}/wipe"
+      IDX=$(( $IDX + 1 ))
+    done
+
+    DEBUG_OVERRIDES=''
+    [ -n "$MENU_FAKE_PREFIX" ] && DEBUG_OVERRIDES=.menu
+    [ -n "$MENU_FAKE_APPLICATIONS" ] && DEBUG_OVERIDES="${DEBUG_OVERRIDES} -merged"
+    
+    for x in dir home; do
+	for y in ${DEBUG_OVERRIDES}; do
+	    if [ -e "${MENUTESTDIR}/xdg_config_${x}/menus/applications${y}" ]; then
+		ln -s applications${y} "${MENUTESTDIR}/xdg_config_${x}/menus/kde-applications${y}"
+		ln -s applications${y} "${MENUTESTDIR}/xdg_config_${x}/menus/gnome-applications${y}"
+	    fi
+	done
+	unset y
+    done
+    unset x DEBUG_OVERRIDES
+    
+    $MENUTEST > ${MENUTESTDIR}/run-result 2> ${MENUTESTDIR}/log
+
+    if [ -e "${RESULT}" ]; then
+      ./expand "${RESULT}" > "${MENUTESTDIR}/required-result"
+    fi
+
+    if [ "$(type -t interpret_results)" == "function" ]; then
+      interpret_results
+    else
+      default_interpret_results
+    fi  
+    ret=$?
+    if [ -e "${MENUTESTDIR}/wipe" ]; then
+      cat "${MENUTESTDIR}/wipe" | while read l; do
+        [ -z "$l" ] && continue
+        rm "$l"
+      done
+    fi
+    return $ret
+  )
+}
+
+default_interpret_results() {
+  if [ ! -e "${RESULT}" ]; then
+    echo "!!! Result file (${RESULT}) for ${TEST} missing"
+    echo '>>> Failed'
+    return 1
+  elif diff -q "${MENUTESTDIR}/run-result" "${MENUTESTDIR}/required-result" > /dev/null; then
+    echo '>>> OK'
+    return 0
+  fi
+  sort "${MENUTESTDIR}/run-result" > "${MENUTESTDIR}/run-result.sorted"
+  sort "${MENUTESTDIR}/required-result" > "${MENUTESTDIR}/required-result.sorted"
+  if diff -u "${MENUTESTDIR}/run-result.sorted" "${MENUTESTDIR}/required-result.sorted" > "${MENUTESTDIR}/result.diff"; then
+    echo '>>> OK (different order)'
+    return 0
+  fi
+  grep "${MENUTESTDIR}" "${MENUTESTDIR}/run-result" > "${MENUTESTDIR}/run-result.filtered" 2> /dev/null
+  if diff -q "${MENUTESTDIR}/run-result.filtered" "${MENUTESTDIR}/required-result" > /dev/null; then
+    echo '>>> OK (additional system items)'
+    return 0
+  fi
+  grep "${MENUTESTDIR}" "${MENUTESTDIR}/run-result.sorted" > "${MENUTESTDIR}/required-result.filtered" 2> /dev/null
+  if diff -u "${MENUTESTDIR}/run-result.filtered" "${MENUTESTDIR}/required-result.sorted" > "${MENUTESTDIR}/result.diff"; then
+    echo '>>> OK (different order, additional system items)'
+    return 0
+  fi
+  echo '>>> Failed'
+  cat "${MENUTESTDIR}/result.diff"
+  cat "${MENUTESTDIR}/log"
+  return 1
+}
+
+if  [ -z "${TESTS}" ]; then
+	export TESTS=`ls tests/*/test | sed -e 's:^\(\./\)\?tests/\+::' -e 's:/\+test$::'`
+fi
+
+if [ -z "$TET_RUN" ]; then
+
+  if [ "x${MENUTEST}" == "x" ]; then
+    echo 'To run the test set $MENUTEST to your menu-spec implementation.'
+    exit 1
+  fi
+
+  if [ "x${MENUTESTDIR}" == "x" ]; then
+    MENUTESTDIR=/tmp/menutestdir
+    echo Using ${MENUTESTDIR} as test directory, override with \$MENUTESTDIR.
+  else
+    echo Using ${MENUTESTDIR} as test directory.
+  fi
+
+  export MENUTESTDIR
+  export USER=${USER:-test}
+
+
+  FAILED=
+  SUCCEEDED=
+
+  for TESTCASE in ${TESTS}; do
+    if [ "${TESTCASE}" == "CVS" ]; then
+      continue
+  fi
+    echo
+    if ! run_test "tests/${TESTCASE}" ${MODE}; then
+      FAILED="${FAILED} ${TESTCASE}"
+    else
+      SUCCEEDED="${SUCCEEDED} ${TESTCASE}"
+    fi
+  done
+
+  echo "OK tests:     ${SUCCEEDED}"
+  [ -n "${FAILED}" ] && echo "Failed tests: ${FAILED}"
+  echo "$(echo ${SUCCEEDED} | wc -w) tests passed, $(echo ${FAILED} | wc -w) tests failed"
+  [ -z "${FAILED}" ] && exit 0
+  exit 1
+fi

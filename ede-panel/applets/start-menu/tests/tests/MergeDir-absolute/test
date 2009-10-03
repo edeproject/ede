@@ -1,0 +1,3 @@
+. tests/MergeDir-relative/test
+export PATH_EXPANSION='${XDG_CONFIG_DIR}/menus/'
+export TEST_PURPOSE="<MergeDir> absolute path test"

@@ -1,0 +1,39 @@
+#!/bin/bash
+TET_RUN="asdf"
+export MENUTESTDIR="${MENUTESTDIR:-/tmp/menutest}"
+. menutest
+# hack, figure out the var to use here
+
+tpstart() {
+	tet_infoline "$*"
+	FAIL=N
+}
+
+tet_startup=''
+tet_cleanup=''
+declare -i count=1
+iclist=''
+echo $TESTS
+for TESTCASE in ${TESTS}; do
+	[ ! -e "tests/${TESTCASE}/test" ] && continue;
+	# this basically curries the arg to run_test.
+	eval "tp${count}() {
+		. tests/${TESTCASE}/test
+		tpstart \"$(. tests/${TESTCASE}/test; echo ${TEST_PURPOSE-none stated})\";
+		if ! run_test tests/\"$TESTCASE\"; then
+			tet_result FAIL;
+		else
+			tet_result PASS;
+		fi
+		set +x
+	}";
+	iclist="${iclist} ic${count}"
+	eval "ic${count}=tp${count}"
+	# force subshelling, so that it doesn't pull a die on us
+	((count+=1))
+done
+tet_iclist=iclist
+. /opt/lsb-tet3-lite/lib/posix_sh/tcm.sh
+tet_outputline 100 "xdg menu test"
+tet_tcm_main $tet_iclist
+

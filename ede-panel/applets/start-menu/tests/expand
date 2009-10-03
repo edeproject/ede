@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+# This script performs expansion of environment variables of the form ${HOME}
+
+while(<>)
+{
+  while (($a) = ($_ =~ /[^\$]*\$\{([^\}]*)\}.*/))
+  {
+     s/([^\$]*)(\$\{$a\})(.*)/$1$ENV{$a}$3/;
+  }
+  printf $_;
+}

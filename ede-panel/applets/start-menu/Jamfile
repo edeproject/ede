@@ -1,0 +1,21 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-panel-new applets start-menu ;
+
+MENU_SRC = XdgMenuReader.cpp DesktopEntry.cpp MenuRules.cpp ;
+
+# TODO: MENU_SRC files will be compiled twice, once for applet and once for test program. 
+
+# applet
+PanelApplet start_menu : StartMenu.cpp $(MENU_SRC) ;
+
+# test program
+EdeProgram  ede-menu-spec-test : ede-menu-spec-test.cpp $(MENU_SRC) ;

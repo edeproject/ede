@@ -1,0 +1,39 @@
+TEST_PURPOSE="move entries from <LegacyDir>"
+
+test_code() {
+	LEGACY_DIR=${MENUTESTDIR}/legacy_applnk
+	export LEGACY_DIR
+
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<LegacyDir>${LEGACY_DIR}</LegacyDir>
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+
+	<Menu>
+		<Name>Development</Name>
+		<Exclude>
+			<Filename>gideon-legacy.desktop</Filename>
+		</Exclude>
+	</Menu>
+	<Menu>
+		<Name>Editors</Name>
+		<Include>
+			<Filename>gideon-legacy.desktop</Filename>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+
+	installData ${LEGACY_DIR} Home.desktop
+	installData ${LEGACY_DIR}/Development gideon-legacy.desktop
+}

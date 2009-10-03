@@ -1,0 +1,5 @@
+Applications/	KEdit.desktop	${XDG_DATA_DIR}/applications/KEdit.desktop
+Applications/	kate.desktop	${XDG_DATA_DIR}/applications/kate.desktop
+Applications/	kwrite.desktop	${XDG_DATA_DIR}/applications/kwrite.desktop
+Development/	kbabel.desktop	${XDG_DATA_DIR}/applications/kbabel.desktop
+Development/	quanta.desktop	${XDG_DATA_DIR}/applications/quanta.desktop

@@ -1,0 +1,53 @@
+TEST_PURPOSE=".desktop files with same name ..."
+
+test_code() {
+	# Tests the type attribute in <MergeFile>
+
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<DefaultAppDirs/>
+	<Menu>
+		<Name>Games</Name>
+		<Include>
+			<Category>Game</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Development</Name>
+		<Include>
+			<Category>Development</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications freecell.desktop glines.desktop mahjongg.desktop
+
+	# freecell.desktop is installed twice, only the version under ${XDG_DATA_HOME}/applications
+	# should show up in the menu
+	# freecell.desktop in ${XDG_DATA_DIR}/applications should be ignored.
+	installData ${XDG_DATA_HOME}/applications freecell.desktop
+
+	# ${XDG_DATA_HOME}/applications/glines.desktop has NoDisplay=true
+	# glines.desktop should not be shown
+	# glines.desktop in ${XDG_DATA_DIR}/applications should be ignored.
+	installDataAs ${XDG_DATA_HOME}/applications glines-2.desktop glines.desktop
+
+	# ${XDG_DATA_HOME}/applications/mahjongg.desktop has Categories=Development
+	# mahjongg.desktop should be shown under the Development menu
+	# mahjongg.desktop in ${XDG_DATA_DIR}/applications should be ignored.
+	installDataAs ${XDG_DATA_HOME}/applications mahjongg-2.desktop mahjongg.desktop
+
+	# kde/gideon.desktop and kde-gideon.desktop are equivalent
+	# only the version under ${XDG_DATA_HOME}/applications should show up in the menu
+	# gideon.desktop in ${XDG_DATA_DIR}/applications/kde should be ignored.
+	installDataAs ${XDG_DATA_DIR}/applications/kde gideon.desktop
+	installDataAs ${XDG_DATA_HOME}/applications gideon.desktop kde-gideon.desktop
+}

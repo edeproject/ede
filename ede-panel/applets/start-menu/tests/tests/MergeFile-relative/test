@@ -1,0 +1,44 @@
+TEST_PURPOSE="<MergeFile> tag relative path"
+
+test_code(){
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<DefaultAppDirs/>
+	<MergeFile>${PATH_EXPANSION}applications-merged/test.menu</MergeFile>
+
+	<Menu>
+		<Name>Applications</Name>
+		<Include>
+			<Category>TextEditor</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	mkdir ${XDG_CONFIG_DIR}/menus/applications-merged/
+	./expand > ${XDG_CONFIG_DIR}/menus/applications-merged/test.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+<!-- test -->
+
+<Menu>
+	<Name>KDE</Name>
+
+	<Menu>
+		<Name>Development</Name>
+		<Include>
+			<Category>Development</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications kwrite.desktop KEdit.desktop quanta.desktop kate.desktop kbabel.desktop
+}

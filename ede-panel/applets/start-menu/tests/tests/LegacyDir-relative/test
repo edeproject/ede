@@ -1,0 +1,42 @@
+TEST_PURPOSE="Simple <LegacyDir> test"
+
+test_code() {
+	LEGACY_DIR=${MENUTESTDIR}/legacy_applnk
+	export LEGACY_DIR
+
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<LegacyDir>${LEGACY_DIR}</LegacyDir>
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+
+	<Menu>
+		<Name>Editors</Name>
+		<Directory>kde-editors.directory</Directory>
+		<Include>
+			<Category>TextEditor</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Development</Name>
+		<Directory>kde-development.directory</Directory>
+		<Include>
+			<Category>Development</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications kwrite.desktop KEdit.desktop kate.desktop
+	installData ${LEGACY_DIR}/Development gideon-legacy.desktop kbabel.desktop quanta.desktop
+	installData ${LEGACY_DIR} Kfind.desktop Home.desktop Help.desktop
+}
+

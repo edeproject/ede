@@ -1,0 +1,35 @@
+TEST_PURPOSE="<Deleted> tag"
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+
+	<Menu>
+		<Name>BoardGames</Name>
+		<Include>
+			<Category>BoardGame</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Games</Name>
+		<Include>
+			<Category>Game</Category>
+		</Include>
+		<Deleted/>
+		<NotDeleted/>
+		<Deleted/>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications gataxx.desktop mahjongg.desktop freecell.desktop glines.desktop
+}

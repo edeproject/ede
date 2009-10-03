@@ -1,0 +1,46 @@
+TEST_PURPOSE="Merge Two Menus and a Legacy Menu"
+
+test_code() {
+	LEGACY_DIR=${MENUTESTDIR}/legacy_applnk
+	export LEGACY_DIR
+
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+	<DefaultDirectoryDirs/>
+	<LegacyDir>${LEGACY_DIR}</LegacyDir>
+
+	<Menu>
+		<Name>Development</Name>
+		<Include>
+			<Filename>kate.desktop</Filename>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Development</Name>
+		<Include>
+			<Filename>KEdit.desktop</Filename>
+		</Include>
+		<Deleted/>
+	</Menu>
+	<Menu>
+		<Name>Editors</Name>
+		<Include>
+			<Filename>kwrite.desktop</Filename>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+
+	installData ${LEGACY_DIR}/Development gideon-legacy.desktop
+	installData ${XDG_DATA_DIR}/applications kate.desktop kwrite.desktop KEdit.desktop
+}

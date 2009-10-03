@@ -1,0 +1,44 @@
+This directory contains regression tests for the menu-spec.
+
+To run these tests your menu-spec implementation should be 
+able to generate a menu in the following text format:
+
+<Full Menu Name><tab><Desktop File Id><tab><Full Path to Desktop File>
+
+Example:
+
+Editors/    kde-kwrite.desktop      /home/bastian/.local/share/applications/kde-kwrite.desktop
+Editors/    kde-kate.desktop        /home/bastian/.local/share/applications/kde-kate.desktop
+Editors/    kde-KEdit.desktop       /home/bastian/.local/share/applications/kde-KEdit.desktop
+Development/    kde-gideon.desktop      /opt/kde3/share/applnk/Development/gideon.desktop
+Development/    kde-kbabel.desktop      /opt/kde3/share/applnk/Development/kbabel.desktop
+Development/    kde-quanta.desktop      /opt/kde3/share/applnk/Development/quanta.desktop
+/       kde-Kfind.desktop       /opt/kde3/share/applnk/Kfind.desktop
+/       kde-Home.desktop        /opt/kde3/share/applnk/Home.desktop
+/       kde-Help.desktop        /opt/kde3/share/applnk/Help.desktop
+
+
+
+The environment variable $MENUTEST should point to a command that is
+able to generate the menu in the above format.
+
+To test KDE one can use:
+	MENUTEST="kbuildsycoca --menutest"
+
+With GNOME, you can use:
+	MENUTEST=gnome-menu-spec-test
+
+The menutest script should be used to run the tests. The following commands can
+be used:
+
+	MENUTEST="foo -bar" ./menutest
+
+to run all tests
+
+	MENUTEST="foo -bar" TESTS="Deleted Directory" ./menutest
+
+to run the tests named "Deleted" and "Directory" only
+
+All tests contain of a test setup script named "test" and a file describing
+the expected menu named "result".
+

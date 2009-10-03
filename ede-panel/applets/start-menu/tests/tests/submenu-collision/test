@@ -1,0 +1,32 @@
+TEST_PURPOSE="two submenus with the same name ..."
+
+test_code() {
+	# Generate applications.menu
+	mkdir -p ${XDG_CONFIG_DIR}/menus
+	./expand > ${XDG_CONFIG_DIR}/menus/applications.menu <<EOF
+ <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+	<Name>KDE</Name>
+	<!-- Search the default locations -->
+	<DefaultAppDirs/>
+
+	<Menu>
+		<Name>Applications</Name>
+		<Include>
+			<Category>TextEditor</Category>
+		</Include>
+	</Menu>
+	<Menu>
+		<Name>Applications</Name>
+		<Include>
+			<Category>Development</Category>
+		</Include>
+	</Menu>
+</Menu>
+EOF
+
+	# Install .desktop files
+	installData ${XDG_DATA_DIR}/applications kwrite.desktop KEdit.desktop quanta.desktop kate.desktop kbabel.desktop
+}

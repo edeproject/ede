@@ -1,0 +1,4 @@
+Games/BoardGame/	gataxx.desktop	${XDG_DATA_DIR}/applications/gataxx.desktop
+Games/BoardGame/	mahjongg.desktop	${XDG_DATA_DIR}/applications/mahjongg.desktop
+Games/	freecell.desktop	${XDG_DATA_DIR}/applications/freecell.desktop
+Games/	glines.desktop	${XDG_DATA_DIR}/applications/glines.desktop

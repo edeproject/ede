@@ -1,0 +1,7 @@
+This is an regression suite taken from http://freedesktop.org, to test
+conformance against XDG menu specification.
+
+Some test results (AppDir) were missing, so they are added. The rest 
+is unchanged.
+
+Sanel Zukan
