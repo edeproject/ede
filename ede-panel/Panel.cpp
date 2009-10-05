@@ -318,6 +318,13 @@ int Panel::handle(int e) {
 			}
 
 			return 1;
+
+		case FL_KEYBOARD:
+			/* do not quit on Esc key */
+			if(Fl::event_key() == FL_Escape)
+				return 1;
+
+			/* fallthrough */
 	}
 
 	return Fl_Window::handle(e);
