@@ -161,8 +161,11 @@ rule InstallDbusService
 	InstallData $(DBUS_SERVICE_DIR) : $(1) ;
 }
 
+# make sure the file was deleted first; if not, some re-installed objects (e.g. plugins)
+# will cause app to crash
 actions Install1
 {
+	$(RM) "$(<)"
 	$(CP) "$(>)" "$(<)"
 }
 
