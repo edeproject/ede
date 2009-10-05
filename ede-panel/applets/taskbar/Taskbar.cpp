@@ -93,7 +93,7 @@ void Taskbar::create_task_buttons(void) {
 				b->update_title_from_xid();
 
 				/* 
-				 * catch name changes 
+				 * catch the name changes 
 				 * TODO: put this in Netwm.{h,cpp} 
 				 */
 				XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
