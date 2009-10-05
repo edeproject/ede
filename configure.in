@@ -152,8 +152,8 @@ if test -n "$FLTK_CONFIG"; then
 		AC_MSG_ERROR([Looks like you have an older FLTK version ($fltk_version). Required is >= 1.1.7])
 	esac
 
-	dnl remove -Wno-non-virtual-dtor from flags
-	FLTK_CFLAGS=`$FLTK_CONFIG --cxxflags | sed -e 's/-Wno-non-virtual-dtor//'`
+	dnl remove -Wno-non-virtual-dtor from flags (also, on NetBSD they added -O2 flag; stupid)
+	FLTK_CFLAGS=`$FLTK_CONFIG --cxxflags | sed -e 's/-Wno-non-virtual-dtor//' | sed -e 's/-O[1-3]//g'`
 	dnl remove -lsupc++ so we can chose what to use
 	FLTK_LIBS_NOIMAGES=`$FLTK_CONFIG --ldflags | sed -e 's/-lsupc++//g'`
 	FLTK_LIBS=`$FLTK_CONFIG --use-images --ldflags | sed -e 's/-lsupc++//g'`
