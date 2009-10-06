@@ -1,6 +1,8 @@
+#include <stdio.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
+#include <X11/Xproto.h>
 
 #include <edelib/Debug.h>
 #include <edelib/List.h>
@@ -33,6 +35,33 @@ EDELIB_NS_USING(build_filename)
 
 typedef list<Fl_Widget*> WidgetList;
 typedef list<Fl_Widget*>::iterator WidgetListIt;
+
+static int xerror_handler(Display *d, XErrorEvent *e) {
+	if(e->request_code == X_GetImage)
+		return 0;
+
+	char buf[128];
+
+	/* 
+	 * construct the similar message format like X11 is using by default, but again, little
+	 * bit different so we knows it comes from here
+	 */
+
+	sprintf(buf, "%d", e->request_code);
+
+	XGetErrorDatabaseText(d, "XRequest", buf, "%d", buf, sizeof(buf));
+	fprintf(stderr, "%s: ", buf);
+
+	XGetErrorText(d, e->error_code, buf, sizeof(buf));
+	fprintf(stderr, "%s\n", buf);
+
+	XGetErrorDatabaseText(d, "XlibMessage", "ResourceID", "%d", buf, sizeof(buf));
+	fprintf(stderr, " ");
+	fprintf(stderr, buf, e->resourceid);
+	fprintf(stderr, "\n");
+
+	return 0;
+}
 
 inline bool intersects(Fl_Widget *o1, Fl_Widget *o2) {
 	    return (MAX(o1->x(), o2->x()) <= MIN(o1->x() + o1->w(), o2->x() + o2->w()) &&
@@ -239,6 +268,12 @@ void Panel::show(void) {
 	int X, Y, W, H;
 
 	fl_open_display();
+
+	/* 
+	 * hush known FLTK bug with XGetImage; a lot of errors will be print when menu icons goes
+	 * outside screen; this also make ede-panel, at some point, unresponsible
+	 */
+	XSetErrorHandler((XErrorHandler) xerror_handler);
 
 	/* position it */
 	if(!netwm_get_workarea(X, Y, W, H))

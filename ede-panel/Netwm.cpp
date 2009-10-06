@@ -93,7 +93,7 @@ static int xevent_handler(int e) {
 	if(fl_xevent->type == PropertyNotify) {
 		int action = -1;
 
-		E_DEBUG("==> %s\n", XGetAtomName(fl_display, fl_xevent->xproperty.atom));
+		/* E_DEBUG("==> %s\n", XGetAtomName(fl_display, fl_xevent->xproperty.atom)); */
 
 		if(fl_xevent->xproperty.atom == _XA_NET_NUMBER_OF_DESKTOPS)
 			action = NETWM_CHANGED_WORKSPACE_COUNT;

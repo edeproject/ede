@@ -82,7 +82,6 @@ void Taskbar::create_task_buttons(void) {
 		for(int i = 0; i < nwins; i++) {
 			if(!netwm_manageable_window(wins[i]))
 				continue;
-
 			/* 
 			 * show window per workspace
 			 * TODO: allow showing all windows in each workspace
