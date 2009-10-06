@@ -15,6 +15,7 @@
 #include <edelib/DesktopFile.h>
 #include <edelib/IconLoader.h>
 #include <edelib/Nls.h>
+#include <edelib/Run.h>
 
 #include "DesktopEntry.h"
 #include "MenuRules.h"
@@ -30,6 +31,7 @@ EDELIB_NS_USING(user_data_dir)
 EDELIB_NS_USING(build_filename)
 EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(str_ends)
+EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(FILE_TEST_IS_DIR)
 EDELIB_NS_USING(DESK_FILE_TYPE_DIRECTORY)
 EDELIB_NS_USING(ICON_SIZE_SMALL)
@@ -870,10 +872,15 @@ void xdg_menu_dump_for_test_suite(void) {
 static MenuParseList   global_parse_list;
 static MenuContextList global_context_list;
 
-static void item_cb(Fl_Widget *, void *en) {
+static void item_cb(Fl_Widget*, void *en) {
 	DesktopEntry *entry = (DesktopEntry*)en;
+	run_async("ede-launch %s", entry->get_exec());
 
-	E_DEBUG("RUN %s\n", entry->get_exec());
+	E_DEBUG(E_STRLOC ": ede-launch %s\n", entry->get_exec());
+}
+
+static void logout_cb(Fl_Widget*, void*) {
+	run_async("ede-shutdown");
 }
 
 static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, unsigned int pos) {
@@ -973,7 +980,7 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 			mi[pos].labelcolor_ = FL_BLACK;
 
 			/* set callback and callback data to be current entry */
-			mi[pos].callback_ = 0;
+			mi[pos].callback_ = logout_cb;
 			mi[pos].user_data_ = 0;
 	
 			if(IconLoader::inited()) {
