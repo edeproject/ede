@@ -47,7 +47,7 @@ private:
 	String *icon;
 
 	/* Exec value from .desktop file; filled with load() */
-	String *exec;
+	String *exec_cmd;
 
 	/* tokenized 'categories' */
 	StrList category_list;
@@ -55,7 +55,7 @@ private:
 	E_DISABLE_CLASS_COPY(DesktopEntry)
 public:
 	DesktopEntry() : age(0), allocated(false), path(NULL), id(NULL),
-	categories(NULL), name(NULL), generic_name(NULL), comment(NULL), icon(NULL), exec(NULL) { }
+	categories(NULL), name(NULL), generic_name(NULL), comment(NULL), icon(NULL), exec_cmd(NULL) { }
 
 	~DesktopEntry();
 
@@ -86,7 +86,7 @@ public:
 
 	const char   *get_name(void) { return name ? name->c_str() : NULL; }
 	const char   *get_icon(void) { return icon ? icon->c_str() : NULL; }
-	const char   *get_exec(void) { return exec ? exec->c_str() : NULL; }
+	const char   *get_exec(void) { return exec_cmd ? exec_cmd->c_str() : NULL; }
 };
 
 /* remove duplicate items in the list, by looking at DesktopEntry id */

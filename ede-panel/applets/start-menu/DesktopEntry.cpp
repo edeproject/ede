@@ -14,6 +14,61 @@ EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
 
 static int age_counter = 1;
 
+/* 
+ * expands Exec key according to Desktop Entry Specification; only '%i' and '%c' codes are expanded
+ * since other requests files parameter for the executable
+ *
+ * TODO: this should be in edelib
+ */
+static String *expand_exec(const char *cmd, DesktopEntry *en) {
+	E_RETURN_VAL_IF_FAIL(cmd != NULL, NULL);
+	E_RETURN_VAL_IF_FAIL(en != NULL, NULL);
+
+	int len = strlen(cmd);
+	E_RETURN_VAL_IF_FAIL(len > 1, NULL);
+
+	String     *tmp = new String;
+	const char *ptr = cmd;
+
+	tmp->reserve(len);
+
+	for(; *ptr; ptr++) {
+		if(*ptr == '%') {
+			ptr++;
+			switch(*ptr) {
+				case '%':
+					tmp->append(1, *ptr);
+					break;
+				case 'i':
+					tmp->append(en->get_icon());
+					break;
+				case 'c':
+					tmp->append(en->get_name());
+					break;
+				case 0:
+					/* end of the string */
+					goto done;
+					break;
+				default:
+					/* every other code is ignored */
+					break;
+			}
+		} else {
+			/* characters that must be quoted */
+			if(strchr("`$<>~|&;*#?()", *ptr) != NULL)
+				tmp->append("\\\\");
+			/* backslash is special */
+			else if(*ptr == '\\')
+				tmp->append("\\\\\\");
+
+			tmp->append(1, *ptr);
+		}
+	}
+
+done:
+	return tmp;
+}
+
 DesktopEntry::~DesktopEntry() {
 	delete path;
 	delete id;
@@ -23,7 +78,7 @@ DesktopEntry::~DesktopEntry() {
 	delete generic_name;
 	delete comment;
 	delete icon;
-	delete exec;
+	delete exec_cmd;
 }
 
 void DesktopEntry::assign_path(const char *dir, const char *p, const char *basedir) {
@@ -107,7 +162,11 @@ bool DesktopEntry::load(void) {
 		icon = new String(buf);
 
 	if(df.exec(buf, sizeof(buf)))
-		exec = new String(buf);
+		exec_cmd = expand_exec(buf, this);
+
+	/* executable wasn't found on system or expand_exec() somehow failed; do not put it in the menu */
+	if(!exec_cmd)
+		return false;
 
 	return true;
 }
