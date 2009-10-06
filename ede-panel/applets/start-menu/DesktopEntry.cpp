@@ -73,10 +73,21 @@ bool DesktopEntry::load(void) {
 	if(df.hidden() || df.no_display())
 		return false;
 
+	char buf[128];
+
+	/* should it be shown in EDE */
+	if(df.only_show_in(buf, sizeof(buf))) {
+		if(strstr(buf, "EDE") == NULL)
+			return false;
+	}
+
+	if(df.not_show_in(buf, sizeof(buf))) {
+		if(strstr(buf, "EDE") != NULL)
+			return false;
+	}
+
 	/* it must be application type */
 	E_RETURN_VAL_IF_FAIL(df.type() == DESK_FILE_TYPE_APPLICATION, false);
-
-	char buf[128];
 
 	/* name must be present too */
 	E_RETURN_VAL_IF_FAIL(df.name(buf, sizeof(buf)) == true, false);
