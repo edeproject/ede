@@ -11,7 +11,7 @@
 SubDir TOP ede-panel ;
 
 # make it as library, so applets can use it too
-ObjectC++Flags Netwm.cpp : -g3 -fPIC $(X_CFLAGS) $(EDELIBINCLUDE) ;
+ObjectC++Flags Netwm.cpp : -g3 -fPIC $(FLTKINCLUDE) $(EDELIBINCLUDE) ;
 StaticLibrary libnetwm   : Netwm.cpp ;
 NETWMLIB = -L$(SUBDIR) -lnetwm ;
 
