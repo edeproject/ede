@@ -57,8 +57,9 @@ EDE_THEMES_DIR        ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/themes" ;
 EDE_TIPS_DIR          ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/tips" ;
 EDE_PANEL_APPLETS_DIR ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/panel-applets" ;
 
-OPTIMFLAGS ?= @EDE_OPTIM_FLAGS@ ;
-DEBUGFLAGS ?= @EDE_DEBUG_FLAGS@ ;
+OPTIMFLAGS     ?= @EDE_OPTIM_FLAGS@ ;
+DEBUGFLAGS     ?= @EDE_DEBUG_FLAGS@ ;
+LARGEFILEFLAGS ?= @LARGEFILE@ ;
 
 # FIXME: a quick hack to work everything on SunStudio
 if $(SUN_COMPILER) {
@@ -75,7 +76,7 @@ if $(SUN_COMPILER) {
 }
 
 # global flags used to be passed to every target
-GLOBALFLAGS ?= $(WALL) $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) ;
+GLOBALFLAGS ?= $(WALL) $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) $(LARGEFILEFLAGS) ;
 STDLIB      ?= -lstdc++ ;
 
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
