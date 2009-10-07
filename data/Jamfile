@@ -22,3 +22,4 @@ Clean distclean : ede.desktop ;
 SubInclude TOP data mime-types ;
 SubInclude TOP data icon-themes ;
 SubInclude TOP data menu ;
+SubInclude TOP data desktop-links ;
