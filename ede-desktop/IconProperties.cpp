@@ -101,7 +101,7 @@ static void study_and_fill(DesktopIcon* dicon, DesktopIconData* data) {
 	} else {
 		char buff[128];
 
-		snprintf(buff, sizeof(buff), "%lu Bytes", st.st_size);
+		snprintf(buff, sizeof(buff), "%lu Bytes", (unsigned long)st.st_size);
 		data->size = buff;
 
 		strftime(buff, sizeof(buff), "%F %H:%S", localtime(&st.st_atime));

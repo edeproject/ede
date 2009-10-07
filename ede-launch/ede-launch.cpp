@@ -179,7 +179,7 @@ static int start_child_process(const char* cmd) {
 		free(params[i]);
 	free(params);
 
-	int status, ret;
+	int status = 0, ret = 1;
 	errno = 0;
 	if(waitpid(pid, &status, 0) < 0) {
 		E_WARNING(E_STRLOC ": waitpid() failed with '%s'\n", strerror(errno));
