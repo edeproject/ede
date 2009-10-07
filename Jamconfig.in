@@ -79,6 +79,11 @@ if $(SUN_COMPILER) {
 GLOBALFLAGS ?= $(WALL) $(PEDANTIC) -DHAVE_CONFIG_H -I$(TOP) $(OPTIMFLAGS) $(DEBUGFLAGS) $(LARGEFILEFLAGS) ;
 STDLIB      ?= -lstdc++ ;
 
+# NetBSD requires explicit -lm for libstdc++
+if $(OS) = "NETBSD" {
+	if $(STDLIB) = "-lstdc++" { $(STDLIB) += "-lm" ; }
+}
+
 # Note that REMOVE_UNUSED_DEPENDENCIES_TRICK _does not_ works when
 # edelib is compiled as shared library (or when is linked with some shared library)
 #REMOVE_UNUSED_DEPENDENCIES_TRICK = 1 ;
