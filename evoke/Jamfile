@@ -32,7 +32,7 @@ EdeProgram evoke : $(SOURCE) ;
 
 ObjectC++Flags ede-shutdown : $(X_CFLAGS) ;
 ProgramBare    ede-shutdown : ede-shutdown.cpp ; 
-LinkAgainst    ede-shutdown : $(X_LIBS) -lX11 ;
+LinkAgainst    ede-shutdown : $(X_LIBS) -lX11 -$(LIBM) ;
 
 InstallEdeProgram ede-settings-apply ;
 
