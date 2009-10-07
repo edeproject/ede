@@ -19,6 +19,6 @@ ObjectC++Flags $(SOURCE)  : -Wno-long-long
 							$(HALINCLUDE) ;
 
 Main              emountd : $(SOURCE) ;
-LinkAgainst       emountd : $(EDELIBLIB) $(HALLIB) $(STDLIB) ;
+LinkAgainst       emountd : $(EDELIBLIB) $(HALLIB) $(STDLIB) $(LIBM) ;
 InstallEdeProgram emountd ;
 EdeManual         emountd.txt ;

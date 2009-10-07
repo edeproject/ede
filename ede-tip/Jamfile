@@ -17,6 +17,7 @@ TranslationStrings  locale : $(SOURCE) ;
 EdeManual doc/ede-tip.txt : doc/ede-tip.jpg ;
 
 ProgramBare ede-tip-compiler : ede-tip-compiler.c ;
+LinkAgainst ede-tip-compiler : $(LIBM) ;
 
 # this rule is for compiling fortune files
 rule FortuneCompile
