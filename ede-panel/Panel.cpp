@@ -104,6 +104,7 @@ static void add_from_list(WidgetList &lst, Panel *self, int &X, bool inc) {
 	}
 }
 
+#if 0
 static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 	int tx, ty, px, py;
 	Fl_Widget *const *a;
@@ -162,6 +163,7 @@ static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 
 	o->parent()->redraw();
 }
+#endif
 
 void Panel::do_layout(void) {
 	E_RETURN_IF_FAIL(mgr.napplets() > 0);
