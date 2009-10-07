@@ -344,7 +344,7 @@ void Desktop::load_icons(const char* path) {
 	edelib::Resource conf, *conf_ptr = NULL;
 
 	if(!conf.load(ICONS_CONFIG_NAME))
-		E_WARNING(E_STRLOC ": Can't load icons positions from %s, randomizing them...\n", ICONS_CONFIG_NAME);
+		E_WARNING(E_STRLOC ": Can't load icons positions; arranging them somehow...\n");
 	else 
 		conf_ptr = &conf;
 
@@ -359,6 +359,10 @@ void Desktop::load_icons(const char* path) {
 	StringListIter it, it_end;
 	for(it = lst.begin(), it_end = lst.end(); it != it_end; ++it)
 		add_icon_by_path((*it).c_str(), conf_ptr);
+
+	/* if stored locations wasn't found */
+	if(!conf_ptr)
+		auto_arrange();
 }
 
 void Desktop::save_icons_positions(void) {
@@ -534,6 +538,27 @@ bool Desktop::remove_icon_by_path(const char* path) {
 	delete ic;
 
 	return true;
+}
+
+void Desktop::auto_arrange(void) {
+	DesktopIcon* ic;
+	DesktopIconListIter it, it_end;
+
+	int X = (gisett->label_maxwidth / 5) + 10;
+	int Y = 10;
+	int H = h();
+
+	for(it = icons.begin(), it_end = icons.end(); it != it_end; ++it) {
+		ic = (*it);
+
+		ic->position(X, Y);
+		Y += ic->h() + (ic->h() / 2);
+
+		if(Y + (ic->h() / 2) > H) {
+			Y = 10;
+			X += gisett->label_maxwidth + (ic->w() / 2);
+		}
+	}
 }
 
 void Desktop::update_trash_icons(void) {

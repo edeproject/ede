@@ -125,6 +125,8 @@ private:
 	DesktopIcon* find_icon_by_path(const char* path, DesktopIconListIter* pos);
 	bool remove_icon_by_path(const char* path);
 
+	void auto_arrange(void);
+
 	void update_trash_icons(void);
 
 	void unfocus_all(void);
