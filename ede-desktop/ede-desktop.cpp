@@ -807,7 +807,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 		sptr = src_copy;
 
 	if(!edelib::file_test(sptr, edelib::FILE_TEST_IS_REGULAR) || !edelib::file_test(sptr, edelib::FILE_TEST_IS_DIR)) {
-		edelib::message("Droping file content is not implemented yet. Soon, soon... :)");
+		edelib::message("Droping file content is not implemented yet ;)");
 		delete [] src_copy;
 		return;
 	}
