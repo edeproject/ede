@@ -102,13 +102,13 @@ void write_autostart_stuff(void) {
 	path += "/ede-tip.desktop";
 	DesktopFile conf;
 
-	bool show_at_startup = check_button->value();
+	bool hidden = check_button->value();
 
 	if(!conf.load(path.c_str()))
 		conf.create_new(DESK_FILE_TYPE_APPLICATION);
 
 	// always write these values so someone does not try to play with us
-	conf.set_hidden(show_at_startup);
+	conf.set_hidden(!hidden);
 	conf.set_name("EDE Tips");
 	conf.set_exec("ede-tip");
 
@@ -127,9 +127,9 @@ void read_autostart_stuff(void) {
 	}
 
 	if(conf.hidden())
-		check_button->value(1);
-	else
 		check_button->value(0);
+	else
+		check_button->value(1);
 }
 
 void close_cb(Fl_Widget*, void*) {
