@@ -157,13 +157,13 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	gisett->label_foreground = FL_WHITE;
 	gisett->label_fontsize = 12;
 	gisett->label_maxwidth = 75;
-	gisett->label_transparent = false;
+	gisett->label_transparent = true;
 	gisett->label_draw = true;
 	gisett->one_click_exec = false;
 	gisett->auto_arrange = true;
 
 	/* default background color */
-	color(FL_GRAY);
+	color(fl_rgb_color(73, 64, 102));
 }
 
 Desktop::~Desktop() { 
@@ -306,7 +306,9 @@ void Desktop::read_config(void) {
 	char wpath[256];
 	int  bcolor, wmode;
 
-	conf.get("Desktop", "color", bcolor, FL_GRAY);
+	/* use nice darker blue color as default for background */
+	conf.get("Desktop", "color", bcolor, fl_rgb_color(73, 64, 102));
+
 	conf.get("Desktop", "wallpaper_use", wuse, false);
 	conf.get("Desktop", "wallpaper", wpath, sizeof(wpath));
 	conf.get("Desktop", "wallpaper_mode", wmode, WALLPAPER_CENTER);
@@ -316,7 +318,7 @@ void Desktop::read_config(void) {
 	conf.get("Icons", "label_foreground", gisett->label_foreground, FL_WHITE);
 	conf.get("Icons", "label_fontsize",   gisett->label_fontsize, 12);
 	conf.get("Icons", "label_maxwidth",   gisett->label_maxwidth, 75);
-	conf.get("Icons", "label_transparent",gisett->label_transparent, false);
+	conf.get("Icons", "label_transparent",gisett->label_transparent, true);
 	conf.get("Icons", "label_visible",    gisett->label_draw, true);
 	conf.get("Icons", "one_click_exec",   gisett->one_click_exec, false);
 	conf.get("Icons", "auto_arrange",     gisett->auto_arrange, true);
