@@ -74,12 +74,6 @@ TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X,
 	box(FL_UP_BOX);
 	align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 
-	/* parameters for callbacks */
-	menu_[0].user_data(this);
-	menu_[1].user_data(this);
-	menu_[2].user_data(this);
-	menu_[3].user_data(this);
-
 	if(IconLoader::inited()) {
 		Fl_Shared_Image *img = IconLoader::get("process-stop", ICON_SIZE_TINY);
 		menu_[3].image((Fl_Image*)img);
@@ -132,6 +126,12 @@ void TaskButton::display_menu(void) {
 
 	/* do not popup tooltip when the menu is on */
 	tooltip(NULL);
+
+	/* parameters for callbacks; this is done here, since menu_ is static and shared between buttons */
+	menu_[0].user_data(this);
+	menu_[1].user_data(this);
+	menu_[2].user_data(this);
+	menu_[3].user_data(this);
 
 	const MenuItem *item = menu_->popup(Fl::event_x(), Fl::event_y(), 0, 0, 0);
 	if(item && item->callback())
