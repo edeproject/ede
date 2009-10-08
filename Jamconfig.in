@@ -69,9 +69,9 @@ if $(SUN_COMPILER) {
 } else {
 	# gcc assumed
 	WALL          ?= "-Wall" ;
-	# some C libraries have issues with C++ when given '-pedantic' flag, so
-	# setting 'jam -sPEDANTIC=""' will allow compilation
-	PEDANTIC      ?= "-pedantic" ;
+	# by default we do not use -pedantic; programs that use C libraries (HAL older versions) and eFLTK will fail 
+	# to compile with it
+	PEDANTIC      ?= ;
 	WNO_LONG_LONG ?= "-Wno-long-long" ;
 }
 
