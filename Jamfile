@@ -10,7 +10,7 @@
 
 SubDir TOP ;
 
-EdeManualWithToc README.alpha ;
+EdeManualWithToc README ;
 
 Clean distclean : $(JCACHEFILE) $(HCACHEFILE) ;
 
