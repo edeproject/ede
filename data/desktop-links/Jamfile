@@ -10,9 +10,11 @@
 
 SubDir TOP data desktop-links ;
 
-actions InstallIfEmpty
+actions quietly existing InstallIfEmpty
 {
-	./$(SUBDIR)/install-in-desktop-dir.sh
+	./$(>)/install-in-desktop-dir.sh
 }
 
-InstallIfEmpty install ;
+# use 'all' pseudotarget not 'install' because 'install' will be often run as superuser, installing 
+# data in superuser directory, not user directory
+InstallIfEmpty all : $(SUBDIR) ;

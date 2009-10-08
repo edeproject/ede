@@ -194,11 +194,12 @@ int main(int argc, char **argv) {
 			Fl_Check_Button* denabled = new Fl_Check_Button(20, 299, 180, 26, _("Enabled"));
 			denabled->down_box(FL_DOWN_BOX);
 			denabled->tooltip(_("Enable or disable Display Power Management Signaling support"));
-			denabled->callback((Fl_Callback*)dpms_enable_cb, sp);
-			if(sp)
+			if(sp) {
+				denabled->callback((Fl_Callback*)dpms_enable_cb, sp);
 				denabled->value(sp->dpms_enabled);
-			else
+			} else {
 				denabled->value(1);
+			}
 
 			Fl_Box* energy_image = new Fl_Box(20, 341, 75, 49);
 			energy_image->image(image_energy);

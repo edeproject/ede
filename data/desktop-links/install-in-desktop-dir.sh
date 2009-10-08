@@ -12,6 +12,8 @@ content=`ls $desktop_dir/*.desktop 2>>/dev/null`
 
 # check if directory is empty and install if it does
 if test "x$content" = "x"; then
+	echo "Preparing $desktop_dir for the first time..."
+
 	for file in $targets; do
 		cp $curr_dir/$file $desktop_dir
 	done
