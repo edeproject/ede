@@ -1,11 +1,10 @@
 Readme for EDE 2.0
 ==================
 
-Please read this document before using or contributing to EDE 2.0 source code
-before 2.0 release.
+Please read this document before using or contributing to EDE 2.0 source code.
 
 [NOTE]
-.This is alpha product
+.This is beta product
 ===================================
 EDE 2.0 is not finished yet and many components are not completed,
 can crash or misbehave
@@ -47,7 +46,7 @@ Compiling and installing
 
 In order to build and install EDE do the following steps:
 
-1. compile and install jam first; going to jam source directory and runnig 'make' will do 
+1. compile and install jam first; going to jam source directory and running 'make' will do 
    the job; after that you should get 'bin.YOUR_PLATFORM' directory (on Linux it will be 
    bin.linux) and copy 'jam' executable in your $PATH, e.g. /usr/local/bin
 
@@ -68,6 +67,5 @@ Used programs that requires eFLTK
 ---------------------------------
 
 - edewm
-- ede-panel
 
 These programs are planned to be replaced with the new ones.
