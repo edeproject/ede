@@ -1,0 +1,16 @@
+
+  KBFlags	Flags icons for keyboard layouts for KDE and other WMs.
+  
+  Copyright (C)	2005 Andi Peredri <andi@ukr.net>
+
+  Homepage:	http://qt.osdn.org.ua/kbflags.html
+  
+  License:	GNU General Public License
+
+  Features:	- 225 21x14 flat flags icons.
+		- 225 21x14 flags icons with flap effect.
+		- Command line tool (mkflags) for creating icons with
+		  flap effect.
+
+  Screenshot:	montage -geometry 21x14 -tile 18x100 -borderwidth 1
+			-bordercolor black *.png screenshot.png
