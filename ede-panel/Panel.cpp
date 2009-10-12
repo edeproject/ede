@@ -375,6 +375,7 @@ void Panel::load_applets(void) {
 		"pager.so",
 		"clock.so",
 		"taskbar.so",
+		"keyboard_layout.so",
 		0
 	};
 
@@ -396,6 +397,7 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/pager/pager.so");
 	mgr.load("./applets/clock/clock.so");
 	mgr.load("./applets/taskbar/taskbar.so");
+	mgr.load("./applets/keyboard-layout/keyboard_layout.so");
 	mgr.fill_group(this);
 #endif
 }

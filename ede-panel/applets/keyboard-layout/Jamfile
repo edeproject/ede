@@ -1,0 +1,13 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-panel applets keyboard-layout ;
+
+PanelApplet keyboard_layout : KeyLayout.cpp : -lxkbfile ;
