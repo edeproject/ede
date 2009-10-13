@@ -10,6 +10,10 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,17 +39,33 @@ EDELIB_NS_USING(Config)
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(EdbusMessage)
 EDELIB_NS_USING(EdbusConnection)
+EDELIB_NS_USING(EdbusError)
 EDELIB_NS_USING(EDBUS_SESSION)
+EDELIB_NS_USING(EDBUS_SYSTEM)
 EDELIB_NS_USING(RES_SYS_ONLY)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(str_trim)
+EDELIB_NS_USING(run_sync)
+EDELIB_NS_USING(alert)
 EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
 
 #ifdef USE_LOCAL_CONFIG
- #define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
+# define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
 #else
- #define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff), RES_SYS_ONLY)
+# define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff), RES_SYS_ONLY)
+#endif
+
+/* stolen from xfce's xfsm-shutdown-helper */
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+# define POWEROFF_CMD  "/sbin/shutdown -p now"
+# define REBOOT_CMD    "/sbin/shutdown -r now"
+#elif defined(sun) || defined(__sun)
+# define POWEROFF_CMD  "/usr/sbin/shutdown -i 5 -g 0 -y"
+# define REBOOT_CMD    "/usr/sbin/shutdown -i 6 -g 0 -y"
+#else
+# define POWEROFF_CMD  "/sbin/shutdown -h now"
+# define REBOOT_CMD    "/sbin/shutdown -r now"
 #endif
 
 static Atom XA_EDE_EVOKE_SHUTDOWN_ALL;
@@ -73,9 +93,68 @@ static void send_dbus_ede_quit(void) {
 	E_RETURN_IF_FAIL(c.connect(EDBUS_SESSION));
 
 	EdbusMessage msg;
-
 	msg.create_signal("/org/equinoxproject/Shutdown", "org.equinoxproject.Shutdown", "Shutdown");
 	c.send(msg);
+}
+
+static bool do_shutdown_or_restart(bool restart) {
+#ifdef HAVE_HAL
+	EdbusConnection c;
+	if(!c.connect(EDBUS_SYSTEM)) {
+		alert(_("Unable to connect to HAL daemon. Make sure both D-BUS and HAL daemons are running"));
+		return false;
+	}
+
+	const char* hal_cmd = "Shutdown";
+	if(restart)
+		hal_cmd = "Reboot";
+
+	EdbusMessage msg;
+	msg.create_method_call("org.freedesktop.Hal",
+						   "/org/freedesktop/Hal/devices/computer", 
+						   "org.freedesktop.Hal.Device.SystemPowerManagement", 
+						   hal_cmd);
+
+	EdbusMessage ret;
+	if(!c.send_with_reply_and_block(msg, 100, ret)) {
+		EdbusError* err = c.error();
+
+		if(err && err->valid()) {
+			if(strcmp(err->name(), "org.freedesktop.DBus.Error.AccessDenied") == 0) {
+				alert(_("Unable to send a message to HAL.\n\n"
+						"Make sure you have permissions to restart and shutdown "
+						"the computer with HAL daemon"));
+				return false;
+			} else if(strcmp(err->name(), "org.freedesktop.DBus.Error.NoReply") == 0) {
+				/* 'Reboot' do not send reply and that is considered as error from D-BUS daemon */
+				return true;
+			} else {
+				/* just print whatever error was received */
+				alert("%s\n\n%s", err->name(), err->message());
+				return false;
+			}
+		}
+
+		alert(_("Unable to send a message to HAL and unable to find out the reasons for that"));
+		return false;
+	}
+#else
+	int ret = 0;
+	const char* cmd = _("restart");
+
+	if(restart) {
+		ret = run_sync(REBOOT_CMD);
+	} else {
+		ret = run_sync(POWEROFF_CMD);
+		cmd = _("shutdown");
+	}
+
+	if(ret) {
+		alert(_("Unable to %s the computer. Probably you do not have enough permissions to do that"), cmd);
+		return false;
+	}
+#endif
+	return true;
 }
 
 EvokeService::EvokeService() : lock_name(NULL), xsm(NULL), is_running(false) { 
@@ -239,11 +318,27 @@ int EvokeService::handle(const XEvent* xev) {
 			int dh = DisplayHeight(fl_display, fl_screen);
 
 			int ret = logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
-			if(ret != -1) {
-				send_dbus_ede_quit();
-				x_shutdown();
-				stop();
+			if(ret == LOGOUT_RET_CANCEL)
+				return 1;
+
+			send_dbus_ede_quit();
+
+			switch(ret) {
+				case LOGOUT_RET_RESTART:
+					if(!do_shutdown_or_restart(true))
+						return 1;
+					break;
+				case LOGOUT_RET_SHUTDOWN:
+					if(!do_shutdown_or_restart(false))
+						return 1;
+					break;
+				case LOGOUT_RET_LOGOUT:
+				default:
+					x_shutdown();
+					break;
 			}
+
+			stop();
 		}
 	}
 
