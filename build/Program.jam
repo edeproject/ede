@@ -76,8 +76,8 @@ rule Program
 # and FLTKLIB. If [noinstall] is given, [target] will not be installed wit 'jam install'.
 rule EdeProgram
 {
-	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
-		Echo "EDELIBINCLUDE or EDELIBLIB not defined; $(1) will not be built" ;
+	if ! $(EDELIBLIB) {
+		Echo "EDELIBLIB not defined; $(1) will not be built" ;
 		return ;
 	}
 
@@ -95,8 +95,8 @@ rule EdeProgram
 # and FLTKLIB. If [noinstall] is given, [target] will not be installed wit 'jam install'.
 rule EdeProgramAsFltkBare
 {
-	if ! $(EDELIBINCLUDE) || ! $(EDELIBLIB) {
-		Echo "EDELIBINCLUDE or EDELIBLIB not defined; $(1) will not be built" ;
+	if ! $(EDELIBLIB) {
+		Echo "EDELIBLIB not defined; $(1) will not be built" ;
 		return ;
 	}
 
