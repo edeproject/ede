@@ -17,7 +17,15 @@ EXEMODE = 755 ;
 rule MakeInstallPrivate
 {
 	local i t s ;
-	local dir = $(1) ;
+	local dir ;
+
+	# use DESTDIR as make use it and is targeted for packagers primarly; FDirName is not used since
+	# it do not understainds external variables well
+	if $(DESTDIR) {
+		dir = $(DESTDIR)$(1) ;
+	} else {
+		dir = $(1) ;
+	}
 
 	MkDir $(dir) ;
 
