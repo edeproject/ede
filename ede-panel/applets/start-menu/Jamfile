@@ -12,10 +12,10 @@ SubDir TOP ede-panel applets start-menu ;
 
 MENU_SRC = XdgMenuReader.cpp DesktopEntry.cpp MenuRules.cpp ;
 
-# TODO: MENU_SRC files will be compiled twice, once for applet and once for test program. 
+Library libmenu : $(MENU_SRC) ;
+ObjectC++Flags $(MENU_SRC) : -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
 
-# applet
-PanelApplet start_menu : StartMenu.cpp $(MENU_SRC) ;
+PanelApplet start_menu : StartMenu.cpp : -L$(SUBDIR) -lmenu ;
 
-# test program
-EdeProgram  ede-menu-spec-test : ede-menu-spec-test.cpp $(MENU_SRC) ;
+EdeProgram ede-menu-spec-test : ede-menu-spec-test.cpp ;
+LinkAgainstAsFirst ede-menu-spec-test : -L$(SUBDIR) -lmenu ;

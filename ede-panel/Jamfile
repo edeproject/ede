@@ -31,9 +31,8 @@ rule PanelApplet
 	Main $(target) : $(>) ;
 	ObjectC++Flags $(>) : -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
 
-	LinkAgainst $(target) : $(NETWMLIB) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
+	LinkAgainst $(target) : $(NETWMLIB) $(3) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
 	LINKFLAGS on $(target) = -shared -rdynamic [ on $(target) return $(LINKFLAGS) ] ;
-	LINKLIBS  on $(target) = [ on $(target) return $(LINKLIBS) ] $(3) ;
 
 	InstallProgram $(EDE_PANEL_APPLETS_DIR) : $(target) ;
 
