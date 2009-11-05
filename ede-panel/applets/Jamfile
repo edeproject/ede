@@ -12,8 +12,9 @@ SubDir TOP ede-panel applets ;
 
 SubInclude TOP ede-panel applets demo ;
 SubInclude TOP ede-panel applets clock ;
+SubInclude TOP ede-panel applets cpu-monitor ;
+SubInclude TOP ede-panel applets keyboard-layout ;
 SubInclude TOP ede-panel applets pager ;
 SubInclude TOP ede-panel applets quick-launch ;
 SubInclude TOP ede-panel applets start-menu ;
 SubInclude TOP ede-panel applets taskbar ;
-SubInclude TOP ede-panel applets keyboard-layout ;
