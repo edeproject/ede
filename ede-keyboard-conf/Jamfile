@@ -1,0 +1,18 @@
+#
+# $Id$
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-keyboard-conf ;
+
+SRC = ede-keyboard-conf.cpp ;
+
+EdeProgram ede-keyboard-conf : $(SRC) ;
+LinkAgainst ede-keyboard-conf : -lxkbfile ;
+
+TranslationStrings locale    : $(SRC) ;
