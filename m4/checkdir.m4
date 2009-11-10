@@ -12,7 +12,7 @@ dnl even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 dnl PARTICULAR PURPOSE.
 
 dnl EDE_CHECK_DIR(VARIABLE, DIRECTORY_LIST)
-AC_DEFUN(EDE_CHECK_DIR,
+AC_DEFUN([EDE_CHECK_DIR],
 [AC_MSG_CHECKING(which directory to use for $1)
 	AC_CACHE_VAL(ac_cv_dir_$1,
 	[for ac_var in $2; do
