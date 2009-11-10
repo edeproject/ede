@@ -38,13 +38,13 @@
 #include <edelib/Nls.h>
 #include <edelib/MessageBox.h>
 #include <edelib/MenuButton.h>
+#include <edelib/ForeignCallback.h>
 
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
 #include "Utils.h"
 #include "Wallpaper.h"
 
-#define EDE_DESKTOP_UID    0x10
 #define CONFIG_NAME        "ede-desktop"
 #define ICONS_CONFIG_NAME  "ede-desktop-icons"
 
@@ -107,7 +107,7 @@ static void dir_watch_cb(const char* dir, const char* changed, int flags, void* 
 	Desktop::instance()->dir_watch(dir, changed, flags);
 }
 
-static void settings_changed_cb(void* data) {
+static void settings_changed_cb(Fl_Window* win) {
 	Desktop::instance()->read_config();
 	Desktop::instance()->redraw();
 }
@@ -142,8 +142,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	do_dirwatch = true;
 
 #ifdef USE_EDELIB_WINDOW
-	window_id(EDE_DESKTOP_UID);
-	foreign_callback(settings_changed_cb);
+	edelib::foreign_callback_add(this, settings_changed_cb, "ede-desktop");
 	/* DESKTOP_WINDOW::single_bufer(true); */
 #endif
 
@@ -176,6 +175,7 @@ Desktop::~Desktop() {
 	delete dbus;
 
 	edelib::DirWatch::shutdown();
+	edelib::foreign_callback_remove(settings_changed_cb);
 }
 
 void Desktop::init_internals(void) {

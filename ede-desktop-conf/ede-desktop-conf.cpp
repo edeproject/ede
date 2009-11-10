@@ -41,8 +41,8 @@
 #include <edelib/Util.h>
 #include <edelib/FontChooser.h>
 #include <edelib/Directory.h>
+#include <edelib/ForeignCallback.h>
 
-#define EDE_DESKTOP_UID    0x10
 #define EDE_DESKTOP_CONFIG "ede-desktop"
 
 Fl_Menu_Item mode_menu[] = {
@@ -269,7 +269,7 @@ void apply_cb(Fl_Widget*, void* w) {
 	conf.set("Icons", "one_click_exec", engage_with_one_click->value());
 
 	if(conf.save(EDE_DESKTOP_CONFIG))
-		edelib::Window::do_foreign_callback(EDE_DESKTOP_UID);
+		edelib::foreign_callback_call("ede-desktop");
 }
 
 void ok_cb(Fl_Widget*, void* w) {
