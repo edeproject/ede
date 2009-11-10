@@ -40,6 +40,7 @@ EDELIB_NS_USING_AS(Window, AppWindow)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
 
+static AppWindow       *win;
 static Fl_Hold_Browser *layout_browser;
 static Fl_Check_Button *repeat_press;
 static Fl_Check_Button *show_flag;
@@ -68,17 +69,13 @@ static const char *x11_rules[] = {
 	0
 }; 
 
-static void cancel_cb(Fl_Widget*, void* win) {
-	AppWindow *ww = (AppWindow*)win;
-	ww->hide();
-
+static void cancel_cb(Fl_Widget*, void*) {
+	win->hide();
 	dialog_canceled = true;
 }
 
-static void ok_cb(Fl_Widget*, void* win) {
-	AppWindow *ww = (AppWindow*)win;
-	ww->hide();
-
+static void ok_cb(Fl_Widget*, void*) {
+	win->hide();
 	dialog_canceled = false;
 }
 
@@ -105,7 +102,7 @@ static void fetch_current_layout(String &ret, String &rules_file_ret) {
 	XFree(vd.variant);
 }
 
-static void fetch_all_layouts(const String &current) {
+static XkbRF_RulesPtr fetch_all_layouts(const String &current) {
 	char		   buf[256];
 	XkbRF_RulesPtr xkb_rules = NULL;
 
@@ -122,7 +119,7 @@ static void fetch_all_layouts(const String &current) {
 
 	if(!xkb_rules) {
 		E_WARNING(E_STRLOC ": Unable to load keyboard rules file\n");
-		return;
+		return NULL;
 	}
 
 done:
@@ -136,7 +133,7 @@ done:
 		}
 	}
 
-	XkbRF_Free(xkb_rules, True);
+	return xkb_rules;
 }
 
 static void read_config(void) {
@@ -169,17 +166,30 @@ static void save_config(const String &layout) {
 
 static void apply_layout_on_x(const String &layout, const String &rules_filename) {
 	XkbRF_VarDefsRec vd;
-	vd.layout = (char*)layout.c_str();
+	vd.layout  = (char*)layout.c_str();
 
-	XkbRF_SetNamesProp(fl_display, (char*)rules_filename.c_str(), &vd);
+	/* 
+	 * rest fields must be zero-fied to prevent crash
+	 * FIXME: will this change other fields???
+	 */
+	vd.model   = NULL;
+	vd.options = NULL;
+	vd.variant = NULL;
+
+	if(XkbRF_SetNamesProp(fl_display, (char*)rules_filename.c_str(), &vd) != True)
+		E_WARNING(E_STRLOC ": Failed to update XKB rules\n");
+	else
+		XSync(fl_display, False);
 }
 
 int main(int argc, char **argv) {
-	/* needed for fetch_current_layout() */
+	String cl, rules_filename;
+
+	/* needed for fetch_current_layout() and '--apply' */
 	fl_open_display();
 	dialog_canceled = false;
 
-	AppWindow *win = new AppWindow(340, 320, _("Keyboard configuration tool"));
+	win = new AppWindow(340, 320, _("Keyboard configuration tool"));
 	win->begin();
 		Fl_Tabs *tabs = new Fl_Tabs(10, 10, 320, 265);
 		tabs->begin();
@@ -214,17 +224,17 @@ int main(int argc, char **argv) {
 		Fl_Group::current()->resizable(rbox);
 
 		Fl_Button *ok_button = new Fl_Button(145, 285, 90, 25, _("&OK"));
-		ok_button->callback(ok_cb, win);
+		ok_button->callback(ok_cb);
 
 		Fl_Button *cancel_button = new Fl_Button(240, 285, 90, 25, _("&Cancel"));
-		cancel_button->callback(cancel_cb, win);
+		cancel_button->callback(cancel_cb);
 	win->end();
 
 	/* read layouts */
-	String cl, rules_filename;
+	XkbRF_RulesPtr xkb_rules;
 
 	fetch_current_layout(cl, rules_filename);
-	fetch_all_layouts(cl);
+	xkb_rules = fetch_all_layouts(cl);
 
 	/* read configuration */
 	read_config();
@@ -233,8 +243,17 @@ int main(int argc, char **argv) {
 	Fl::run();
 
 	/* do not save configuration if was canceled */
-	if(!dialog_canceled)
-		save_config(cl);
+	if(!dialog_canceled && xkb_rules && layout_browser->value()) {
+		int  i = layout_browser->value();
+		/* get the layout that matches browser row */
+		char *n  = xkb_rules->layouts.desc[i - 1].name;
+
+		save_config(n);
+		apply_layout_on_x(n, rules_filename);
+	}
+
+	if(xkb_rules) 
+		XkbRF_Free(xkb_rules, True);
 
 	return 0;
 }
