@@ -106,8 +106,8 @@ void close_cb(Fl_Widget*, void*) {
 char* prepare_style(char* txt, int len) {
 	// paint all with 'A' style at startup
 	char* style = new char[len + 1];
-	memset(style, 'A', len);
-	style[len + 1] = '\0';
+	memset(style, 'A', len - 1);
+	style[len] = '\0';
 
 	// find bold keywords and paint them
 	char* p = 0;
