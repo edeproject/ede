@@ -87,6 +87,12 @@
 #define	STR_ENDSTRING(line,tbl) \
 	((line)[0] == (tbl).str_delim && (line)[1] == '\n')
 
+/* these types are BSD specific, but exists on Linux too */
+#if defined(sun) || defined(__sun)
+typedef unsigned int  u_int32_t;
+typedef unsigned char u_int8_t;
+#endif
+
 typedef struct {				/* information table */
 #define	VERSION		2
 	u_int32_t	str_version;		/* version number */
