@@ -13,6 +13,6 @@ SubDir TOP ede-keyboard-conf ;
 SRC = ede-keyboard-conf.cpp ;
 
 EdeProgram ede-keyboard-conf : $(SRC) ;
-LinkAgainst ede-keyboard-conf : -lxkbfile ;
+LinkAgainst ede-keyboard-conf : $(X_LIBS) -lxkbfile ;
 
 TranslationStrings locale    : $(SRC) ;
