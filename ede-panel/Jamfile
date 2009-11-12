@@ -18,12 +18,21 @@ NETWMLIB = -L$(SUBDIR) -lnetwm ;
 EdeProgram  ede-panel : Panel.cpp AppletManager.cpp ede-panel.cpp ;
 LinkAgainst ede-panel : $(NETWMLIB) ;
 
-# also must use this flag or program will crash
-LINKFLAGS on ede-panel = -rdynamic ;
+if $(OS) != "SOLARIS" {
+	# also must use this flag (on anything but Solaris) or program will crash
+	LINKFLAGS on ede-panel = -rdynamic ;
+}
 
 rule PanelApplet
 {
-	local target ;
+	local target linker_stuff ;
+
+	# FIXME: these are gcc specific flags
+	if $(OS) = "SOLARIS" {
+		linker_stuff = "-G" ;
+	} else {
+		linker_stuff = "-shared -rdynamic" ;
+	}
 
 	# append default extension
 	target = $(<:S=$(SUFLIB_SHARED)) ;
@@ -32,7 +41,7 @@ rule PanelApplet
 	ObjectC++Flags $(>) : -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
 
 	LinkAgainst $(target) : $(NETWMLIB) $(3) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
-	LINKFLAGS on $(target) = -shared -rdynamic [ on $(target) return $(LINKFLAGS) ] ;
+	LINKFLAGS on $(target) = $(linker_stuff) [ on $(target) return $(LINKFLAGS) ] ;
 
 	InstallProgram $(EDE_PANEL_APPLETS_DIR) : $(target) ;
 
