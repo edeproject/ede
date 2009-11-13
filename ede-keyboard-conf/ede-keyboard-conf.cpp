@@ -33,12 +33,22 @@
 #include <edelib/Debug.h>
 #include <edelib/String.h>
 #include <edelib/Resource.h>
+#include <edelib/File.h>
+#include <edelib/Run.h>
+#include <edelib/MessageBox.h>
+#include <edelib/ForeignCallback.h>
 
-#define CONFIG_NAME "ede-keyboard"
+#define CONFIG_NAME      "ede-keyboard"
+#define PANEL_APPLET_ID  "ede-keyboard"
+#define DEFAULT_X_LAYOUT "us"
 
 EDELIB_NS_USING_AS(Window, AppWindow)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(file_path)
+EDELIB_NS_USING(run_sync)
+EDELIB_NS_USING(alert)
+EDELIB_NS_USING(foreign_callback_call)
 
 static AppWindow       *win;
 static Fl_Hold_Browser *layout_browser;
@@ -79,23 +89,20 @@ static void ok_cb(Fl_Widget*, void*) {
 	dialog_canceled = false;
 }
 
-static void fetch_current_layout(String &ret, String &rules_file_ret) {
-	char			 *tmp = NULL;
-	XkbRF_VarDefsRec  vd;
-
-	E_ASSERT(fl_display != NULL);
+static void fetch_current_layout(String &current) {
+	char             *rules_file;
+	XkbRF_VarDefsRec vd;
 
 	/* get the layout straight from X since the layout can be changed during X session */
-	if(!XkbRF_GetNamesProp(fl_display, &tmp, &vd) || !vd.layout)
-		return;
+	if(!XkbRF_GetNamesProp(fl_display, &rules_file, &vd)) {
+		/* use some values */
+		current = DEFAULT_X_LAYOUT;
+	} else {
+		current = vd.layout;
+	}
 
-	ret = vd.layout;
-
-	/* remember rules filename too (on X.org is 'xorg')*/
-	rules_file_ret = tmp;
-
-	/* manually free each member */
-	XFree(tmp);
+	/* free everything */
+	XFree(rules_file);
 	XFree(vd.layout);
 	XFree(vd.model);
 	XFree(vd.options);
@@ -164,31 +171,63 @@ static void save_config(const String &layout) {
 	r.save(CONFIG_NAME);
 }
 
-static void apply_layout_on_x(const String &layout, const String &rules_filename) {
-	XkbRF_VarDefsRec vd;
-	vd.layout  = (char*)layout.c_str();
-
+static void apply_changes_on_x(const char *current) {
 	/* 
-	 * rest fields must be zero-fied to prevent crash
-	 * FIXME: will this change other fields???
+	 * believe me, it is easier to call this command than to reimplmement a mess for 
+	 * uploading keyboard layout on X server! 
 	 */
-	vd.model   = NULL;
-	vd.options = NULL;
-	vd.variant = NULL;
+	String setxkbmap = file_path("setxkbmap");
+	if(setxkbmap.empty()) {
+		alert(_("Unable to find 'setxkbmap' tool.\n\nThis tool is used as helper tool for "
+				"easier keyboard setup and is standard tool shipped with every X package. "
+				"Please install it first and run this program again."));
+	} else {
+		int ret = run_sync("%s %s", setxkbmap.c_str(), current);
+		/* do not show dialog since we can fail if config has bad entry when called from apply_chages_from_config() */
+		if(ret != 0) 
+			E_WARNING(E_STRLOC ": 'setxkbmap %s' failed with %i\n", current, ret);
+	}
 
-	if(XkbRF_SetNamesProp(fl_display, (char*)rules_filename.c_str(), &vd) != True)
-		E_WARNING(E_STRLOC ": Failed to update XKB rules\n");
+	if(repeat_press->value())
+		XAutoRepeatOn(fl_display);
 	else
-		XSync(fl_display, False);
+		XAutoRepeatOff(fl_display);
+
+	/* force panel applet to re-read config file to see if flag should be displayed or not*/
+	foreign_callback_call(PANEL_APPLET_ID);
+	XFlush(fl_display);
+}
+
+static void apply_chages_from_config(void) {
+	Resource r;
+	if(!r.load(CONFIG_NAME))
+		return;
+
+	char buf[32];
+	if(!r.get("Keyboard", "layout", buf, sizeof(buf)))
+		return;
+
+	/* TODO: this should be validated somehow */
+	apply_changes_on_x(buf);
 }
 
 int main(int argc, char **argv) {
-	String cl, rules_filename;
-
-	/* needed for fetch_current_layout() and '--apply' */
+	/* must be opened first */
 	fl_open_display();
+
+	/* only apply what was written in config */
+	if(argc > 1 && strcmp(argv[1], "--apply") == 0) {
+		apply_chages_from_config();
+		return 0;
+	}
+
+	String cl;
 	dialog_canceled = false;
 
+	/* get layout X holds */
+	fetch_current_layout(cl);
+
+	/* construct GUI */
 	win = new AppWindow(340, 320, _("Keyboard configuration tool"));
 	win->begin();
 		Fl_Tabs *tabs = new Fl_Tabs(10, 10, 320, 265);
@@ -230,11 +269,8 @@ int main(int argc, char **argv) {
 		cancel_button->callback(cancel_cb);
 	win->end();
 
-	/* read layouts */
-	XkbRF_RulesPtr xkb_rules;
-
-	fetch_current_layout(cl, rules_filename);
-	xkb_rules = fetch_all_layouts(cl);
+	/* read all XKB layouts */
+	XkbRF_RulesPtr xkb_rules = fetch_all_layouts(cl);
 
 	/* read configuration */
 	read_config();
@@ -249,7 +285,7 @@ int main(int argc, char **argv) {
 		char *n  = xkb_rules->layouts.desc[i - 1].name;
 
 		save_config(n);
-		apply_layout_on_x(n, rules_filename);
+		apply_changes_on_x(n);
 	}
 
 	if(xkb_rules) 

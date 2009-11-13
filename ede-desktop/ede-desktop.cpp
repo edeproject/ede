@@ -107,7 +107,7 @@ static void dir_watch_cb(const char* dir, const char* changed, int flags, void* 
 	Desktop::instance()->dir_watch(dir, changed, flags);
 }
 
-static void settings_changed_cb(Fl_Window* win) {
+static void settings_changed_cb(Fl_Window *win, void *data) {
 	Desktop::instance()->read_config();
 	Desktop::instance()->redraw();
 }
@@ -142,7 +142,7 @@ Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	do_dirwatch = true;
 
 #ifdef USE_EDELIB_WINDOW
-	edelib::foreign_callback_add(this, settings_changed_cb, "ede-desktop");
+	edelib::foreign_callback_add(this, "ede-desktop", settings_changed_cb);
 	/* DESKTOP_WINDOW::single_bufer(true); */
 #endif
 
