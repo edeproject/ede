@@ -171,31 +171,34 @@ static void save_config(const String &layout) {
 	r.save(CONFIG_NAME);
 }
 
-static void apply_changes_on_x(const char *current) {
-	/* 
-	 * believe me, it is easier to call this command than to reimplmement a mess for 
-	 * uploading keyboard layout on X server! 
-	 */
-	String setxkbmap = file_path("setxkbmap");
-	if(setxkbmap.empty()) {
-		alert(_("Unable to find 'setxkbmap' tool.\n\nThis tool is used as helper tool for "
-				"easier keyboard setup and is standard tool shipped with every X package. "
-				"Please install it first and run this program again."));
-	} else {
-		int ret = run_sync("%s %s", setxkbmap.c_str(), current);
-		/* do not show dialog since we can fail if config has bad entry when called from apply_chages_from_config() */
-		if(ret != 0) 
-			E_WARNING(E_STRLOC ": 'setxkbmap %s' failed with %i\n", current, ret);
-	}
-
+static void apply_changes_on_x(const char *current, const String* previous) {
 	if(repeat_press->value())
 		XAutoRepeatOn(fl_display);
 	else
 		XAutoRepeatOff(fl_display);
 
-	/* force panel applet to re-read config file to see if flag should be displayed or not*/
+	/* do not do anything if selected layout is the same as previous */
+	if(!previous || *previous != current) {
+		/* 
+		 * believe me, it is easier to call this command than to reimplmement a mess for 
+		 * uploading keyboard layout on X server! 
+		 */
+		String setxkbmap = file_path("setxkbmap");
+
+		if(setxkbmap.empty()) {
+			alert(_("Unable to find 'setxkbmap' tool.\n\nThis tool is used as helper tool for "
+					"easier keyboard setup and is standard tool shipped with every X package. "
+					"Please install it first and run this program again."));
+		} else {
+			int ret = run_sync("%s %s", setxkbmap.c_str(), current);
+			/* do not show dialog since we can fail if config has bad entry when called from apply_chages_from_config() */
+			if(ret != 0) 
+				E_WARNING(E_STRLOC ": 'setxkbmap %s' failed with %i\n", current, ret);
+		}
+	}
+
+	/* force panel applet to re-read config file to see if flag should be displayed or not */
 	foreign_callback_call(PANEL_APPLET_ID);
-	XFlush(fl_display);
 }
 
 static void apply_chages_from_config(void) {
@@ -208,7 +211,7 @@ static void apply_chages_from_config(void) {
 		return;
 
 	/* TODO: this should be validated somehow */
-	apply_changes_on_x(buf);
+	apply_changes_on_x(buf, NULL);
 }
 
 int main(int argc, char **argv) {
@@ -285,7 +288,7 @@ int main(int argc, char **argv) {
 		char *n  = xkb_rules->layouts.desc[i - 1].name;
 
 		save_config(n);
-		apply_changes_on_x(n);
+		apply_changes_on_x(n, &cl);
 	}
 
 	if(xkb_rules) 

@@ -19,12 +19,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <FL/Fl_Pixmap.H>
+#include <FL/Fl.H>
 #include <FL/Fl_Check_Browser.H>
 #include <FL/Fl_Button.H>
-#include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
-#include <FL/Fl.H>
 
 #include <edelib/String.h>
 #include <edelib/StrUtil.h>
@@ -37,11 +35,13 @@
 #include <edelib/Run.h>
 #include <edelib/FileTest.h>
 #include <edelib/MessageBox.h>
+#include <edelib/Window.h>
+#include <edelib/IconLoader.h>
 
-#include "icons/warning.xpm"
-
+EDELIB_NS_USING_AS(Window, AppWindow)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(DesktopFile)
+EDELIB_NS_USING(IconLoader)
 EDELIB_NS_USING(list)
 EDELIB_NS_USING(dir_list)
 EDELIB_NS_USING(system_config_dirs)
@@ -52,6 +52,7 @@ EDELIB_NS_USING(ask)
 EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
 EDELIB_NS_USING(FILE_TEST_IS_EXECUTABLE)
+EDELIB_NS_USING(ICON_SIZE_MEDIUM)
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
@@ -83,9 +84,8 @@ typedef list<String>::iterator StringListIter;
 typedef list<DialogEntry*>                 DialogEntryList;
 typedef list<DialogEntry*>::iterator       DialogEntryListIter;
 
-static Fl_Window*        dialog_win;
+static AppWindow*        dialog_win;
 static Fl_Check_Browser* cbrowser;
-static Fl_Pixmap         warnpix((const char**)warning_xpm);
 
 static char* get_basename(const char* path) {
 	char* p = strrchr(path, '/');
@@ -174,11 +174,14 @@ static void dialog_close_cb(Fl_Widget*, void* e) {
 static void run_autostart_dialog(DialogEntryList& l) {
 	DialogEntryList* ptr = (DialogEntryList*)&l;
 
-	dialog_win = new Fl_Window(370, 305, _("Autostart warning"));
+	dialog_win = new AppWindow(370, 305, _("Autostart warning"));
 	dialog_win->begin();
 		Fl_Box* img = new Fl_Box(10, 10, 65, 60);
-		img->image(warnpix);
-		Fl_Box* txt = new Fl_Box(80, 10, 280, 60, _("The following applications are registered for starting. Please chose what to do next"));
+		Fl_Image* ii = (Fl_Image*)IconLoader::get("dialog-warning", ICON_SIZE_MEDIUM);
+		img->image(ii);
+
+		Fl_Box* txt = new Fl_Box(80, 10, 280, 60, _("The following applications are "
+													"registered for starting. Please choose what to do next"));
 		txt->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_WRAP);
 		cbrowser = new Fl_Check_Browser(10, 75, 350, 185);
 
