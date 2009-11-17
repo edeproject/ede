@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <libhal-storage.h>
 #include <edelib/List.h>
+#include <edelib/Missing.h>
 
 /* HAL can return NULL as error message if not checked */
 #define CHECK_STR(s) ((s != NULL) ? s : "<unknown>")
@@ -327,7 +328,7 @@ int main(int argc, char** argv) {
 #else
 	/* run in background */
 	if(go_daemon)
-		daemon(0, 0);
+		edelib_daemon(0, 0);
 
 	DBusError err;
 	DBusConnection* conn = NULL, *session_conn = NULL;
