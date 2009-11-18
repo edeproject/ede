@@ -272,7 +272,9 @@ static void ok_cb(Fl_Widget*, void* w) {
 	if(in_term->value()) {
 		char buf[128];
 		char* term = getenv("TERM");
-		if(!term)
+
+		/* also check if TERM get inherited from login console */
+		if(!term || strcmp(term, "linux") == 0)
 			term = "xterm";
 
 		snprintf(buf, sizeof(buf), "%s -e %s", term, cmd);

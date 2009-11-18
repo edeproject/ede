@@ -9,24 +9,31 @@
 
 EDELIB_NS_USING_AS(Window, PanelWindow)
 
+enum {
+	PANEL_POSITION_TOP,
+	PANEL_POSITION_BOTTOM
+};
+
 class Panel : public PanelWindow {
 private:
 	Fl_Widget *clicked;
+	int        vpos;
 	int        sx, sy;
 	int        screen_x, screen_y, screen_w, screen_h, screen_h_half;
 	bool       can_move_widgets;
 
 	AppletManager mgr;
 
+	void read_config(void);
+	void save_config(void);
 	void do_layout(void);
 
 public:
-	Panel() : PanelWindow(300, 30), clicked(0), sx(0), sy(0), 
-	screen_x(0), screen_y(0), screen_w(0), screen_h(0), screen_h_half(0), can_move_widgets(false) 
-	{ box(FL_UP_BOX); }
+	Panel();
 
-	int  handle(int e);
 	void show(void);
+	void hide(void);
+	int  handle(int e);
 	void load_applets(void);
 
 	int panel_w(void) { return w(); }

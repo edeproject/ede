@@ -165,6 +165,38 @@ static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 }
 #endif
 
+Panel::Panel() : PanelWindow(300, 30) {
+	clicked = 0; 
+	sx = sy = 0;
+	vpos = PANEL_POSITION_BOTTOM;
+	screen_x = screen_y = screen_w = screen_h = 0;
+	screen_h_half = 0;
+	can_move_widgets = false;
+
+	box(FL_UP_BOX); 
+	read_config();
+}
+
+void Panel::read_config(void) {
+	Resource r;
+	if(!r.load("ede-panel"))
+		return;
+
+	int p;
+	if(r.get("Panel", "position", p, PANEL_POSITION_BOTTOM)) {
+		if((p != PANEL_POSITION_TOP) && (p != PANEL_POSITION_BOTTOM))
+			p = PANEL_POSITION_BOTTOM;
+	}
+
+	vpos = p;
+}
+
+void Panel::save_config(void) {
+	Resource r;
+	r.set("Panel", "position", vpos);
+	r.save("ede-panel");
+}
+
 void Panel::do_layout(void) {
 	E_RETURN_IF_FAIL(mgr.napplets() > 0);
 
@@ -231,7 +263,7 @@ void Panel::do_layout(void) {
 	/* 
 	 * Code for horizontal streching. 
 	 *
-	 * FIXME: This code pretty sucks and need better rewrite in future.
+	 * FIXME: This code pretty sucks and need better rewrite in the future.
 	 * To work properly, applets that will be streched must be successive or everything will be
 	 * messed up. Also, applets that are placed right2left does not work with it; they will be resized to right.
 	 */
@@ -281,30 +313,35 @@ void Panel::show(void) {
 	if(!netwm_get_workarea(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
 
-	resize(X, Y + H - DEFAULT_PANEL_H, W, DEFAULT_PANEL_H);
-
 	screen_x = X;
 	screen_y = Y;
 	screen_w = W;
 	screen_h = H;
 	screen_h_half = screen_h / 2;
 
+	/* set size as soon as possible, since do_layout() depends on it */
+	size(W, DEFAULT_PANEL_H);
+
 	do_layout();
 	window_xid_create(this, netwm_make_me_dock);
+
+	/* position it, this is done after XID was created */
+	if(vpos == PANEL_POSITION_BOTTOM) {
+		position(screen_x, screen_h - h());
+		netwm_set_window_strut(this, 0, 0, 0, h());
+	} else {
+		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
+		position(screen_x, screen_y);
+		netwm_set_window_strut(this, 0, 0, h(), 0);
+	}
+}
+
+void Panel::hide(void) {
+	save_config();
 }
 
 int Panel::handle(int e) {
 	switch(e) {
-		case FL_SHOW: {
-			int ret = PanelWindow::handle(e);
-			position(0, screen_h - h());
-
-			if(shown())
-				netwm_set_window_strut(this, 0, 0, 0, h());
-
-			return ret;
-		}
-
 		case FL_PUSH:
 			clicked = Fl::belowmouse();
 
@@ -319,29 +356,21 @@ int Panel::handle(int e) {
 			return 1;
 
 		case FL_DRAG: {
-#if 0
-			if(clicked && clicked->takesevents()) {
-				cursor(FL_CURSOR_MOVE);
-				/* moving the child */
-				//move_widget(this, clicked, sx, sy);
-				clicked->handle(e);
-			} else {
-#endif
-				cursor(FL_CURSOR_MOVE);
-				/* are moving the panel; only vertical moving is supported */
+			/* are moving the panel; only vertical moving is supported */
+			cursor(FL_CURSOR_MOVE);
 
-				/* snap it to the top or bottom, depending on pressed mouse location */
-				if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
-					position(screen_x, screen_y);
-					netwm_set_window_strut(this, 0, 0, h(), 0);
-				} 
+			/* snap it to the top or bottom, depending on pressed mouse location */
+			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
+				position(screen_x, screen_y);
+				netwm_set_window_strut(this, 0, 0, h(), 0);
+				vpos = PANEL_POSITION_TOP;
+			} 
 				
-				if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
-					/* TODO: use area x and area y */
-					position(screen_x, screen_h - h());
-					netwm_set_window_strut(this, 0, 0, 0, h());
-				}
-			// }
+			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
+				position(screen_x, screen_h - h());
+				netwm_set_window_strut(this, 0, 0, 0, h());
+				vpos = PANEL_POSITION_BOTTOM;
+			}
 
 			return 1;
 		}
@@ -360,7 +389,6 @@ int Panel::handle(int e) {
 			/* do not quit on Esc key */
 			if(Fl::event_key() == FL_Escape)
 				return 1;
-
 			/* fallthrough */
 	}
 
