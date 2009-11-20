@@ -10,15 +10,14 @@
  * See COPYING for details.
  */
 
-
-#include <Fl/Fl.h>
-#include <Fl/Fl_Window.h>
-#include <Fl/Fl_Button.h>
-#include <Fl/Fl_Shared_Image.h>
-#include <Fl/Fl_Scroll.h>
-#include <Fl/Fl_Widget.h>
-#include <Fl/Fl_File_Chooser.h>
-#include <Fl/filename.h>
+#include <Fl/Fl.H>
+#include <Fl/Fl_Window.H>
+#include <Fl/Fl_Button.H>
+#include <Fl/Fl_Shared_Image.H>
+#include <Fl/Fl_Scroll.H>
+#include <Fl/Fl_Widget.H>
+#include <Fl/Fl_File_Chooser.H>
+#include <Fl/filename.H>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -369,7 +368,7 @@ int main (int argc, char **argv) {
 	Fl::args(argc,argv,unknown);
 	filename[0]='\0'; directory[0]='\0';
 	if (unknown==argc)
-		snprintf(directory, FL_PATH_MAX, getenv("HOME"));
+		snprintf(directory, FL_PATH_MAX, "%s", getenv("HOME"));
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
 			printf(_("EImage - EDE Image Viewer\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
@@ -379,14 +378,14 @@ int main (int argc, char **argv) {
 		}
 
 		if (fl_filename_isdir(argv[unknown])) { // Param is directory
-			snprintf(directory, FL_PATH_MAX, argv[unknown]);
+			snprintf(directory, FL_PATH_MAX, "%s", argv[unknown]);
 			if (directory[0] == '~' && directory[1] == '/') // expand home dir
 				snprintf (directory, FL_PATH_MAX, "%s%s", getenv("HOME"), argv[unknown]+1);
 			else if (directory[0] != '/') // relative path
 				snprintf (directory, FL_PATH_MAX, "%s/%s", getenv("PWD"), argv[unknown]);
 
 		} else {
-			snprintf (filename, FL_PATH_MAX, argv[unknown]);
+			snprintf (filename, FL_PATH_MAX, "%s", argv[unknown]);
 			if (filename[0] == '~' && filename[1] == '/') // expand home dir
 				snprintf (filename, FL_PATH_MAX, "%s%s", getenv("HOME"), argv[unknown]+1);
 			else if (filename[0] != '/') // relative filename

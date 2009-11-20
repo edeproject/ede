@@ -120,6 +120,9 @@ X_LIBS       ?= @X_LIBS@ ;
 X_PRE_LIBS   ?= @X_PRE_LIBS@ ;
 X_EXTRA_LIBS ?= @X_EXTRA_LIBS@ ;
 
+# solo XKB extension library
+XKB_LIBS ?= @XKB_LIBS@ ;
+
 # curl libraries
 CURL_CFLAGS  ?= @CURL_CFLAGS@ ;
 CURL_LIBS    ?= @CURL_LIBS@ ;

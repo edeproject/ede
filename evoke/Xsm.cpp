@@ -53,9 +53,9 @@ EDELIB_NS_USING(XSETTINGS_TYPE_INT)
 EDELIB_NS_USING(XSETTINGS_TYPE_STRING)
 
 struct ResourceMap {
-	char* name;
-	char* xresource_key;
-	char* xresource_klass;
+	const char* name;
+	const char* xresource_key;
+	const char* xresource_klass;
 };
 
 /*

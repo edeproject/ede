@@ -88,7 +88,7 @@ static AppWindow*        dialog_win;
 static Fl_Check_Browser* cbrowser;
 
 static char* get_basename(const char* path) {
-	char* p = strrchr(path, '/');
+	char* p = (char*)strrchr(path, '/');
 	if(p) 
 		return (p + 1);
 

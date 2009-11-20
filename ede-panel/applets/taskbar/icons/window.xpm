@@ -1,5 +1,5 @@
 /* XPM */
-static char * window_xpm[] = {
+static const char *window_xpm[] = {
 "16 16 57 1",
 " 	c None",
 ".	c #BABDB6",

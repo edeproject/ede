@@ -1,5 +1,5 @@
 /* XPM */
-static char * energy_star_xpm[] = {
+static const char *energy_star_xpm[] = {
 "64 64 1305 2",
 "  	c None",
 ". 	c #D1EFFF",

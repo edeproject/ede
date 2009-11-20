@@ -14,6 +14,11 @@
 #include <config.h>
 #endif
 
+#include <edelib/MessageBox.h>
+#include <edelib/Nls.h>
+EDELIB_NS_USING(alert)
+
+#ifdef HAVE_XKBRULES
 #include <stdio.h>
 #include <string.h>
 #include <FL/Fl.H>
@@ -29,7 +34,6 @@
 #include <X11/extensions/XKBrules.h> 
 
 #include <edelib/Window.h>
-#include <edelib/Nls.h>
 #include <edelib/Debug.h>
 #include <edelib/String.h>
 #include <edelib/Resource.h>
@@ -47,7 +51,6 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(run_sync)
-EDELIB_NS_USING(alert)
 EDELIB_NS_USING(foreign_callback_call)
 
 static AppWindow       *win;
@@ -213,8 +216,10 @@ static void apply_chages_from_config(void) {
 	/* TODO: this should be validated somehow */
 	apply_changes_on_x(buf, NULL);
 }
+#endif /* HAVE_XKBRULES */
 
 int main(int argc, char **argv) {
+#ifdef HAVE_XKBRULES
 	/* must be opened first */
 	fl_open_display();
 
@@ -293,6 +298,10 @@ int main(int argc, char **argv) {
 
 	if(xkb_rules) 
 		XkbRF_Free(xkb_rules, True);
+
+#else
+	alert(_("ede-keyboard-conf was compiled without XKB extension. Please recompile it again"));
+#endif /* HAVE_XKBRULES */
 
 	return 0;
 }

@@ -1,5 +1,5 @@
 /* XPM */
-const char *world[] = { 
+static const char *world[] = { 
 "356 184 3 1",
 ". c #000078",
 "# c #007800",

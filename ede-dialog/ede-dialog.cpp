@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <FL/Fl.h>
+#include <FL/Fl.H>
 #include <edelib/MessageBox.h>
 #include <edelib/Window.h>
 #include <edelib/Nls.h>

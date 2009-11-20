@@ -212,6 +212,36 @@ fi
 dnl emits PTHREAD_CFLAGS and PTHREAD_LIBS
 ACX_PTHREAD
 
+AC_MSG_CHECKING([for XKB extension files])
+ac_save_CFLAGS="$CFLAGS"
+ac_save_LIBS="$LIBS"
+CFLAGS="$CFLAGS $X_CFLAGS"
+LIBS="$LIBS $X_LIBS $X_EXTRA_LIBS -lxkbfile"
+
+AC_LANG_SAVE
+AC_LANG_C
+AC_TRY_LINK([
+	#include <stdio.h>
+	#include <X11/XKBlib.h>
+	#include <X11/extensions/XKBrules.h>
+],[
+	FILE *fd = fopen("/some/file", "r");
+	XkbRF_RulesPtr ptr;
+	XkbRF_LoadRules(fd, ptr);
+],[have_xkbrules=yes],[])
+AC_LANG_RESTORE
+
+CFLAGS="ac_save_CFLAGS"
+LIBS="ac_save_LIBS"
+
+if test "$have_xkbrules" = "yes"; then
+	AC_DEFINE(HAVE_XKBRULES, 1, [Define to 1 if you have XKB extension])
+	XKB_LIBS="$X_LIBS -lxkbfile"
+	AC_MSG_RESULT(yes)
+else 
+	AC_MSG_RESULT(no)
+fi
+
 EDE_CHECK_DIR(DBUS_SERVICE_DIR, 
 			  [/usr/share/dbus-1/services /usr/local/share/dbus-1/services "$datarootdir/dbus-1/services"])
 
@@ -231,6 +261,7 @@ AC_SUBST(EDELIB_API_INDEX)
 AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)
 AC_SUBST(LARGEFILE)
+AC_SUBST(XKB_LIBS)
 
 AC_OUTPUT([
  Jamconfig

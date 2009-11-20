@@ -1,5 +1,9 @@
 #include "Applet.h"
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/x.H>
@@ -7,9 +11,11 @@
 
 #include <stdio.h> /* needed for XKBrules.h */
 
-#include <X11/XKBlib.h>
-#include <X11/extensions/XKBgeom.h>
-#include <X11/extensions/XKBrules.h>
+#ifdef HAVE_XKBRULES
+# include <X11/XKBlib.h>
+# include <X11/extensions/XKBgeom.h>
+# include <X11/extensions/XKBrules.h>
+#endif
 
 #include <edelib/Resource.h>
 #include <edelib/Debug.h>
@@ -52,6 +58,7 @@ typedef list<KeyLayout*>::iterator KeyLayoutListIt;
 
 static KeyLayoutList keylayout_objects;
 
+#ifdef HAVE_XKBRULES
 /* Xkb does not provide this */
 static void xkbrf_names_prop_free(XkbRF_VarDefsRec &vd, char *tmp) {
 	XFree(tmp);
@@ -60,6 +67,7 @@ static void xkbrf_names_prop_free(XkbRF_VarDefsRec &vd, char *tmp) {
 	XFree(vd.options);
 	XFree(vd.variant);
 }
+#endif
 
 /* 
  * any layout changes on X will be reported here, executed either via ede-keyboard-conf or
@@ -113,8 +121,10 @@ KeyLayout::KeyLayout() : Fl_Button(0, 0, 30, 25) {
 	keylayout_objects.push_back(this);
 
 	/* with this, kb layout chages will be catched */
+#if HAVE_XKBRULES
 	if(!_XA_XKB_RF_NAMES_PROP_ATOM)
 		_XA_XKB_RF_NAMES_PROP_ATOM = XInternAtom(fl_display, _XKB_RF_NAMES_PROP_ATOM, False);
+#endif
 
 	Fl::add_handler(xkb_events);
 }
@@ -156,12 +166,11 @@ void KeyLayout::update_flag(bool read_config) {
 }
 
 void KeyLayout::do_key_layout(void) {
+#ifdef HAVE_XKBRULES
 	char             *tmp = NULL;
 	XkbRF_VarDefsRec  vd;
 
 	if(XkbRF_GetNamesProp(fl_display, &tmp, &vd)) {
-		Fl_Image *img = NULL;
-
 		/* do nothing if layout do not exists or the same was catched */
 		if(!vd.layout || (curr_layout == vd.layout))
 			return;
@@ -170,6 +179,7 @@ void KeyLayout::do_key_layout(void) {
 		curr_layout = vd.layout;
 		xkbrf_names_prop_free(vd, tmp);
 	}
+#endif
 }
 
 int KeyLayout::handle(int e) {

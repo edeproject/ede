@@ -130,7 +130,7 @@ static void min_to_time(unsigned int t, String& ret) {
 
 	unsigned int hour = 0, min = 0;
 	char buf[3];
-	char* fmt;
+	const char* fmt;
 
 	/* assure we do not get values that exceedes a day (24 * 60 = 1440) */
 	if(t >= 1440) {
@@ -636,8 +636,8 @@ void xscreensaver_preview(int id, const char* name) {
 		case 0: {
 			usleep(250000);
 			char* argv[4];
-			argv[0] = "sh";
-			argv[1] = "-c";
+			argv[0] = (char*)"sh";
+			argv[1] = (char*)"-c";
 			argv[2] = (char*)cmd.c_str();
 			argv[3] = NULL;
 			execve("/bin/sh", argv, environ);

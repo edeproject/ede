@@ -10,4 +10,4 @@
 
 SubDir TOP ede-panel applets keyboard-layout ;
 
-PanelApplet keyboard_layout : KeyLayout.cpp : $(X_LIBS) -lxkbfile ;
+PanelApplet keyboard_layout : KeyLayout.cpp : $(XKB_LIBS) ;

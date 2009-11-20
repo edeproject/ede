@@ -1,5 +1,5 @@
 /* XPM */
-static char * hint_xpm[] = {
+static const char *hint_xpm[] = {
 "118 197 174 2",
 "  	c #F1F3F5",
 ". 	c #F2F4F6",

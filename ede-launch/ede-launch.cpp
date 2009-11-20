@@ -67,7 +67,7 @@ static void help(void) {
 }
 
 static char* get_basename(const char* path) {
-	char *p = strrchr(path, '/');
+	char *p = (char*)strrchr(path, '/');
 	if(p)
 		return (p + 1);
 
@@ -271,7 +271,7 @@ static void ok_cb(Fl_Widget*, void* w) {
 	/* TODO: is 'cmd' safe after hide? */
 	if(in_term->value()) {
 		char buf[128];
-		char* term = getenv("TERM");
+		const char* term = getenv("TERM");
 
 		/* also check if TERM get inherited from login console */
 		if(!term || strcmp(term, "linux") == 0)

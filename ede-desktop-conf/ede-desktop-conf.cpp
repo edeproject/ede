@@ -26,12 +26,12 @@
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Value_Slider.H>
-#include <FL/Fl_Color_Chooser.h>
-#include <FL/Fl_File_Chooser.h>
-#include <FL/Fl_Shared_Image.h>
-#include <FL/Fl_Tiled_Image.h>
-#include <FL/Fl_Menu_Button.h>
-#include <FL/x.h>
+#include <FL/Fl_Color_Chooser.H>
+#include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Tiled_Image.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/x.H>
 
 #include <edelib/Nls.h>
 #include <edelib/Color.h>

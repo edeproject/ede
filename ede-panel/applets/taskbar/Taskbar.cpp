@@ -76,8 +76,7 @@ void Taskbar::create_task_buttons(void) {
 
 	if(nwins > 0) {
 		TaskButton *b;
-		int   curr_workspace = netwm_get_current_workspace();
-		char *title;
+		int         curr_workspace = netwm_get_current_workspace();
 
 		for(int i = 0; i < nwins; i++) {
 			if(!netwm_manageable_window(wins[i]))
@@ -158,7 +157,7 @@ void Taskbar::update_active_button(int xid) {
 	for(int i = 0; i < children(); i++) {
 		o = (TaskButton*)child(i);
 
-		if(o->get_window_xid() == xid)
+		if(o->get_window_xid() == (Window)xid)
 			o->box(FL_DOWN_BOX);
 		else
 			o->box(FL_UP_BOX);

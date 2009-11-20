@@ -57,7 +57,7 @@ bool time_changed, format_changed, tz_changed, date_changed;
 // config file for workpanel (time format)
 edelib::Config config_file;
 
-char* zonetab_dir = 0;
+const char* zonetab_dir = 0;
 
 // Time servers - all in one string, so that translators can easily add new servers
 const char* time_servers = _("International (pool.ntp.org)\nEurope (europe.pool.ntp.org)\nAsia (asia.pool.ntp.org)\nNorth America (north-america.pool.ntp.org)\nAustralia and Oceania (oceania.pool.ntp.org)");

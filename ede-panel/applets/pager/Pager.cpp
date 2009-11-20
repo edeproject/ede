@@ -57,7 +57,6 @@ void Pager::init_workspace_boxes(void) {
 
 	int  nworkspaces, curr_workspace;
 	char **names = 0;
-	char nbuf[16];
 
 	nworkspaces    = netwm_get_workspace_count();
 	curr_workspace = netwm_get_current_workspace();
