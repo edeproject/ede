@@ -1,5 +1,5 @@
 /* XPM */
-static char * bug_xpm[] = {
+static const char *bug_xpm[] = {
 "22 22 191 2",
 "  	c None",
 ". 	c #4C2C16",

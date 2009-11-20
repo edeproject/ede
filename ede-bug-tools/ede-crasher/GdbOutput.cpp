@@ -91,9 +91,9 @@ bool gdb_output_generate(const char *path, TempFile &t) {
 
         char* argv[8];
         argv[0] = (char*)gdb_path.c_str();
-        argv[1] = "--quiet";
-        argv[2] = "--batch";
-        argv[3] = "-x";
+        argv[1] = (char*)"--quiet";
+        argv[2] = (char*)"--batch";
+        argv[3] = (char*)"-x";
         argv[4] = (char*)scr.name();
         argv[5] = (char*)path;
         argv[6] = (char*)CORE_FILE;
