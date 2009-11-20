@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # create aclocal.m4 file with content of given directory without 'aclocal' tool
-function aclocal_emulate() {
+aclocal_emulate() {
 	dir="$1"
 	filename="aclocal.m4"
 
