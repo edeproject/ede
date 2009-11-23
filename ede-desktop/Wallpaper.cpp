@@ -24,21 +24,21 @@
 #include "Utils.h"
 
 #define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
-	tmp = 0; \
-	if(rshift >= 0) \
-		tmp |= (((int)r << rshift) & rmask); \
-	else \
+	tmp = 0;                                    \
+	if(rshift >= 0)                             \
+		tmp |= (((int)r << rshift) & rmask);    \
+	else                                        \
 		tmp |= (((int)r >> (-rshift)) & rmask); \
-\
-	if(gshift >= 0) \
-		tmp |= (((int)g << gshift) & gmask); \
-	else \
+                                                \
+	if(gshift >= 0)                             \
+		tmp |= (((int)g << gshift) & gmask);    \
+	else                                        \
 		tmp |= (((int)g >> (-gshift)) & gmask); \
-\
-	if(bshift >= 0) \
-		tmp |= (((int)b << bshift) & bmask); \
-	else \
-		tmp |= (((int)b >> (-bshift)) & bmask);
+                                                \
+	if(bshift >= 0)                             \
+		tmp |= (((int)b << bshift) & bmask);    \
+	else                                        \
+		tmp |= (((int)b >> (-bshift)) & bmask)
 
 
 static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, int wp_h) {
@@ -116,7 +116,8 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 		msb = false;
 
 	unsigned int r, g, b, tmp;
-	unsigned char* dest = (unsigned char*)malloc(sizeof(unsigned char) * iw * ih * id);
+	//unsigned char* dest = (unsigned char*)malloc(sizeof(unsigned char) * iw * ih * id);
+	unsigned char* dest = (unsigned char*)malloc(ih * (*xim)->bytes_per_line);
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)img->data()[0];
 
@@ -134,18 +135,12 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
 
 					if(msb) {
-						// big endian
 						*destptr++ = (tmp & 0xff000000) >> 24;
 						*destptr++ = (tmp & 0xff0000) >> 16;
 						*destptr++ = (tmp & 0xff00) >> 8;
-
-						// FIXME: check this somehow !
-						if(id == 4)
-							*destptr++ = (tmp & 0xff);
+						*destptr++ = (tmp & 0xff);
 					} else {
-						// little endian
-						if(id == 4)
-							*destptr++ = (tmp & 0xff);
+						*destptr++ = (tmp & 0xff);
 						*destptr++ = (tmp & 0xff00) >> 8;
 						*destptr++ = (tmp & 0xff0000) >> 16;
 						*destptr++ = (tmp & 0xff000000) >> 24;
@@ -187,13 +182,11 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
 
 					if(msb) {
-						// big endian
 						*destptr++ = (tmp & 0xff0000) >> 16;
 						*destptr++ = (tmp & 0xff00) >> 8;
 						*destptr++ = (tmp & 0xff);
 
 					} else {
-						// little endian
 						*destptr++ = (tmp & 0xff);
 						*destptr++ = (tmp & 0xff00) >> 8;
 						*destptr++ = (tmp & 0xff0000) >> 16;
@@ -208,12 +201,10 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 					b = *src++;
 
 					if(msb) {
-						// big endian
 						*destptr++ = b;
 						*destptr++ = g;
 						*destptr++ = r;
 					} else {
-						// little endian
 						*destptr++ = r;
 						*destptr++ = g;
 						*destptr++ = b;
@@ -235,12 +226,9 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 					CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask);
 
 					if(msb) {
-						// big endian
 						*destptr++ = (tmp >> 8) & 0xff;
 						*destptr++ = (tmp & 0xff);
-
 					} else {
-						// little endian
 						*destptr++ = (tmp & 0xff);
 						*destptr++ = (tmp >> 8) & 0xff;
 					}
