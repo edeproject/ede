@@ -121,7 +121,7 @@ static XkbRF_RulesPtr fetch_all_layouts(const String &current) {
 		for(int j = 0; x11_rules[j]; j++) {
 			snprintf(buf, sizeof(buf), "%s%s", x11_dirs[i], x11_rules[j]);
 
-			xkb_rules = XkbRF_Load(buf, "", True, True);
+			xkb_rules = XkbRF_Load(buf, (char*)"", True, True);
 			if(xkb_rules) 
 				goto done;
 		}

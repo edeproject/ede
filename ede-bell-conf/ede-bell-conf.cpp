@@ -48,7 +48,7 @@ static unsigned int dur_val;
 static bool block_xsettings_cb = false;
 
 #define CHECK_SETTING(n, setting, action) (strcmp(setting->name, n) == 0) && \
-		(action == XSETTINGS_ACTION_NEW) || (action == XSETTINGS_ACTION_CHANGED)
+		((action == XSETTINGS_ACTION_NEW) || (action == XSETTINGS_ACTION_CHANGED))
 
 #define KEY_VOLUME   "Bell/Volume"
 #define KEY_PITCH    "Bell/Pitch"

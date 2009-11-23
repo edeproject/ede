@@ -510,13 +510,15 @@ double sign;
 	if (ready) init_value(top);
 
 	if (numb == -1.0) 
-	if (dot) /* check whether we already have a dot */
-		return;
-	else 
 	{
-		dot = 1;
-		set_display(value[top],DOT);
-		return;
+		if (dot) /* check whether we already have a dot */
+			return;
+		else 
+		{
+			dot = 1;
+			set_display(value[top],DOT);
+			return;
+		}
 	}
 
 	if (emode) 
