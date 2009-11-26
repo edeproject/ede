@@ -76,7 +76,7 @@ char *bugzilla_get_version(BugzillaData *data) {
 
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to call xmlrpc function (%s)\n", data->xenv.fault_string);
-		return "";
+		return (char*)"";
 	}
 
 	/* this value will be malloc()-ated by xmlrpc_decompose_value() and should be freeed by user */
