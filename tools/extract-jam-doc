@@ -1,0 +1,68 @@
+#!/bin/env perl
+# Generate asciidoc documentation from known tags
+
+sub read_file {
+	open(ALL, $_[0]);
+	my @lines = <ALL>;
+	close(ALL);
+
+	my $in_block = 0;
+
+	foreach $line (@lines) {
+		if($line =~ /^##\s*$/) {
+			$in_block ^= 1;
+		}
+
+		# stuff between '##' and '##' blocks but starting with '#'
+		if($in_block && $line =~ /^#\s+/) {
+			$line =~ s/^#\s+//;
+
+			# remove possible ending spaces
+			$line =~ s/\s+$/\n/;
+
+			# check for '\function' or '\fn' tag
+			if($line =~ /\\function\s+/ || $line =~ /\\fn\s+/) {
+				$line =~ s/\\function\s+//;
+				$line =~ s/\\fn\s+//;
+
+				my $undeline = "~" x (length($line) - 1);
+
+				print "\n";
+				print $line;
+				print $undeline . "\n";
+			} else {
+				# replace '\code' and '\endcode' if possible
+				$line =~ s/\\code/\n-------------------------/;
+				$line =~ s/\\endcode/-------------------------\n/;
+
+				# replace '\p' with empty line so it behaves much as newline
+				$line =~ s/\\p//;
+
+				print $line;
+			}
+		}
+	}
+}
+
+$len = @ARGV;
+if($len != 1) {
+	print "Usage: extract-jam-doc <directory>\n";
+	print "Generate documentation with asciidoc tags by reading jam files from given directory.\n";
+	print "Output will be written to stdout.\n";
+	exit 1;
+}
+
+@files = <$ARGV[0]/*.jam>;
+$len = @files;
+
+if($len < 1) {
+	print "No jam files found in '$ARGV[0]' directory.\n";
+	exit 1;
+}
+
+print "EDE Jam Build API\n";
+print "=================\n";
+
+foreach $file (@files) {
+	&read_file($file);
+}
