@@ -323,6 +323,14 @@ void Desktop::read_config(void) {
 	conf.get("Icons", "one_click_exec",   gisett->one_click_exec, false);
 	conf.get("Icons", "auto_arrange",     gisett->auto_arrange, true);
 
+	/* minimal allowed font size */
+	if(gisett->label_fontsize < 8)
+		gisett->label_fontsize = 12;
+
+	/* minimal allowed maxwidth size */
+	if(gisett->label_maxwidth < 30)
+		gisett->label_maxwidth = 75;
+
 	/* prevent wild values */
 	if(wmode != WALLPAPER_CENTER && wmode != WALLPAPER_TILE && wmode != WALLPAPER_STRETCH)
 		wmode = WALLPAPER_CENTER;

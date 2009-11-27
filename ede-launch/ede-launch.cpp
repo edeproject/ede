@@ -274,7 +274,7 @@ static void ok_cb(Fl_Widget*, void* w) {
 		const char* term = getenv("TERM");
 
 		/* also check if TERM get inherited from login console */
-		if(!term || strcmp(term, "linux") == 0)
+		if(!term || (strcmp(term, "linux") == 0) || (strcmp(term, "dumb") == 0))
 			term = "xterm";
 
 		snprintf(buf, sizeof(buf), "%s -e %s", term, cmd);
