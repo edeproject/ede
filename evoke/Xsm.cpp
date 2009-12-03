@@ -25,6 +25,8 @@
 #include <edelib/XSettingsCommon.h>
 #include <edelib/File.h>
 #include <edelib/Resource.h>
+#include <edelib/Nls.h>
+#include <edelib/EdbusList.h>
 
 #include "Xsm.h"
 
@@ -38,6 +40,11 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(XSettingsSetting)
 EDELIB_NS_USING(XSettingsList)
+
+EDELIB_NS_USING(EdbusMessage)
+EDELIB_NS_USING(EdbusData)
+EDELIB_NS_USING(EdbusList)
+
 EDELIB_NS_USING(dir_home)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_rename)
@@ -51,6 +58,7 @@ EDELIB_NS_USING(color_fltk_to_html)
 EDELIB_NS_USING(XSETTINGS_TYPE_COLOR)
 EDELIB_NS_USING(XSETTINGS_TYPE_INT)
 EDELIB_NS_USING(XSETTINGS_TYPE_STRING)
+EDELIB_NS_USING(EDBUS_SESSION)
 
 struct ResourceMap {
 	const char* name;
@@ -75,11 +83,134 @@ static int ignore_xerrors(Display* display, XErrorEvent* xev) {
 	return True;
 }
 
-Xsm::Xsm() {
+static void handle_get_type(XSettingsData* mdata, const EdbusMessage* orig, EdbusMessage& reply) {
+	if(orig->size() != 1) {
+		reply.create_error_reply(*orig, _("This function accepts only one parameter"));
+		return;
+	} 
+
+	EdbusMessage::const_iterator it = orig->begin();
+	if(!(*it).is_string()) {
+		reply.create_error_reply(*orig, _("Parameter must be a string"));
+		return;
+	}
+
+	XSettingsSetting* s = xsettings_list_find(mdata->settings, (*it).to_string());
+	if(!s) {
+		reply.create_error_reply(*orig, _("Requested setting wasn't found"));
+		return;
+	}
+
+	reply.create_reply(*orig);
+	switch(s->type) {
+		case XSETTINGS_TYPE_STRING:
+			reply << EdbusData::from_string("string");
+			break;
+		case XSETTINGS_TYPE_INT:
+			reply << EdbusData::from_string("int");
+			break;
+		case XSETTINGS_TYPE_COLOR:
+			reply << EdbusData::from_string("color");
+			break;
+		default:
+			E_FATAL("Received unknown XSETTINGS type!\n");
+	}
+}
+
+static void handle_get_all(XSettingsData* mdata, const EdbusMessage* orig, EdbusMessage& reply) {
+	reply.create_reply(*orig);
+
+	EdbusList array = EdbusList::create_array();
+	XSettingsList* iter = mdata->settings;
+
+	while(iter) {
+		array << EdbusData::from_string(iter->setting->name);
+		iter = iter->next;
+	}
+
+	reply << EdbusData::from_array(array);
+}
+
+static void handle_get_value(XSettingsData* mdata, const EdbusMessage* orig, EdbusMessage& reply) {
+	if(orig->size() != 1) {
+		reply.create_error_reply(*orig, _("This function accepts only one parameter"));
+		return;
+	} 
+
+	EdbusMessage::const_iterator it = orig->begin();
+	if(!(*it).is_string()) {
+		reply.create_error_reply(*orig, _("Parameter must be a string"));
+		return;
+	}
+
+	XSettingsSetting* s = xsettings_list_find(mdata->settings, (*it).to_string());
+	if(!s) {
+		reply.create_error_reply(*orig, _("Requested setting wasn't found"));
+		return;
+	}
+
+	reply.create_reply(*orig);
+	switch(s->type) {
+		case XSETTINGS_TYPE_STRING:
+			reply << EdbusData::from_string(s->data.v_string);
+			break;
+		case XSETTINGS_TYPE_INT:
+			reply << EdbusData::from_int32(s->data.v_int);
+			break;
+		case XSETTINGS_TYPE_COLOR: {
+			EdbusList rgb_array = EdbusList::create_array();
+			rgb_array << EdbusData::from_int32(s->data.v_color.red);
+			rgb_array << EdbusData::from_int32(s->data.v_color.green);
+			rgb_array << EdbusData::from_int32(s->data.v_color.blue);
+			rgb_array << EdbusData::from_int32(s->data.v_color.alpha);
+
+			reply << EdbusData::from_array(rgb_array);
+			break;
+		}
+		default:
+			E_FATAL("Received unknown XSETTINGS type!\n");
+	}
+}
+
+static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
+	Xsm* x = (Xsm*)data;
+	XSettingsData* md = x->get_manager_data();
+
+	/* string GetType(string name) */
+	if(strcmp(m->member(), "GetType") == 0) {
+		EdbusMessage reply;
+		handle_get_type(md, m, reply);
+
+		x->get_dbus_connection()->send(reply);
+		return 1;
+	}
+
+	/* string-array GetAll() */
+	if(strcmp(m->member(), "GetAll") == 0) {
+		EdbusMessage reply;
+		handle_get_all(md, m, reply);
+
+		x->get_dbus_connection()->send(reply);
+		return 1;
+
+	}
+
+	/* [string|array|int] GetValue(string name) */
+	if(strcmp(m->member(), "GetValue") == 0) {
+		EdbusMessage reply;
+		handle_get_value(md, m, reply);
+
+		x->get_dbus_connection()->send(reply);
+		return 1;
+
+	}
+
+	return 1;
 }
 
 Xsm::~Xsm() { 
 	E_DEBUG(E_STRLOC ": Xsm::~Xsm()\n"); 
+	delete dbus_conn;
 }
 
 /*
@@ -201,6 +332,30 @@ void Xsm::xresource_undo(void) {
 		file_remove(db_file.c_str());
 }
 
+void Xsm::xsettings_dbus_serve(void) {
+	E_RETURN_IF_FAIL(!dbus_conn);
+
+	EdbusConnection* d = new EdbusConnection;
+
+	if(!d->connect(EDBUS_SESSION)) {
+		E_WARNING(E_STRLOC ": Unable to connecto to session bus. XSETTINGS will not be served via D-Bus\n");
+		delete d;
+		return;
+	}
+
+	if(!d->request_name("org.equinoxproject.Xsettings")) {
+		E_WARNING(E_STRLOC ": Unable to request 'org.equinoxproject.Xsettings' name\n");
+		delete d;
+		return;
+	}
+
+	d->register_object("/org/equinoxproject/Xsettings");
+	d->method_callback(xsettings_dbus_cb, this);
+
+	d->setup_listener_with_fltk();
+	dbus_conn = d;
+}
+
 bool Xsm::load_serialized(void) {
 #ifdef USE_LOCAL_CONFIG
 	/* 
@@ -286,6 +441,7 @@ bool Xsm::load_serialized(void) {
 	}
 
 	xresource_replace();
+	xsettings_dbus_serve();
 	return true;
 }
 
