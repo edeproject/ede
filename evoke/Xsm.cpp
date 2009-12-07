@@ -172,6 +172,82 @@ static void handle_get_value(XSettingsData* mdata, const EdbusMessage* orig, Edb
 	}
 }
 
+static void handle_remove(Xsm* xsm, XSettingsData* mdata, const EdbusMessage* msg) {
+	if(msg->size() != 1)
+		return;
+
+	EdbusMessage::const_iterator it = msg->begin();
+	if(!(*it).is_string())
+		return;
+
+	/* 
+	 * just remove it, without reporting the status 
+	 * TODO: lock this
+	 */
+	xsettings_list_remove(&(mdata->settings), (*it).to_string());
+	xsm->notify();
+}
+
+static void handle_set(Xsm* xsm, XSettingsData* mdata, const EdbusMessage* orig, EdbusMessage& reply) {
+	if(orig->size() != 2) {
+		reply.create_error_reply(*orig, _("This function accepts two parameters"));
+		return;
+	} 
+
+	EdbusMessage::const_iterator it = orig->begin();
+	if(!(*it).is_string()) {
+		reply.create_error_reply(*orig, _("First parameter must be a string"));
+		return;
+	}
+
+	const char* name = (*it).to_string();
+
+	/* figure out the type of second parameter and add it to the list */
+	++it;
+	if((*it).is_string()) {
+		xsm->set(name, (*it).to_string());
+		xsm->notify();
+
+		reply.create_reply(*orig);
+		reply << EdbusData::from_bool(true);
+	} else if((*it).is_int32()) {
+		xsm->set(name, (*it).to_int32());
+		xsm->notify();
+
+		reply.create_reply(*orig);
+		reply << EdbusData::from_bool(true);
+	} else if((*it).is_array()) {
+		EdbusList rgb_array = (*it).to_array();
+
+		/* RGBA array has 4 elements */
+		if(rgb_array.size() != 4) {
+			reply.create_error_reply(*orig, _("Color array must have 4 parameters"));
+			return;
+		}
+
+		EdbusList::const_iterator arr_it = rgb_array.begin();
+		unsigned short r, g, b, a;
+		r = g = b = a = 0;
+
+		r = (*arr_it).to_int32();
+		++arr_it;
+		g = (*arr_it).to_int32();
+		++arr_it;
+		b = (*arr_it).to_int32();
+		++arr_it;
+		a = (*arr_it).to_int32();
+
+		xsm->set(name, r, g, b, a);
+		xsm->notify();
+
+		reply.create_reply(*orig);
+		reply << EdbusData::from_bool(true);
+	} else {
+		reply.create_error_reply(*orig, _("Unknown value type. Only 3 types are allowed: string, int32 and array[int32]"));
+	}
+}
+
+
 static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 	Xsm* x = (Xsm*)data;
 	XSettingsData* md = x->get_manager_data();
@@ -185,7 +261,7 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 		return 1;
 	}
 
-	/* string-array GetAll() */
+	/* string-array GetAll(void) */
 	if(strcmp(m->member(), "GetAll") == 0) {
 		EdbusMessage reply;
 		handle_get_all(md, m, reply);
@@ -195,7 +271,7 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 
 	}
 
-	/* [string|array|int] GetValue(string name) */
+	/* [string|array|int32] GetValue(string name) */
 	if(strcmp(m->member(), "GetValue") == 0) {
 		EdbusMessage reply;
 		handle_get_value(md, m, reply);
@@ -203,6 +279,27 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 		x->get_dbus_connection()->send(reply);
 		return 1;
 
+	}
+
+	/* void Remove(string name) */
+	if(strcmp(m->member(), "Remove") == 0) {
+		handle_remove(x, md, m);
+		return 1;
+	}
+
+	/* void Flush(void) */
+	if(strcmp(m->member(), "Flush") == 0) {
+		x->save_serialized();
+		return 1;
+	}
+
+	/* bool Set(string name, [string|array|int32] value) */
+	if(strcmp(m->member(), "Set") == 0) {
+		EdbusMessage reply;
+		handle_set(x, md, m, reply);
+
+		x->get_dbus_connection()->send(reply);
+		return 1;
 	}
 
 	return 1;
@@ -235,19 +332,19 @@ Xsm::~Xsm() {
  * workaround for missing functions to delete key/value pairs from xrdb (what was they thinking for??).
  */
 void Xsm::xresource_replace(void) {
-	// with inheritance we got manager_data
+	/* with inheritance we got manager_data */
 	if(!manager_data->settings)
 		return;
 
 	String home = dir_home();
 
-	// try to open ~/.Xdefaults; if failed, X Resource will not complain
+	/* try to open ~/.Xdefaults; if failed, X Resource will not complain */
 	String db_file = build_filename(home.c_str(), USER_XRESOURCE);
 
-	// initialize XResource manager
+	/* initialize XResource manager */
 	XrmInitialize();
 
-	// load XResource database
+	/* load XResource database */
 	XrmDatabase db = XrmGetFileDatabase(db_file.c_str());
 
 	XSettingsSetting* s;
@@ -268,13 +365,13 @@ void Xsm::xresource_replace(void) {
 		if(!s)
 			continue;
 
-		// assure that XSETTINGS key is color type
+		/* assure that XSETTINGS key is color type */
 		if(s->type != XSETTINGS_TYPE_COLOR) {
 			E_WARNING(E_STRLOC ": Expected color type in %s, but it is not, skipping...\n", s->name);
 			continue;
 		}
 
-		// check if resource is present
+		/* check if resource is present */
 		status = XrmGetResource(db, resource_map[i].xresource_key, resource_map[i].xresource_klass, &type, &xrmv);
 
 		if(status && strcmp(type, "String") == 0) {
@@ -291,7 +388,7 @@ void Xsm::xresource_replace(void) {
 		int fltk_color = color_rgb_to_fltk(s->data.v_color.red, s->data.v_color.green, s->data.v_color.blue);
 		color_fltk_to_html(fltk_color, color_val);
 
-		// and save it
+		/* and save it */
 		tmp.clear();
 		tmp.printf("%s.%s: %s", resource_map[i].xresource_klass, resource_map[i].xresource_key, color_val);
 		XrmPutLineResource(&db, tmp.c_str());
@@ -456,13 +553,17 @@ bool Xsm::save_serialized(void) {
 	int (*old_handler)(Display*, XErrorEvent*);
 
 	/* possible ? */
-	if(!manager_data->manager_win)
-		return false;
+	E_RETURN_VAL_IF_FAIL(manager_data->manager_win, false);
 
+	/* manually fetch XSETTINGS encoded data, so we can pick whatever was externally set */
 	old_handler = XSetErrorHandler(ignore_xerrors);
-	result = XGetWindowProperty(manager_data->display, manager_data->manager_win, manager_data->xsettings_atom,
-			0, LONG_MAX, False, manager_data->xsettings_atom,
-			&type, &format, &n_items, &bytes_after, (unsigned char**)&data);
+	result = XGetWindowProperty(manager_data->display, 
+								manager_data->manager_win, 
+								manager_data->xsettings_atom, 
+								0, LONG_MAX, False, 
+								manager_data->xsettings_atom, 
+								&type, &format, &n_items, &bytes_after, 
+								(unsigned char**)&data);
 
 	XSetErrorHandler(old_handler);
 	if(result == Success && type != None) {
@@ -475,8 +576,7 @@ bool Xsm::save_serialized(void) {
 		XFree(data);
 	}
 
-	if(!settings)
-		return false;
+	E_RETURN_VAL_IF_FAIL(settings, false);
 
 #ifdef USE_LOCAL_CONFIG
 	/* 

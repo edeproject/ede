@@ -11,7 +11,7 @@
  */
 
 #include <Fl/Fl.H>
-#include <Fl/Fl_Window.H>
+#include <Fl/Fl_Double_Window.H>
 #include <Fl/Fl_Button.H>
 #include <Fl/Fl_Shared_Image.H>
 #include <Fl/Fl_Scroll.H>
@@ -46,7 +46,7 @@ const char* supported[] = {"bm","bmp","gif","jpg","pbm","pgm","png","ppm","xbm",
 
 // Global variables used everywhere
 char filename[FL_PATH_MAX], directory[FL_PATH_MAX];
-Fl_Window* w;
+Fl_Double_Window* w;
 float zoomfactor;
 bool autozoom=false;
 Fl_Shared_Image *im;
@@ -404,7 +404,7 @@ int main (int argc, char **argv) {
 
 	// Main window
 
-	w = new Fl_Window(400, 200, _("View picture"));
+	w = new Fl_Double_Window(400, 200, _("View picture"));
 	s = new ScrolledImage(0,0,400,200);
 	s->color(33);
 	s->labelcolor(FL_WHITE);
