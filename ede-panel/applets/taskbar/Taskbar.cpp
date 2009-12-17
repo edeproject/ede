@@ -3,14 +3,30 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
 #include <edelib/Debug.h>
+#include <edelib/Netwm.h>
 
-#include "Netwm.h"
 #include "TaskButton.h"
 #include "Taskbar.h"
 #include "Panel.h"
 
 #define DEFAULT_CHILD_W 175
 #define DEFAULT_SPACING 5
+
+EDELIB_NS_USING(netwm_callback_add)
+EDELIB_NS_USING(netwm_callback_remove)
+EDELIB_NS_USING(netwm_window_get_all_mapped)
+EDELIB_NS_USING(netwm_window_is_manageable)
+EDELIB_NS_USING(netwm_window_get_workspace)
+EDELIB_NS_USING(netwm_window_get_active)
+EDELIB_NS_USING(netwm_window_set_active)
+EDELIB_NS_USING(netwm_workspace_get_current)
+EDELIB_NS_USING(wm_window_set_state)
+EDELIB_NS_USING(wm_window_get_state)
+EDELIB_NS_USING(NETWM_CHANGED_ACTIVE_WINDOW)
+EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
+EDELIB_NS_USING(NETWM_CHANGED_WINDOW_LIST)
+EDELIB_NS_USING(NETWM_CHANGED_WINDOW_NAME)
+EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 
 static void button_cb(TaskButton *b, void *t) {
 	Taskbar *tt = (Taskbar*)t;
@@ -36,7 +52,7 @@ static void net_event_cb(int action, Window xid, void *data) {
 		return;
 	}
 
-	/* this is a message, so property is not changed and netwm_get_active_window() must be called */
+	/* this is a message, so property is not changed and netwm_window_get_active() must be called */
 	if(action == NETWM_CHANGED_ACTIVE_WINDOW) {
 		Taskbar *tt = (Taskbar*)data;
 		tt->update_active_button();
@@ -72,20 +88,20 @@ void Taskbar::create_task_buttons(void) {
 	panel_redraw();
 
 	Window *wins;
-	int     nwins = netwm_get_mapped_windows(&wins);
+	int     nwins = netwm_window_get_all_mapped(&wins);
 
 	if(nwins > 0) {
 		TaskButton *b;
-		int         curr_workspace = netwm_get_current_workspace();
+		int         curr_workspace = netwm_workspace_get_current();
 
 		for(int i = 0; i < nwins; i++) {
-			if(!netwm_manageable_window(wins[i]))
+			if(!netwm_window_is_manageable(wins[i]))
 				continue;
 			/* 
 			 * show window per workspace
 			 * TODO: allow showing all windows in each workspace
 			 */
-			if(curr_workspace == netwm_get_window_workspace(wins[i])) {
+			if(curr_workspace == netwm_window_get_workspace(wins[i])) {
 				b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
 				b->set_window_xid(wins[i]);
 				b->update_title_from_xid();
@@ -149,7 +165,7 @@ void Taskbar::update_active_button(int xid) {
 		return;
 
 	if(xid == -1) {
-		xid = netwm_get_active_window();
+		xid = netwm_window_get_active();
 		/* TODO: make sure panel does not get 'active', or all buttons will be FL_UP_BOX */
 	}
 
@@ -173,13 +189,13 @@ void Taskbar::activate_window(TaskButton *b) {
 
 	/* if clicked on activated button, it will be minimized, then next one will be activated */
 	if(b == curr_active) {
-		if(wm_get_window_state(xid) != WM_STATE_ICONIC) {
+		if(wm_window_get_state(xid) != WM_WINDOW_STATE_ICONIC) {
 			/* minimize if not so */
-			wm_set_window_state(xid, WM_STATE_ICONIC);
+			wm_window_set_state(xid, WM_WINDOW_STATE_ICONIC);
 
 			if(prev_active && 
 			   prev_active != b && 
-			   wm_get_window_state(prev_active->get_window_xid()) != WM_STATE_ICONIC) 
+			   wm_window_get_state(prev_active->get_window_xid()) != WM_WINDOW_STATE_ICONIC) 
 			{
 				xid = prev_active->get_window_xid();
 				b   = prev_active;
@@ -190,7 +206,7 @@ void Taskbar::activate_window(TaskButton *b) {
 	} 
 
 	/* active or restore minimized */
-	netwm_set_active_window(xid);
+	netwm_window_set_active(xid);
 	update_active_button(xid);
 
 	/* TODO: use stack for this (case when this can't handle: minimize three window, out of four on the workspace) */

@@ -7,15 +7,23 @@
 #include <edelib/Nls.h>
 #include <edelib/MenuItem.h>
 #include <edelib/IconLoader.h>
+#include <edelib/Netwm.h>
 
 #include "TaskButton.h"
 #include "Taskbar.h"
-#include "Netwm.h"
 #include "icons/window.xpm"
 
 EDELIB_NS_USING(MenuItem)
 EDELIB_NS_USING(IconLoader)
 EDELIB_NS_USING(ICON_SIZE_TINY)
+EDELIB_NS_USING(netwm_window_close)
+EDELIB_NS_USING(netwm_window_set_active)
+EDELIB_NS_USING(netwm_window_maximize)
+EDELIB_NS_USING(netwm_window_get_title)
+EDELIB_NS_USING(wm_window_ede_restore)
+EDELIB_NS_USING(wm_window_get_state)
+EDELIB_NS_USING(wm_window_set_state)
+EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 
 static Fl_Pixmap image_window(window_xpm);
 
@@ -40,23 +48,23 @@ static void redraw_whole_panel(TaskButton *b) {
 
 static void close_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
-	netwm_close_window(bb->get_window_xid());
+	netwm_window_close(bb->get_window_xid());
 	/* no need to redraw whole panel since taskbar elements are recreated again */
 }
 
 static void restore_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
-	wm_ede_restore_window(bb->get_window_xid());
+	wm_window_ede_restore(bb->get_window_xid());
 
-	netwm_set_active_window(bb->get_window_xid());
+	netwm_window_set_active(bb->get_window_xid());
 	redraw_whole_panel(bb);
 }
 
 static void minimize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
-	if(wm_get_window_state(bb->get_window_xid()) != WM_STATE_ICONIC)
-		wm_set_window_state(bb->get_window_xid(), WM_STATE_ICONIC);
+	if(wm_window_get_state(bb->get_window_xid()) != WM_WINDOW_STATE_ICONIC)
+		wm_window_set_state(bb->get_window_xid(), WM_WINDOW_STATE_ICONIC);
 
 	redraw_whole_panel(bb);
 }
@@ -64,8 +72,8 @@ static void minimize_cb(Fl_Widget*, void *b) {
 static void maximize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
-	netwm_set_active_window(bb->get_window_xid());
-	netwm_maximize_window(bb->get_window_xid());
+	netwm_window_set_active(bb->get_window_xid());
+	netwm_window_maximize(bb->get_window_xid());
 
 	redraw_whole_panel(bb);
 }
@@ -143,7 +151,7 @@ void TaskButton::display_menu(void) {
 void TaskButton::update_title_from_xid(void) {
 	E_RETURN_IF_FAIL(xid >= 0);
 
-	char *title = netwm_get_window_title(xid);
+	char *title = netwm_window_get_title(xid);
 	if(!title) {
 		label("...");
 		tooltip("...");

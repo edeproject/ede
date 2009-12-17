@@ -10,13 +10,7 @@
 
 SubDir TOP ede-panel ;
 
-# make it as library, so applets can use it too
-ObjectC++Flags Netwm.cpp : $(GLOBALFLAGS) -fPIC $(FLTKINCLUDE) $(EDELIBINCLUDE) ;
-StaticLibrary libnetwm   : Netwm.cpp ;
-NETWMLIB = -L$(SUBDIR) -lnetwm ;
-
 EdeProgram  ede-panel : Panel.cpp AppletManager.cpp ede-panel.cpp ;
-LinkAgainst ede-panel : $(NETWMLIB) ;
 
 if $(OS) != "SOLARIS" {
 	# also must use this flag (on anything but Solaris) or program will crash
@@ -40,7 +34,7 @@ rule PanelApplet
 	Main $(target) : $(>) ;
 	ObjectC++Flags $(>) : $(GLOBALFLAGS) -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
 
-	LinkAgainst $(target) : $(NETWMLIB) $(3) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
+	LinkAgainst $(target) : $(3) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
 	LINKFLAGS on $(target) = $(linker_stuff) [ on $(target) return $(LINKFLAGS) ] ;
 
 	InstallProgram $(EDE_PANEL_APPLETS_DIR) : $(target) ;

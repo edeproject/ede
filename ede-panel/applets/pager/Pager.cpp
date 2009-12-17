@@ -1,13 +1,22 @@
 #include "Applet.h"
-#include "Netwm.h"
 
 #include <string.h>
 
 #include <FL/Fl_Group.H>
 #include <FL/Fl.H>
 #include <edelib/Debug.h>
+#include <edelib/Netwm.h>
 
 #include "PagerButton.h"
+
+EDELIB_NS_USING(netwm_workspace_change)
+EDELIB_NS_USING(netwm_workspace_get_current)
+EDELIB_NS_USING(netwm_workspace_get_count)
+EDELIB_NS_USING(netwm_workspace_get_names)
+EDELIB_NS_USING(netwm_workspace_free_names)
+EDELIB_NS_USING(netwm_callback_add)
+EDELIB_NS_USING(netwm_callback_remove)
+EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 
 class Pager : public Fl_Group {
 public:
@@ -22,7 +31,7 @@ static void box_cb(Fl_Widget*, void *b) {
 
 	/* because workspaces in button labels are increased */
 	int s = pb->get_workspace_label() - 1;
-	netwm_change_workspace(s);
+	netwm_workspace_change(s);
 }
 
 static void net_event_cb(int action, Window xid, void *data) {
@@ -58,9 +67,9 @@ void Pager::init_workspace_boxes(void) {
 	int  nworkspaces, curr_workspace;
 	char **names = 0;
 
-	nworkspaces    = netwm_get_workspace_count();
-	curr_workspace = netwm_get_current_workspace();
-	netwm_get_workspace_names(names);
+	nworkspaces    = netwm_workspace_get_count();
+	curr_workspace = netwm_workspace_get_current();
+	netwm_workspace_get_names(names);
 
 	/* 
 	 * Resize group before childs, or they will be resized too, messing things up.
@@ -96,11 +105,11 @@ void Pager::init_workspace_boxes(void) {
 		X = bx->x() + bx->w() + 1;
 	}
 
-	XFreeStringList(names);
+	netwm_workspace_free_names(names);
 }
 
 void Pager::workspace_changed(void) {
-	int c = netwm_get_current_workspace();
+	int c = netwm_workspace_get_current();
 	PagerButton *pb;
 
 	E_RETURN_IF_FAIL(c < children());

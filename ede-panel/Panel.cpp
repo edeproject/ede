@@ -9,9 +9,9 @@
 #include <edelib/WindowXid.h>
 #include <edelib/Resource.h>
 #include <edelib/Util.h>
+#include <edelib/Netwm.h>
 
 #include "Panel.h"
-#include "Netwm.h"
 
 /* empty space from left and right panel border */
 #define INITIAL_SPACING 5
@@ -32,9 +32,18 @@ EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(window_xid_create)
 EDELIB_NS_USING(build_filename)
+EDELIB_NS_USING(netwm_window_set_strut)
+EDELIB_NS_USING(netwm_window_set_type)
+EDELIB_NS_USING(netwm_workarea_get_size)
+EDELIB_NS_USING(NETWM_WINDOW_TYPE_DOCK)
 
 typedef list<Fl_Widget*> WidgetList;
 typedef list<Fl_Widget*>::iterator WidgetListIt;
+
+inline bool intersects(Fl_Widget *o1, Fl_Widget *o2) {
+	    return (MAX(o1->x(), o2->x()) <= MIN(o1->x() + o1->w(), o2->x() + o2->w()) &&
+	            MAX(o1->y(), o2->y()) <= MIN(o1->y() + o1->h(), o2->y() + o2->h()));
+}
 
 static int xerror_handler(Display *d, XErrorEvent *e) {
 	if(e->request_code == X_GetImage)
@@ -63,9 +72,8 @@ static int xerror_handler(Display *d, XErrorEvent *e) {
 	return 0;
 }
 
-inline bool intersects(Fl_Widget *o1, Fl_Widget *o2) {
-	    return (MAX(o1->x(), o2->x()) <= MIN(o1->x() + o1->w(), o2->x() + o2->w()) &&
-	            MAX(o1->y(), o2->y()) <= MIN(o1->y() + o1->h(), o2->y() + o2->h()));
+static void make_me_dock(Fl_Window *win) {
+	netwm_window_set_type(fl_xid(win), NETWM_WINDOW_TYPE_DOCK);
 }
 
 /* horizontaly centers widget in the panel */
@@ -310,7 +318,7 @@ void Panel::show(void) {
 	XSetErrorHandler((XErrorHandler) xerror_handler);
 
 	/* position it */
-	if(!netwm_get_workarea(X, Y, W, H))
+	if(!netwm_workarea_get_size(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
 
 	screen_x = X;
@@ -323,16 +331,16 @@ void Panel::show(void) {
 	size(W, DEFAULT_PANEL_H);
 
 	do_layout();
-	window_xid_create(this, netwm_make_me_dock);
+	window_xid_create(this, make_me_dock);
 
 	/* position it, this is done after XID was created */
 	if(vpos == PANEL_POSITION_BOTTOM) {
 		position(screen_x, screen_h - h());
-		netwm_set_window_strut(this, 0, 0, 0, h());
+		netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 	} else {
 		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
 		position(screen_x, screen_y);
-		netwm_set_window_strut(this, 0, 0, h(), 0);
+		netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 	}
 }
 
@@ -362,13 +370,13 @@ int Panel::handle(int e) {
 			/* snap it to the top or bottom, depending on pressed mouse location */
 			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
 				position(screen_x, screen_y);
-				netwm_set_window_strut(this, 0, 0, h(), 0);
+				netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 				vpos = PANEL_POSITION_TOP;
 			} 
 				
 			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
 				position(screen_x, screen_h - h());
-				netwm_set_window_strut(this, 0, 0, 0, h());
+				netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 				vpos = PANEL_POSITION_BOTTOM;
 			}
 
