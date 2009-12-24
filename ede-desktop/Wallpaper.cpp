@@ -360,6 +360,8 @@ void Wallpaper::set_rootpmap(void) {
 		return;
 
 	XImage* rootpmap_image = 0;
+	Atom    _XA_XROOTPMAP_ID;
+
 	rootpmap_pixmap = create_xpixmap(image(), &rootpmap_image, rootpmap_pixmap, w(), h());
 
 	if(!rootpmap_pixmap)
@@ -368,6 +370,8 @@ void Wallpaper::set_rootpmap(void) {
 	/* XDestroyImage function calls frees both the image structure and the data pointed to by the image structure */
 	if(rootpmap_image)
 		XDestroyImage(rootpmap_image);
+
+	_XA_XROOTPMAP_ID = XInternAtom(fl_display, "_XROOTPMAP_ID", False);
 
 	XChangeProperty(fl_display, RootWindow(fl_display, fl_screen), 
 			_XA_XROOTPMAP_ID, XA_PIXMAP, 32, PropModeReplace, (unsigned char *)&rootpmap_pixmap, 1);	

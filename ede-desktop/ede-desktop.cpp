@@ -39,6 +39,8 @@
 #include <edelib/MessageBox.h>
 #include <edelib/MenuButton.h>
 #include <edelib/ForeignCallback.h>
+#include <edelib/Netwm.h>
+#include <edelib/WindowXid.h>
 
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
@@ -59,11 +61,23 @@
 #undef MAX
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
-/*
- * Which widgets Fl::belowmouse() should skip. This should be updated
- * when new non-icon child is added to Desktop window.
+/* 
+ * Which widgets Fl::belowmouse() should skip. 
+ * This should be updated when new non-icon child is added to Desktop window
  */
 #define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == dmenu))
+
+EDELIB_NS_USING(window_xid_create)
+EDELIB_NS_USING(netwm_workspace_get_names)
+EDELIB_NS_USING(netwm_workspace_free_names)
+EDELIB_NS_USING(netwm_workspace_get_current)
+EDELIB_NS_USING(netwm_workarea_get_size)
+EDELIB_NS_USING(netwm_window_set_type)
+EDELIB_NS_USING(netwm_callback_add)
+EDELIB_NS_USING(netwm_callback_remove)
+EDELIB_NS_USING(NETWM_WINDOW_TYPE_DESKTOP)
+EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKAREA)
+EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
@@ -99,8 +113,8 @@ static void exit_signal(int signum) {
     running = false;
 }
 
-static void restart_signal(int signum) {
-	E_DEBUG(E_STRLOC ": Restarting (got signal %d)\n", signum);
+static void make_me_desktop(Fl_Window *win) {
+	netwm_window_set_type(fl_xid(win), NETWM_WINDOW_TYPE_DESKTOP);
 }
 
 static void dir_watch_cb(const char* dir, const char* changed, int flags, void* data) {
@@ -120,20 +134,15 @@ static void icons_conf_cb(Fl_Widget*, void*) {
 	edelib::run_async("ede-launch ede-desktop-conf --icons");
 }
 
-static int desktop_xmessage_handler(int event) { 
-	if(fl_xevent->type == PropertyNotify) {
-		if(fl_xevent->xproperty.atom == _XA_NET_CURRENT_DESKTOP) {
+static void desktop_message_handler(int action, Window xid, void *data) { 
+	switch(action) {
+		case NETWM_CHANGED_CURRENT_WORKSPACE:
 			Desktop::instance()->notify_desktop_changed();
-			return 1;
-		}
-
-		if(fl_xevent->xproperty.atom == _XA_NET_WORKAREA) {
+			break;
+		case NETWM_CHANGED_CURRENT_WORKAREA:
 			Desktop::instance()->update_workarea();
-			return 1;
-		}
+			break;
 	}
-
-	return 0; 
 }
 
 Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
@@ -181,7 +190,6 @@ Desktop::~Desktop() {
 void Desktop::init_internals(void) {
 	edelib::String p;
 
-	init_atoms();
 	update_workarea();
 
 	/*
@@ -265,15 +273,11 @@ Desktop* Desktop::instance(void) {
 	return Desktop::pinstance;
 }
 
-/*
- * This function must be overriden so window can inform wm to see it as desktop. It will send data when window
- * is created, but before is shown.
- */
 void Desktop::show(void) {
-	if(!shown()) {
-		Fl_X::make_xid(this);
-		net_make_me_desktop(this);
-	}
+	if(shown())
+		return DESKTOP_WINDOW::show();
+
+	window_xid_create(this, make_me_desktop);
 }
 
 /* If someone intentionaly hide desktop then quit from it */
@@ -283,10 +287,11 @@ void Desktop::hide(void) {
 
 void Desktop::update_workarea(void) {
 	int X, Y, W, H;
-	if(!net_get_workarea(X, Y, W, H)) {
-		E_DEBUG(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
-		X = Y = 0;
 
+	if(!netwm_workarea_get_size(X, Y, W, H)) {
+		E_DEBUG(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
+
+		X = Y = 0;
 		W = DisplayWidth(fl_display, fl_screen);
 		H = DisplayHeight(fl_display, fl_screen);
 	}
@@ -754,17 +759,17 @@ void Desktop::select_in_area(void) {
 }
 
 void Desktop::notify_desktop_changed(void) {
-	int num = net_get_current_desktop();
+	int num = netwm_workspace_get_current();
 	if(num == -1)
 		return;
 
 	char** names;
-	int ret = net_get_workspace_names(names);
+	int ret = netwm_workspace_get_names(names);
 	if(!ret)
 		return;
 
 	if(num >= ret) {
-		XFreeStringList(names);
+		netwm_workspace_free_names(names);
 		return;
 	}
 
@@ -1135,7 +1140,6 @@ int main() {
 	signal(SIGTERM, exit_signal);
 	signal(SIGKILL, exit_signal);
 	signal(SIGINT,  exit_signal);
-	signal(SIGHUP,  restart_signal);
 
 	srand(time(NULL));
 
@@ -1153,7 +1157,7 @@ int main() {
 	/* XSelectInput will redirect PropertyNotify messages, which are listened for */
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), PropertyChangeMask | StructureNotifyMask | ClientMessage);
 
-	Fl::add_handler(desktop_xmessage_handler);
+	netwm_callback_add(desktop_message_handler);
 
 	while(running) 
 		Fl::wait();
