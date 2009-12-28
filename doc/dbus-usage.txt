@@ -54,7 +54,6 @@ signals are:
 
 Mounted(struct device_info)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 'device_info' contains the following fields:
 
 [grid="all"]
@@ -158,8 +157,70 @@ are send in 'drive_type' and 'cdrom_type' (device_info struct).
 
 org.equinoxproject.Shutdown
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A general signal emitted when EDE is starting to shut down
+A general signal emitted when EDE is starting to shut down.
 
 Shutdown()
 ^^^^^^^^^^
 The only member of 'org.equinoxproject.Shutdown' signal.
+
+org.equinoxproject.Xsettings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This service path exposes XSETTINGS registry. Object path for access 
+service methods is '/org/equinoxproject/Xsettings' and interface is 'org.equinoxproject.Xsettings'.
+
+GetAll()
+^^^^^^^^
+Returns array of all known keys hold by XSETTINGS manager. Each array item is string type.
+
+GetType(string key)
+^^^^^^^^^^^^^^^^^^^
+Returns type of the given key. As XSETTINGS knows only three types (int, string and color), returned
+value will be string holding type name.
+
+[grid="all"]
+`---------`---------`----------------
+ Name      Type      Description
+-------------------------------------
+ key       string    Key name
+-------------------------------------
+
+GetValue(string key)
+^^^^^^^^^^^^^^^^^^^^
+Returns value given key holds. Value can be int32, string or array, depending whay type key is.
+Array will be returned when key holds color type and array will represent RGBA, where
+each element holds int32 type.
+
+[grid="all"]
+`---------`---------`----------------
+ Name      Type      Description
+-------------------------------------
+ key       string    Key name
+-------------------------------------
+
+Remove(string key)
+^^^^^^^^^^^^^^^^^^
+Removes given key from XSETTINGS registry. If key wasn't found, the function will do nothing.
+
+[grid="all"]
+`---------`---------`----------------
+ Name      Type      Description
+-------------------------------------
+ key       string    Key name
+-------------------------------------
+
+Flush()
+^^^^^^^
+Force XSETTINGS manager to store data on disk. This is usually done by manager when exits.
+
+Set(string key, type value)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set key to given value. Here, value can be int32, string or array (4 int32 elements, representing RGBA)
+and set value will automatically set key value type. Returns true if done successfully or false if not.
+
+[grid="all"]
+`---------`------------------------------`---------------------
+ Name      Type                           Description
+---------------------------------------------------------------
+ key       string                         Key name
+ value     int32, string or int32 array   Value key will hold
+---------------------------------------------------------------
