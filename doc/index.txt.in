@@ -33,6 +33,5 @@
 *Development*
 
 - link:hacking.html[Contributing (in your spare time ;-)]
-- link:jambuild.html[Jam build]
 - link:dbus-usage.html[D-BUS usage]
 - link:@EDELIB_API_INDEX@[edelib reference]
