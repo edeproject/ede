@@ -87,7 +87,7 @@ void Taskbar::create_task_buttons(void) {
 	/* redraw it, in case no windows exists in this workspace */
 	panel_redraw();
 
-	Window *wins;
+	Window *wins, transient_prop_win;
 	int     nwins = netwm_window_get_all_mapped(&wins);
 
 	if(nwins > 0) {
@@ -95,8 +95,22 @@ void Taskbar::create_task_buttons(void) {
 		int         curr_workspace = netwm_workspace_get_current();
 
 		for(int i = 0; i < nwins; i++) {
+			transient_prop_win = None;
+
 			if(!netwm_window_is_manageable(wins[i]))
 				continue;
+
+			/* 
+			 * see if it has WM_TRANSIENT_FOR hint set; transient_prop_win would point to parent window, but
+			 * parent should not be root window for this screen
+			 */
+			if(XGetTransientForHint(fl_display, wins[i], &transient_prop_win) 
+					&& (transient_prop_win != None)
+					&& (transient_prop_win != RootWindow(fl_display, fl_screen)))
+			{
+				continue;
+			}
+
 			/* 
 			 * show window per workspace
 			 * TODO: allow showing all windows in each workspace
