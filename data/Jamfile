@@ -16,7 +16,7 @@ InstallEdeProgram      startede ;
 InstallEdeConfigFiles  $(CONFS) ;
 
 # install entry for login/desktop managers
-InstallData /usr/share/xsessions : ede.desktop ;
+InstallData $(XSESSIONS_DIR) : ede.desktop ;
 Clean distclean : ede.desktop ;
 
 SubInclude TOP data mime-types ;

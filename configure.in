@@ -242,10 +242,6 @@ else
 	AC_MSG_RESULT(no)
 fi
 
-EDE_CHECK_DIR(DBUS_SERVICE_DIR, 
-			  [/usr/share/dbus-1/services /usr/local/share/dbus-1/services "$datarootdir/dbus-1/services"])
-
-
 EDE_INIT_JAM
 
 AC_SUBST(EDE_VERSION)
