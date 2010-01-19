@@ -32,7 +32,7 @@ if [ "x$XDG_DATA_DIRS" = "x" ]; then
 fi
 
 if [ "x$XDG_CONFIG_DIRS" = "x" ]; then
-	XDG_CONFIG_DIRS="/etc/xdg"
+	XDG_CONFIG_DIRS="$PREFIX/etc/xdg"
 fi
 
 # prefix for applications.menu
