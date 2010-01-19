@@ -28,7 +28,6 @@ else
 fi
 AC_DEFINE_UNQUOTED(PREFIX, "$EDE_INSTALL_DIR", [Default installation place])
 
-
 EDE_OPTIM_FLAGS=""
 EDE_DEBUG_FLAGS=""
 
@@ -242,6 +241,9 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+dnl expand variables before EDE_INIT_JAM convert them to jam variables
+EDE_EXPAND(sysconfdir, "NONE", my_sysconfdir)
+
 EDE_INIT_JAM
 
 AC_SUBST(EDE_VERSION)
@@ -258,6 +260,7 @@ AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)
 AC_SUBST(LARGEFILE)
 AC_SUBST(XKB_LIBS)
+AC_SUBST(my_sysconfdir)
 
 AC_OUTPUT([
  Jamconfig
