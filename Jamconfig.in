@@ -19,14 +19,7 @@ includedir  ?= "@includedir@" ;
 libdir      ?= "@libdir@" ;
 mandir      ?= "@mandir@" ;
 srcdir      ?= "@abs_srcdir@" ;
-
-# by default, configure will use '$(prefix)/etc' for sysconfdir which is pretty dumb
-# as (by default) things installed in '/usr' put config data in '/etc'
-if $(prefix) = "/" || $(prefix) = "/usr" {
-	sysconfdir ?= "/etc" ;
-} else {
-	sysconfdir ?= "@sysconfdir@" ;
-}
+sysconfdir  ?= "@sysconfdir@" ;
 
 # compiler
 CC           = @CC@ ;
