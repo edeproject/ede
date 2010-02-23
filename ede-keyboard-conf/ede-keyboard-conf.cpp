@@ -58,7 +58,7 @@ static Fl_Hold_Browser *layout_browser;
 static Fl_Check_Button *repeat_press;
 static Fl_Check_Button *show_flag;
 
-static bool				dialog_canceled;
+static bool             dialog_canceled;
 static bool             show_flag_value;
 static bool             repeat_press_value;
 
