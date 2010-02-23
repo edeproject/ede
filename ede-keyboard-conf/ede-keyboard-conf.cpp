@@ -57,7 +57,10 @@ static AppWindow       *win;
 static Fl_Hold_Browser *layout_browser;
 static Fl_Check_Button *repeat_press;
 static Fl_Check_Button *show_flag;
+
 static bool				dialog_canceled;
+static bool             show_flag_value;
+static bool             repeat_press_value;
 
 static const char *x11_dirs[] = {
 	"/etc/X11/",
@@ -90,6 +93,14 @@ static void cancel_cb(Fl_Widget*, void*) {
 static void ok_cb(Fl_Widget*, void*) {
 	win->hide();
 	dialog_canceled = false;
+}
+
+static void show_flag_cb(Fl_Widget*, void*) {
+	show_flag_value = (bool)show_flag->value();
+}
+
+static void repeat_press_cb(Fl_Widget*, void*) {
+	repeat_press_value = (bool)repeat_press->value();
 }
 
 static void fetch_current_layout(String &current) {
@@ -146,36 +157,46 @@ done:
 	return xkb_rules;
 }
 
-static void read_config(void) {
+static void read_config(String *ret_layout) {
 	Resource r;
-	if(!r.load(CONFIG_NAME))
+	if(!r.load(CONFIG_NAME)) {
+		/* setup some default values */
+		show_flag_value = repeat_press_value = true;
+		if(ret_layout)
+			*ret_layout = DEFAULT_X_LAYOUT;
 		return;
+	}
 
 	/* 
 	 * NOTE: keyboard layout is not read from config file to set applet flag/name;
 	 * this is done using X call. Keyboard layout is only read when '--apply' was given
 	 * to this program, so it can be set when EDE is started
 	 */
-	bool state;
-	r.get("Keyboard", "show_country_flag", state, true);
-	show_flag->value((int)state);
+	r.get("Keyboard", "show_country_flag", show_flag_value, true);
+	r.get("Keyboard", "repeat_key_press", repeat_press_value, true);
 
-	r.get("Keyboard", "repeat_key_press", state, true);
-	repeat_press->value((int)state);
+	if(ret_layout) {
+		char buf[32];
+
+		if(r.get("Keyboard", "layout", buf, sizeof(buf)))
+			*ret_layout = buf;
+		else
+			*ret_layout = DEFAULT_X_LAYOUT;
+	}
 }
 
 static void save_config(const String &layout) {
 	Resource r;
 
-	r.set("Keyboard", "show_country_flag", (bool)show_flag->value());
-	r.set("Keyboard", "repeat_key_press", (bool)repeat_press->value());
+	r.set("Keyboard", "show_country_flag", show_flag_value);
+	r.set("Keyboard", "repeat_key_press",  repeat_press_value);
 	r.set("Keyboard", "layout", layout.c_str());
 
 	r.save(CONFIG_NAME);
 }
 
-static void apply_changes_on_x(const char *current, const String* previous) {
-	if(repeat_press->value())
+static void apply_changes_on_x(const char *current, const String *previous) {
+	if(repeat_press_value)
 		XAutoRepeatOn(fl_display);
 	else
 		XAutoRepeatOff(fl_display);
@@ -203,19 +224,6 @@ static void apply_changes_on_x(const char *current, const String* previous) {
 	/* force panel applet to re-read config file to see if flag should be displayed or not */
 	foreign_callback_call(PANEL_APPLET_ID);
 }
-
-static void apply_chages_from_config(void) {
-	Resource r;
-	if(!r.load(CONFIG_NAME))
-		return;
-
-	char buf[32];
-	if(!r.get("Keyboard", "layout", buf, sizeof(buf)))
-		return;
-
-	/* TODO: this should be validated somehow */
-	apply_changes_on_x(buf, NULL);
-}
 #endif /* HAVE_XKBRULES */
 
 int main(int argc, char **argv) {
@@ -225,8 +233,13 @@ int main(int argc, char **argv) {
 
 	/* only apply what was written in config */
 	if(argc > 1 && strcmp(argv[1], "--apply") == 0) {
-		apply_chages_from_config();
+		String layout;
+
+		read_config(&layout);
+		apply_changes_on_x(layout.c_str(), NULL);
 		return 0;
+	} else {
+		read_config(NULL);
 	}
 
 	String cl;
@@ -252,8 +265,10 @@ int main(int argc, char **argv) {
 				layout_group->resizable(layout_browser);
 
 				show_flag = new Fl_Check_Button(20, 240, 300, 25, _("Show country flag"));
+				show_flag->tooltip(_("Display country flag in panel keyboard applet"));
 				show_flag->down_box(FL_DOWN_BOX);
-				show_flag->value(1);
+				show_flag->value(show_flag_value);
+				show_flag->callback(show_flag_cb);
 			layout_group->end();
 			Fl_Group::current()->resizable(layout_group);
 
@@ -261,8 +276,10 @@ int main(int argc, char **argv) {
 			details_group->hide();
 			details_group->begin();
 				repeat_press = new Fl_Check_Button(20, 45, 300, 25, _("Repeat pressed key"));
+				repeat_press->tooltip(_("Allow pressed key to be repeated"));
 				repeat_press->down_box(FL_DOWN_BOX);
-				repeat_press->value(1);
+				repeat_press->value(repeat_press_value);
+				repeat_press->callback(repeat_press_cb);
 			details_group->end();
 		tabs->end();
 
@@ -279,9 +296,6 @@ int main(int argc, char **argv) {
 
 	/* read all XKB layouts */
 	XkbRF_RulesPtr xkb_rules = fetch_all_layouts(cl);
-
-	/* read configuration */
-	read_config();
 
 	win->show(argc, argv);
 	Fl::run();
