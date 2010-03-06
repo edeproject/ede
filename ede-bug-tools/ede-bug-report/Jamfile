@@ -16,6 +16,8 @@ XMLRPC_C_TOP      = $(XMLRPC_C_SRC_PATH) ;
 XMLRPC_C_LIB_DIR  = [ FDirName $(XMLRPC_C_SRC_PATH) lib ] ;
 
 XMLRPC_C_FLAGS = 
+		-DHAVE_CONFIG_H
+		-I$(TOP)
 		-I$(XMLRPC_C_SRC_PATH) 
 		-I [ FDirName $(XMLRPC_C_SRC_PATH) include ] 
 		-I [ FDirName $(XMLRPC_C_SRC_PATH) deps util include ]

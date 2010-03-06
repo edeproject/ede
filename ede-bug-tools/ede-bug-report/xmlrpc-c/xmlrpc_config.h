@@ -32,6 +32,13 @@
 */
 #include "xmlrpc_amconfig.h"
 
+/* EDE top config file */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+/* PREFIX is variable in xmlrpc-c code, but is defined in config.h too */
+#undef PREFIX
+#endif
+
 #ifndef HAVE_SETGROUPS
 #define HAVE_SETGROUPS 0
 #endif
@@ -70,7 +77,9 @@
 #define HAVE_SYS_FILIO_H 0
 #define HAVE_SYS_IOCTL_H 1
 
+#ifndef VA_LIST_IS_ARRAY
 #define VA_LIST_IS_ARRAY 0
+#endif
 
 #define HAVE_LIBWWW_SSL 0
 

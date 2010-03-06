@@ -241,6 +241,21 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+dnl this check is stolen from xmlrpc-c which is borrowed from Python 1.5.2.
+AC_MSG_CHECKING([whether va_list is an array])
+AC_TRY_COMPILE([
+	#include <stdarg.h>
+],[
+	va_list list1, list2; list1 = list2;
+],, va_list_is_array=yes)
+
+if test "x$va_list_is_array" = "xyes"; then
+	AC_DEFINE(VA_LIST_IS_ARRAY, 1, [Define to 1 if your va_list is array])
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
 dnl expand variables before EDE_INIT_JAM convert them to jam variables
 EDE_EXPAND(sysconfdir, "NONE", my_sysconfdir)
 
