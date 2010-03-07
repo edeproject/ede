@@ -302,8 +302,7 @@ static int start_dialog(int argc, char** argv) {
 		Fl_Box* icon = new Fl_Box(10, 10, 55, 55);
 		icon->image(image_run);
 
-		Fl_Box* txt = new Fl_Box(70, 10, 290, 69, _("Enter the name of the application "
-													"you would like to run or the URL you would like to view"));
+		Fl_Box* txt = new Fl_Box(70, 10, 290, 69, _("Enter the name of the application you would like to run"));
 		txt->align(132|FL_ALIGN_INSIDE);
 
 		dialog_input = new Fl_Input(70, 90, 290, 25, _("Open:"));
