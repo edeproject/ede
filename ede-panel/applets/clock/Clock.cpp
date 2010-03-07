@@ -13,9 +13,13 @@ static void clock_refresh(void *o);
 
 class Clock : public Fl_Box {
 private:
-	char buf[64];
+	int  hour;
+	char buf[64], tbuf[256];
+
+	time_t     curr_time;
+	struct tm *curr_tm;
 public:
-	Clock() : Fl_Box(450, 0, 80, 25, NULL) { 
+	Clock() : Fl_Box(450, 0, 80, 25, NULL), hour(0) { 
 		box(FL_FLAT_BOX);
 	}
 
@@ -35,16 +39,20 @@ static void clock_refresh(void *o) {
 }
 
 void Clock::update_time(void) {
-	time_t    t;
-	struct tm *tmp;
-
-	t = time(NULL);
-	tmp = localtime(&t);
-	if(!tmp)
+	curr_time = time(NULL);
+	curr_tm = localtime(&curr_time);
+	if(!curr_tm)
 		return;
 
-	strftime(buf, sizeof(buf), "%H:%M:%S", tmp);
+	strftime(buf, sizeof(buf), "%H:%M:%S", curr_tm);
 	label(buf);
+
+	/* update tooltip if needed */
+	if(curr_tm->tm_hour != hour) {
+		hour = curr_tm->tm_hour;
+		strftime(tbuf, sizeof(tbuf), "%d %B %Y", curr_tm);
+		tooltip(tbuf);
+	}
 }
 
 int Clock::handle(int e) {
