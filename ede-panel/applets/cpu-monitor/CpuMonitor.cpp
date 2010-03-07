@@ -262,10 +262,10 @@ void CPUMonitor::update_status() {
 	// Update tooltip
 	static char load[255];
 	snprintf(load, sizeof(load)-1,
-			 _("CPU Load:\n"
+			 _("CPU Load\n"
 			 "User: %d%%\n"
 			 "Nice: %d%%\n"
-			 "Sys:	%d%%\n"
+			 "Sys:   %d%%\n"
 			 "Idle: %d%%"),
 			 cpu[samples()-1][0]*2, cpu[samples()-1][1]*2,
 			 cpu[samples()-1][2]*2, cpu[samples()-1][3]*2);
