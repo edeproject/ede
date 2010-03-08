@@ -14,7 +14,7 @@ static void clock_refresh(void *o);
 class Clock : public Fl_Box {
 private:
 	int  hour;
-	char buf[64], tbuf[256];
+	char buf[64], tbuf[128];
 
 	time_t     curr_time;
 	struct tm *curr_tm;
@@ -50,7 +50,7 @@ void Clock::update_time(void) {
 	/* update tooltip if needed */
 	if(curr_tm->tm_hour != hour) {
 		hour = curr_tm->tm_hour;
-		strftime(tbuf, sizeof(tbuf), "%d %B %Y", curr_tm);
+		strftime(tbuf, sizeof(tbuf), "%A, %d %B %Y", curr_tm);
 		tooltip(tbuf);
 	}
 }
