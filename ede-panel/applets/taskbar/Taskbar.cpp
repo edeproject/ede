@@ -119,6 +119,7 @@ void Taskbar::create_task_buttons(void) {
 				b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
 				b->set_window_xid(wins[i]);
 				b->update_title_from_xid();
+				b->update_image_from_xid();
 
 				/* 
 				 * catch the name changes 

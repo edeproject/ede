@@ -8,6 +8,7 @@ class TaskButton : public Fl_Button {
 private:
 	/* window ID this button handles */
 	Window     xid;
+	Atom       net_wm_icon;
 
 public:
 	TaskButton(int X, int Y, int W, int H, const char *l = 0);
@@ -19,6 +20,7 @@ public:
 	Window  get_window_xid(void) { return xid; }
 
 	void update_title_from_xid(void);
+	void update_image_from_xid(void);
 };
 
 #endif

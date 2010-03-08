@@ -3,6 +3,9 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Pixmap.H>
 #include <FL/fl_draw.H>
+#include <FL/x.H>
+#include <FL/Fl_RGB_Image.H>
+
 #include <edelib/Debug.h>
 #include <edelib/Nls.h>
 #include <edelib/MenuItem.h>
@@ -12,6 +15,9 @@
 #include "TaskButton.h"
 #include "Taskbar.h"
 #include "icons/window.xpm"
+
+#define TASKBUTTON_ICON_W 16
+#define TASKBUTTON_ICON_H 16
 
 EDELIB_NS_USING(MenuItem)
 EDELIB_NS_USING(IconLoader)
@@ -87,6 +93,7 @@ TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X,
 		menu_[3].image((Fl_Image*)img);
 	}
 
+	net_wm_icon = XInternAtom(fl_display, "_NET_WM_ICON", False);
 	image(image_window);
 }
 
@@ -160,4 +167,78 @@ void TaskButton::update_title_from_xid(void) {
 		tooltip(label());
 		free(title);
 	}
+}
+
+/* stolen from pekwm */
+void TaskButton::update_image_from_xid(void) {
+	E_RETURN_IF_FAIL(xid >= 0);
+
+	Atom real;
+	int  format;
+	unsigned long n, extra;
+	unsigned char *prop = 0;
+	long len = 2;
+
+	int status = XGetWindowProperty(fl_display, xid,
+			net_wm_icon , 0L, len, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
+
+	if((status != Success) || (real != XA_CARDINAL)) {
+		if(prop) XFree(prop);
+		return;
+	}
+
+	long *data = (long*)prop;
+	unsigned int width, height;
+
+	width  = data[0];
+	height = data[1];
+	XFree(prop);
+
+	len += width * height;
+
+	format = 0;
+	prop   = 0;
+	real   = 0;
+
+	status = XGetWindowProperty(fl_display, xid,
+			net_wm_icon , 0L, len, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
+
+	if((status != Success) || (real != XA_CARDINAL)) {
+		if(prop) XFree(prop);
+		return;
+	}
+
+	data = (long*)prop;
+
+	unsigned char *img_data = new unsigned char[width * height * 4];
+	unsigned char *ptr = img_data;
+	int            pixel;
+
+	for(int i = 2; i < len; i++) {
+		pixel = data[i];
+
+		*ptr++ = pixel >> 16 & 0xff;
+		*ptr++ = pixel >> 8  & 0xff;
+		*ptr++ = pixel & 0xff;
+		*ptr++ = pixel >> 24 & 0xff;
+	}
+
+	XFree(prop);
+
+	Fl_RGB_Image *img = new Fl_RGB_Image(img_data, width, height, 4);
+	img->alloc_array = 1;
+
+	/* some safety, scale it if needed */
+	if((width  > TASKBUTTON_ICON_W) || (height > TASKBUTTON_ICON_H)) {
+		width  = (width  > TASKBUTTON_ICON_W) ? TASKBUTTON_ICON_W : width;
+		height = (height > TASKBUTTON_ICON_H) ? TASKBUTTON_ICON_H : height;
+
+		/* safe casting */
+		Fl_RGB_Image *scaled = (Fl_RGB_Image*)img->copy(width, height);
+		delete img;
+
+		img = scaled;
+	}
+
+	image(img);
 }
