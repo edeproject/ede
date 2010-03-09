@@ -23,6 +23,7 @@ public:
 	void update_active_button(int xid = -1);
 	void activate_window(TaskButton *b);
 	void update_child_title(Window xid);
+	void update_child_icon(Window xid);
 
 	void panel_redraw(void);
 };

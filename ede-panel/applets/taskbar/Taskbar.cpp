@@ -26,6 +26,7 @@ EDELIB_NS_USING(NETWM_CHANGED_ACTIVE_WINDOW)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_LIST)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_NAME)
+EDELIB_NS_USING(NETWM_CHANGED_WINDOW_ICON)
 EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 
 static void button_cb(TaskButton *b, void *t) {
@@ -56,6 +57,12 @@ static void net_event_cb(int action, Window xid, void *data) {
 	if(action == NETWM_CHANGED_ACTIVE_WINDOW) {
 		Taskbar *tt = (Taskbar*)data;
 		tt->update_active_button();
+		return;
+	}
+
+	if(action == NETWM_CHANGED_WINDOW_ICON) {
+		Taskbar *tt = (Taskbar*)data;
+		tt->update_child_icon(xid);
 		return;
 	}
 }
@@ -238,6 +245,21 @@ void Taskbar::update_child_title(Window xid) {
 
 		if(o->get_window_xid() == xid) {
 			o->update_title_from_xid();
+			break;
+		}
+	}
+}
+
+void Taskbar::update_child_icon(Window xid) {
+	E_RETURN_IF_FAIL(xid >= 0);
+
+	TaskButton *o;
+	for(int i = 0; i < children(); i++) {
+		o = (TaskButton*)child(i);
+
+		if(o->get_window_xid() == xid) {
+			o->update_image_from_xid();
+			o->redraw();
 			break;
 		}
 	}
