@@ -3,7 +3,7 @@
  *
  * Eabout, display version and authors
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2008 EDE Authors.
+ * Copyright (c) 2008-2010 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
 			ede_label_box->labelfont(1);
 			ede_label_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
-			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 300, 25, "Copyright (c) by EDE Authors 2000-2009");
+			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 300, 25, "Copyright (c) by EDE Authors 2000-2010");
 			ede_copy_box->labelsize(11);
 			ede_copy_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_TOP);
 
