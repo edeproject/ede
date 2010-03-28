@@ -36,11 +36,11 @@
 #include <edelib/Run.h>
 #include <edelib/Resource.h>
 #include <edelib/Window.h>
-#include <edelib/Nls.h>
 #include <edelib/Debug.h>
 #include <edelib/Missing.h>
 #include <edelib/MessageBox.h>
 #include <edelib/String.h>
+#include <edelib/Ede.h>
 
 #include "icons/run.xpm"
 
@@ -332,6 +332,8 @@ static int start_dialog(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+	EDE_APPLICATION("ede-launch");
+
 	if(argc <= 1)
 		return start_dialog(argc, argv);
 

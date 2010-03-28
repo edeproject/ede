@@ -25,7 +25,7 @@
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_Pixmap.H>
 
-#include <edelib/Nls.h>
+#include <edelib/Ede.h>
 #include "icons/ede.xpm"
 
 static Fl_Pixmap image_ede((const char**)ede_xpm);
@@ -123,6 +123,8 @@ char* prepare_style(char* txt, int len) {
 }
 
 int main(int argc, char **argv) {
+	EDE_APPLICATION("ede-about");
+
 	win = new Fl_Window(440, 335, _("About EDE"));
 	win->begin();
 		Fl_Group* title_group = new Fl_Group(0, 0, 440, 65);

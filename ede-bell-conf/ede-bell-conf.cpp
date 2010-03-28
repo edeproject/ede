@@ -10,7 +10,7 @@
  * See COPYING for details.
  */
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
@@ -23,8 +23,8 @@
 #include <FL/Fl_Value_Slider.H>
 
 #include <edelib/Window.h>
-#include <edelib/Nls.h>
 #include <edelib/XSettingsClient.h>
+#include <edelib/Ede.h>
 
 EDELIB_NS_USING(XSettingsClient)
 EDELIB_NS_USING(XSettingsAction)
@@ -132,6 +132,8 @@ static void test_cb(Fl_Widget*, void*) {
 }
 
 static void window_create(int argc, char** argv) {
+	EDE_APPLICATION("ede-bell-conf");
+
 	win = new edelib::Window(330, 210, _("System bell configuration"), edelib::WIN_INIT_NONE);
 	win->begin();
 		vol_slide = new Fl_Value_Slider(10, 30, 310, 25, _("Volume"));

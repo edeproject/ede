@@ -10,6 +10,10 @@
  * See COPYING for the details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Box.H>
@@ -21,8 +25,8 @@
 #include <FL/Fl_Pixmap.H>
 #include <FL/x.H>
 
-#include <edelib/Nls.h>
 #include <edelib/Debug.h>
+#include <edelib/Ede.h>
 
 #include "XScreenSaver.h"
 #include "icons/energy.xpm"
@@ -107,6 +111,8 @@ static void ok_cb(Fl_Widget*, void* s) {
 }
 
 int main(int argc, char **argv) {
+	EDE_APPLICATION("ede-screensaver-conf");
+
 	fl_open_display();
 	/* start daemon if not started */
 	xscreensaver_run_daemon(fl_display);

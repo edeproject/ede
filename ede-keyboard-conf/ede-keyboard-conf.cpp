@@ -15,7 +15,7 @@
 #endif
 
 #include <edelib/MessageBox.h>
-#include <edelib/Nls.h>
+#include <edelib/Ede.h>
 EDELIB_NS_USING(alert)
 
 #ifdef HAVE_XKBRULES
@@ -241,6 +241,8 @@ int main(int argc, char **argv) {
 	} else {
 		read_config(NULL);
 	}
+
+	EDE_APPLICATION("ede-keyboard-conf");
 
 	String cl;
 	dialog_canceled = false;

@@ -1,7 +1,12 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <signal.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
+#include <edelib/Ede.h>
 
 #include "Panel.h"
 #include "AppletManager.h"
@@ -13,6 +18,8 @@ static void exit_signal(int signum) {
 }
 
 int main(int argc, char **argv) {
+	EDE_APPLICATION("ede-panel");
+
 	signal(SIGTERM, exit_signal);
 	signal(SIGKILL, exit_signal);
 	signal(SIGINT,  exit_signal);

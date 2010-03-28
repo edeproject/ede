@@ -10,6 +10,16 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <errno.h>
+
 #include <Fl/Fl.H>
 #include <Fl/Fl_Double_Window.H>
 #include <Fl/Fl_Button.H>
@@ -18,26 +28,9 @@
 #include <Fl/Fl_Widget.H>
 #include <Fl/Fl_File_Chooser.H>
 #include <Fl/filename.H>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <errno.h>
-
+#include <edelib/Ede.h>
 
 #define DEBUG 1
-
-// Can this be moved to Jamfile/configure?
-//#define USE_EDELIB
-
-
-#ifdef USE_EDELIB
-#include <edelib/Nls.h>
-#else
-#define _(stuff) stuff
-#endif
-
 
 // Supported image types
 const char* supported[] = {"bm","bmp","gif","jpg","pbm","pgm","png","ppm","xbm","xpm",0};
@@ -371,7 +364,7 @@ int main (int argc, char **argv) {
 		snprintf(directory, FL_PATH_MAX, "%s", getenv("HOME"));
 	else {
 		if (strcmp(argv[unknown],"--help")==0) {
-			printf(_("EImage - EDE Image Viewer\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
+			printf(_("ede-image-view - EDE Image Viewer\nPart of Equinox Desktop Environment (EDE).\nCopyright (c) 2000-2007 EDE Authors.\n\nThis program is licenced under terms of the\nGNU General Public Licence version 2 or newer.\nSee COPYING for details.\n\n"));
 			printf(_("Usage: ede-image-view [OPTIONS] [IMAGE_FILE]\n\n"));
 			printf(_("Available options:\n%s\n"),Fl::help);
 			return 1;
@@ -395,13 +388,11 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	zoomfactor=1; im=0; // defaults
+	EDE_APPLICATION("ede-image-view");
+
 	fl_register_images();
-
-	FL_NORMAL_SIZE=12;
-	fl_message_font(FL_HELVETICA, 12);
-
-
+	zoomfactor=1; im=0; // defaults
+	
 	// Main window
 
 	w = new Fl_Double_Window(400, 200, _("View picture"));

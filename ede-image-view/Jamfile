@@ -10,5 +10,5 @@
 
 SubDir TOP ede-image-view ;
 
-FltkProgram ede-image-view : ede-image-view.cpp ;
+EdeProgram ede-image-view : ede-image-view.cpp ;
 TranslationStrings locale  : ede-image-view.cpp ;

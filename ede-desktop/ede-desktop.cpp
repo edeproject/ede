@@ -35,12 +35,12 @@
 #include <edelib/IconLoader.h>
 #include <edelib/Run.h>
 #include <edelib/Util.h>
-#include <edelib/Nls.h>
 #include <edelib/MessageBox.h>
 #include <edelib/MenuButton.h>
 #include <edelib/ForeignCallback.h>
 #include <edelib/Netwm.h>
 #include <edelib/WindowXid.h>
+#include <edelib/Ede.h>
 
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
@@ -1137,6 +1137,8 @@ int Desktop::handle(int event) {
 }
 
 int main() {
+	EDE_APPLICATION("ede-desktop");
+
 	signal(SIGTERM, exit_signal);
 	signal(SIGKILL, exit_signal);
 	signal(SIGINT,  exit_signal);

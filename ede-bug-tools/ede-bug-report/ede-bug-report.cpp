@@ -25,11 +25,11 @@
 #include <FL/Fl_Button.H>
 
 #include <edelib/Window.h>
-#include <edelib/Nls.h>
 #include <edelib/MessageBox.h>
 #include <edelib/String.h>
 #include <edelib/Regex.h>
 #include <edelib/Debug.h>
+#include <edelib/Ede.h>
 
 #ifdef HAVE_CURL
 # include "BugzillaSender.h"
@@ -136,6 +136,8 @@ int main(int argc, char** argv) {
 			"it from http://curl.haxx.se. After this, you'll have to recompile ede-bug-report again"));
 	return 1;
 #else
+	EDE_APPLICATION("ede-bug-report");
+
 	/* in case if debugger output was given */
 	const char *gdb_output = NULL;
 

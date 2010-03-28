@@ -10,8 +10,13 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
+#include <edelib/Ede.h>
 #include "CrashDialog.h"
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
@@ -43,6 +48,8 @@ int main(int argc, char** argv) {
 		help();
 		return 0;
 	}
+
+	EDE_APPLICATION("ede-crasher");
 
 	const char*    a;
 	ProgramDetails p;

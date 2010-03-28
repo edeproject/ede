@@ -10,6 +10,10 @@
  * See COPYING for the details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -22,7 +26,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Pixmap.H>
 
-#include <edelib/Nls.h>
 #include <edelib/Resource.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/File.h>
@@ -30,6 +33,7 @@
 #include <edelib/Util.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Directory.h>
+#include <edelib/Ede.h>
 
 #include "icons/hint.xpm"
 #include "Fortune.h"
@@ -164,6 +168,8 @@ void prev_cb(Fl_Widget*, void*) {
 }
 
 int main(int argc, char **argv) {
+	EDE_APPLICATION("ede-tip");
+
 	ffile = load_fortune_file();
 
 	// initialize random number only if we loaded tips

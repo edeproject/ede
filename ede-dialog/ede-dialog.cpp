@@ -10,7 +10,7 @@
  * See COPYING for details.
  */
 
-#ifndef HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
@@ -20,7 +20,7 @@
 #include <FL/Fl.H>
 #include <edelib/MessageBox.h>
 #include <edelib/Window.h>
-#include <edelib/Nls.h>
+#include <edelib/Ede.h>
 
 EDELIB_NS_USING(MessageBox)
 EDELIB_NS_USING(MessageBoxType)
@@ -158,6 +158,8 @@ int main(int argc, char **argv) {
 		puts("Missing one of the flags that will describe the dialog. Run program with '--help' for the details");
 		return EDE_DIALOG_ERROR_RET;
 	}
+
+	EDE_APPLICATION("ede-dialog");
 
 	/* 
 	 * Use a trick to load icon theme and colors using xsettings stuff. edelib::Window will load them

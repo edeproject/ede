@@ -33,7 +33,6 @@
 #include <FL/Fl_Menu_Button.H>
 #include <FL/x.H>
 
-#include <edelib/Nls.h>
 #include <edelib/Color.h>
 #include <edelib/Window.h>
 #include <edelib/Resource.h>
@@ -42,6 +41,7 @@
 #include <edelib/FontChooser.h>
 #include <edelib/Directory.h>
 #include <edelib/ForeignCallback.h>
+#include <edelib/Ede.h>
 
 #define EDE_DESKTOP_CONFIG "ede-desktop"
 
@@ -362,6 +362,8 @@ int main(int argc, char** argv) {
 		else if(strcmp(argv[1], "--icons-behaviour") == 0)
 			show_group = 3;
 	}
+
+	EDE_APPLICATION("ede-desktop-conf");
 
 	edelib::Window* win = new edelib::Window(550, 285, _("Desktop options"), edelib::WIN_INIT_IMAGES);
 	win->begin();

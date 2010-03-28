@@ -10,6 +10,10 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Box.H>
@@ -22,10 +26,10 @@
 #include <edelib/ExpandableGroup.h>
 #include <edelib/String.h>
 #include <edelib/IconLoader.h>
-#include <edelib/Nls.h>
 #include <edelib/Window.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
+#include <edelib/Ede.h>
 
 EDELIB_NS_USING(list)
 EDELIB_NS_USING(Resource)
@@ -146,6 +150,8 @@ static void load_buttons(Fl_Group* g) {
 }
 
 int main(int argc, char** argv) {
+	EDE_APPLICATION("ede-conf");
+
 	edelib::Window* win = new edelib::Window(455, 330, _("EDE Configuration Place"));
 	win->begin();
 

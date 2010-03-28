@@ -10,9 +10,21 @@
  * See COPYING for details.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "ede-timedate.h"
 
-#include <edelib/Nls.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
+#include <FL/Fl_Pixmap.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Repeat_Button.H>
+#define FL_PATH_MAX 1024
+
 #include <edelib/MessageBox.h>
 #include <edelib/Run.h>
 #include <edelib/StrUtil.h>
@@ -20,16 +32,7 @@
 #include <edelib/IconTheme.h>
 #include <edelib/Debug.h>
 #include <edelib/Window.h>
-
-#include <FL/Fl_Pixmap.H>
-#include <FL/Fl_Shared_Image.H>
-#include <FL/Fl_Repeat_Button.H>
-#define FL_PATH_MAX 1024
-
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <time.h>
+#include <edelib/Ede.h>
 
 
 #include "icons/world2.xpm"
@@ -430,10 +433,9 @@ static void tick(void *v) {
 
 
 int main(int argc, char **argv) {
+	EDE_APPLICATION("ede-timedate");
 
-FL_NORMAL_SIZE=12;
-time_changed = format_changed = tz_changed = date_changed = false;
-
+	time_changed = format_changed = tz_changed = date_changed = false;
 
   { timedateWindow = new edelib::Window(415, 320, _("Time and date"));
     { Fl_Tabs* o = new Fl_Tabs(5, 5, 405, 270);

@@ -30,13 +30,13 @@
 #include <edelib/Util.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/Directory.h>
-#include <edelib/Nls.h>
 #include <edelib/Debug.h>
 #include <edelib/Run.h>
 #include <edelib/FileTest.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Window.h>
 #include <edelib/IconLoader.h>
+#include <edelib/Ede.h>
 
 EDELIB_NS_USING_AS(Window, AppWindow)
 EDELIB_NS_USING(String)
@@ -346,6 +346,8 @@ static const char* next_param(int curr, char** argv, int argc) {
 }
 
 int main(int argc, char** argv) {
+	EDE_APPLICATION("ede-autostart");
+
 	if(argc == 1) {
 		perform_autostart(false);
 		return 0;

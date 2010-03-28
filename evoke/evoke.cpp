@@ -20,6 +20,7 @@
 #include <FL/Fl.H>
 #include <FL/x.H>
 #include <edelib/Run.h>
+#include <edelib/Ede.h>
 
 #include "EvokeService.h"
 
@@ -74,6 +75,8 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+
+	EDE_APPLICATION("evoke");
 
 	/* make sure X11 is running before rest of code is called */
 	fl_open_display();
