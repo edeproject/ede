@@ -296,6 +296,9 @@ static void perform_autostart(bool safe) {
 		entry_list.push_back(en);
 	}
 
+	if(entry_list.empty())
+		return;
+
 	if(safe)
 		run_autostart_dialog(entry_list);
 	else
