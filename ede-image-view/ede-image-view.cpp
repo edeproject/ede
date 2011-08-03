@@ -20,14 +20,14 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include <Fl/Fl.H>
-#include <Fl/Fl_Double_Window.H>
-#include <Fl/Fl_Button.H>
-#include <Fl/Fl_Shared_Image.H>
-#include <Fl/Fl_Scroll.H>
-#include <Fl/Fl_Widget.H>
-#include <Fl/Fl_File_Chooser.H>
-#include <Fl/filename.H>
+#include <FL/Fl.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Scroll.H>
+#include <FL/Fl_Widget.H>
+#include <FL/Fl_File_Chooser.H>
+#include <FL/filename.H>
 #include <edelib/Ede.h>
 
 #define DEBUG 1

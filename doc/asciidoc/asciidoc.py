@@ -3944,7 +3944,7 @@ def asciidoc(backend, doctype, confiles, infile, outfile, options):
             raise EAsciiDoc,'input file %s missing' % infile
         if '-e' not in options:
             # Load global configuration from system configuration directory.
-            config.load_all(GLOBAL_CONFIG_DIR)
+            #config.load_all(GLOBAL_CONFIG_DIR)
             # Load global configuration files from asciidoc directory.
             config.load_all(APP_DIR)
             # Load configuration files from ~/.asciidoc if it exists.
