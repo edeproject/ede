@@ -10,35 +10,28 @@
 pots="ede-@EDE_VERSION@-l10n"
 
 directories="
- ede-about
- ede-calc
- ecolorconf 
- ede-conf
- ede-crasher 
- ede-desktop-conf
- edewm 
- edialog 
- edisplayconf 
- efiler 
- efinder 
- ede-help 
- ede-desktop
- eimage
- einstaller 
- ekeyconf 
- elauncher 
- elma 
- emenueditor 
- emountd 
- epanelconf
- ede-screensaver-conf
- ede-timedate 
- ede-tip
- evoke 
- evolume 
- ewmconf 
- eworkpanel 
- exset"
+ede-about
+ede-autostart
+ede-bell-conf
+ede-bug-tools
+ede-calc
+ede-conf
+ede-desktop
+ede-desktop-conf
+ede-dialog
+ede-help
+ede-image-view
+ede-keyboard-conf
+ede-launch
+ede-panel
+ede-screensaver-conf
+ede-timedate
+ede-tip
+edewm
+efiler
+elma
+emountd
+evoke"
 
 [ -d $pots ] && rm -R $pots
 mkdir $pots
