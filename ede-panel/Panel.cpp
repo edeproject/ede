@@ -404,7 +404,6 @@ int Panel::handle(int e) {
 }
 
 void Panel::load_applets(void) {
-#if 0
 	/* FIXME: hardcoded order */
 	static const char *applets[] = {
 		"start_menu.so",
@@ -414,6 +413,7 @@ void Panel::load_applets(void) {
 		"taskbar.so",
 		"keyboard_layout.so",
 		"cpu_monitor.so",
+		"mem_monitor.so",
 		0
 	};
 
@@ -428,8 +428,7 @@ void Panel::load_applets(void) {
 	}
 
 	mgr.fill_group(this);
-#endif
-
+#if 0
 	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/pager/pager.so");
@@ -439,4 +438,5 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/cpu-monitor/cpu_monitor.so");
 	mgr.load("./applets/mem-monitor/mem_monitor.so");
 	mgr.fill_group(this);
+#endif
 }
