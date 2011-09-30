@@ -10,6 +10,7 @@ private:
 public:
 	MemMonitor();
 	void update_status(void);
+	void draw(void);
 };
 
 #endif
