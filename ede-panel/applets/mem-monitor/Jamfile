@@ -1,0 +1,13 @@
+#
+# $Id: Jamfile 2922 2009-11-05 15:18:51Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-panel applets mem-monitor ;
+
+PanelApplet mem_monitor : MemMonitor.cpp ;
