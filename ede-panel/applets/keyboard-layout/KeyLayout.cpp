@@ -24,6 +24,7 @@
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 #include <edelib/ForeignCallback.h>
+#include <edelib/Functional.h>
 
 /* they should match names in ede-keyboard-conf */
 #define PANEL_APPLET_ID "ede-keyboard"
@@ -35,6 +36,7 @@ EDELIB_NS_USING(list)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(foreign_callback_add)
 EDELIB_NS_USING(foreign_callback_remove)
+EDELIB_NS_USING(for_each)
 EDELIB_NS_USING(RES_SYS_ONLY)
 
 static Atom _XA_XKB_RF_NAMES_PROP_ATOM = 0;
@@ -54,9 +56,7 @@ public:
 };
 
 typedef list<KeyLayout*> KeyLayoutList;
-typedef list<KeyLayout*>::iterator KeyLayoutListIt;
-
-static KeyLayoutList keylayout_objects;
+static  KeyLayoutList    keylayout_objects;
 
 #ifdef HAVE_XKBRULES
 /* Xkb does not provide this */
@@ -69,6 +69,11 @@ static void xkbrf_names_prop_free(XkbRF_VarDefsRec &vd, char *tmp) {
 }
 #endif
 
+static void update_key_layout(KeyLayout *k) {
+	k->do_key_layout();
+	k->update_flag(false);
+}
+
 /* 
  * any layout changes on X will be reported here, executed either via ede-keyboard-conf or
  * another tool, so there are no needs to read layout from configuration file
@@ -76,12 +81,7 @@ static void xkbrf_names_prop_free(XkbRF_VarDefsRec &vd, char *tmp) {
 static int xkb_events(int e) {
 	if(fl_xevent->xproperty.atom == _XA_XKB_RF_NAMES_PROP_ATOM) {
 		/* TODO: lock this */
-		KeyLayoutListIt it = keylayout_objects.begin(), it_end = keylayout_objects.end();
-
-		for(; it != it_end; ++it) {
-			(*it)->do_key_layout();
-			(*it)->update_flag(false);
-		}
+		for_each(update_key_layout, keylayout_objects);
 	}
 
 	return 0;
