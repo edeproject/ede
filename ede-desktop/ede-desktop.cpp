@@ -145,14 +145,14 @@ static void desktop_message_handler(int action, Window xid, void *data) {
 	}
 }
 
-Desktop::Desktop() : DESKTOP_WINDOW(0, 0, 100, 100, "") {
+Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selection_x = selection_y = 0;
 	moving = false;
 	do_dirwatch = true;
 
 #ifdef USE_EDELIB_WINDOW
 	edelib::foreign_callback_add(this, "ede-desktop", settings_changed_cb);
-	/* DESKTOP_WINDOW::single_bufer(true); */
+	/* EDE_DESKTOP_WINDOW::single_bufer(true); */
 #endif
 
 	selbox = new SelectionOverlay;
@@ -260,7 +260,7 @@ Desktop* Desktop::instance(void) {
 
 void Desktop::show(void) {
 	if(shown())
-		return DESKTOP_WINDOW::show();
+		return EDE_DESKTOP_WINDOW::show();
 
 	window_xid_create(this, make_me_desktop);
 }
@@ -873,7 +873,7 @@ void Desktop::draw(void) {
 		 */
 		clear_xoverlay();
 
-		DESKTOP_WINDOW::draw();
+		EDE_DESKTOP_WINDOW::draw();
 		E_DEBUG(E_STRLOC ": REDRAW ALL\n");
 	}
 
@@ -1089,7 +1089,7 @@ int Desktop::handle(int event) {
 		case FL_ENTER:
 		case FL_LEAVE:
 		case FL_MOVE:
-			return DESKTOP_WINDOW::handle(event);
+			return EDE_DESKTOP_WINDOW::handle(event);
 
 		default:
 			break;

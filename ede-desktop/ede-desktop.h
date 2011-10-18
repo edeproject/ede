@@ -15,11 +15,11 @@
 
 #ifdef USE_EDELIB_WINDOW
 # include <edelib/Window.h>
-# define DESKTOP_WINDOW edelib::Window
+# define EDE_DESKTOP_WINDOW edelib::Window
 #else
 # include <FL/Fl_Window.H>
 # include <FL/Fl_Double_Window.H>
-# define DESKTOP_WINDOW Fl_Window
+# define EDE_DESKTOP_WINDOW Fl_Window
 #endif
 
 #include <FL/Fl_Image.H>
@@ -88,7 +88,7 @@ typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
 typedef edelib::list<edelib::String>           StringList;
 typedef edelib::list<edelib::String>::iterator StringListIter;
 
-class Desktop : public DESKTOP_WINDOW {
+class Desktop : public EDE_DESKTOP_WINDOW {
 private:
 	static Desktop* pinstance;
 
