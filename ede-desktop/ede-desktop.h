@@ -14,10 +14,12 @@
 #define __EDE_DESKTOP_H__
 
 #ifdef USE_EDELIB_WINDOW
-	#include <edelib/Window.h>
+# include <edelib/Window.h>
+# define DESKTOP_WINDOW edelib::Window
 #else
-	#include <FL/Fl_Window.H>
-	#include <FL/Fl_Double_Window.H>
+# include <FL/Fl_Window.H>
+# include <FL/Fl_Double_Window.H>
+# define DESKTOP_WINDOW Fl_Window
 #endif
 
 #include <FL/Fl_Image.H>
@@ -86,12 +88,6 @@ typedef edelib::list<DesktopIcon*>::iterator DesktopIconListIter;
 typedef edelib::list<edelib::String>           StringList;
 typedef edelib::list<edelib::String>::iterator StringListIter;
 
-#ifdef USE_EDELIB_WINDOW
-	#define DESKTOP_WINDOW edelib::Window
-#else
-	#define DESKTOP_WINDOW Fl_Window
-#endif
-
 class Desktop : public DESKTOP_WINDOW {
 private:
 	static Desktop* pinstance;
@@ -111,8 +107,6 @@ private:
 	DesktopIconList icons;
 	DesktopIconList selectionbuf;
 
-	edelib::String trash_path;
-
 	void init_internals(void);
 
 	void load_icons(const char* path);
@@ -126,8 +120,6 @@ private:
 	bool remove_icon_by_path(const char* path);
 
 	void auto_arrange(void);
-
-	void update_trash_icons(void);
 
 	void unfocus_all(void);
 

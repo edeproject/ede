@@ -13,8 +13,6 @@
 #ifndef __DESKTOPICON_H__
 #define __DESKTOPICON_H__
 
-#include <X11/Xlib.h> // Pixmap
-
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -92,18 +90,6 @@ public:
 	int  icon_type(void);
 	void use_icon1(void);
 	void use_icon2(void);
-};
-
-class MovableIcon : public Fl_Window {
-private:
-	DesktopIcon* icon;
-	Fl_Box* icon_box;
-	Pixmap mask;
-
-public:
-	MovableIcon(DesktopIcon* i);
-	~MovableIcon();
-	virtual void show(void);
 };
 
 #endif

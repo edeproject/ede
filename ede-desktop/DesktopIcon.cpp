@@ -27,12 +27,9 @@
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 
-#ifdef HAVE_SHAPE
-# include <X11/extensions/shape.h>
-#endif
-
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
+#include "MovableIcon.h"
 #include "IconProperties.h"
 #include "Utils.h"
 
@@ -91,7 +88,6 @@ static void rename_cb(Fl_Widget*, void* d) {
 
 static void props_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
-
 	show_icon_properties_dialog(di);
 }
 
@@ -430,57 +426,4 @@ int DesktopIcon::handle(int event) {
 	}
 
 	return 0;
-}
-
-MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic), mask(0) {
-	E_ASSERT(icon != NULL);
-
-	set_override();
-	color(ic->color());
-
-	begin();
-		/*
-		 * Force box be same width/height as icon so it
-		 * can fit inside masked window.
-		 */
-#ifdef HAVE_SHAPE 
-		Fl_Image* img = ic->icon_image();
-		if(img)
-			icon_box = new Fl_Box(0, 0, img->w(), img->h());
-		else
-			icon_box = new Fl_Box(0, 0, w(), h());
-#else
-		icon_box = new Fl_Box(0, 0, w(), h());
-#endif
-		icon_box->image(ic->icon_image());
-	end();
-}
-
-MovableIcon::~MovableIcon() {
-	if(mask)
-		XFreePixmap(fl_display, mask);
-}
-
-void MovableIcon::show(void) {
-	if(!shown())
-		Fl_X::make_xid(this);
-
-#ifdef HAVE_SHAPE
-	if(icon->icon_image()) {
-		mask = create_mask(icon->icon_image());
-		if(mask) {
-			XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
-
-			/*
-			 * now set transparency; composite manager should handle the rest (if running)
-			 * TODO: should this be declared as part of the class ?
-			 */
-			Atom opacity_atom = XInternAtom(fl_display, "_NET_WM_WINDOW_OPACITY", False);
-			unsigned int opacity = 0xc0000000;
-
-			XChangeProperty(fl_display, fl_xid(this), opacity_atom, XA_CARDINAL, 32, PropModeReplace,
-					(unsigned char*)&opacity, 1L);
-		}
-	}
-#endif
 }

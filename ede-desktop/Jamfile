@@ -12,7 +12,12 @@ SubDir TOP ede-desktop ;
 
 ObjectC++Flags ede-desktop.cpp : -DUSE_EDELIB_WINDOW ;
 
-SOURCE = ede-desktop.cpp Utils.cpp Wallpaper.cpp DesktopIcon.cpp IconProperties.cpp ;
+SOURCE = ede-desktop.cpp 
+		 Utils.cpp 
+		 Wallpaper.cpp 
+		 DesktopIcon.cpp 
+		 MovableIcon.cpp
+		 IconProperties.cpp ;
 
 ObjectC++Flags $(SOURCE) : $(EDELIB_DBUS_INCLUDE) ;
 

@@ -233,21 +233,6 @@ void Desktop::init_internals(void) {
 		}
 	}
 
-	/*
-	 * For watching Trash, we will check Trash/files only with create/delete flags and
-	 * in callback will be checked if directory is empty (trash empty) or not (trash full).
-	 */
-	p = edelib::user_data_dir();
-	trash_path = edelib::build_filename(p.c_str(), "Trash/files");
-
-	if(edelib::file_test(trash_path.c_str(), edelib::FILE_TEST_IS_DIR)) {
-		if(!edelib::DirWatch::add(trash_path.c_str(), edelib::DW_CREATE | edelib::DW_DELETE))
-			E_WARNING(E_STRLOC ": Unable to watch %s\n", trash_path.c_str());
-	}
-
-	/* draw appropriate trash icon */
-	update_trash_icons();
-
 	edelib::DirWatch::callback(dir_watch_cb);
 	running = true;
 }
@@ -572,20 +557,6 @@ void Desktop::auto_arrange(void) {
 		if(Y + (ic->h() / 2) > H) {
 			Y = 10;
 			X += gisett->label_maxwidth + (ic->w() / 2);
-		}
-	}
-}
-
-void Desktop::update_trash_icons(void) {
-	bool is_empty = edelib::dir_empty(trash_path.c_str());
-	DesktopIconListIter it = icons.begin(), it_end = icons.end();
-
-	for(; it != it_end; ++it) {
-		if((*it)->icon_type() == ICON_TRASH) {
-			if(is_empty)
-				(*it)->use_icon1();
-			else
-				(*it)->use_icon2();
 		}
 	}
 }
@@ -936,12 +907,6 @@ void Desktop::dir_watch(const char* dir, const char* changed, int flags) {
 	if(is_temp_filename(changed))
 		return;
 
-	if(trash_path == dir) {
-		update_trash_icons();
-		E_DEBUG(E_STRLOC ": event on trash dir %s\n", dir);
-		return;
-	}
-
 	if(flags == edelib::DW_REPORT_CREATE) {
 		E_DEBUG(E_STRLOC ": adding %s\n", changed);
 
@@ -1003,10 +968,7 @@ int Desktop::handle(int event) {
 			// from here, all events are managed for icons
 			DesktopIcon* tmp_icon = (DesktopIcon*)clicked;
 
-			/*
-			 * do no use assertion on this, since
-			 * fltk::belowmouse() can miss our icon
-			 */
+			/* do no use assertion on this, since fltk::belowmouse() can miss our icon */
 			if(!tmp_icon)
 				return 1;
 
