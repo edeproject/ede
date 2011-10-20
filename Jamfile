@@ -33,6 +33,7 @@ SubInclude TOP ede-launch ;
 SubInclude TOP emountd ;
 SubInclude TOP ede-timedate ;
 SubInclude TOP ede-tip ;
+SubInclude TOP ede-preferred-applications ;
 SubInclude TOP evoke ;
 SubInclude TOP doc ;
 SubInclude TOP data ;

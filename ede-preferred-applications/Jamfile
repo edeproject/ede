@@ -1,0 +1,10 @@
+#
+# $Id:$
+#
+
+SubDir TOP ede-preferred-applications ;
+
+SOURCE = ede-preferred-applications.cpp Apps.cpp ;
+
+EdeProgram ede-preferred-applications : $(SOURCE) ;
+TranslationStrings locale : $(SOURCE) ;

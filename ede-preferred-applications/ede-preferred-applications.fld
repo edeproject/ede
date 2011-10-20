@@ -1,0 +1,50 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0300 
+header_name {.h} 
+code_name {.cxx}
+Function {} {open
+} {
+  Fl_Window {} {
+    label {Preferred applications} open selected
+    xywh {583 354 365 220} type Double modal visible
+  } {
+    Fl_Button {} {
+      label {&OK}
+      xywh {170 185 90 25}
+    }
+    Fl_Button {} {
+      label {&Cancel}
+      xywh {265 185 90 25}
+    }
+    Fl_Tabs {} {open
+      xywh {10 10 345 165}
+    } {
+      Fl_Group {} {
+        label Internet open
+        xywh {15 30 335 140}
+      } {
+        Fl_Choice {} {
+          label {Web browser} open
+          xywh {20 65 320 25} align 5
+        } {}
+        Fl_Choice {} {
+          label {Mail reader} open
+          xywh {20 120 320 25} align 5
+        } {}
+      }
+      Fl_Group {} {
+        label Utilities open
+        xywh {15 30 335 140} hide
+      } {
+        Fl_Choice {} {
+          label {File manager} open
+          xywh {20 65 320 25} align 5
+        } {}
+        Fl_Choice {} {
+          label Terminal open
+          xywh {20 120 320 25} align 5
+        } {}
+      }
+    }
+  }
+} 
