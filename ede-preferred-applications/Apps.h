@@ -21,7 +21,11 @@ KnownApp *app_find_by_name(KnownApp *lst, const char *name);
 KnownApp *app_find_by_cmd(KnownApp *lst, const char *cmd);
 KnownApp *app_get(KnownApp *lst, int index);
 
+int        app_get_index(KnownApp *lst, const char *cmd);
+inline int app_get_index(KnownApp *lst, KnownApp &a) { return app_get_index(lst, a.cmd); }
+
 void      app_populate_menu(KnownApp *lst, Fl_Choice *c);
 
-bool      app_is_magic_cmd(const char *cmd);
+bool        app_is_magic_cmd(const char *cmd);
+inline bool app_is_magic_cmd(const KnownApp &a) { return app_is_magic_cmd(a.cmd); }
 #endif

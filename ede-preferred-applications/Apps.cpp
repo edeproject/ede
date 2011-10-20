@@ -19,7 +19,7 @@ KnownApp *app_find_by_cmd(KnownApp *lst, const char *name) {
 	E_RETURN_VAL_IF_FAIL(name, 0);
 
 	for(int i = 0; lst[i].name; i++)
-		if(strcmp(lst[i].name, name) == 0)
+		if(strcmp(lst[i].cmd, name) == 0)
 			return &lst[i];
 	return 0;
 }
@@ -37,6 +37,18 @@ KnownApp *app_find_by_name(KnownApp *lst, const char *cmd) {
 KnownApp *app_get(KnownApp *lst, int index) {
 	E_RETURN_VAL_IF_FAIL(lst != 0, 0);
 	return &lst[index];
+}
+
+int app_get_index(KnownApp *lst, const char *cmd) {
+	E_RETURN_VAL_IF_FAIL(lst != 0, -1);
+	E_RETURN_VAL_IF_FAIL(cmd != 0, -1);
+
+	for(int i = 0; lst[i].name; i++) {
+		if(strcmp(lst[i].cmd, cmd) == 0)
+			return i;
+	}
+
+	return -1;
 }
 
 static void populate_menu(const KnownApp &item, void *data) {
