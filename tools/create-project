@@ -1,0 +1,85 @@
+#!/bin/sh
+# create ede project with starting boilerplate code
+
+program_name="$0"
+
+die() {
+	echo "*** $@"
+	exit 1
+}
+
+help() {
+	cat <<EOF
+Usage: $program_name [PROJECT] [CLASS]
+Create project boilerplate code in [PROJECT] directory.
+
+Options:
+  --help        this help
+
+Example:
+  $program_name ede-sample-application
+EOF
+	exit 1
+}
+
+create_boilerplate() {
+	name="$1"
+	[ -d $name ] && die "Project folder with this name already exists. Aborting..."
+
+	mkdir $name
+
+	# create Jamfile
+	cat > $name/Jamfile <<EOF
+#
+# \$Id:\$
+#
+
+SubDir TOP $name ;
+
+SOURCE = $name.cpp ;
+
+EdeProgram $name : $name.cpp ;
+TranslationStrings locale : \$(SOURCE) ;
+EOF
+
+	# create sources
+	cat > $name/$name.cpp <<EOF
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <stdio.h>
+#include <edelib/Ede.h>
+#include <edelib/Window.h>
+#include <FL/Fl.H>
+#include <FL/Fl_Box.H>
+
+EDELIB_NS_USING_AS(Window, EdeWindow)
+
+int main(int argc, char** argv) {
+	EDE_APPLICATION("$name");
+
+	EdeWindow *win = new EdeWindow(300, 100);
+	win->label("$name sample");
+	new Fl_Box(1, 1, 299, 99, "Hola from $name");
+	win->end();
+	win->show(argc, argv);
+
+	return Fl::run();
+}
+EOF
+}
+
+if [ $# -eq 0 ] || [ "$1" = "--help" ]; then
+	help
+fi
+
+create_boilerplate "$1"
+
+cat <<EOF
+Project created. Now add:
+
+ SubInclude TOP $name ;
+
+to toplevel Jamfile.
+EOF
