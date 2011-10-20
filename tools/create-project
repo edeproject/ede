@@ -38,7 +38,7 @@ SubDir TOP $name ;
 
 SOURCE = $name.cpp ;
 
-EdeProgram $name : $name.cpp ;
+EdeProgram $name : \$(SOURCE) ;
 TranslationStrings locale : \$(SOURCE) ;
 EOF
 
