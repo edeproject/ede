@@ -49,8 +49,9 @@ EOF
 #endif
 
 #include <stdio.h>
-#include <edelib/Ede.h>
 #include <edelib/Window.h>
+#include <edelib/Nls.h>
+#include <edelib/Ede.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
 
 	EdeWindow *win = new EdeWindow(300, 100);
 	win->label("$name sample");
-	new Fl_Box(1, 1, 299, 99, "Hola from $name");
+	new Fl_Box(1, 1, 299, 99, _("Hola from $name"));
 	win->end();
 	win->show(argc, argv);
 
