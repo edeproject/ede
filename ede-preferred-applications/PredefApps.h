@@ -10,6 +10,8 @@ struct KnownApp {
 
 #define KNOWN_APP_END {0, 0} 
 
+/* to allow inclusion from single place, without issuing gcc warnings */
+#if KNOWN_APP_PREDEFINED
 static KnownApp app_browsers[] = {
 	{"Mozilla Firefox", "firefox"},
 	{"Mozilla Seamonkey", "seamonkey"},
@@ -40,5 +42,6 @@ static KnownApp app_terminals[] = {
 	{"Xfce Terminal", "xfterm4"},
 	KNOWN_APP_END
 };
+#endif
 
 #endif

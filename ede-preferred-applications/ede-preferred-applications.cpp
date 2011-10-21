@@ -14,6 +14,8 @@
 #include <edelib/Resource.h>
 #include <edelib/Debug.h>
 
+#define KNOWN_APP_PREDEFINED 1
+#include "PredefApps.h"
 #include "AppChoice.h"
 
 #define EMPTY_STR(s) (s[0] == '\0' || (strlen(s) == 0))
