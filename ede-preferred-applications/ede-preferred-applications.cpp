@@ -16,6 +16,8 @@
 
 #include "AppChoice.h"
 
+#define EMPTY_STR(s) (s[0] == '\0' || (strlen(s) == 0))
+
 EDELIB_NS_USING_AS(Window, EdeWindow)
 EDELIB_NS_USING(Resource)
 
@@ -33,7 +35,7 @@ static void check_and_store(AppChoice *c, const char *n, Resource &rc) {
 /* load separate item */
 static void check_and_load(AppChoice *c, const char *n, Resource &rc) {
 	static char buf[128];
-	if(rc.get("Preferred", n, buf, sizeof(buf)) && strlen(buf) > 0) {
+	if(rc.get("Preferred", n, buf, sizeof(buf)) && !EMPTY_STR(buf)) {
 		c->add_if_user_program(buf);
 		c->select_by_cmd(buf);
 	}

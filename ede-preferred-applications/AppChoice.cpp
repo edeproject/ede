@@ -60,6 +60,7 @@ void AppChoice::add_if_user_program(const char *cmd) {
 
 	if(found) return;
 
+	user_val = cmd;
 	replace(size() - 2, get_basename(cmd));
 	add(_("Browse..."));
 }
@@ -69,6 +70,16 @@ void AppChoice::select_by_cmd(const char *cmd) {
 	E_RETURN_IF_FAIL(known_apps != 0);
 
 	int pos;
+
+	if(!user_val.empty()) {
+		const char *b = get_basename(user_val.c_str());
+		pos = find_index(b);
+		if(pos >= 0) {
+			value(pos);
+			pvalue = pos;
+			return;
+		}
+	}
 
 	for(int i = 0; known_apps[i].name; i++) {
 		if(STR_CMP(cmd, known_apps[i].cmd)) {
@@ -94,7 +105,7 @@ const char *AppChoice::selected(void) {
 	const char *n = text();
 
 	/* first check if user one was selected */
-	if(!user_val.empty() && STR_CMP(get_basename(user_val.c_str()), n));
+	if(!user_val.empty() && STR_CMP(get_basename(user_val.c_str()), n))
 		return user_val.c_str();
 
 	for(int i = 0; known_apps[i].name; i++) {
