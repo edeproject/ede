@@ -1,10 +1,16 @@
-#ifndef __EDE_PREFERRED_APPLICATIONS_PREDEFAPPS_H__
-#define __EDE_PREFERRED_APPLICATIONS_PREDEFAPPS_H__
+#ifndef __PREDEFAPPS_H__
+#define __PREDEFAPPS_H__
 
-#include "Apps.h"
+#include <edelib/Nls.h>
+
+struct KnownApp {
+	const char *name;
+	const char *cmd;
+};
+
+#define KNOWN_APP_END {0, 0} 
 
 static KnownApp app_browsers[] = {
-	KNOWN_APP_START,
 	{"Mozilla Firefox", "firefox"},
 	{"Mozilla Seamonkey", "seamonkey"},
 	{"Google Chrome", "google-chrome"},
@@ -15,13 +21,11 @@ static KnownApp app_browsers[] = {
 };
 
 static KnownApp app_mails[] = {
-	KNOWN_APP_START,
 	{"Mozilla Thunderbird", "thunderbird"},
 	KNOWN_APP_END
 };
 
 static KnownApp app_filemanagers[] = {
-	KNOWN_APP_START,
 	{"Thunar", "thunar"},
 	{"Nautilus", "nautilus"},
 	{"Dolphin", "dolphin"},
@@ -30,7 +34,6 @@ static KnownApp app_filemanagers[] = {
 };
 
 static KnownApp app_terminals[] = {
-	KNOWN_APP_START,
 	{"X11 terminal", "xterm"},
 	{"Rxvt", "rxvt"},
 	{"Mrxvt", "mrxvt"},

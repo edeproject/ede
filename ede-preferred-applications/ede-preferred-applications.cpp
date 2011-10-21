@@ -6,7 +6,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Group.H>
-#include <FL/Fl_Choice.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_File_Chooser.H>
 #include <edelib/Window.h>
@@ -15,61 +14,39 @@
 #include <edelib/Resource.h>
 #include <edelib/Debug.h>
 
-#include "PredefApps.h"
+#include "AppChoice.h"
 
 EDELIB_NS_USING_AS(Window, EdeWindow)
 EDELIB_NS_USING(Resource)
 
-Fl_Choice *browser_choice,
+AppChoice *browser_choice,
 		  *mail_choice,
 		  *filemgr_choice,
 		  *term_choice;
 
 /* store separate item */
-static void check_and_store(Fl_Choice *c, KnownApp *lst, const char *n, Resource &rc) {
-	int       sel = c->value();
-	KnownApp *app = app_get(lst, sel);
-	if(app_is_magic_cmd(*app))
-		return;
-
-	rc.set("Preferred", n, app->cmd);
+static void check_and_store(AppChoice *c, const char *n, Resource &rc) {
+	const char *val = c->selected();
+	if(val) rc.set("Preferred", n, val);
 }
 
 /* load separate item */
-static void check_and_load(Fl_Choice *c, KnownApp *lst, const char *n, Resource &rc) {
+static void check_and_load(AppChoice *c, const char *n, Resource &rc) {
 	static char buf[128];
-	if(!rc.get("Preferred", n, buf, sizeof(buf)))
-		return;
-
-	KnownApp *app = app_find_by_cmd(lst, buf);
-	if(!app) return;
-
-	int i = app_get_index(lst, *app);
-	if(i < 0) return;
-
-	c->value(i);
+	if(rc.get("Preferred", n, buf, sizeof(buf)) && strlen(buf) > 0) {
+		c->add_if_user_program(buf);
+		c->select_by_cmd(buf);
+	}
 }
 
 static void load_settings(void) {
 	Resource rc;
 	if(!rc.load("ede-launch")) return;
 
-	check_and_load(browser_choice, app_browsers, "browser", rc);
-	check_and_load(mail_choice, app_mails, "mail", rc);
-	check_and_load(filemgr_choice, app_filemanagers, "file_manager", rc);
-	check_and_load(term_choice, app_terminals, "terminal", rc);
-}
-
-static void menu_cb(Fl_Widget *widget, void *ww) {
-	Fl_Choice  *c = (Fl_Choice*)widget;
-	const char *name = c->text();
-	KnownApp   *lst = (KnownApp*)ww;
-
-	if(!name || !app_is_browse_item(lst, name)) return;
-	const char *path = fl_file_chooser(_("Choose program"), "*", 0);
-
-	/* go to first, as it will be None */
-	if(!path) c->value(0);
+	check_and_load(browser_choice, "browser", rc);
+	check_and_load(mail_choice, "mail", rc);
+	check_and_load(filemgr_choice, "file_manager", rc);
+	check_and_load(term_choice, "terminal", rc);
 }
 
 static void close_cb(Fl_Widget *widget, void *ww) {
@@ -79,11 +56,16 @@ static void close_cb(Fl_Widget *widget, void *ww) {
 
 static void ok_cb(Fl_Widget *widget, void *ww) {
 	Resource  rc;
+	/* 
+	 * if Resource does not have any items, it will refuse to save anything, keeping
+	 * previous content of conf file. This happens if all items are set to be None
+	 */
+	rc.set("Preferred", "dummy", 0);
 
-	check_and_store(browser_choice, app_browsers, "browser", rc);
-	check_and_store(mail_choice, app_mails, "mail", rc);
-	check_and_store(filemgr_choice, app_filemanagers, "file_manager", rc);
-	check_and_store(term_choice, app_terminals, "terminal", rc);
+	check_and_store(browser_choice, "browser", rc);
+	check_and_store(mail_choice, "mail", rc);
+	check_and_store(filemgr_choice, "file_manager", rc);
+	check_and_store(term_choice, "terminal", rc);
 
 	rc.save("ede-launch");
 	close_cb(widget, ww);
@@ -97,33 +79,25 @@ int main(int argc, char** argv) {
 	tabs->begin();
 		Fl_Group *gint = new Fl_Group(15, 30, 335, 140, _("Internet"));
 		gint->begin();
-			browser_choice = new Fl_Choice(20, 65, 320, 25, _("Web browser"));
-			browser_choice->align(FL_ALIGN_TOP_LEFT);
-			app_populate_menu(app_browsers, browser_choice);
+			browser_choice = new AppChoice(20, 65, 320, 25, _("Web browser"));
+			browser_choice->add_programs(app_browsers);
 			browser_choice->value(0);
-			browser_choice->callback(menu_cb, app_browsers);
 
-			mail_choice = new Fl_Choice(20, 120, 320, 25, _("Mail reader"));
-			mail_choice->align(FL_ALIGN_TOP_LEFT);
-			app_populate_menu(app_mails, mail_choice);
+			mail_choice = new AppChoice(20, 120, 320, 25, _("Mail reader"));
+			mail_choice->add_programs(app_mails);
 			mail_choice->value(0);
-			mail_choice->callback(menu_cb, app_mails);
 		gint->end();
 
 		Fl_Group *gutil = new Fl_Group(15, 30, 335, 140, _("Utilities"));
 		gutil->hide();
 		gutil->begin();
-			filemgr_choice = new Fl_Choice(20, 65, 320, 25, _("File manager"));
-			filemgr_choice->align(FL_ALIGN_TOP_LEFT);
-			app_populate_menu(app_filemanagers, filemgr_choice);
+			filemgr_choice = new AppChoice(20, 65, 320, 25, _("File manager"));
+			filemgr_choice->add_programs(app_filemanagers);
 			filemgr_choice->value(0);
-			filemgr_choice->callback(menu_cb, app_filemanagers);
 
-			term_choice = new Fl_Choice(20, 120, 320, 25, _("Terminal"));
-			term_choice->align(FL_ALIGN_TOP_LEFT);
-			app_populate_menu(app_terminals, term_choice);
+			term_choice = new AppChoice(20, 120, 320, 25, _("Terminal"));
+			term_choice->add_programs(app_terminals);
 			term_choice->value(0);
-			term_choice->callback(menu_cb, app_terminals);
 		gutil->end();
 	tabs->end();
 

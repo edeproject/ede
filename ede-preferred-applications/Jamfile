@@ -4,7 +4,7 @@
 
 SubDir TOP ede-preferred-applications ;
 
-SOURCE = ede-preferred-applications.cpp Apps.cpp ;
+SOURCE = ede-preferred-applications.cpp AppChoice.cpp ;
 
 EdeProgram ede-preferred-applications : $(SOURCE) ;
 TranslationStrings locale : $(SOURCE) ;
