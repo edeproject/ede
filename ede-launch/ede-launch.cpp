@@ -40,6 +40,7 @@
 #include <edelib/Missing.h>
 #include <edelib/MessageBox.h>
 #include <edelib/String.h>
+#include <edelib/File.h>
 #include <edelib/Ede.h>
 
 #include "icons/run.xpm"
@@ -56,6 +57,7 @@ EDELIB_NS_USING(RES_USER_ONLY)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
+EDELIB_NS_USING(file_path)
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
@@ -258,6 +260,41 @@ static void cancel_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
+#define RETURN_IF_VALID_TERM(t, r) \
+do { \
+	if(t && ((strcmp(t, "linux") != 0) || (strcmp(t, "dumb") != 0))) { \
+		r = file_path(t, false); \
+		if(E_UNLIKELY(r.empty())) return true; \
+	} \
+} while(0)
+
+static bool find_terminal(String &ret) {
+	/* list of known terminals */
+	static const char *terms[] = {
+		"xterm",
+		"rxvt",
+		"Terminal",
+		"gnome-terminal",
+		"konsole",
+		0
+	};
+
+	const char* term = getenv("TERM");
+
+	RETURN_IF_VALID_TERM(term, ret);
+
+	term = getenv("COLORTERM");
+	RETURN_IF_VALID_TERM(term, ret);
+
+	for(int i = 0; terms[i]; i++) {
+		term = terms[i];
+		printf("--> %s\n", term);
+		RETURN_IF_VALID_TERM(term, ret);
+	}
+
+	return false;
+}
+
 static void ok_cb(Fl_Widget*, void* w) {
 	LaunchWindow* win = (LaunchWindow*)w;
 	const char* cmd = dialog_input->value();
@@ -271,14 +308,14 @@ static void ok_cb(Fl_Widget*, void* w) {
 	/* TODO: is 'cmd' safe after hide? */
 	if(in_term->value()) {
 		char buf[128];
-		const char* term = getenv("TERM");
+		String term;
 
-		/* also check if TERM get inherited from login console */
-		if(!term || (strcmp(term, "linux") == 0) || (strcmp(term, "dumb") == 0))
-			term = "xterm";
-
-		snprintf(buf, sizeof(buf), "%s -e %s", term, cmd);
-		started = start_child(buf);
+		if(find_terminal(term)) {
+			snprintf(buf, sizeof(buf), "%s -e %s", term.c_str(), cmd);
+			started = start_child(buf);
+		} else {
+			E_WARNING(E_STRLOC ": unable to find any suitable terminal\n");
+		}
 	} else {
 		started = start_child(cmd);
 	}
