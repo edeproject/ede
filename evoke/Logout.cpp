@@ -10,14 +10,16 @@
  * See COPYING for details.
  */
 
-#include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl.H>
+#include <edelib/Window.h>
 #include <edelib/Nls.h>
 
 #include "Logout.h"
+
+EDELIB_NS_USING_AS(Window, EdeWindow)
 
 /* Note that order of initialized items is important so LOGOUT_OPT_XXX can work */
 struct LogoutOptions {
@@ -29,7 +31,7 @@ struct LogoutOptions {
 	{ _("Shut down"), _("This option will shut down the computer closing all running programs") }
 };
 
-static Fl_Window* win;
+static EdeWindow* win;
 static Fl_Box*    description;
 static int        ret_option;
 
@@ -53,7 +55,7 @@ static void option_cb(Fl_Widget*, void* o) {
 int logout_dialog_show(int screen_w, int screen_h, int opt) {
 	ret_option = LOGOUT_RET_LOGOUT;
 
-	win = new Fl_Window(335, 180, _("Quit EDE?"));
+	win = new EdeWindow(335, 180, _("Quit EDE?"));
 	win->begin();
 		Fl_Box* b1 = new Fl_Box(10, 9, 315, 25, _("How do you want to quit EDE?"));
 		b1->labelfont(1);
