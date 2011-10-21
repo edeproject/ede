@@ -8,10 +8,12 @@
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Tabs.H>
+#include <FL/Fl_File_Chooser.H>
 #include <edelib/Window.h>
 #include <edelib/Nls.h>
 #include <edelib/Ede.h>
 #include <edelib/Resource.h>
+#include <edelib/Debug.h>
 
 #include "PredefApps.h"
 
@@ -58,6 +60,18 @@ static void load_settings(void) {
 	check_and_load(term_choice, app_terminals, "terminal", rc);
 }
 
+static void menu_cb(Fl_Widget *widget, void *ww) {
+	Fl_Choice  *c = (Fl_Choice*)widget;
+	const char *name = c->text();
+	KnownApp   *lst = (KnownApp*)ww;
+
+	if(!name || !app_is_browse_item(lst, name)) return;
+	const char *path = fl_file_chooser(_("Choose program"), "*", 0);
+
+	/* go to first, as it will be None */
+	if(!path) c->value(0);
+}
+
 static void close_cb(Fl_Widget *widget, void *ww) {
 	EdeWindow *win = (EdeWindow*)ww;
 	win->hide();
@@ -87,11 +101,13 @@ int main(int argc, char** argv) {
 			browser_choice->align(FL_ALIGN_TOP_LEFT);
 			app_populate_menu(app_browsers, browser_choice);
 			browser_choice->value(0);
+			browser_choice->callback(menu_cb, app_browsers);
 
 			mail_choice = new Fl_Choice(20, 120, 320, 25, _("Mail reader"));
 			mail_choice->align(FL_ALIGN_TOP_LEFT);
 			app_populate_menu(app_mails, mail_choice);
 			mail_choice->value(0);
+			mail_choice->callback(menu_cb, app_mails);
 		gint->end();
 
 		Fl_Group *gutil = new Fl_Group(15, 30, 335, 140, _("Utilities"));
@@ -101,11 +117,13 @@ int main(int argc, char** argv) {
 			filemgr_choice->align(FL_ALIGN_TOP_LEFT);
 			app_populate_menu(app_filemanagers, filemgr_choice);
 			filemgr_choice->value(0);
+			filemgr_choice->callback(menu_cb, app_filemanagers);
 
 			term_choice = new Fl_Choice(20, 120, 320, 25, _("Terminal"));
 			term_choice->align(FL_ALIGN_TOP_LEFT);
 			app_populate_menu(app_terminals, term_choice);
 			term_choice->value(0);
+			term_choice->callback(menu_cb, app_terminals);
 		gutil->end();
 	tabs->end();
 

@@ -28,4 +28,6 @@ void      app_populate_menu(KnownApp *lst, Fl_Choice *c);
 
 bool        app_is_magic_cmd(const char *cmd);
 inline bool app_is_magic_cmd(const KnownApp &a) { return app_is_magic_cmd(a.cmd); }
+
+bool app_is_browse_item(KnownApp *lst, const char *name);
 #endif

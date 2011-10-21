@@ -82,3 +82,15 @@ bool app_is_magic_cmd(const char *cmd) {
 		return true;
 	return false;
 }
+
+bool app_is_browse_item(KnownApp *lst, const char *name) {
+	E_RETURN_VAL_IF_FAIL(lst != 0, false);
+	E_RETURN_VAL_IF_FAIL(name != 0, false);
+
+	for(int i = 0; lst[i].name; i++) {
+		if(strcmp(lst[i].name, name) == 0 && app_is_magic_cmd(lst[i].cmd) && lst[i].cmd[1] == 'b')
+			return true;
+	}
+
+	return false;
+}
