@@ -24,6 +24,7 @@ static KnownApp app_browsers[] = {
 
 static KnownApp app_mails[] = {
 	{"Mozilla Thunderbird", "thunderbird"},
+	{"Evolution", "evolution"},
 	KNOWN_APP_END
 };
 
@@ -40,6 +41,7 @@ static KnownApp app_terminals[] = {
 	{"Rxvt", "rxvt"},
 	{"Mrxvt", "mrxvt"},
 	{"Xfce Terminal", "xfterm4"},
+	{"GNOME Terminal", "gnome-terminal"},
 	KNOWN_APP_END
 };
 #endif
