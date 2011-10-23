@@ -41,6 +41,7 @@
 #include <edelib/MessageBox.h>
 #include <edelib/String.h>
 #include <edelib/File.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Ede.h>
 
 #include "icons/run.xpm"
@@ -58,6 +59,7 @@ EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(file_path)
+EDELIB_NS_USING(window_center_on_screen)
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
@@ -363,6 +365,7 @@ static int start_dialog(int argc, char** argv) {
 		cancel->callback(cancel_cb, win);
 	win->end();
 	win->window_icon(run_xpm);
+	window_center_on_screen(win);
 	win->show(argc, argv);
 
 	return Fl::run();

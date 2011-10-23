@@ -1,0 +1,69 @@
+#
+# $Id: Jamfile 2492 2009-02-20 13:10:21Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2011 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP pekwm ;
+         
+SOURCE = ActionHandler.cc
+         ActionMenu.cc 
+         Atoms.cc
+         AutoProperties.cc
+         CfgParser.cc
+         CfgParserKey.cc
+         CfgParserSource.cc
+         Client.cc
+         CmdDialog.cc
+         ColorHandler.cc
+         Compat.cc
+         Completer.cc
+         Config.cc
+         DecorMenu.cc
+         DockApp.cc
+         FontHandler.cc
+         Frame.cc
+         FrameListMenu.cc
+         Harbour.cc
+         HarbourMenu.cc
+         ImageHandler.cc
+         InputDialog.cc
+         KeyGrabber.cc
+         main.cc
+         ManagerWindows.cc
+         MenuHandler.cc
+         Observable.cc
+         PDecor.cc
+         PFont.cc
+         PImage.cc
+         PImageIcon.cc
+         PImageLoaderJpeg.cc
+         PImageLoaderPng.cc
+         PImageLoaderXpm.cc
+         PixmapHandler.cc
+         PMenu.cc
+         PScreen.cc
+         PTexturePlain.cc
+         PWinObj.cc
+         PWinObjReference.cc
+         RegexString.cc
+         ScreenResources.cc
+         SearchDialog.cc
+         StatusWindow.cc
+         TextureHandler.cc
+         Theme.cc
+         Util.cc
+         WindowManager.cc
+         WORefMenu.cc
+         WorkspaceIndicator.cc
+         Workspaces.cc ;
+         
+
+Program pekwm : $(SOURCE) ;
+ObjectC++Flags $(SOURCE) : $(GLOBALFLAGS) $(PEKWM_CXXFLAGS) -DDATADIR=\\\"$(datadir)\\\" -DSYSCONFDIR=\\\"$(PEKWM_CONFIG_DIR)\\\" -DVERSION=\\\"0.1.13\\\"  ;
+LinkAgainst pekwm : $(PEKWM_LIBS) -lX11 -lXext $(STDLIB) ;
+InstallEdeProgram pekwm ;

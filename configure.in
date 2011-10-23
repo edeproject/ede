@@ -108,10 +108,10 @@ else
 fi
 
 if test -n "$with_edelib_path"; then
-	PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$with_edelib_path"
+	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$with_edelib_path"
 else
 	dnl TODO: remove this in release
-	PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
+	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
 fi
 
 PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
@@ -230,8 +230,8 @@ AC_TRY_LINK([
 ],[have_xkbrules=yes],[])
 AC_LANG_RESTORE
 
-CFLAGS="ac_save_CFLAGS"
-LIBS="ac_save_LIBS"
+CFLAGS="$ac_save_CFLAGS"
+LIBS="$ac_save_LIBS"
 
 if test "$have_xkbrules" = "yes"; then
 	AC_DEFINE(HAVE_XKBRULES, 1, [Define to 1 if you have XKB extension])
@@ -256,6 +256,9 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+dnl pekwm specific macros
+EDE_CHECK_PEKWM_DEPENDENCIES
+
 dnl expand variables before EDE_INIT_JAM convert them to jam variables
 EDE_EXPAND(sysconfdir, "NONE", my_sysconfdir)
 
@@ -276,6 +279,8 @@ AC_SUBST(CURL_LIBS)
 AC_SUBST(LARGEFILE)
 AC_SUBST(XKB_LIBS)
 AC_SUBST(my_sysconfdir)
+AC_SUBST(PEKWM_CXXFLAGS)
+AC_SUBST(PEKWM_LIBS)
 
 AC_OUTPUT([
  Jamconfig

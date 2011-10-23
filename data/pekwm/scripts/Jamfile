@@ -1,0 +1,13 @@
+#
+# $Id: Jamfile 2858 2009-10-03 07:24:06Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2009-2011 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP data pekwm scripts ;
+
+InstallProgram "$(PEKWM_DATA_DIR)/scripts" : pekwm_themeset.sh pekwm_ws_menu.sh ;

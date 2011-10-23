@@ -60,6 +60,11 @@ EDE_PANEL_APPLETS_DIR ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/panel-applets" ;
 DBUS_SERVICE_DIR      ?= "$(datarootdir)/dbus-1/services" ;
 XSESSIONS_DIR         ?= "$(datarootdir)/xsessions" ;
 
+PEKWM_CONFIG_DIR      ?= "$(sysconfdir)/pekwm" ;
+PEKWM_DATA_DIR        ?= "$(datadir)/pekwm" ;
+PEKWM_CXXFLAGS        ?= "@PEKWM_CXXFLAGS@" ;
+PEKWM_LIBS            ?= "@PEKWM_LIBS@" ;
+
 OPTIMFLAGS     ?= @EDE_OPTIM_FLAGS@ ;
 DEBUGFLAGS     ?= @EDE_DEBUG_FLAGS@ ;
 LARGEFILEFLAGS ?= @LARGEFILE@ ;
