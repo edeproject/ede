@@ -298,7 +298,7 @@ void browse_fonts_cb(Fl_Widget*, void* w) {
 void load_settings(void) {
 	int b_mode = 0;
 	bool d_wp_use = false;
-	int d_background_color = FL_BLUE;
+	int d_background_color = fl_rgb_color(73, 64, 102); /* keep it in sync with default color in ede-desktop */
 	int i_background_color = FL_BLUE;
 	int i_label_color = FL_WHITE;
 	int i_show_background_color = 0;
