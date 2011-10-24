@@ -42,6 +42,8 @@
 #include <edelib/String.h>
 #include <edelib/File.h>
 #include <edelib/WindowUtils.h>
+#include <edelib/DesktopFile.h>
+#include <edelib/StrUtil.h>
 #include <edelib/Ede.h>
 
 #include "icons/run.xpm"
@@ -54,12 +56,15 @@
 
 EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(String)
+EDELIB_NS_USING(DesktopFile)
 EDELIB_NS_USING(RES_USER_ONLY)
+EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(window_center_on_screen)
+EDELIB_NS_USING(str_ends)
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
@@ -234,6 +239,7 @@ static bool start_child(const char* cmd) {
 	run_async("ede-launch-sn --program %s --icon applications-order", cmd);
 #endif
 
+	E_DEBUG(E_STRLOC ": Starting '%s'\n", cmd);
 	int ret = start_child_process_with_core(cmd);
 
 	if(ret == 199) {
@@ -255,6 +261,29 @@ static bool start_child(const char* cmd) {
 	}
 
 	return true;
+}
+
+static bool start_desktop_file(const char *cmd) {
+	DesktopFile d;
+
+	if(!d.load(cmd)) {
+		alert(d.strerror());
+		goto FAIL;
+	}
+
+	if(d.type() != DESK_FILE_TYPE_APPLICATION) {
+		alert(_("Starting other types of .desktop files except 'Application' is not supported now"));
+		goto FAIL;
+	}
+
+	char buf[PATH_MAX];
+	if(d.exec(buf, PATH_MAX))
+		return start_child_process(buf);
+	else
+		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
+
+FAIL:
+	return false;
 }
 
 static void cancel_cb(Fl_Widget*, void* w) {
@@ -290,7 +319,6 @@ static bool find_terminal(String &ret) {
 
 	for(int i = 0; terms[i]; i++) {
 		term = terms[i];
-		printf("--> %s\n", term);
 		RETURN_IF_VALID_TERM(term, ret);
 	}
 
@@ -380,6 +408,12 @@ int main(int argc, char** argv) {
 	/* do not see possible flags as commands */
 	if(argv[1][0] == '-') {
 		help();
+		return 0;
+	}
+
+	/* check if we have .desktop file */
+	if(argc == 2 && str_ends(argv[1], ".desktop")) {
+		start_desktop_file(argv[1]);
 		return 0;
 	}
 
