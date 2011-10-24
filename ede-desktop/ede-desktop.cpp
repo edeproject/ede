@@ -85,12 +85,6 @@ static void icons_conf_cb(Fl_Widget*, void*);
 edelib::MenuItem desktop_menu[] = {
 	{_("Create &launcher..."), 0, 0},
 	{_("Create &folder..."), 0, 0, 0, FL_MENU_DIVIDER},
-	{_("&Arrange"), 0, 0, 0, FL_SUBMENU | FL_MENU_DIVIDER},
-		{_("&Vertical line up"), 0, 0},
-		{_("&Horizontal line up"), 0, 0},
-		{0},
-	{_("&Copy"), 0, 0},
-	{_("&Paste"), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("&Icons settings..."), 0, icons_conf_cb, 0},
 	{_("&Background..."), 0, background_conf_cb, 0},
 	{0}
