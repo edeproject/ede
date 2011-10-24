@@ -13,6 +13,7 @@
 #include <edelib/Ede.h>
 #include <edelib/Resource.h>
 #include <edelib/Debug.h>
+#include <edelib/WindowUtils.h>
 
 #define KNOWN_APP_PREDEFINED 1
 #include "PredefApps.h"
@@ -22,6 +23,7 @@
 
 EDELIB_NS_USING_AS(Window, EdeWindow)
 EDELIB_NS_USING(Resource)
+EDELIB_NS_USING(window_center_on_screen)
 
 AppChoice *browser_choice,
 		  *mail_choice,
@@ -115,6 +117,7 @@ int main(int argc, char** argv) {
 
 	/* now load all settings before show */
 	load_settings();
+	window_center_on_screen(win);
 	win->show(argc, argv);
 
 	return Fl::run();

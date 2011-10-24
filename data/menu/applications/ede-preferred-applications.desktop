@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Exec=ede-preferred-applications
+Icon=empty
+Categories=X-EDE;Settings;
+Name=Preferred Applications
+Comment=Configure applications for common tasks
