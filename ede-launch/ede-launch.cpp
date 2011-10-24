@@ -45,6 +45,7 @@
 #include <edelib/DesktopFile.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Ede.h>
+#include "StartupNotify.h"
 
 #include "icons/run.xpm"
 
@@ -69,10 +70,30 @@ EDELIB_NS_USING(str_ends)
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
 static Fl_Check_Button* in_term;
+static const char *launch_type[] = {
+	"browser",
+	"mail",
+	"terminal",
+	"file_manager",
+	0
+};
 
 static void help(void) {
-	puts("Usage: ede-launch program");
+	puts("Usage: ede-launch [OPTIONS] [URLs...]");
 	puts("EDE program launcher");
+	puts("Options:");
+	puts("   -h, --help                         show this help");
+	puts("   -l, --launch [TYPE] [PARAMETERS]   launch preferred application of TYPE with");
+	puts("                                      given PARAMETERS; see Types below");
+	puts("   -w, --working-dir [DIR]            run programs with DIR as working directory\n");
+	puts("Types:");
+	puts("   browser                            preferred web browser");
+	puts("   mail                               preferred mail reader"); 
+	puts("   terminal                           preferred terminal");
+	puts("   file_manager                       preferred file manager\n");
+	puts("Example:");
+	puts("   ede-launch --launch browser http://www.foo.com");
+	puts("   ede-launch gvim");
 }
 
 static char* get_basename(const char* path) {
@@ -235,12 +256,12 @@ static int start_child_process_with_core(const char* cmd) {
 }
 
 static bool start_child(const char* cmd) {
-#ifdef HAVE_LIBSTARTUP_NOTIFICATION
-	run_async("ede-launch-sn --program %s --icon applications-order", cmd);
-#endif
-
 	E_DEBUG(E_STRLOC ": Starting '%s'\n", cmd);
+
+	StartupNotify *n = startup_notify_start(cmd, "applications-order");
 	int ret = start_child_process_with_core(cmd);
+
+	startup_notify_end(n);
 
 	if(ret == 199) {
 		alert(_("Program '%s' not found.\n\nPlease check if given path to the "

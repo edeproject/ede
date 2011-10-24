@@ -10,11 +10,9 @@
 
 SubDir TOP ede-launch ;
 
-SOURCE = ede-launch.cpp ;
+SOURCE = ede-launch.cpp StartupNotify.cpp ;
 
+ObjectC++Flags $(SOURCE)  : $(STARTUP_NOTIFICATION_INCLUDE) ;
 EdeProgram     ede-launch : $(SOURCE) ;
+LinkAgainst    ede-launch : $(STARTUP_NOTIFICATION_LIB) ;
 TranslationStrings locale : $(SOURCE) ;
-
-ObjectC++Flags ede-launch-sn.cpp : $(STARTUP_NOTIFICATION_INCLUDE) ;
-EdeProgram     ede-launch-sn     : ede-launch-sn.cpp ;
-LinkAgainst    ede-launch-sn     : $(STARTUP_NOTIFICATION_LIB) ;
