@@ -67,6 +67,12 @@
  */
 #define NOT_SELECTABLE(widget) ((widget == this) || (widget == wallpaper) || (widget == dmenu))
 
+EDELIB_NS_USING(MenuItem)
+EDELIB_NS_USING(String)
+EDELIB_NS_USING(DesktopFile)
+EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(foreign_callback_add)
+EDELIB_NS_USING(foreign_callback_remove)
 EDELIB_NS_USING(window_xid_create)
 EDELIB_NS_USING(netwm_workspace_get_names)
 EDELIB_NS_USING(netwm_workspace_free_names)
@@ -82,7 +88,7 @@ EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
 
-edelib::MenuItem desktop_menu[] = {
+MenuItem desktop_menu[] = {
 	{_("Create &launcher..."), 0, 0},
 	{_("Create &folder..."), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("&Icons settings..."), 0, icons_conf_cb, 0},
@@ -121,11 +127,11 @@ static void settings_changed_cb(Fl_Window *win, void *data) {
 }
 
 static void background_conf_cb(Fl_Widget*, void*) {
-	edelib::run_async("ede-launch ede-desktop-conf");
+	run_async("ede-launch ede-desktop-conf");
 }
 
 static void icons_conf_cb(Fl_Widget*, void*) {
-	edelib::run_async("ede-launch ede-desktop-conf --icons");
+	run_async("ede-launch ede-desktop-conf --icons");
 }
 
 static void desktop_message_handler(int action, Window xid, void *data) { 
@@ -145,7 +151,7 @@ Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	do_dirwatch = true;
 
 #ifdef USE_EDELIB_WINDOW
-	edelib::foreign_callback_add(this, "ede-desktop", settings_changed_cb);
+	foreign_callback_add(this, "ede-desktop", settings_changed_cb);
 	/* EDE_DESKTOP_WINDOW::single_bufer(true); */
 #endif
 
@@ -178,11 +184,11 @@ Desktop::~Desktop() {
 	delete dbus;
 
 	edelib::DirWatch::shutdown();
-	edelib::foreign_callback_remove(settings_changed_cb);
+	foreign_callback_remove(settings_changed_cb);
 }
 
 void Desktop::init_internals(void) {
-	edelib::String p;
+	String p;
 
 	update_workarea();
 
@@ -212,9 +218,9 @@ void Desktop::init_internals(void) {
 
 	/* now try to load icons from "Desktop" directory */
 	p = edelib::dir_home();
-	edelib::String desktop_path = edelib::build_filename(p.c_str(), "Desktop");
+	String desktop_path = edelib::build_filename(p.c_str(), "Desktop");
 
-	/* setup watcher used for Desktop and Trash directories */
+	/* setup watcher used for Desktop directory */
 	edelib::DirWatch::init();
 
 	if(edelib::file_test(desktop_path.c_str(), edelib::FILE_TEST_IS_DIR)) {
@@ -380,7 +386,7 @@ void Desktop::save_icons_positions(void) {
 IconSettings* Desktop::read_desktop_file(const char* path) {
 	E_ASSERT(path != NULL);
 
-	edelib::DesktopFile dconf;
+	DesktopFile dconf;
 	if(!dconf.load(path)) {
 		E_WARNING(E_STRLOC ": Can't read %s (%s)\n", path, dconf.strerror());
 		return NULL;
@@ -799,10 +805,10 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	bool is_read = false;
 
 	if(edelib::str_ends(src_copy, ".desktop")) {
-		edelib::DesktopFile dconf;
+		DesktopFile dconf;
 
-		edelib::String path = sptr;
-		edelib::DesktopFile dfile;
+		String path = sptr;
+		DesktopFile dfile;
 
 		if(dfile.load(path.c_str())) {
 			char buf[256];
