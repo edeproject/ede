@@ -14,7 +14,7 @@ Build requirements
 ------------------
 
 EDE 2.0 is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time 
-of this writing, latest stable version is 1.1.9.
+of this writing, latest stable version is 1.3.0.
 
 Since FLTK lacks many things needed for developing a full *nix desktop 
 environment, we have developed a small add-on library called 'edelib'. This 
@@ -23,8 +23,6 @@ library is also required for compiling EDE 2.0 and should be released together w
 We *strongly* recommend that you use matching versions of ede and 
 edelib (e.g. released at the same time) or that you do SVN checkout at the same time due
 their frequent changes.
-
-Make sure you have eFLTK installed too, because some packages still requires it.
 
 Also you will need a Jam tool. Jam is a make replacement and you can find it on our repository.
 
@@ -37,7 +35,6 @@ you should checkout (with their paths):
 - jam : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/jam'
 - edelib : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/edelib'
 - ede : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/ede2'
-- efltk : 'svn co https://ede.svn.sourceforge.net/svnroot/ede/trunk/efltk'
 
 If you already have Jam installed, there is no need to download it.
 
@@ -52,20 +49,10 @@ In order to build and install EDE do the following steps:
 
 2. compile and install edelib; please read README file in edelib directory
 
-3. compile and install efltk; './configure --disable-mysql --disable-unixODBC && make && make install'
-   will do the job
+3. go in ede2 directory and run './autogen.sh'
 
-4. go in ede2 directory and run './autogen.sh'
+4. after that, goes './configure --enable-debug'
 
-5. after that, goes './configure --enable-debug'
+5. jam
 
-6. jam
-
-7. jam install
-
-Used programs that requires eFLTK
----------------------------------
-
-- edewm
-
-These programs are planned to be replaced with the new ones.
+6. jam install

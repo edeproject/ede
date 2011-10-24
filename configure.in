@@ -39,8 +39,6 @@ AC_ARG_ENABLE(hal, AC_HELP_STRING([--enable-hal], [enable HAL support (default=y
 
 dnl set 'with_fltk_path'
 AC_ARG_WITH(fltk_path, AC_HELP_STRING([--with-fltk-path=[DIR]], [alternative directory where FLTK is installed]))
-dnl set 'with_efltk_path'
-AC_ARG_WITH(efltk_path, AC_HELP_STRING([--with-efltk-path=[DIR]], [alternative directory where eFLTK is installed]))
 dnl set 'with_edelib_path'
 AC_ARG_WITH(edelib_path, AC_HELP_STRING([--with-edelib-path=[DIR]], [alternative directory where edelib is installed]))
 
@@ -171,25 +169,6 @@ if test "x$with_efltk_path" = "x"; then
 	AC_PATH_PROG(EFLTK_CONFIG, efltk-config)
 else
 	AC_PATH_PROG(EFLTK_CONFIG, efltk-config,, "$with_efltk_path/bin")
-fi
-
-if test -n "$EFLTK_CONFIG"; then
-	efltk_version=`$EFLTK_CONFIG --version`
-
-	AC_MSG_CHECKING([for eFLTK version >= 2.0.4])
-
-	case "$efltk_version" in ["2.0."[456789]])
-		AC_MSG_RESULT(yes)
-		;;
-	*)
-		AC_MSG_ERROR([Looks like you have an older eFLTK version ($efltk_version). Required is >= 2.0.4])
-	esac
-
-	EFLTK_CFLAGS=`$EFLTK_CONFIG --cxxflags`
-	EFLTK_LIBS_NOIMAGES=`$EFLTK_CONFIG --ldflags`
-	EFLTK_LIBS=`$EFLTK_CONFIG --use-xml --use-images --ldflags`
-else
-	AC_MSG_WARN([You don't have eFLTK installed. EDE will be built without window manager!])
 fi
 
 EDE_CHECK_LIBXPM

@@ -349,9 +349,8 @@ void Xsm::xresource_replace(void) {
 
 	XSettingsSetting* s;
 	int status;
-	char* type, *value;
 	XrmValue xrmv;
-	char color_val[8];
+	char color_val[8], *type;
 
 	String tmp;
 
@@ -377,8 +376,6 @@ void Xsm::xresource_replace(void) {
 		if(status && strcmp(type, "String") == 0) {
 			E_DEBUG(E_STRLOC ": %s.%s found in database\n", 
 					resource_map[i].xresource_klass, resource_map[i].xresource_key);
-
-			value = xrmv.addr;
 		}
 
 		/*
