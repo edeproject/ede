@@ -44,56 +44,42 @@
 #include <edelib/WindowUtils.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/StrUtil.h>
+#include <edelib/Debug.h>
 #include <edelib/Ede.h>
 #include "StartupNotify.h"
 
 #include "icons/run.xpm"
 
-/* 
- * Window from X11 is alread included with Fl.H so we can't use EDELIB_NS_USING(Window) here. 
- * Stupid C++ namespaces
- */
-#define LaunchWindow edelib::Window
+/* so value could be directed returned to shell */
+#define RETURN_FROM_BOOL(v) (v != false)
 
-EDELIB_NS_USING(Resource)
-EDELIB_NS_USING(String)
-EDELIB_NS_USING(DesktopFile)
-EDELIB_NS_USING(RES_USER_ONLY)
-EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
-EDELIB_NS_USING(run_sync)
-EDELIB_NS_USING(run_async)
-EDELIB_NS_USING(alert)
-EDELIB_NS_USING(file_path)
-EDELIB_NS_USING(window_center_on_screen)
-EDELIB_NS_USING(str_ends)
+/* config name where all things are stored and read from */
+#define EDE_LAUNCH_CONFIG "ede-launch"
+
+EDELIB_NS_USING_LIST(11, (Resource, String, DesktopFile, RES_USER_ONLY, DESK_FILE_TYPE_APPLICATION, run_sync, run_async, alert, file_path, window_center_on_screen, str_ends))
+EDELIB_NS_USING_AS(Window, LaunchWindow)
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
 static Fl_Check_Button* in_term;
-static const char *launch_type[] = {
-	"browser",
-	"mail",
-	"terminal",
-	"file_manager",
-	0
-};
 
 static void help(void) {
-	puts("Usage: ede-launch [OPTIONS] [URLs...]");
+	puts("Usage: ede-launch [OPTIONS] [PROGRAM]");
 	puts("EDE program launcher");
 	puts("Options:");
-	puts("   -h, --help                         show this help");
-	puts("   -l, --launch [TYPE] [PARAMETERS]   launch preferred application of TYPE with");
-	puts("                                      given PARAMETERS; see Types below");
-	puts("   -w, --working-dir [DIR]            run programs with DIR as working directory\n");
+	puts("   -h, --help                            show this help");
+	puts("   -l, --launch [TYPE] [PARAMETERS]      launch preferred application of TYPE with");
+	puts("                                         given PARAMETERS; see Types below");
+	puts("   -w, --working-dir [DIR]               run programs with DIR as working directory\n");
 	puts("Types:");
-	puts("   browser                            preferred web browser");
-	puts("   mail                               preferred mail reader"); 
-	puts("   terminal                           preferred terminal");
-	puts("   file_manager                       preferred file manager\n");
+	puts("   browser                               preferred web browser");
+	puts("   mail                                  preferred mail reader"); 
+	puts("   terminal                              preferred terminal");
+	puts("   file_manager                          preferred file manager\n");
 	puts("Example:");
 	puts("   ede-launch --launch browser http://www.foo.com");
 	puts("   ede-launch gvim");
+	puts("   ede-launch ~/Desktop/foo.desktop");
 }
 
 static char* get_basename(const char* path) {
@@ -125,13 +111,33 @@ static char** cmd_split(const char* cmd) {
 	return arr;
 }
 
+static bool allowed_launch_type(const char *t) {
+	E_RETURN_VAL_IF_FAIL(t != 0, false);
+
+	/* should be synced with keys from ede-preferred-applications */
+	static const char *launch_types[] = {
+		"browser",
+		"mail",
+		"terminal",
+		"file_manager",
+		0
+	};
+
+	for(int i = 0; launch_types[i]; i++) {
+		/* we do not allow >= 64 chars from user input */
+		if(strncmp(t, launch_types[i], 64) == 0)
+			return true;
+	}
+
+	return false;
+}
+
 static void start_crasher(const char* cmd, int sig) {
 	const char* base = get_basename(cmd);
 	const char* ede_app_flag = "";
 
 	/* this means the app was called without full path */
-	if(!base)
-		base = cmd;
+	if(!base) base = cmd;
 
 	/* 
 	 * determine is our app by checking the prefix; we don't want user to send bug reports about crashes 
@@ -141,7 +147,7 @@ static void start_crasher(const char* cmd, int sig) {
 		ede_app_flag = "--edeapp";
 
 	/* call edelib implementation instead start_child_process() to prevents loops if 'ede-crasher' crashes */
-	run_sync("ede-crasher %s --appname %s --apppath %s --signal %i", ede_app_flag, base, cmd, sig);
+	run_sync(PREFIX "/bin/ede-crasher %s --appname %s --apppath %s --signal %i", ede_app_flag, base, cmd, sig);
 }
 
 static int start_child_process(const char* cmd) {
@@ -288,7 +294,7 @@ static bool start_desktop_file(const char *cmd) {
 	DesktopFile d;
 
 	if(!d.load(cmd)) {
-		alert(d.strerror());
+		alert(_("Unable to load .desktop file '%s'. Got: %s"), cmd, d.strerror());
 		goto FAIL;
 	}
 
@@ -298,13 +304,56 @@ static bool start_desktop_file(const char *cmd) {
 	}
 
 	char buf[PATH_MAX];
-	if(d.exec(buf, PATH_MAX))
-		return start_child_process(buf);
-	else
+	if(d.exec(buf, PATH_MAX)) {
 		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
+		goto FAIL;
+	}
+
+	return start_child(buf);
 
 FAIL:
 	return false;
+}
+
+/* concat all arguments preparing it for start_child() */
+static void join_args(int start, int argc, char **argv, const char *program, String &ret) {
+	String       args;
+	unsigned int alen;
+
+	/* append program if given */
+	if(program) {
+	   	args = program;
+		args += ' ';
+	}
+
+	for(int i = start; i < argc; i++) {
+		args += argv[i];
+		args += ' ';
+	}
+
+	alen = args.length();
+
+	/* remove start/ending quotes and spaces */
+	if((args[0] == '"') || isspace(args[0]) || (args[alen - 1] == '"') || isspace(args[alen - 1])) {
+		int i;
+		char *copy = strdup(args.c_str());
+		char *ptr = copy;
+
+		/* remove ending first */
+		for(i = (int)alen - 1; i > 0 && (ptr[i] == '"' || isspace(ptr[i])); i--)
+			;
+
+		ptr[i + 1] = 0;
+
+		/* remove then starting */
+		for(; *ptr && (*ptr == '"' || isspace(*ptr)); ptr++)
+			;
+
+		ret = copy;
+		free(copy);
+	} else {
+		ret = args;
+	}
 }
 
 static void cancel_cb(Fl_Widget*, void* w) {
@@ -321,6 +370,16 @@ do { \
 } while(0)
 
 static bool find_terminal(String &ret) {
+	/* before goint to list, try to read it from config file */
+	Resource rc;
+	if(rc.load(EDE_LAUNCH_CONFIG)) {
+		char buf[64];
+		if(rc.get("Preferred", "terminal", buf, sizeof(buf))) {
+			ret = buf;
+			return true;
+		}
+	}
+
 	/* list of known terminals */
 	static const char *terms[] = {
 		"xterm",
@@ -379,8 +438,10 @@ static void ok_cb(Fl_Widget*, void* w) {
 			dialog_input->position(0, dialog_input->size());
 	} else {
 		Resource rc;
+		/* so could load previous content */
+		rc.load(EDE_LAUNCH_CONFIG);
 		rc.set("History", "open", cmd);
-		rc.save("ede-launch-history");
+		rc.save(EDE_LAUNCH_CONFIG);
 	}
 }
 
@@ -398,7 +459,7 @@ static int start_dialog(int argc, char** argv) {
 		Resource rc;
 		char     buf[128];
 
-		if(rc.load("ede-launch-history") && rc.get("History", "open", buf, sizeof(buf))) {
+		if(rc.load(EDE_LAUNCH_CONFIG) && rc.get("History", "open", buf, sizeof(buf))) {
 			dialog_input->value(buf);
 
 			/* make text appear selected */
@@ -414,61 +475,109 @@ static int start_dialog(int argc, char** argv) {
 		cancel->callback(cancel_cb, win);
 	win->end();
 	win->window_icon(run_xpm);
+
 	window_center_on_screen(win);
 	win->show(argc, argv);
 
 	return Fl::run();
 }
 
+#define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
+
+static const char* next_param(int curr, char **argv, int argc) {
+	int j = curr + 1;
+	if(j >= argc)
+		return NULL;
+	if(argv[j][0] == '-')
+		return NULL;
+	return argv[j];
+}
+
 int main(int argc, char** argv) {
 	EDE_APPLICATION("ede-launch");
 
+	/* start dialog if we have nothing */
 	if(argc <= 1)
 		return start_dialog(argc, argv);
 
-	/* do not see possible flags as commands */
-	if(argv[1][0] == '-') {
-		help();
-		return 0;
+	int        ca = 1; /* current argument index */
+	const char *cwd, *launch_type;
+	cwd = launch_type = 0;
+
+	/* parse args and stop as soon as detected first non-parameter value (not counting parameter values) */
+	for(; ca < argc; ca++) {
+		if(argv[ca][0] != '-') break;
+
+		if(CHECK_ARGV(argv[ca], "-h", "--help")) {
+			help();
+			return 0;
+		}
+		
+		if(CHECK_ARGV(argv[ca], "-l", "--launch")) {
+			launch_type = next_param(ca, argv, argc);
+			if(!launch_type) {
+				puts("Missing lauch type. Run program with '-h' to see options");
+				return 1;
+			}
+
+			if(!allowed_launch_type(launch_type)) {
+				puts("This is not allowed launch type. Run program with '-h' to see options");
+				return 1;
+			}
+
+			ca++;
+			continue;
+		} 
+
+		if(CHECK_ARGV(argv[ca], "-w", "--working-dir")) {
+			cwd = next_param(ca, argv, argc);
+			if(!cwd) {
+				puts("Missing working directory parameter. Run program with '-h' to see options");
+				return 1;
+			}
+
+			ca++;
+			continue;
+		}
+
+		printf("Bad parameter '%s'. Run program with '-h' to see options\n", argv[ca]);
+		return 1;
+	}
+
+	/* make sure we have something to run */
+	if(!argv[ca]) {
+		puts("Missing execution parameter(s). Run program with '-h' to see options");
+		return 1;
+	}
+
+	/* setup working dir */
+	if(cwd) {
+		errno = 0;
+		if(chdir(cwd) != 0) {
+			alert(_("Unable to change directory to '%s'. Got '%s' (%i)"), cwd, strerror(errno), errno);
+			return 1;
+		}
 	}
 
 	/* check if we have .desktop file */
-	if(argc == 2 && str_ends(argv[1], ".desktop")) {
-		start_desktop_file(argv[1]);
-		return 0;
-	}
+	if(str_ends(argv[ca], ".desktop"))
+		return RETURN_FROM_BOOL(start_desktop_file(argv[ca]));
 
-	String       args;
-	unsigned int alen;
+	/* make arguments and exec program */
+	String args;
+	if(launch_type) {
+		Resource rc;
+		char     buf[64];
 
-	for(int i = 1; i < argc; i++) {
-		args += argv[i];
-		args += ' ';
-	}
+		if(!rc.load(EDE_LAUNCH_CONFIG) || !rc.get("Preferred", launch_type, buf, sizeof(buf))) {
+			E_WARNING("Unable to find out launch type. Balling out...\n");
+			return 1;
+		}
 
-	alen = args.length();
-
-	/* remove start/ending quotes and spaces */
-	if((args[0] == '"') || isspace(args[0]) || (args[alen - 1] == '"') || isspace(args[alen - 1])) {
-		int i;
-		char *copy = strdup(args.c_str());
-		char *ptr = copy;
-
-		/* remove ending first */
-		for(i = (int)alen - 1; i > 0 && (ptr[i] == '"' || isspace(ptr[i])); i--)
-			;
-
-		ptr[i + 1] = 0;
-
-		/* remove then starting */
-		for(; *ptr && (*ptr == '"' || isspace(*ptr)); ptr++)
-			;
-
-		start_child(ptr);
-		free(copy);
+		join_args(ca, argc, argv, buf, args);
 	} else {
-		start_child(args.c_str());
+		join_args(ca, argc, argv, 0, args);
 	}
 
-	return 0;
+	return RETURN_FROM_BOOL(start_child(args.c_str()));
 }
