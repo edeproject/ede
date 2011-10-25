@@ -304,7 +304,7 @@ static bool start_desktop_file(const char *cmd) {
 	}
 
 	char buf[PATH_MAX];
-	if(d.exec(buf, PATH_MAX)) {
+	if(!d.exec(buf, PATH_MAX)) {
 		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
 		goto FAIL;
 	}
@@ -544,8 +544,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	/* make sure we have something to run */
-	if(!argv[ca]) {
+	/* make sure we have something to run but only if --launch isn't used */
+	if(!argv[ca] && !launch_type) {
 		puts("Missing execution parameter(s). Run program with '-h' to see options");
 		return 1;
 	}
@@ -560,7 +560,7 @@ int main(int argc, char** argv) {
 	}
 
 	/* check if we have .desktop file */
-	if(str_ends(argv[ca], ".desktop"))
+	if(argv[ca] && str_ends(argv[ca], ".desktop"))
 		return RETURN_FROM_BOOL(start_desktop_file(argv[ca]));
 
 	/* make arguments and exec program */
