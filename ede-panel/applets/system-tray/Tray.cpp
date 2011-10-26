@@ -96,15 +96,6 @@ void Tray::register_notification_area(void) {
 	Fl::add_handler(handle_xevent);
 }
 
-static int get_parent(Window id, Window *parent) {
-	Window root, *children = 0;
-	unsigned int nchildren;
-	int s = XQueryTree(fl_display, id, &root, parent, &children, &nchildren);
-	if(s && children);
-		XFree(children);
-	return s;
-}
-
 void Tray::embed_window(Window id) {
 	TrayWindow *win = new TrayWindow(25, 25);
 	win->end();
