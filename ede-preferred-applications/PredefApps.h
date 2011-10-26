@@ -25,6 +25,7 @@ static KnownApp app_browsers[] = {
 static KnownApp app_mails[] = {
 	{"Mozilla Thunderbird", "thunderbird"},
 	{"Evolution", "evolution"},
+	{"Claws Mail", "claws-mail"},
 	KNOWN_APP_END
 };
 
