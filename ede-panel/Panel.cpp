@@ -418,7 +418,6 @@ void Panel::load_applets(void) {
 		0
 	};
 
-#if 0
 	String dir = Resource::find_data("panel-applets");
 	if(dir.empty())
 		return;
@@ -430,7 +429,7 @@ void Panel::load_applets(void) {
 	}
 
 	mgr.fill_group(this);
-#endif
+#if 0
 	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/pager/pager.so");
@@ -441,4 +440,5 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/mem-monitor/mem_monitor.so");
 	mgr.load("./applets/system-tray/system_tray.so");
 	mgr.fill_group(this);
+#endif
 }

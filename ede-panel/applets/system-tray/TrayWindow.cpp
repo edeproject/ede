@@ -26,6 +26,7 @@ static Fl_RGB_Image *aspect_scale(Fl_RGB_Image *orig, int W, int H) {
 
 TrayWindow::TrayWindow(int W, int H) : Fl_Window(W, H), img(0) {
 	box(FL_FLAT_BOX);
+	color(FL_BLUE);
 }
 
 void TrayWindow::set_image(Fl_RGB_Image *im) {
