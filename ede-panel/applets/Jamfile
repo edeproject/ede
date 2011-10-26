@@ -18,4 +18,5 @@ SubInclude TOP ede-panel applets keyboard-layout ;
 SubInclude TOP ede-panel applets pager ;
 SubInclude TOP ede-panel applets quick-launch ;
 SubInclude TOP ede-panel applets start-menu ;
+SubInclude TOP ede-panel applets system-tray ;
 SubInclude TOP ede-panel applets taskbar ;

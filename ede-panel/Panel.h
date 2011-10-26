@@ -4,8 +4,8 @@
 #include <edelib/Window.h>
 #include "AppletManager.h"
 
-#define EDE_PANEL_CAST_TO_PANEL(obj) ((Panel*)(obj))
-#define EDE_PANEL_GET_PANEL_OBJECT   (EDE_PANEL_CAST_TO_PANEL(parent()))
+#define EDE_PANEL_CAST_TO_PANEL(obj)   ((Panel*)(obj))
+#define EDE_PANEL_GET_PANEL_OBJECT(w)  (EDE_PANEL_CAST_TO_PANEL(w->parent()))
 
 EDELIB_NS_USING_AS(Window, PanelWindow)
 
@@ -38,6 +38,8 @@ public:
 
 	int panel_w(void) { return w(); }
 	int panel_h(void) { return h(); }
+
+	void relayout(void) { do_layout(); }
 };
 
 #endif

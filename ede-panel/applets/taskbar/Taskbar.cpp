@@ -70,7 +70,7 @@ static void net_event_cb(int action, Window xid, void *data) {
 Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL), panel(NULL) {
 	end();
 
-	panel = EDE_PANEL_GET_PANEL_OBJECT;
+	panel = EDE_PANEL_GET_PANEL_OBJECT(this);
 
 	/* assure display is openned */
 	fl_open_display();
