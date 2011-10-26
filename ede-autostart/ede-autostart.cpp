@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Check_Browser.H>
@@ -39,20 +40,20 @@
 #include <edelib/Ede.h>
 
 EDELIB_NS_USING_AS(Window, AppWindow)
-EDELIB_NS_USING(String)
-EDELIB_NS_USING(DesktopFile)
-EDELIB_NS_USING(IconLoader)
-EDELIB_NS_USING(list)
-EDELIB_NS_USING(dir_list)
-EDELIB_NS_USING(system_config_dirs)
-EDELIB_NS_USING(user_config_dir)
-EDELIB_NS_USING(str_ends)
-EDELIB_NS_USING(run_async)
-EDELIB_NS_USING(ask)
-EDELIB_NS_USING(file_test)
-EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
-EDELIB_NS_USING(FILE_TEST_IS_EXECUTABLE)
-EDELIB_NS_USING(ICON_SIZE_MEDIUM)
+EDELIB_NS_USING_LIST(14, (String,
+						  DesktopFile,
+						  IconLoader,
+						  list,
+						  dir_list,
+						  system_config_dirs,
+						  user_config_dir,
+						  str_ends,
+						  run_async,
+						  ask,
+						  file_test,
+						  FILE_TEST_IS_REGULAR,
+						  FILE_TEST_IS_EXECUTABLE,
+						  ICON_SIZE_MEDIUM ))
 
 #define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
@@ -250,7 +251,7 @@ static void perform_autostart(bool safe) {
 	 * exists, but $XDG_CONFIG_HOME/autostart/foo.desktop have 'Hidden = true',
 	 * $XDG_CONFIG_DIRS/autostart/foo.autostart is ignored too.
 	 *
-	 * Latter is implied via unique_by_basename().
+	 * Later is implied via unique_by_basename().
 	 */
 	unique_by_basename(dfiles);
 
@@ -305,23 +306,20 @@ static void perform_autostart(bool safe) {
 		entry_list_run_clear(entry_list, true);
 }
 
-static void perform_autostart_scripts(const char* path) {
-	int i;
-	String name;
+static void perform_autostart_scripts(const char* dir) {
+	char path[PATH_MAX];
 
-	for(i = 0; autostart_names[i]; i++) {
-		name = path;
-		name += E_DIR_SEPARATOR_STR;
-		name += autostart_names[i];
+	for(int i = 0; autostart_names[i]; i++) {
+		snprintf(path, sizeof(path), "%s%s%s", dir, E_DIR_SEPARATOR_STR, autostart_names[i]);
 
-		if(file_test(name.c_str(), FILE_TEST_IS_REGULAR | FILE_TEST_IS_EXECUTABLE)) {
+		if(file_test(path, FILE_TEST_IS_REGULAR | FILE_TEST_IS_EXECUTABLE)) {
 			if(ask(_("Mounted media at '%s' would like to start some files. "
 					 "Content of these files is not checked and could be malicious. "
-					 "Would you like to start them?"), path))
+					 "Would you like to start them?"), dir))
 			{
 				/* spec said how we must chdir to the root of the medium */
-				chdir(path);
-				AUTOSTART_RUN(name.c_str());
+				chdir(dir);
+				AUTOSTART_RUN(path);
 			}
 
 			/* we only match the one file */
