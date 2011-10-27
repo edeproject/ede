@@ -12,6 +12,10 @@
 #define SYSTEM_TRAY_BEGIN_MESSAGE  1
 #define SYSTEM_TRAY_CANCEL_MESSAGE 2
 
+/* try orientation type */
+#define SYSTEM_TRAY_ORIENTATION_HORZ 0
+#define SYSTEM_TRAY_ORIENTATION_VERT 1
+
 /* dimenstions of tray items */
 #define TRAY_ICON_W 25
 #define TRAY_ICON_H 25
@@ -46,6 +50,18 @@ static int handle_xevent(int e) {
 	}
 
 	return false;
+}
+
+static int validate_drawable(Display *d, Window xid) {
+	Window root;
+	int x, y, st;
+	unsigned int w, h, b, depth;
+
+	XSync(d, False);
+	st = XGetGeometry(d, xid, &root, &x, &y, &w, &h, &b, &depth);
+
+	XSync(d, False);
+	return st;
 }
 
 Tray::Tray() : Fl_Group(0, 0, 1, 25), opcode(0) {
@@ -92,9 +108,18 @@ void Tray::register_notification_area(void) {
 	}
 
 	/* setup visual atom so registering icons knows how to draw images */
-	Atom visual = XInternAtom(fl_display, "_NET_SYSTEM_TRAY_VISUAL", False);
-	XChangeProperty(fl_display, fl_message_window, visual, XA_VISUALID, 32, PropModeReplace, (unsigned char*)&fl_visual->visualid, 1);
+	Atom visual_atom = XInternAtom(fl_display, "_NET_SYSTEM_TRAY_VISUAL", False);
+	XChangeProperty(fl_display, fl_message_window, visual_atom, XA_VISUALID, 32, PropModeReplace, (unsigned char*)&fl_visual->visualid, 1);
+
+	/* 
+	 * setup orientation; also required by spec
+	 * panel is always in horizontal position, so value is hardcoded here
+	 */
+	Atom or_atom = XInternAtom(fl_display, "_NET_SYSTEM_TRAY_ORIENTATION", False);
+	int  or_val  = SYSTEM_TRAY_ORIENTATION_HORZ;
+	XChangeProperty(fl_display, fl_message_window, or_atom, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&or_val, 1);
 	
+	/* notify root who is manager */
 	XClientMessageEvent xev;
 	xev.type = ClientMessage;
 	xev.message_type = XInternAtom(fl_display, "MANAGER", False);
@@ -114,6 +139,9 @@ void Tray::register_notification_area(void) {
 }
 
 void Tray::embed_window(Window id) {
+	/* make sure we don't get some windows that could not be displayed */
+	E_RETURN_IF_FAIL(validate_drawable(fl_display, id) == 1);
+
 	Fl_Window *win = new Fl_Window(TRAY_ICON_W, TRAY_ICON_H);
 	win->end();
 
@@ -160,13 +188,10 @@ void Tray::remove_from_tray(Fl_Widget *win) {
 	remove(win);
 	w(w() - win->w() - TRAY_ICONS_SPACE);
 
-	E_DEBUG("Removing child, left: %i\n", children());
-
 	distribute_children();
 
 	redraw();
 	EDE_PANEL_GET_PANEL_OBJECT(this)->relayout();
-	EDE_PANEL_GET_PANEL_OBJECT(this)->redraw();
 }
 
 int Tray::handle(int e) {
