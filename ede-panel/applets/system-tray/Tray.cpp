@@ -1,20 +1,23 @@
 #include <stdio.h>
 #define FL_LIBRARY 1
 #include <FL/Fl.H>
+#include <FL/Fl_Window.H>
 #include <edelib/Debug.h>
-#include <edelib/Netwm.h>
 
 #include "Applet.h"
 #include "Panel.h"
 #include "Tray.h"
-#include "TrayWindow.h"
 
 #define SYSTEM_TRAY_REQUEST_DOCK   0
 #define SYSTEM_TRAY_BEGIN_MESSAGE  1
 #define SYSTEM_TRAY_CANCEL_MESSAGE 2
 
-EDELIB_NS_USING(netwm_window_get_icon)
-EDELIB_NS_USING(netwm_window_get_title)
+/* dimenstions of tray items */
+#define TRAY_ICON_W 25
+#define TRAY_ICON_H 25
+
+/* space between tray icons */
+#define TRAY_ICONS_SPACE 5
 
 /* multiple tray's are not allowed anyways so this can work */
 Tray *curr_tray = 0;
@@ -45,9 +48,8 @@ static int handle_xevent(int e) {
 	return false;
 }
 
-Tray::Tray() : Fl_Group(0, 0, 5, 25), opcode(0) {
+Tray::Tray() : Fl_Group(0, 0, 1, 25), opcode(0) {
 	box(FL_FLAT_BOX);
-	color(FL_RED);
 	register_notification_area();
 }
 
@@ -58,6 +60,17 @@ Tray::~Tray() {
 	snprintf(sel_name, sizeof(sel_name), "_NET_SYSTEM_TRAY_S%d", fl_screen);
 	sel = XInternAtom(fl_display, sel_name, False);
 	XSetSelectionOwner(fl_display, sel, None, CurrentTime);
+}
+
+void Tray::distribute_children(void) {
+	int X, Y;
+
+	X = x();
+	Y = y();
+	for(int i = 0; i < children(); i++) {
+		child(i)->position(X, Y);
+		X += child(i)->w() + TRAY_ICONS_SPACE;
+	}
 }
 
 void Tray::register_notification_area(void) {
@@ -97,17 +110,16 @@ void Tray::register_notification_area(void) {
 }
 
 void Tray::embed_window(Window id) {
-	TrayWindow *win = new TrayWindow(25, 25);
+	Fl_Window *win = new Fl_Window(TRAY_ICON_W, TRAY_ICON_H);
 	win->end();
-	win->set_image(netwm_window_get_icon(id));
-	win->set_tooltip(netwm_window_get_title(id));
 
 	add_to_tray(win);
 	win->show();
 
+	/* do real magic */
+	XResizeWindow(fl_display, id, win->w(), win->h());
 	XReparentWindow(fl_display, id, fl_xid(win), 0, 0); 
-	/* remove any pixmap from reparented window, so 'TrayWindow' can display own content */
-	XSetWindowBackgroundPixmap(fl_display, id, None);
+	XMapWindow(fl_display, id);
 
 	/* need to know when child dies */
 	XSelectInput(fl_display, fl_xid(win), SubstructureNotifyMask);
@@ -132,22 +144,23 @@ void Tray::unembed_window(Window id) {
 }
 
 void Tray::add_to_tray(Fl_Widget *win) {
-	win->position(x(), y());
-
 	insert(*win, 0);
-	int W = w() + win->w() + 5;
-	w(W);
-
+	w(w() + win->w() + TRAY_ICONS_SPACE);
+	
+	distribute_children();
+	redraw();
 	EDE_PANEL_GET_PANEL_OBJECT(this)->relayout();
 }
 
 void Tray::remove_from_tray(Fl_Widget *win) {
 	remove(win);
+	w(w() - win->w() - TRAY_ICONS_SPACE);
 
-	int W = w() - win->w() - 5;
-	w(W);
+	distribute_children();
 
+	redraw();
 	EDE_PANEL_GET_PANEL_OBJECT(this)->relayout();
+	EDE_PANEL_GET_PANEL_OBJECT(this)->redraw();
 }
 
 int Tray::handle(int e) {

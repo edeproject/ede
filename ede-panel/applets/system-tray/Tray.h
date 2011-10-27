@@ -19,6 +19,7 @@ class Tray : public Fl_Group {
 private:
 	Atom    opcode, message_data;
 	WinList win_list;
+	void distribute_children(void);
 public:
 	Tray();
 	~Tray();

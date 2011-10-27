@@ -10,4 +10,4 @@
 
 SubDir TOP ede-panel applets system-tray ;
 
-PanelApplet system_tray : Tray.cpp TrayWindow.cpp ;
+PanelApplet system_tray : Tray.cpp ;
