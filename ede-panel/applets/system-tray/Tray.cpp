@@ -90,6 +90,10 @@ void Tray::register_notification_area(void) {
 		E_WARNING(E_STRLOC ": Unable to register notification area service\n");
 		return;
 	}
+
+	/* setup visual atom so registering icons knows how to draw images */
+	Atom visual = XInternAtom(fl_display, "_NET_SYSTEM_TRAY_VISUAL", False);
+	XChangeProperty(fl_display, fl_message_window, visual, XA_VISUALID, 32, PropModeReplace, (unsigned char*)&fl_visual->visualid, 1);
 	
 	XClientMessageEvent xev;
 	xev.type = ClientMessage;
@@ -155,6 +159,8 @@ void Tray::add_to_tray(Fl_Widget *win) {
 void Tray::remove_from_tray(Fl_Widget *win) {
 	remove(win);
 	w(w() - win->w() - TRAY_ICONS_SPACE);
+
+	E_DEBUG("Removing child, left: %i\n", children());
 
 	distribute_children();
 
