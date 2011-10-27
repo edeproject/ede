@@ -11,6 +11,7 @@
 SubDir TOP ede-panel ;
 
 EdeProgram  ede-panel : Panel.cpp AppletManager.cpp ede-panel.cpp ;
+#ObjectC++Flags Panel.cpp : -DEDE_PANEL_LOCAL_APPLETS ;
 
 if $(OS) != "SOLARIS" {
 	# also must use this flag (on anything but Solaris) or program will crash

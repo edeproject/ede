@@ -12,7 +12,7 @@ PagerButton::~PagerButton() {
 void PagerButton::set_workspace_label(int l) {
 	wlabel = l;
 
-	char buf[16];
+	char buf[6];
 	snprintf(buf, sizeof(buf), "%i", l);
 	copy_label(buf);
 }

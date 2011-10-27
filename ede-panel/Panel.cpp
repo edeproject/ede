@@ -404,6 +404,7 @@ int Panel::handle(int e) {
 }
 
 void Panel::load_applets(void) {
+#ifndef EDE_PANEL_LOCAL_APPLETS
 	/* FIXME: hardcoded order */
 	static const char *applets[] = {
 		"start_menu.so",
@@ -429,7 +430,7 @@ void Panel::load_applets(void) {
 	}
 
 	mgr.fill_group(this);
-#if 0
+#else
 	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/pager/pager.so");
