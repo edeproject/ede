@@ -45,6 +45,7 @@
 #include <edelib/DesktopFile.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Debug.h>
+#include <edelib/Regex.h>
 #include <edelib/Ede.h>
 #include "StartupNotify.h"
 
@@ -56,8 +57,18 @@
 /* config name where all things are stored and read from */
 #define EDE_LAUNCH_CONFIG "ede-launch"
 
-EDELIB_NS_USING_LIST(11, (Resource, String, DesktopFile, RES_USER_ONLY, DESK_FILE_TYPE_APPLICATION, run_sync, run_async, alert, file_path, window_center_on_screen, str_ends))
+/* patterns for guessing user input */
+#define REGEX_PATTERN_MAIL "\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b"
+#define REGEX_PATTERN_URL  "((http|https|ftp|gopher|!file):\\/\\/|www)[a-zA-Z0-9\\-\\._]+\\/?[a-zA-Z0-9_\\.\\-\\?\\+\\/~=&#;,]*[a-zA-Z0-9\\/]{1}"
+
 EDELIB_NS_USING_AS(Window, LaunchWindow)
+EDELIB_NS_USING_LIST(12, (Resource,
+						  Regex,
+						  String,
+						  DesktopFile,
+					  	  RES_USER_ONLY,
+						  DESK_FILE_TYPE_APPLICATION,
+						  run_sync, run_async, alert, file_path, window_center_on_screen, str_ends))
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
@@ -81,6 +92,25 @@ static void help(void) {
 	puts("   ede-launch --launch mail mailto:foo@foo.com");
 	puts("   ede-launch gvim");
 	puts("   ede-launch ~/Desktop/foo.desktop");
+}
+
+static int re_match(const char *p, const char *str) {
+	static Regex re;
+
+	E_RETURN_VAL_IF_FAIL(re.compile(p) == true, -1);
+	return re.match(str);
+}
+
+static const char *resource_get(Resource &rc, const char *g, const char *k) {
+	static char buf[64];
+
+	if(!rc) rc.load(EDE_LAUNCH_CONFIG);
+	E_RETURN_VAL_IF_FAIL(rc != false, NULL);
+
+	if(rc.get(g, k, buf, sizeof(buf)))
+		return (const char*)buf;
+
+	return NULL;
 }
 
 static char* get_basename(const char* path) {
@@ -317,9 +347,10 @@ FAIL:
 }
 
 /* concat all arguments preparing it for start_child() */
-static void join_args(int start, int argc, char **argv, const char *program, String &ret) {
+static void join_args(int start, int argc, char **argv, const char *program, String &ret, bool is_mailto = false) {
 	String       args;
 	unsigned int alen;
+	char         sep = ' ';
 
 	/* append program if given */
 	if(program) {
@@ -327,9 +358,12 @@ static void join_args(int start, int argc, char **argv, const char *program, Str
 		args += ' ';
 	}
 
+	/* 'mailto' is handled special */
+	if(is_mailto) args += "mailto:";
+
 	for(int i = start; i < argc; i++) {
 		args += argv[i];
-		args += ' ';
+		args += sep;
 	}
 
 	alen = args.length();
@@ -373,12 +407,10 @@ do { \
 static bool find_terminal(String &ret) {
 	/* before goint to list, try to read it from config file */
 	Resource rc;
-	if(rc.load(EDE_LAUNCH_CONFIG)) {
-		char buf[64];
-		if(rc.get("Preferred", "terminal", buf, sizeof(buf))) {
-			ret = buf;
-			return true;
-		}
+	const char *t = resource_get(rc, "Preferred", "terminal");
+	if(t) {
+		ret = t;
+		return true;
 	}
 
 	/* list of known terminals */
@@ -565,19 +597,51 @@ int main(int argc, char** argv) {
 		return RETURN_FROM_BOOL(start_desktop_file(argv[ca]));
 
 	/* make arguments and exec program */
-	String args;
-	if(launch_type) {
-		Resource rc;
-		char     buf[64];
+	String     args;
+	Resource   rc;
+	const char *prog = NULL;
 
-		if(!rc.load(EDE_LAUNCH_CONFIG) || !rc.get("Preferred", launch_type, buf, sizeof(buf))) {
-			E_WARNING("Unable to find out launch type. Balling out...\n");
+	if(launch_type) {
+		/* explicitly launch what user requested */
+		prog = resource_get(rc, "Preferred", launch_type);
+
+		if(!prog) {
+			E_WARNING(E_STRLOC ": Unable to find out launch type\n");
 			return 1;
 		}
 
-		join_args(ca, argc, argv, buf, args);
+		join_args(ca, argc, argv, prog, args);
 	} else {
-		join_args(ca, argc, argv, 0, args);
+		bool mailto = false;
+
+		/* 
+		 * guess what arg we got; if got something like web url or mail address, launch preferred apps with it
+		 * Note however how this matching works on only one argument; other would be ignored
+		 */
+		if(re_match(REGEX_PATTERN_MAIL, argv[ca]) > 0) {
+			prog = resource_get(rc, "Preferred", "mail");
+			if(!prog) {
+				E_WARNING(E_STRLOC ": Unable to find mail agent\n");
+				return 1;
+			}
+
+			mailto = true;
+
+			/* use only one argumet */
+			argc = ca + 1;
+		} else if(re_match(REGEX_PATTERN_URL, argv[ca]) > 0) {
+			prog = resource_get(rc, "Preferred", "browser");
+			if(!prog) {
+				E_WARNING(E_STRLOC ": Unable to find browser\n");
+				return 1;
+			}
+
+			/* use only one argumet */
+			argc = ca + 1;
+		}
+
+		/* if 'prog' was left to be NULL, argc[ca] will be seen as program to be run */
+		join_args(ca, argc, argv, prog, args, mailto);
 	}
 
 	return RETURN_FROM_BOOL(start_child(args.c_str()));
