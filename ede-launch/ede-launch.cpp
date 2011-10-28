@@ -90,6 +90,7 @@ static void help(void) {
 	puts("Example:");
 	puts("   ede-launch --launch browser http://www.foo.com");
 	puts("   ede-launch --launch mail mailto:foo@foo.com");
+	puts("   ede-launch foo@foo.com");
 	puts("   ede-launch gvim");
 	puts("   ede-launch ~/Desktop/foo.desktop");
 }
