@@ -115,7 +115,7 @@ void TaskButton::draw(void) {
 			fl_color(labelcolor());
 
 			lw = lh = 0;
-			fl_measure(label(), lw, lh, align());
+			fl_measure(label(), lw, lh, 0);
 
 			/* use clipping so long labels do not be drawn on the right border, which looks ugly */
 			fl_push_clip(x() + Fl::box_dx(box()), 
@@ -123,8 +123,8 @@ void TaskButton::draw(void) {
 						 w() - Fl::box_dw(box()) - 5, 
 						 h() - Fl::box_dh(box()));
 
-				Y = (y() + h() / 2) - (lh / 2);
-				fl_draw(label(), X, Y, lw, lh, align(), 0, 0);
+			Y = (y() + h() / 2) - (lh / 2);
+			fl_draw(label(), X, Y, lw, lh, align(), 0, 0);
 
 			fl_pop_clip();
 		}
