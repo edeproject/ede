@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include <FL/x.H>
 #include <FL/Fl.H>
