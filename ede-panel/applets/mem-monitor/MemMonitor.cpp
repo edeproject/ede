@@ -83,8 +83,8 @@ void MemMonitor::draw(void) {
 	mh = height_from_perc(mem_usedp, H);
 	sh = height_from_perc(swap_usedp, H);
 
-	fl_rectf(X, Y + H - mh, W2, mh, color_rgb_to_fltk(166, 48, 48));
-	fl_rectf(X + W2, Y + H - sh, W2, sh, color_rgb_to_fltk(54, 136, 79));
+	fl_rectf(X, Y + H - mh, W2, mh, (Fl_Color)color_rgb_to_fltk(166, 48, 48));
+	fl_rectf(X + W2, Y + H - sh, W2, sh, (Fl_Color)color_rgb_to_fltk(54, 136, 79));
 }
 
 EDE_PANEL_APPLET_EXPORT (
