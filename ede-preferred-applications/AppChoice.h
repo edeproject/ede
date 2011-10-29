@@ -22,6 +22,12 @@ public:
 	void select_by_cmd(const char *cmd);
 	const char *selected(void);
 	void on_select(void);
+
+	/* 
+	 * FLTK 1.3 has this function, but not previous one versions.
+	 * Here, we are not traversing submenus, e.g. Edit/Copy, but only top level ones
+	 */
+	int find_item_index(const char *p);
 };
 
 #endif

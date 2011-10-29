@@ -73,7 +73,7 @@ void AppChoice::select_by_cmd(const char *cmd) {
 
 	if(!user_val.empty()) {
 		const char *b = get_basename(user_val.c_str());
-		pos = find_index(b);
+		pos = find_item_index(b);
 		if(pos >= 0) {
 			value(pos);
 			pvalue = pos;
@@ -84,7 +84,7 @@ void AppChoice::select_by_cmd(const char *cmd) {
 	for(int i = 0; known_apps[i].name; i++) {
 		if(STR_CMP(cmd, known_apps[i].cmd)) {
 			/* now find menu entry with this name */
-			pos = find_index(known_apps[i].name);	
+			pos = find_item_index(known_apps[i].name);	
 			if(pos >= 0) {
 				value(pos);
 				pvalue = pos;
@@ -134,4 +134,22 @@ void AppChoice::on_select(void) {
 	}
 
 	pvalue = value();
+}
+
+int AppChoice::find_item_index(const char *p) {
+	E_RETURN_VAL_IF_FAIL(p != NULL, -1);
+
+	const Fl_Menu_Item *m;
+	for(int i = 0; i < size(); i++) {
+		m = menu() + i;
+		if(m->flags & FL_SUBMENU) {
+			E_WARNING(E_STRLOC ": Submenus are not supported\n");
+			continue;
+		}
+
+		if(!m->label()) continue;
+		if(strcmp(m->label(), p) == 0) return i;
+	}
+
+	return -1;
 }
