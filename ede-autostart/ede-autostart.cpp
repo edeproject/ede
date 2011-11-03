@@ -37,10 +37,11 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Window.h>
 #include <edelib/IconLoader.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Ede.h>
 
 EDELIB_NS_USING_AS(Window, AppWindow)
-EDELIB_NS_USING_LIST(14, (String,
+EDELIB_NS_USING_LIST(15, (String,
 						  DesktopFile,
 						  IconLoader,
 						  list,
@@ -51,6 +52,7 @@ EDELIB_NS_USING_LIST(14, (String,
 						  run_async,
 						  ask,
 						  file_test,
+                          window_center_on_screen,
 						  FILE_TEST_IS_REGULAR,
 						  FILE_TEST_IS_EXECUTABLE,
 						  ICON_SIZE_MEDIUM ))
@@ -208,6 +210,7 @@ static void run_autostart_dialog(DialogEntryList& l) {
 		cancel->callback(dialog_close_cb, ptr);
 		cancel->take_focus();
 	dialog_win->end();
+	window_center_on_screen(dialog_win);
 	dialog_win->show();
 
 	while(dialog_win->shown())
