@@ -1,0 +1,185 @@
+#
+# Based on 'classic2' EDE 1.x theme
+# 
+
+$font = "Sans-9Left#XFT"
+
+PDecor {
+	Decor = "Default" {
+		Title {
+			Height = "25"
+			Pad = "6 10 10 8"
+
+			Focused = "Image title.png"
+			Unfocused = "Image title-unfocus.png"
+
+			Tab {
+				Focused = "Image title.png"
+				FocusedSelected = "Image title.png"
+				Unfocused = "Image title-unfocus.png"
+				UnfocusedSelected = "Image title-unfocus.png"
+			}
+
+			Separator {
+				Focused = "Empty"
+				Unfocused = "Empty"
+			}
+
+			Font {
+				Focused = "$font"
+			}
+
+			FontColor {
+				Focused = "#ffffff"
+				FocusedSelected = "#ffffff"
+				Unfocused = "#4b6983"
+				UnfocusedSelected = "#4b6983"
+			}
+
+			Buttons {
+				Right {
+					Focused = "Image close.png"
+					Unfocused = "Image close-unfocus.png"
+					Pressed = "Image close-press.png"
+					Button = "1" { Actions = "Close" }
+					Button = "3" { Actions = "Kill" }
+				}
+
+				Right {
+					Focused = "Image max.png"
+					Unfocused = "Image max-unfocus.png"
+					Pressed = "Image max-press.png"
+					Button = "1" { Actions = "Toggle Maximized 1 1" }
+				}
+
+				Right {
+					Focused = "Image min.png"
+					Unfocused = "Image min-unfocus.png"
+					Pressed = "Image min-press.png"
+					Button = "1" { Actions = "Set Iconified" }
+				}
+			}
+
+			Border {
+				Focused {
+					TopLeft = "Image border.png"
+					Top = "Image border.png"
+					TopRight = "Image border.png"
+					Left =  "Image border.png"
+					Right = "Image border.png"
+					BottomLeft = "Image border.png"
+					Bottom = "Image border.png"
+					BottomRight = "Image border.png"
+				}
+				Unfocused {
+					TopLeft = "Image border.png"
+					Top = "Image border.png"
+					TopRight = "Image border.png"
+					Left =  "Image border.png"
+					Right = "Image border.png"
+					BottomLeft = "Image border.png"
+					Bottom = "Image border.png"
+					BottomRight = "Image border.png"
+				}
+			}
+		}
+	}
+
+	Decor = "Titlebarless" {
+		Title {
+			Focused = "Empty"
+			Unfocused = "Empty"
+
+			Tab {
+				Focused = "Empty"
+				FocusedSelected = "Empty"
+				Unfocused = "Empty"
+				UnfocusedSelected = "Empty"
+			}
+
+	                Separator {
+	                        Focused = "Empty"
+	                        Unfocused = "Empty"
+        	        }
+	                Font {
+	                        Focused = "Empty"
+	                }
+	                FontColor {
+	                        Focused = "Empty"
+	                        FocusedSelected = "Empty"
+	                        Unfocused = "Empty"
+	                        UnfocusedSelected = "Empty"
+	                }    
+			Border {
+				Focused {
+					TopLeft = "Empty"
+					Top = "Empty"
+					TopRight = "Empty"
+					Left =  "Empty"
+					Right = "Empty"
+					BottomLeft = "Empty"
+					Bottom = "Empty"
+					BottomRight = "Empty"
+				}
+				Unfocused {
+	                                TopLeft = "Empty"           
+	                                Top = "Empty"           
+        	                        TopRight = "Empty"           
+	                                Left =  "Empty"           
+	                                Right = "Empty"           
+	                                BottomLeft = "Empty"           
+	                                Bottom = "Empty"           
+	                                BottomRight = "Empty"
+				}
+			}
+		}
+	}
+}
+
+Harbour {
+        Texture = "Solid #7f9ebc"
+}
+
+Menu {
+	Pad = "2 4 7 7" 
+
+	Focused {
+		Font = "$font"
+		Background = "Solid #ffffff"
+		Item = "Empty"
+		Text = "#000000" 
+		Separator = "Image menuline.png"
+		Arrow = "Image arrow-focus.png"
+  	}
+
+  	Unfocused {
+		Font = "$font"
+		Background = "Solid #ffffff"
+		Item = "Empty"
+		Text = "#000000"
+		Separator = "Image menuline.png"
+		Arrow = "Image arrow-focus.png"
+  	}
+
+  	Selected {
+		Font = "$font"
+		Background = "Solid #7f9ebc"
+		Item = "Empty"
+		Text = "#ffffff"
+		Arrow = "Image arrow-sel.png"
+  	}
+}
+
+CmdDialog {
+ 	Font = "$font"
+	Texture = "Solid #ffffff"
+	Text = "#000000"
+	Pad = "3 0 1 10"
+}
+
+Status {
+	Font = "$font"
+	Texture = "Solid #ffffff"  
+	Text = "#000000"
+	Pad = "2 2 10 10"
+}
