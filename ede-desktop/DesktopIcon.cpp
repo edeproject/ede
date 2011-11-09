@@ -104,12 +104,6 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	gsettings = gs;
 	settings = is;
 
-	/* setting fonts is TODO :P */
-#if 0	
-	Fl::set_font((Fl_Font)20, "-windows-*-medium-r-*-*-14-*-*-*-*-*-*-*");
-	labelfont((Fl_Font)20);
-#endif
-
 	label(settings->name.c_str());
 
 	imenu = new MenuButton(0, 0, 0, 0);
@@ -127,7 +121,7 @@ DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) :
 	color(bg);
 
 	align(FL_ALIGN_WRAP);
-	update_label_size();
+	update_label_font_and_size();
 }
 
 DesktopIcon::~DesktopIcon() { 
@@ -175,7 +169,8 @@ void DesktopIcon::load_icon(int face) {
 	darker_img->color_average(FL_BLUE, 0.6);
 }
 
-void DesktopIcon::update_label_size(void) {
+void DesktopIcon::update_label_font_and_size(void) {
+	labelfont(gsettings->label_font);
 	labelsize(gsettings->label_fontsize);
     lwidth = gsettings->label_maxwidth;
     lheight= 0;
@@ -278,7 +273,7 @@ void DesktopIcon::rename(const char* str) {
 
 	settings->name = str;
 	label(settings->name.c_str());
-	update_label_size();
+	update_label_font_and_size();
 	redraw();
 }
 

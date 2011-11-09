@@ -44,6 +44,7 @@
 struct GlobalIconSettings {
 	int  label_background;
 	int  label_foreground;
+	int  label_font;
 	int  label_fontsize;
 	int  label_maxwidth;
 	bool label_transparent;

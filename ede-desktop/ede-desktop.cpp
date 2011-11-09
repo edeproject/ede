@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <stdlib.h> // rand, srand
 #include <time.h>   // time
+#include <limits.h>
 
 #include <FL/Fl.H>
 #include <FL/x.H>
@@ -40,6 +41,7 @@
 #include <edelib/ForeignCallback.h>
 #include <edelib/Netwm.h>
 #include <edelib/WindowXid.h>
+#include <edelib/FontCache.h>
 #include <edelib/Ede.h>
 
 #include "ede-desktop.h"
@@ -81,6 +83,7 @@ EDELIB_NS_USING(netwm_workarea_get_size)
 EDELIB_NS_USING(netwm_window_set_type)
 EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
+EDELIB_NS_USING(font_cache_find)
 EDELIB_NS_USING(NETWM_WINDOW_TYPE_DESKTOP)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKAREA)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
@@ -163,6 +166,7 @@ Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	/* gnome light blue */
 	gisett->label_background = 138;
 	gisett->label_foreground = FL_WHITE;
+	gisett->label_font = FL_HELVETICA;
 	gisett->label_fontsize = 12;
 	gisett->label_maxwidth = 75;
 	gisett->label_transparent = true;
@@ -293,7 +297,7 @@ void Desktop::read_config(void) {
 	}
 
 	bool wuse;
-	char wpath[256];
+	char wpath[PATH_MAX], font_name[64];
 	int  bcolor, wmode;
 
 	/* use nice darker blue color as default for background */
@@ -306,12 +310,19 @@ void Desktop::read_config(void) {
 	/* '138' is gnome light blue */
 	conf.get("Icons", "label_background", gisett->label_background, 138);
 	conf.get("Icons", "label_foreground", gisett->label_foreground, FL_WHITE);
-	conf.get("Icons", "label_fontsize",   gisett->label_fontsize, 12);
 	conf.get("Icons", "label_maxwidth",   gisett->label_maxwidth, 75);
 	conf.get("Icons", "label_transparent",gisett->label_transparent, true);
 	conf.get("Icons", "label_visible",    gisett->label_draw, true);
 	conf.get("Icons", "one_click_exec",   gisett->one_click_exec, false);
 	conf.get("Icons", "auto_arrange",     gisett->auto_arrange, true);
+
+	/* try to get font */
+	if(conf.get("Icons", "label_font", font_name, sizeof(font_name))) {
+		font_cache_find(font_name, gisett->label_font,
+								   gisett->label_fontsize,
+								   gisett->label_font,
+								   gisett->label_fontsize);
+	}
 
 	/* minimal allowed font size */
 	if(gisett->label_fontsize < 8)

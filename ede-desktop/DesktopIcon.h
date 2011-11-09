@@ -41,7 +41,7 @@ private:
 	edelib::MenuButton* imenu;
 
 	void load_icon(int face);
-	void update_label_size(void);
+	void update_label_font_and_size(void);
 	void fix_position(int X, int Y);
 
 public:
