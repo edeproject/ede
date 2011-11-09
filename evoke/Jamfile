@@ -20,7 +20,8 @@ SOURCE = evoke.cpp
 CONFIG = ede-settings.conf 
          ede-startup.conf ;
 
-#ObjectC++Flags $(SOURCE) : -DUSE_LOCAL_CONFIG ;
+# pekwm have splash support
+ObjectC++Flags Splash.cpp : -DEDEWM_HAVE_NET_SPLASH ;
 
 # use SIGHUP for now as default
 ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
