@@ -4,3 +4,4 @@
 
 ede-bell-conf --apply
 ede-keyboard-conf --apply
+edelib-update-font-cache
