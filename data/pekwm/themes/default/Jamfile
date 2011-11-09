@@ -8,7 +8,8 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SubDir TOP data pekwm themes ;
+SubDir TOP data pekwm themes default ;
 
-SubInclude TOP data pekwm themes default ;
-SubInclude TOP data pekwm themes pekwm ;
+IMAGES = [ Wildcard *.png ] ;
+
+InstallData "$(PEKWM_DATA_DIR)/themes/default" : $(IMAGES) theme ;
