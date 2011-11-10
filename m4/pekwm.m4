@@ -13,18 +13,30 @@ AC_DEFUN([EDE_CHECK_PEKWM_DEPENDENCIES], [
 AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 
-dnl Check for iconv
-dnl AM_ICONV
-dnl if test "x$am_cv_func_iconv" != "xyes"; then
-dnl    AC_MSG_ERROR([Could not find iconv.])
-dnl fi
-dnl 
-dnl PEKWM_LIBS="$LIBS $LIBICONV"
-dnl PEKWM_CXXFLAGS="$CXXFLAGS $INCICONV"
-dnl PEKWM_FEATURES=""
-dnl 
+dnl Stupid way to find iconv; on linux, iconv is part of glibc, for others
+dnl try to search binary, then adjust paths
+if test "x$`uname`" = "xLinux"; then
+ 	LIBICONV=""
+ 	INCICONV=""
+else
+	iconv_path="`which iconv 2>/dev/null | sed 's/\/bin\/.*//g'`"
+	if test "x$iconv_path" != "x"; then
+		LIBICONV="-L$iconv_path/lib -liconv"
+		INCICONV="-I$iconv_path/include"
+		dnl dummy
+		AC_DEFINE(ICONV_CONST, [1], [Define if iconv() have second parameter const])
+	fi
+fi
+ 
+PEKWM_LIBS="$PEKWM_LIBS $LIBICONV"
+PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $INCICONV"
+
 dnl Check for iconvctl
 AC_CHECK_FUNC(iconvctl, [AC_DEFINE(HAVE_ICONVCTL, [1], [Define to 1 if you the iconvctl call])], )
+
+dnl Assume we have X libs
+PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $X_CFLAGS"
+PEKWM_LIBS="$PEKWM_LIBS $X_LIBS $X_EXTRA_LIBS"
 
 dnl Check for Xinerama support
 AC_MSG_CHECKING([whether to build support for the Xinerama extension])
@@ -118,78 +130,44 @@ AC_MSG_CHECKING([wheter to build support XPM images])
 AC_CHECK_LIB(Xpm, XpmReadFileToPixmap,
   AC_MSG_CHECKING([for X11/xpm.h])
     AC_TRY_COMPILE(
-#include <X11/xpm.h>
-			, int foo = XpmSuccess,
-			AC_MSG_RESULT([yes])
-			AC_DEFINE(HAVE_IMAGE_XPM, [1], [Define to 1 if you libXpm])
-			PEKWM_LIBS="$PEKWM_LIBS -lXpm"
-			PEKWM_FEATURES="$PEKWM_FEATURES image-xpm",
-		AC_MSG_RESULT([no])))
+	#include <X11/xpm.h>
+	, int foo = XpmSuccess,
+	AC_MSG_RESULT([yes])
+	AC_DEFINE(HAVE_IMAGE_XPM, [1], [Define to 1 if you libXpm])
+	PEKWM_LIBS="$PEKWM_LIBS -lXpm"
+	PEKWM_FEATURES="$PEKWM_FEATURES image-xpm",
+AC_MSG_RESULT([no])))
 
 dnl Check for JPEG support
- 	AC_CHECK_LIB(jpeg, jpeg_read_header,
- 		AC_MSG_CHECKING([for jpeglib.h])
- 		AC_TRY_CPP([#include <jpeglib.h>],
-			jpeg_ok=yes,
- 			jpeg_ok=no)
- 		AC_MSG_RESULT($jpeg_ok)
- 		if test "$jpeg_ok" = yes; then
-			AC_DEFINE(HAVE_IMAGE_JPEG, [1], [Define to 1 if you have jpeg6b])
- 			PEKWM_LIBS="$PEKWM_LIBS -ljpeg"
- 			PEKWM_FEATURES="$PEKWM_FEATURES image-jpeg"
- 		fi,
- 		AC_MSG_RESULT([no]))
+AC_CHECK_LIB(jpeg, jpeg_read_header,
+	AC_MSG_CHECKING([for jpeglib.h])
+	AC_TRY_CPP([#include <jpeglib.h>], jpeg_ok=yes, jpeg_ok=no)
+	AC_MSG_RESULT($jpeg_ok)
+	if test "$jpeg_ok" = yes; then
+		AC_DEFINE(HAVE_IMAGE_JPEG, [1], [Define to 1 if you have jpeg6b])
+		PEKWM_LIBS="$PEKWM_LIBS -ljpeg"
+		PEKWM_FEATURES="$PEKWM_FEATURES image-jpeg"
+	fi,
+AC_MSG_RESULT([no]))
 
 dnl Check for PNG support
-        PKG_CHECK_MODULES([libpng12], [libpng12 >= 1.2.0], HAVE_LIBPNG=yes, HAVE_LIBPNG=no)
-        if test "x$HAVE_LIBPNG" = "xyes"; then
+PKG_CHECK_MODULES([libpng12], [libpng12 >= 1.2.0], HAVE_LIBPNG=yes, HAVE_LIBPNG=no)
+if test "x$HAVE_LIBPNG" = "xyes"; then
+	AC_DEFINE(HAVE_IMAGE_PNG, [1], [Define to 1 if you have libpng12])
+	PEKWM_LIBS="$PEKWM_LIBS $libpng12_LIBS"
+	PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $libpng12_CFLAGS"
+	PEKWM_FEATURES="$PEKWM_FEATURES image-png"
+else
+	PKG_CHECK_MODULES([libpng], [libpng >= 1.0.0], HAVE_LIBPNG=yes, HAVE_LIBPNG=no)
+	if test "x$HAVE_LIBPNG" = "xyes"; then                
 		AC_DEFINE(HAVE_IMAGE_PNG, [1], [Define to 1 if you have libpng12])
- 		PEKWM_LIBS="$PEKWM_LIBS $libpng12_LIBS"
-                PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $libpng12_CFLAGS"
- 		PEKWM_FEATURES="$PEKWM_FEATURES image-png"
- 	else
-                PKG_CHECK_MODULES([libpng], [libpng >= 1.0.0], HAVE_LIBPNG=yes, HAVE_LIBPNG=no)
-
-                if test "x$HAVE_LIBPNG" = "xyes"; then                
-	        	AC_DEFINE(HAVE_IMAGE_PNG, [1], [Define to 1 if you have libpng12])
- 		        PEKWM_LIBS="PEKWM_$LIBS $libpng_LIBS"
-                        PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $libpng_CFLAGS"
-                        PEKWM_FEATURES="$PEKWM_FEATURES image-png"
-                else
-                        AC_MSG_RESULT([no])
-                fi
-        fi
-
-dnl Check whether to include debugging code
-dnl AC_MSG_CHECKING([whether to include verbose debugging code])
-dnl AC_ARG_ENABLE(debug,
-dnl 	AC_HELP_STRING([--enable-debug],
-dnl 								 [include verbose debugging code [default=no]]), ,
-dnl 							[enable_debug=no])
-dnl if test "x$enable_debug" = "xyes"; then
-dnl 	AC_MSG_RESULT([yes])
-dnl 	AC_DEFINE(DEBUG, [1], [Define to 1 to compile in debug information])
-dnl 	FEATURES="$FEATURES debug"
-dnl else
-dnl 	AC_MSG_RESULT([no])
-dnl fi
-dnl 
-dnl dnl Check wheter to use strict warnings
-dnl AC_MSG_CHECKING([whether to use strict compile-time warnings])
-dnl AC_ARG_ENABLE(pedantic,
-dnl 	AC_HELP_STRING([--enable-pedantic],
-dnl 								 [turn on strict compile-time warnings [default=no]]), ,
-dnl 							[enable_pedantic=no])
-dnl if test "$enable_pedantic" = "yes"; then
-dnl 	AC_MSG_RESULT([yes])
-dnl         if test "x$GXX" = "xyes"; then
-dnl 		CXXFLAGS="-Wall -Werror -pedantic $CXXFLAGS"
-dnl 	fi
-dnl 	FEATURES="$FEATURES pedantic"
-dnl else
-dnl 	AC_MSG_RESULT([no])
-dnl fi
-dnl 
+		PEKWM_LIBS="$PEKWM_LIBS $libpng_LIBS"
+		PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $libpng_CFLAGS"
+		PEKWM_FEATURES="$PEKWM_FEATURES image-png"
+	else
+		AC_MSG_RESULT([no])
+	fi
+fi
 
 AC_DEFINE(OPACITY, [1], [Define to 1 to compile in support for opacity hinting])
 

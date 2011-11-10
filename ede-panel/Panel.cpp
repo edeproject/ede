@@ -414,7 +414,9 @@ void Panel::load_applets(void) {
 		"taskbar.so",
 		"keyboard_layout.so",
 		"cpu_monitor.so",
+#ifdef __linux__
 		"mem_monitor.so",
+#endif
 		"system_tray.so",
 		0
 	};

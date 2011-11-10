@@ -318,7 +318,7 @@ void Desktop::read_config(void) {
 
 	/* try to get font */
 	if(conf.get("Icons", "label_font", font_name, sizeof(font_name))) {
-		font_cache_find(font_name, (Fl_Font)gisett->label_font,
+		font_cache_find(font_name, (Fl_Font&)gisett->label_font,
 								            gisett->label_fontsize,
 								   (Fl_Font)gisett->label_font,
 								            gisett->label_fontsize);

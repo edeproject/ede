@@ -65,5 +65,5 @@ SOURCE = ActionHandler.cc
 
 Program pekwm : $(SOURCE) ;
 ObjectC++Flags $(SOURCE) : $(GLOBALFLAGS) $(PEKWM_CXXFLAGS) -DDATADIR=\\\"$(datadir)\\\" -DSYSCONFDIR=\\\"$(PEKWM_CONFIG_DIR)\\\" -DVERSION=\\\"0.1.13\\\"  ;
-LinkAgainst pekwm : $(PEKWM_LIBS) -lX11 -lXext $(STDLIB) ;
+LinkAgainst pekwm : $(PEKWM_LIBS) $(STDLIB) ;
 InstallEdeProgram pekwm ;
