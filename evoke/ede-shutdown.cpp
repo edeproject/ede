@@ -17,7 +17,7 @@
 int main(int argc, char** argv) {
 	Display* dpy = XOpenDisplay(0);
 	if(!dpy) {
-		puts("Unabel to open default display");
+		puts("Unable to open default display");
 		return 1;
 	}
 
