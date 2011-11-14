@@ -34,8 +34,8 @@
 #ifndef Fl_Icon_Browser_H
 #define Fl_Icon_Browser_H
 
-#include <Fl/Fl_Browser_.H>
-#include <Fl/Fl_Image.H>
+#include <FL/Fl_Browser_.H>
+#include <FL/Fl_Image.H>
 
 #include <stdio.h> 
 

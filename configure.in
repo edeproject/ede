@@ -165,12 +165,6 @@ else
 	AC_MSG_ERROR([You don't have FLTK installed. To compile EDE, you will need it.])
 fi
 
-if test "x$with_efltk_path" = "x"; then
-	AC_PATH_PROG(EFLTK_CONFIG, efltk-config)
-else
-	AC_PATH_PROG(EFLTK_CONFIG, efltk-config,, "$with_efltk_path/bin")
-fi
-
 EDE_CHECK_LIBXPM
 if test "$have_libxpm" = "yes"; then
 	FLTK_LIBS="$FLTK_LIBS $LIBXPM_LIBS"
@@ -249,9 +243,6 @@ AC_SUBST(EDE_DEBUG_FLAGS)
 AC_SUBST(FLTK_CFLAGS)
 AC_SUBST(FLTK_LIBS)
 AC_SUBST(FLTK_LIBS_NOIMAGES)
-AC_SUBST(EFLTK_CFLAGS)
-AC_SUBST(EFLTK_LIBS_NOIMAGES)
-AC_SUBST(EFLTK_LIBS)
 AC_SUBST(EDELIB_API_INDEX)
 AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)

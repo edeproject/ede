@@ -15,7 +15,7 @@ AC_LANG_CPLUSPLUS
 
 dnl Stupid way to find iconv; on linux, iconv is part of glibc, for others
 dnl try to search binary, then adjust paths
-if test "x$`uname`" = "xLinux"; then
+if test "x`uname`" = "xLinux"; then
  	LIBICONV=""
  	INCICONV=""
 else
@@ -36,7 +36,7 @@ AC_CHECK_FUNC(iconvctl, [AC_DEFINE(HAVE_ICONVCTL, [1], [Define to 1 if you the i
 
 dnl Assume we have X libs
 PEKWM_CXXFLAGS="$PEKWM_CXXFLAGS $X_CFLAGS"
-PEKWM_LIBS="$PEKWM_LIBS $X_LIBS $X_EXTRA_LIBS"
+PEKWM_LIBS="$PEKWM_LIBS -lX11 -lXext $X_LIBS $X_EXTRA_LIBS"
 
 dnl Check for Xinerama support
 AC_MSG_CHECKING([whether to build support for the Xinerama extension])
