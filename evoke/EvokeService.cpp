@@ -48,6 +48,7 @@ EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(str_trim)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(alert)
+EDELIB_NS_USING(ask)
 EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
 
 #ifdef USE_LOCAL_CONFIG
@@ -98,62 +99,57 @@ static void send_dbus_ede_quit(void) {
 }
 
 static bool do_shutdown_or_restart(bool restart) {
-#ifdef HAVE_HAL
+	const char *action;
+
 	EdbusConnection c;
 	if(!c.connect(EDBUS_SYSTEM)) {
 		alert(_("Unable to connect to HAL daemon. Make sure both D-BUS and HAL daemons are running"));
 		return false;
 	}
 
-	const char* hal_cmd = "Shutdown";
-	if(restart)
-		hal_cmd = "Reboot";
+	/* determine what to check first; ConsoleKit shutdown action calls 'Stop' */
+	action = restart ? "Restart" : "Stop";
 
-	EdbusMessage msg;
-	msg.create_method_call("org.freedesktop.Hal",
-						   "/org/freedesktop/Hal/devices/computer", 
-						   "org.freedesktop.Hal.Device.SystemPowerManagement", 
-						   hal_cmd);
+	EdbusMessage msg, ret;
+	msg.create_method_call("org.freedesktop.ConsoleKit",
+						   "/org/freedesktop/ConsoleKit/Manager",
+						   "org.freedesktop.ConsoleKit.Manager",
+						   action);
 
-	EdbusMessage ret;
 	if(!c.send_with_reply_and_block(msg, 100, ret)) {
-		EdbusError* err = c.error();
-
-		if(err && err->valid()) {
-			if(strcmp(err->name(), "org.freedesktop.DBus.Error.AccessDenied") == 0) {
-				alert(_("Unable to send a message to HAL.\n\n"
-						"Make sure you have permissions to restart and shutdown "
-						"the computer with HAL daemon"));
-				return false;
-			} else if(strcmp(err->name(), "org.freedesktop.DBus.Error.NoReply") == 0) {
-				/* 'Reboot' do not send reply and that is considered as error from D-BUS daemon */
-				return true;
-			} else {
-				/* just print whatever error was received */
-				alert("%s\n\n%s", err->name(), err->message());
-				return false;
-			}
-		}
-
-		alert(_("Unable to send a message to HAL and unable to find out the reasons for that"));
+		EdbusError *err = c.error();
+		alert(_("Unable to complete this action. Got '%s' (%s)"), err->name(), err->message());
 		return false;
 	}
-#else
-	int ret = 0;
-	const char* cmd = _("restart");
+
+	if(ret.size() != 1) {
+		alert(_("Bad reply size. Expected '1' element, but got '%i' instead"), ret.size());
+		return false;
+	}
+
+	EdbusMessage::iterator it = ret.begin();
+	if((*it).to_bool() == true)
+		return true;
+
+	int r = ask(_("You are not allowed to execute this command. Please consult ConsoleKit documentation on how to allow privileged actions. "
+				  "Would you like to try to execute system commands?"));
+
+	/* try to do things manually */
+	if(!r) return false;
+	const char *cmd = _("restart");
 
 	if(restart) {
-		ret = run_sync(REBOOT_CMD);
+		r = run_sync(REBOOT_CMD);
 	} else {
-		ret = run_sync(POWEROFF_CMD);
+		r = run_sync(POWEROFF_CMD);
 		cmd = _("shutdown");
 	}
 
-	if(ret) {
+	if(r) {
 		alert(_("Unable to %s the computer. Probably you do not have enough permissions to do that"), cmd);
 		return false;
 	}
-#endif
+
 	return true;
 }
 
