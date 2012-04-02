@@ -6,5 +6,5 @@ Exec=ede-screen-lock
 Icon=system-lock-screen
 StartupNotify=false
 Categories=X-EDE;X-EDE-Toplevel;
-Name=Lock Screen
+Name=Screen Lock
 Comment=Lock user screen
