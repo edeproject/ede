@@ -1,0 +1,28 @@
+#!/bin/sh
+
+program="ede-screen-lock"
+
+if [ "$1" = "--help" ]; then
+	cat <<EOF
+Usage: $program [OPTIONS]
+Lock screen for current user
+
+Options:
+  --help      this help
+
+EOF
+	exit 1
+fi
+
+if `command -v xscreensaver-command > /dev/null 2>&1`; then
+	lock_cmd="xscreensaver-command -lock"
+elif `command -v xlock > /dev/null 2>&1`; then
+	lock_cmd="xlock"
+fi
+
+if [ "x$lock_cmd" = "x" ]; then
+	ede-dialog --error "Unable to find any known locker. Please install xscreensaver or xlock to enable screen lock in EDE"
+	exit 1
+fi
+
+$lock_cmd

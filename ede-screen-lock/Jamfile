@@ -1,0 +1,13 @@
+#
+# $Id: Jamfile 2496 2009-02-20 15:29:11Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2012 EDE Authors.
+#
+# This program is licensed under the terms of the
+# GNU General Public License version 2 or later.
+# See COPYING for the details.
+ 
+SubDir TOP ede-screen-lock ;
+
+InstallEdeProgram ede-screen-lock ;

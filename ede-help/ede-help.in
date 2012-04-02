@@ -48,7 +48,7 @@ url="file://$url"
 # try to find browser
 if [ "x$BROWSER" = "x" ]; then
 	for i in $browser_list; do
-		if which $i > /dev/null 2>&1; then
+		if command -v $i > /dev/null 2>&1; then
 			BROWSER="$i"
 			break;
 		fi

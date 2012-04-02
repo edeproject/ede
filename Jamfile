@@ -26,6 +26,7 @@ SubInclude TOP ede-desktop-conf ;
 SubInclude TOP ede-dialog ;
 SubInclude TOP ede-keyboard-conf ;
 SubInclude TOP ede-screensaver-conf ;
+SubInclude TOP ede-screen-lock ;
 SubInclude TOP ede-help ;
 SubInclude TOP ede-image-view ;
 SubInclude TOP elma ;
