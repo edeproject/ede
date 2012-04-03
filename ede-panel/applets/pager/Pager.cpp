@@ -1,9 +1,9 @@
 #include "Applet.h"
 
 #include <string.h>
-
 #include <FL/Fl_Group.H>
 #include <FL/Fl.H>
+#include <FL/fl_ask.H>
 #include <edelib/Debug.h>
 #include <edelib/Netwm.h>
 
@@ -26,9 +26,7 @@ public:
 	void workspace_changed(void);
 };
 
-static void box_cb(Fl_Widget*, void *b) {
-	PagerButton *pb = (PagerButton*)b;
-
+static void box_cb(PagerButton *pb, void *p) {
 	/* because workspaces in button labels are increased */
 	int s = pb->get_workspace_label() - 1;
 	netwm_workspace_change(s);
@@ -98,7 +96,7 @@ void Pager::init_workspace_boxes(void) {
 		if(names)
 			bx->copy_tooltip(names[i]);
 
-		bx->callback(box_cb, bx);
+		bx->callback((Fl_Callback*)box_cb, this);
 
 		add(bx);
 		/* position for the next box */
@@ -110,9 +108,9 @@ void Pager::init_workspace_boxes(void) {
 
 void Pager::workspace_changed(void) {
 	int c = netwm_workspace_get_current();
-	PagerButton *pb;
-
 	E_RETURN_IF_FAIL(c < children());
+
+	PagerButton *pb;
 
 	for(int i = 0; i < children(); i++) {
 		pb = (PagerButton*)child(i);
