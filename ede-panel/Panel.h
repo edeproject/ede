@@ -20,6 +20,7 @@ private:
 	int        vpos;
 	int        sx, sy;
 	int        screen_x, screen_y, screen_w, screen_h, screen_h_half;
+	int        width_perc; /* user specified panel width */
 	bool       can_move_widgets;
 
 	AppletManager mgr;

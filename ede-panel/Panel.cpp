@@ -177,8 +177,8 @@ Panel::Panel() : PanelWindow(300, 30) {
 	clicked = 0; 
 	sx = sy = 0;
 	vpos = PANEL_POSITION_BOTTOM;
-	screen_x = screen_y = screen_w = screen_h = 0;
-	screen_h_half = 0;
+	screen_x = screen_y = screen_w = screen_h = screen_h_half = 0;
+	width_perc = 100;
 	can_move_widgets = false;
 
 	box(FL_UP_BOX); 
@@ -190,17 +190,26 @@ void Panel::read_config(void) {
 	if(!r.load("ede-panel"))
 		return;
 
-	int p;
-	if(r.get("Panel", "position", p, PANEL_POSITION_BOTTOM)) {
-		if((p != PANEL_POSITION_TOP) && (p != PANEL_POSITION_BOTTOM))
-			p = PANEL_POSITION_BOTTOM;
+	int tmp;
+	if(r.get("Panel", "position", tmp, PANEL_POSITION_BOTTOM)) {
+		if((tmp != PANEL_POSITION_TOP) && (tmp != PANEL_POSITION_BOTTOM))
+			tmp = PANEL_POSITION_BOTTOM;
+		vpos = tmp;
 	}
 
-	vpos = p;
+	if(r.get("Panel", "width", tmp, 100)) {
+		if(tmp > 100) tmp = 100;
+		else if(tmp < 10) tmp = 10;
+
+		width_perc = tmp;
+	}
 }
 
 void Panel::save_config(void) {
 	Resource r;
+	/* use whatever was explicitly stored in configuration */
+	r.load("ede-panel");
+
 	r.set("Panel", "position", vpos);
 	r.save("ede-panel");
 }
@@ -321,11 +330,18 @@ void Panel::show(void) {
 	if(!netwm_workarea_get_size(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
 
+	/* TODO: these numbers are also used to calculate panel x,y,w,h so rename it! */
 	screen_x = X;
 	screen_y = Y;
 	screen_w = W;
 	screen_h = H;
 	screen_h_half = screen_h / 2;
+
+	/* calculate panel percentage width if given */
+	if(width_perc < 100) {
+		W = (width_perc * screen_w) / 100;
+		screen_x = (screen_w / 2) - (W / 2);
+	}
 
 	/* set size as soon as possible, since do_layout() depends on it */
 	size(W, DEFAULT_PANEL_H);
@@ -336,11 +352,13 @@ void Panel::show(void) {
 	/* position it, this is done after XID was created */
 	if(vpos == PANEL_POSITION_BOTTOM) {
 		position(screen_x, screen_h - h());
-		netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
+		if(width_perc >= 100)
+			netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 	} else {
 		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
 		position(screen_x, screen_y);
-		netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
+		if(width_perc >= 100)
+			netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 	}
 }
 
@@ -370,13 +388,15 @@ int Panel::handle(int e) {
 			/* snap it to the top or bottom, depending on pressed mouse location */
 			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
 				position(screen_x, screen_y);
-				netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
+				if(width_perc >= 100)
+					netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 				vpos = PANEL_POSITION_TOP;
 			} 
 				
 			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
 				position(screen_x, screen_h - h());
-				netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
+				if(width_perc >= 100)
+					netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 				vpos = PANEL_POSITION_BOTTOM;
 			}
 
