@@ -531,17 +531,17 @@ static const char* next_param(int curr, char **argv, int argc) {
 int main(int argc, char** argv) {
 	EDE_APPLICATION("ede-launch");
 
-	/* start dialog if we have nothing */
-	if(argc <= 1)
-		return start_dialog(argc, argv);
-
 	int        ca = 1; /* current argument index */
 	const char *cwd, *launch_type;
 	cwd = launch_type = 0;
 
 	/* in case if ede-launch launches itself; just skip ourself and use the rest of arguments */
-	if(strstr(argv[ca], "ede-launch"))
+	while(argv[ca] && strstr(argv[ca], "ede-launch") != NULL)
 		ca++;
+
+	/* start dialog if we have nothing */
+	if(!argv[ca])
+		return start_dialog(argc, argv);
 
 	/* parse args and stop as soon as detected first non-parameter value (not counting parameter values) */
 	for(; ca < argc; ca++) {
