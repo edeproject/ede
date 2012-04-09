@@ -539,6 +539,10 @@ int main(int argc, char** argv) {
 	const char *cwd, *launch_type;
 	cwd = launch_type = 0;
 
+	/* in case if ede-launch launches itself; just skip ourself and use the rest of arguments */
+	if(strstr(argv[ca], "ede-launch"))
+		ca++;
+
 	/* parse args and stop as soon as detected first non-parameter value (not counting parameter values) */
 	for(; ca < argc; ca++) {
 		if(argv[ca][0] != '-') break;
