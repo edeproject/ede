@@ -11,6 +11,7 @@ public:
 	MemMonitor();
 	void update_status(void);
 	void draw(void);
+	int  handle(int e);
 };
 
 #endif

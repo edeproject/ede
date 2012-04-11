@@ -10,7 +10,7 @@
 
 EDELIB_NS_USING(color_rgb_to_fltk)
 
-#define UPDATE_INTERVAL .5f
+#define UPDATE_INTERVAL 1.0f
 #define STR_CMP(first, second, n) (strncmp(first, second, n) == 0)
 
 static int height_from_perc(int perc, int h) {
@@ -36,7 +36,6 @@ static void mem_timeout_cb(void *d) {
 
 MemMonitor::MemMonitor() : Fl_Box(0, 0, 45, 25), mem_usedp(0), swap_usedp(0) {
 	box(FL_THIN_DOWN_BOX);
-	Fl::add_timeout(UPDATE_INTERVAL, mem_timeout_cb, this);
 }
 
 void MemMonitor::update_status(void) {
@@ -85,6 +84,22 @@ void MemMonitor::draw(void) {
 
 	fl_rectf(X, Y + H - mh, W2, mh, (Fl_Color)color_rgb_to_fltk(166, 48, 48));
 	fl_rectf(X + W2, Y + H - sh, W2, sh, (Fl_Color)color_rgb_to_fltk(54, 136, 79));
+}
+
+int MemMonitor::handle(int e) {
+	switch(e) {
+		case FL_SHOW: {
+			int ret = Fl_Box::handle(e);
+			Fl::add_timeout(UPDATE_INTERVAL, mem_timeout_cb, this);
+			return ret;
+		}
+
+		case FL_HIDE:
+			Fl::remove_timeout(mem_timeout_cb);
+			/* fallthrough */
+	}
+
+	return Fl_Box::handle(e);
 }
 
 EDE_PANEL_APPLET_EXPORT (

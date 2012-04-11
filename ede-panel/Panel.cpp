@@ -27,15 +27,16 @@
 #undef MAX
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
-EDELIB_NS_USING(list)
-EDELIB_NS_USING(Resource)
-EDELIB_NS_USING(String)
-EDELIB_NS_USING(window_xid_create)
-EDELIB_NS_USING(build_filename)
-EDELIB_NS_USING(netwm_window_set_strut)
-EDELIB_NS_USING(netwm_window_set_type)
-EDELIB_NS_USING(netwm_workarea_get_size)
-EDELIB_NS_USING(NETWM_WINDOW_TYPE_DOCK)
+EDELIB_NS_USING_LIST(10, (list,
+						  Resource,
+						  String,
+						  window_xid_create,
+						  build_filename,
+						  netwm_window_set_strut,
+						  netwm_window_remove_strut,
+						  netwm_window_set_type,
+						  netwm_workarea_get_size,
+						  NETWM_WINDOW_TYPE_DOCK))
 
 typedef list<Fl_Widget*> WidgetList;
 typedef list<Fl_Widget*>::iterator WidgetListIt;
@@ -180,6 +181,7 @@ Panel::Panel() : PanelWindow(300, 30) {
 	screen_x = screen_y = screen_w = screen_h = screen_h_half = 0;
 	width_perc = 100;
 	can_move_widgets = false;
+	can_drag = true;
 
 	box(FL_UP_BOX); 
 	read_config();
@@ -330,7 +332,6 @@ void Panel::show(void) {
 	if(!netwm_workarea_get_size(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
 
-	/* TODO: these numbers are also used to calculate panel x,y,w,h so rename it! */
 	screen_x = X;
 	screen_y = Y;
 	screen_w = W;
@@ -340,7 +341,7 @@ void Panel::show(void) {
 	/* calculate panel percentage width if given */
 	if(width_perc < 100) {
 		W = (width_perc * screen_w) / 100;
-		screen_x = (screen_w / 2) - (W / 2);
+		X = (screen_w / 2) - (W / 2);
 	}
 
 	/* set size as soon as possible, since do_layout() depends on it */
@@ -351,12 +352,12 @@ void Panel::show(void) {
 
 	/* position it, this is done after XID was created */
 	if(vpos == PANEL_POSITION_BOTTOM) {
-		position(screen_x, screen_h - h());
+		position(X, screen_h - h());
 		if(width_perc >= 100)
 			netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 	} else {
 		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
-		position(screen_x, screen_y);
+		position(X, Y);
 		if(width_perc >= 100)
 			netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 	}
@@ -382,19 +383,21 @@ int Panel::handle(int e) {
 			return 1;
 
 		case FL_DRAG: {
+			if(!can_drag) return 1;
+
 			/* are moving the panel; only vertical moving is supported */
 			cursor(FL_CURSOR_MOVE);
 
 			/* snap it to the top or bottom, depending on pressed mouse location */
 			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
-				position(screen_x, screen_y);
+				position(x(), screen_y);
 				if(width_perc >= 100)
 					netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
 				vpos = PANEL_POSITION_TOP;
 			} 
 				
 			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
-				position(screen_x, screen_h - h());
+				position(x(), screen_h - h());
 				if(width_perc >= 100)
 					netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
 				vpos = PANEL_POSITION_BOTTOM;
@@ -430,6 +433,7 @@ void Panel::load_applets(void) {
 		"start_menu.so",
 		"quick_launch.so",
 		"pager.so",
+		"hider.so",
 		"clock.so",
 		"taskbar.so",
 		"keyboard_layout.so",
@@ -456,6 +460,7 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/pager/pager.so");
+	mgr.load("./applets/hider/hider.so");
 	mgr.load("./applets/clock/clock.so");
 	mgr.load("./applets/taskbar/taskbar.so");
 	mgr.load("./applets/keyboard-layout/keyboard_layout.so");
@@ -464,4 +469,18 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/system-tray/system_tray.so");
 	mgr.fill_group(this);
 #endif
+}
+
+/* TODO: can be better */
+void Panel::apply_struts(bool apply) {
+	if(!(width_perc >= 100)) return;
+
+	int bottom = 0, top = 0;
+
+	if(vpos == PANEL_POSITION_TOP)
+		top = !apply ? 1 : h();
+	else
+		bottom = !apply ? 1 : h();
+
+	netwm_window_set_strut(fl_xid(this), 0, 0, top, bottom);
 }

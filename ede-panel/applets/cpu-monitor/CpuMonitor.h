@@ -39,6 +39,7 @@ public:
 
     void draw();
     void layout();
+	int  handle(int e);
 
     int samples() const { return m_samples; }
 };

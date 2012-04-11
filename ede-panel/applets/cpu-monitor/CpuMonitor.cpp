@@ -142,7 +142,6 @@ CPUMonitor::CPUMonitor() : Fl_Box(0, 0, 45, 25)
 	colors[IWM_IDLE] = FL_BACKGROUND_COLOR;
 
 	layout();
-	Fl::add_timeout(UPDATE_INTERVAL, cpu_timeout_cb, this);
 }
 
 void CPUMonitor::clear()
@@ -245,6 +244,22 @@ void CPUMonitor::layout() {
 		update_status();
 		m_old_samples = m_samples;
 	}
+}
+
+int CPUMonitor::handle(int e) {
+	switch(e) {
+		case FL_SHOW: {
+			int ret = Fl_Box::handle(e);
+			Fl::add_timeout(UPDATE_INTERVAL, cpu_timeout_cb, this);
+			return ret;
+		}
+
+		case FL_HIDE:
+			Fl::remove_timeout(cpu_timeout_cb);
+			/* fallthrough */
+	}
+
+	return Fl_Box::handle(e);
 }
 
 void CPUMonitor::update_status() {

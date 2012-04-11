@@ -34,7 +34,6 @@ public:
 static void clock_refresh(void *o) {
 	Clock *c = (Clock *)o;
 	c->update_time();
-
 	Fl::repeat_timeout(1.0, clock_refresh, o);
 }
 
@@ -57,13 +56,19 @@ void Clock::update_time(void) {
 
 int Clock::handle(int e) {
 	switch(e) {
-		case FL_SHOW:
+		case FL_SHOW: {
+			int ret = Fl_Box::handle(e);
 			Fl::add_timeout(0, clock_refresh, this);
-			break;
+			return ret;
+		}
 
 		case FL_RELEASE:
 			run_async("ede-timedate");
 			break;
+
+		case FL_HIDE:
+			Fl::remove_timeout(clock_refresh);
+			/* fallthrough */
 	}
 
 	return Fl_Box::handle(e);
