@@ -24,7 +24,7 @@
 #define TRAY_ICONS_SPACE 5
 
 /* multiple tray's are not allowed anyways so this can work */
-Tray *curr_tray = 0;
+static Tray *curr_tray = 0;
 
 static int handle_xevent(int e) {
 	if(fl_xevent->type == ClientMessage && fl_xevent->xclient.message_type == curr_tray->get_opcode()) {
