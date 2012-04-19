@@ -22,8 +22,11 @@ static long get_number(const char *ln) {
 	int i = 1;
 
 	for(char *p = strtok(s, " "); p; p = strtok(NULL, " "), i++) {
-		if(i == 2)
-			return atol(p);
+		if(i == 2) {
+			long ret = atol(p);
+			free(s);
+			return ret;
+		}
 	}
 
 	free(s);

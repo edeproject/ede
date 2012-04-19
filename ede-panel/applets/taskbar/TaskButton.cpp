@@ -84,7 +84,7 @@ static void maximize_cb(Fl_Widget*, void *b) {
 	redraw_whole_panel(bb);
 }
 
-TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X, Y, W, H, l), xid(0) { 
+TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X, Y, W, H, l), xid(0), image_alloc(false) { 
 	box(FL_UP_BOX);
 	align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 
@@ -96,6 +96,18 @@ TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X,
 	net_wm_icon = XInternAtom(fl_display, "_NET_WM_ICON", False);
 	image(image_window);
 }
+
+TaskButton::~TaskButton() {
+	clear_image();
+}
+
+void TaskButton::clear_image(void) {
+	if(image_alloc && image())
+		delete image();
+
+	image(NULL);
+	image_alloc = false;
+}	
 
 void TaskButton::draw(void) {
 	Fl_Color col = value() ? selection_color() : color();
@@ -240,5 +252,7 @@ void TaskButton::update_image_from_xid(void) {
 		img = scaled;
 	}
 
+	clear_image();
 	image(img);
+	image_alloc = true;
 }

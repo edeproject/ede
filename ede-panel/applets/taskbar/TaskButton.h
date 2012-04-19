@@ -7,11 +7,15 @@
 class TaskButton : public Fl_Button {
 private:
 	/* window ID this button handles */
-	Window     xid;
-	Atom       net_wm_icon;
+	Window xid;
+	bool   image_alloc;    
+	Atom   net_wm_icon;
+
+	void clear_image(void);
 
 public:
 	TaskButton(int X, int Y, int W, int H, const char *l = 0);
+	~TaskButton();
 
 	void draw(void);
 	void display_menu(void);
