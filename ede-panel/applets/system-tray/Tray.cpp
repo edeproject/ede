@@ -47,6 +47,9 @@ static int handle_xevent(int e) {
 		XDestroyWindowEvent xev = fl_xevent->xdestroywindow;
 		curr_tray->unembed_window(xev.window);
 		return false;
+	} else if(fl_xevent->type == ConfigureNotify) {
+		curr_tray->configure_notify(fl_xevent->xconfigure.window);
+		return false;
 	}
 
 	return false;
@@ -148,10 +151,13 @@ void Tray::embed_window(Window id) {
 	add_to_tray(win);
 	win->show();
 
-	/* do real magic */
+	/* do real magic
+	 * Some apps require we explicitly resize tray window, but some ignores it. So after window was shown, ConfigureNotify
+	 * will be fired up and we will handle those windows who are not resized.
+	 */
 	XResizeWindow(fl_display, id, win->w(), win->h());
 	XReparentWindow(fl_display, id, fl_xid(win), 0, 0); 
-	XMapWindow(fl_display, id);
+	XMapRaised(fl_display, id);
 
 	/* need to know when child dies */
 	XSelectInput(fl_display, fl_xid(win), SubstructureNotifyMask);
@@ -170,6 +176,23 @@ void Tray::unembed_window(Window id) {
 		if((*it).id == id) {
 			remove_from_tray((*it).win);
 			win_list.erase(it);
+			return;
+		}
+	}
+}
+
+void Tray::configure_notify(Window id) {
+	WinListIt it = win_list.begin(), ite = win_list.end();
+
+	for(; it != ite; ++it) {
+		if(it->id == id) {
+			XWindowChanges c;
+			c.width = TRAY_ICON_W;
+			c.height = TRAY_ICON_H;
+			c.x = 0;
+			c.y = 0;
+
+			XConfigureWindow(fl_display, id, CWWidth | CWHeight | CWX | CWY, &c);
 			return;
 		}
 	}

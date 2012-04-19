@@ -27,6 +27,7 @@ public:
 	Atom get_opcode(void) const { return opcode; }
 	void embed_window(Window id);
 	void unembed_window(Window id);
+	void configure_notify(Window id);
 
 	void add_to_tray(Fl_Widget *w);
 	void remove_from_tray(Fl_Widget *w);
