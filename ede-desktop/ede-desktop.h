@@ -94,6 +94,10 @@ private:
 	static Desktop* pinstance;
 
 	int selection_x, selection_y;
+
+	/* last recorded pointer position, so icon can be created at position where menu is clicked */
+	int last_px, last_py;
+
 	bool moving;
 	bool do_dirwatch;
 
@@ -101,8 +105,8 @@ private:
 
 	GlobalIconSettings* gisett;
 
-	edelib::MenuButton*  dmenu;
-	Wallpaper*       wallpaper;
+	edelib::MenuButton*      dmenu;
+	Wallpaper*               wallpaper;
 	edelib::EdbusConnection* dbus;
 
 	DesktopIconList icons;

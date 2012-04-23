@@ -3,7 +3,7 @@
  *
  * ede-desktop, desktop and icon manager
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
+ * Copyright (c) 2006-2012 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -42,6 +42,7 @@
 #include <edelib/Netwm.h>
 #include <edelib/WindowXid.h>
 #include <edelib/FontCache.h>
+#include <edelib/Nls.h>
 #include <edelib/Ede.h>
 
 #include "ede-desktop.h"
@@ -73,6 +74,9 @@ EDELIB_NS_USING(MenuItem)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(DesktopFile)
 EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(input)
+EDELIB_NS_USING(alert)
+EDELIB_NS_USING(dir_create)
 EDELIB_NS_USING(foreign_callback_add)
 EDELIB_NS_USING(foreign_callback_remove)
 EDELIB_NS_USING(window_xid_create)
@@ -90,10 +94,11 @@ EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
+static void folder_create_cb(Fl_Widget*, void*);
 
 MenuItem desktop_menu[] = {
 	{_("Create &launcher..."), 0, 0},
-	{_("Create &folder..."), 0, 0, 0, FL_MENU_DIVIDER},
+	{_("Create &folder..."), 0, folder_create_cb, 0, FL_MENU_DIVIDER},
 	{_("&Icons settings..."), 0, icons_conf_cb, 0},
 	{_("&Background..."), 0, background_conf_cb, 0},
 	{0}
@@ -137,6 +142,17 @@ static void icons_conf_cb(Fl_Widget*, void*) {
 	run_async("ede-launch ede-desktop-conf --icons");
 }
 
+static void folder_create_cb(Fl_Widget*, void*) {
+	const char *n = input(_("New folder with name"));
+	if(!n) return;
+
+	String h = edelib::dir_home();
+	String dp = edelib::build_filename(h.c_str(), "Desktop", n);
+
+	if(!dir_create(dp.c_str()))
+		alert(_("Unable to create directory '%s'! Please check if directory already exists or you have enough permissions to create it"), dp.c_str());
+}
+
 static void desktop_message_handler(int action, Window xid, void *data) { 
 	switch(action) {
 		case NETWM_CHANGED_CURRENT_WORKSPACE:
@@ -150,6 +166,7 @@ static void desktop_message_handler(int action, Window xid, void *data) {
 
 Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "") {
 	selection_x = selection_y = 0;
+	last_px = last_py = -1;
 	moving = false;
 	do_dirwatch = true;
 
@@ -279,10 +296,7 @@ void Desktop::update_workarea(void) {
 
 	if(!netwm_workarea_get_size(X, Y, W, H)) {
 		E_DEBUG(E_STRLOC ": wm does not support _NET_WM_WORKAREA; using screen sizes...\n");
-
-		X = Y = 0;
-		W = DisplayWidth(fl_display, fl_screen);
-		H = DisplayHeight(fl_display, fl_screen);
+		Fl::screen_xywh(X, Y, W, H);
 	}
 
 	resize(X, Y, W, H);
@@ -494,8 +508,16 @@ bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
 	int icon_x = random_pos(w() - 10);
 	int icon_y = random_pos(w() - 10);
 
+	/* assign if we have it */
+	if(last_px != -1 && last_py != -1) {
+		icon_x = last_px;
+		icon_y = last_py;
+
+		last_px = last_py = -1;
+	}
+
 	if(conf) {
-		/* we load positions from used ede-desktop-icos.conf only */
+		/* we load positions from used ede-desktop-icons.conf only */
 		conf->get(base, "X", icon_x, icon_x, edelib::RES_USER_ONLY);
 		conf->get(base, "Y", icon_y, icon_y, edelib::RES_USER_ONLY);
 	}
@@ -969,6 +991,9 @@ int Desktop::handle(int event) {
 					selbox->x = Fl::event_x();
 					selbox->y = Fl::event_y();
 				} else if(Fl::event_button() == 3) {
+					last_px = Fl::event_x();
+					last_py = Fl::event_y();
+
 					const edelib::MenuItem* item = dmenu->menu()->popup(Fl::event_x(), Fl::event_y());
 					dmenu->picked(item);
 				}

@@ -60,7 +60,6 @@ static void props_cb(Fl_Widget*, void* d);
 static MenuItem icon_menu[] = {
 	{_("&Open"),   0, open_cb, 0},
 	{_("&Rename"), 0, rename_cb, 0},
-	{_("&Delete"), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("&Properties"), 0, props_cb, 0},
 	{0}
 };
