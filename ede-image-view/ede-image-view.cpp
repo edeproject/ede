@@ -28,14 +28,13 @@
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/filename.H>
+#include <FL/x.H>
 #include <edelib/Ede.h>
 
 #define DEBUG 1
 
 // Supported image types
 const char* supported[] = {"bm","bmp","gif","jpg","pbm","pgm","png","ppm","xbm","xpm",0};
-
-
 
 // Global variables used everywhere
 char filename[FL_PATH_MAX], directory[FL_PATH_MAX];
@@ -47,6 +46,7 @@ Fl_Shared_Image *im;
 class ScrolledImage;
 ScrolledImage* s;
 
+int screen_x, screen_y, screen_w, screen_h;
 
 // Directory list cache used in prevnext()
 dirent **files;
@@ -80,7 +80,6 @@ void open_cb(Fl_Widget*,void*) {
 	loadimage();
 }
 
-void manage_cb(Fl_Widget* b,void*) {} // call file manager
 void fullscreen_cb(Fl_Widget* b,void*) {
 	static bool isfull=false;
 	static int X,Y,W,H;
@@ -93,45 +92,42 @@ void fullscreen_cb(Fl_Widget* b,void*) {
 		isfull=true;
 	}
 } 
+
 void zoomin_cb(Fl_Widget* b,void*) { 
 	if (zoomfactor>=1) zoomfactor += 0.2; else zoomfactor += zoomfactor/5; 
 	autozoom=false; 
 	loadimage(); 
+
+	if((im->w() > w->w() || im->h() > w->h()) && (w->w() < screen_w && w->h() < screen_h))
+		w->size(im->w(), im->h());
 }
+
 void zoomout_cb(Fl_Widget* b,void*) { 
 	if (zoomfactor>=1) zoomfactor -= 0.2; else zoomfactor -= zoomfactor/5; 
 	autozoom=false; 
 	loadimage(); 
+
+	// some minimal size
+	if(w->w() > 10 && w->h() > 10)
+		w->size(im->w(), im->h());
 }
 void zoomrestore_cb(Fl_Widget* b,void*) { zoomfactor = 1; autozoom=false; loadimage(); }
 void zoomauto_cb(Fl_Widget *b,void*) { autozoom = !autozoom; loadimage(); } 
-void about_cb(Fl_Widget* b,void*) {} // about window
-void exit_cb(Fl_Widget* b,void*) { exit(0); } 
-
-
+void exit_cb(Fl_Widget* b,void*) { w->hide(); }
 
 // Main popup menu
 Fl_Menu_Item mainmenu[] = {
-	{_("&Open"),		FL_CTRL+'o',	open_cb},
-	{_("&Manage"),		0,      	manage_cb,	0, 	FL_MENU_DIVIDER},
-
-	{_("&Previous"),	FL_Page_Up,	prev_cb},
-	{_("&Next"),		FL_Page_Down,	next_cb,	0, 	FL_MENU_DIVIDER},
-
-	{_("&Zoom in"),		'+',    	zoomin_cb},
-	{_("Zoom &out"),	'-',    	zoomout_cb},
-	{_("Zoom &auto"),	FL_CTRL+'a',	zoomauto_cb},
-	{_("&Restore"),		'/',    	zoomrestore_cb,	0,	FL_MENU_DIVIDER},
-
-	{_("&Fullscreen"),	FL_F+11,    	fullscreen_cb,	0,	FL_MENU_DIVIDER},
-
-	{_("A&bout"),		0,      	about_cb},
-	{_("&Exit"),		FL_Escape,    	exit_cb},
+	{_("&Open"),		FL_CTRL+'o',open_cb, 0, FL_MENU_DIVIDER},
+	{_("&Previous"),	FL_Page_Up,	  prev_cb},
+	{_("&Next"),		FL_Page_Down, next_cb,	0, 	FL_MENU_DIVIDER},
+	{_("&Zoom in"),		'+',    	 zoomin_cb},
+	{_("Zoom &out"),	'-',    	 zoomout_cb},
+	{_("Zoom &auto"),	FL_CTRL+'a', zoomauto_cb},
+	{_("&Restore"),		'/',    	 zoomrestore_cb,	0,	FL_MENU_DIVIDER},
+	{_("&Fullscreen"),	FL_F+11,    fullscreen_cb,	0,	FL_MENU_DIVIDER},
+	{_("&Exit"),		FL_Escape,  exit_cb},
 	{0}
 };
-
-
-
 
 class ScrolledImage : public Fl_Scroll {
 private:
@@ -202,8 +198,6 @@ public:
 };
 
 
-
-
 // Directory changed, get new directory from filename
 void newdir() {
 	int p=0;
@@ -220,8 +214,6 @@ void newdir() {
 // Load the image given in char[] filename
 void loadimage() {
 	char tmp[FL_PATH_MAX]; // the string buffer
-
-	if (DEBUG) fprintf(stderr, "Loadimage() - file: %s\n",filename);
 
 	// Load image
 	if (im) { im->release(); im=0; }
@@ -268,7 +260,7 @@ void loadimage() {
 		snprintf(tmp,FL_PATH_MAX, "%s (%dx%d) - %s", fl_filename_name(filename),realw,realh, _("View picture")); // splitted for easier localization
 	else
 		snprintf(tmp,FL_PATH_MAX, "%s (%dx%d) - %s %1.1fx - %s", fl_filename_name(filename),realw,realh,_("zoom"),zoomfactor, _("View picture"));
-	w->label(strdup(tmp));
+	w->copy_label(tmp);
 }
 
 
@@ -276,9 +268,6 @@ void loadimage() {
 // (universal func. to be called from nextpic() and prevpic() )
 void prevnext(int direction) {
 	char tmp[FL_PATH_MAX]; // the string buffer
-
-	if (DEBUG) 
-		fprintf(stderr, "Prevnext() - file: %s dir: %s direction: %d\n",filename,directory,direction);
 
 	if (nfiles == 0) { // read directory
 		nfiles = fl_filename_list(directory,&files);
@@ -341,21 +330,18 @@ void prevnext(int direction) {
 	s->image(0);
 	filename[0]=0;
 	snprintf(tmp,FL_PATH_MAX, _("No pictures in directory %s"),directory);
-	s->label(strdup(tmp));
+	s->copy_label(tmp);
 	s->redraw();
 
 	// Window title
 	snprintf(tmp,FL_PATH_MAX, _("View picture - nothing found in %s"),directory);
-	w->label(strdup(tmp));
+	w->copy_label(tmp);
 }
 
 void nextpic() { prevnext(1); }
 void prevpic() { prevnext(0); }
 
-
-
 int main (int argc, char **argv) {
-
 	// Parse command line - this must come first
 	int unknown=0;
 	Fl::args(argc,argv,unknown);
@@ -390,8 +376,11 @@ int main (int argc, char **argv) {
 
 	EDE_APPLICATION("ede-image-view");
 
+	fl_open_display();
 	fl_register_images();
 	zoomfactor=1; im=0; // defaults
+
+	Fl::screen_xywh(screen_x, screen_y, screen_w, screen_h);
 	
 	// Main window
 
