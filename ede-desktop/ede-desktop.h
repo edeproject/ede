@@ -120,7 +120,6 @@ private:
 
 	void add_icon(DesktopIcon* ic);
 
-	bool add_icon_by_path(const char* path, edelib::Resource* conf);
 	DesktopIcon* find_icon_by_path(const char* path, DesktopIconListIter* pos);
 	bool remove_icon_by_path(const char* path);
 
@@ -153,6 +152,8 @@ public:
 	static Desktop* instance(void);
 
 	void read_config(void);
+
+	bool add_icon_by_path(const char* path, edelib::Resource* conf);
 
 	void update_workarea(void);
 	void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }

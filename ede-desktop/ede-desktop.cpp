@@ -49,6 +49,7 @@
 #include "DesktopIcon.h"
 #include "Utils.h"
 #include "Wallpaper.h"
+#include "IconDialog.h"
 
 #define CONFIG_NAME        "ede-desktop"
 #define ICONS_CONFIG_NAME  "ede-desktop-icons"
@@ -95,9 +96,10 @@ EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
 static void folder_create_cb(Fl_Widget*, void*);
+static void launcher_create_cb(Fl_Widget*, void*);
 
 MenuItem desktop_menu[] = {
-	{_("Create &launcher..."), 0, 0},
+	{_("Create &launcher..."), 0, launcher_create_cb},
 	{_("Create &folder..."), 0, folder_create_cb, 0, FL_MENU_DIVIDER},
 	{_("&Icons settings..."), 0, icons_conf_cb, 0},
 	{_("&Background..."), 0, background_conf_cb, 0},
@@ -151,6 +153,10 @@ static void folder_create_cb(Fl_Widget*, void*) {
 
 	if(!dir_create(dp.c_str()))
 		alert(_("Unable to create directory '%s'! Please check if directory already exists or you have enough permissions to create it"), dp.c_str());
+}
+
+static void launcher_create_cb(Fl_Widget*, void*) {
+	icon_dialog_icon_create();
 }
 
 static void desktop_message_handler(int action, Window xid, void *data) { 

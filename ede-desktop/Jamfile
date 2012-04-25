@@ -17,6 +17,7 @@ SOURCE = ede-desktop.cpp
 		 Wallpaper.cpp 
 		 DesktopIcon.cpp 
 		 MovableIcon.cpp
+		 IconDialog.cpp
 		 IconProperties.cpp ;
 
 ObjectC++Flags $(SOURCE) : $(EDELIB_DBUS_INCLUDE) ;
