@@ -34,6 +34,7 @@ EDELIB_NS_USING(alert)
 #include <X11/extensions/XKBrules.h> 
 
 #include <edelib/Window.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Debug.h>
 #include <edelib/String.h>
 #include <edelib/Resource.h>
@@ -52,6 +53,7 @@ EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(file_path)
 EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(foreign_callback_call)
+EDELIB_NS_USING(window_center_on_screen)
 
 static AppWindow       *win;
 static Fl_Hold_Browser *layout_browser;
@@ -299,6 +301,7 @@ int main(int argc, char **argv) {
 	/* read all XKB layouts */
 	XkbRF_RulesPtr xkb_rules = fetch_all_layouts(cl);
 
+	window_center_on_screen(win);
 	win->show(argc, argv);
 	Fl::run();
 

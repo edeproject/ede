@@ -23,9 +23,11 @@
 #include <FL/Fl_Value_Slider.H>
 
 #include <edelib/Window.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/XSettingsClient.h>
 #include <edelib/Ede.h>
 
+EDELIB_NS_USING(window_center_on_screen)
 EDELIB_NS_USING(XSettingsClient)
 EDELIB_NS_USING(XSettingsAction)
 EDELIB_NS_USING(XSettingsSetting)
@@ -165,6 +167,7 @@ static void window_create(int argc, char** argv) {
 		Fl_Button* test = new Fl_Button(10, 175, 90, 25, _("&Test"));
 		test->callback(test_cb);
 	win->end();
+	window_center_on_screen(win);
 	win->show(argc, argv);
 }
 

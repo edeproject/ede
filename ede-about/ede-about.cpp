@@ -3,7 +3,7 @@
  *
  * Eabout, display version and authors
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2008-2011 EDE Authors.
+ * Copyright (c) 2008-2012 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -26,7 +26,10 @@
 #include <FL/Fl_Pixmap.H>
 
 #include <edelib/Ede.h>
+#include <edelib/WindowUtils.h>
 #include "icons/ede.xpm"
+
+EDELIB_NS_USING(window_center_on_screen)
 
 static Fl_Pixmap image_ede((const char**)ede_xpm);
 
@@ -39,9 +42,9 @@ Fl_Text_Display::Style_Table_Entry style_table[] = {
 };
 
 const char* content = "\n\
- Heads:\n\n\
- Sanel Zukan (karijes@equinox-project.org)\n\
- Vedran Ljubovic (vljubovic@equinox-project.org)\n\
+ Developers:\n\n\
+ Sanel Zukan (karijes@users.sf.net)\n\
+ Vedran Ljubovic (vljubovic@users.sf.net)\n\
 \n\
  Contributors:\n\n\
  (to be added)\n\
@@ -87,7 +90,7 @@ const char* content = "\n\
  Cambridge, MA 02139, USA";
 
 const char* bold_keywords[] = {
-	"Heads:",
+	"Developers:",
 	"Contributors:",
 	"Past developers:",
 	"Patches in 1.x series by:",
@@ -138,7 +141,7 @@ int main(int argc, char **argv) {
 			ede_label_box->labelfont(1);
 			ede_label_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 
-			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 300, 25, "Copyright (c) by EDE Authors 2000-2011");
+			Fl_Box* ede_copy_box = new Fl_Box(70, 35, 300, 25, "Copyright (c) by EDE Authors 2000-2012");
 			ede_copy_box->labelsize(11);
 			ede_copy_box->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE|FL_ALIGN_TOP);
 
@@ -175,6 +178,7 @@ int main(int argc, char **argv) {
 
 		Fl_Group::current()->resizable(rbox2);
 	win->end();
+	window_center_on_screen(win);
 	win->show(argc, argv);
 	return Fl::run();
 }

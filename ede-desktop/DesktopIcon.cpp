@@ -30,7 +30,6 @@
 #include "ede-desktop.h"
 #include "DesktopIcon.h"
 #include "MovableIcon.h"
-#include "IconProperties.h"
 #include "Utils.h"
 
 /* minimal icon sizes */
@@ -51,15 +50,18 @@ EDELIB_NS_USING(MenuButton)
 EDELIB_NS_USING(ICON_SIZE_HUGE)
 EDELIB_NS_USING(ICON_SIZE_TINY)
 EDELIB_NS_USING(input)
+EDELIB_NS_USING(ask)
 EDELIB_NS_USING(run_async)
 
 static void open_cb(Fl_Widget*, void* d);
 static void rename_cb(Fl_Widget*, void* d);
+static void delete_cb(Fl_Widget*, void* d);
 static void props_cb(Fl_Widget*, void* d);
 
 static MenuItem icon_menu[] = {
 	{_("&Open"),   0, open_cb, 0},
 	{_("&Rename"), 0, rename_cb, 0},
+	{_("&Delete"), 0, delete_cb, 0, FL_MENU_DIVIDER},
 	{_("&Properties"), 0, props_cb, 0},
 	{0}
 };
@@ -85,9 +87,15 @@ static void rename_cb(Fl_Widget*, void* d) {
 	di->rename(new_name);
 }
 
+static void delete_cb(Fl_Widget*, void* d) {
+	DesktopIcon* di = (DesktopIcon*)d;
+
+	if(ask(_("This icon will be permanently deleted. Proceed?")))
+		Desktop::instance()->remove_icon(di, true);
+}
+
 static void props_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
-	show_icon_properties_dialog(di);
 }
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 

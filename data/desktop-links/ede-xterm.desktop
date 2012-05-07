@@ -2,8 +2,8 @@
 Version=1.0
 Type=Application
 Encoding=UTF-8
-Exec=xterm -fn 9x15
+Exec=ede-launch --launch terminal
 Icon=utilities-terminal
 Categories=Utility;
 Name=Terminal
-Comment=Standard X11 terminal
+Comment=X11 terminal

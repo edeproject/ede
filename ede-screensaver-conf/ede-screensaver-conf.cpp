@@ -26,10 +26,13 @@
 #include <FL/x.H>
 
 #include <edelib/Debug.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Ede.h>
 
 #include "XScreenSaver.h"
 #include "icons/energy.xpm"
+
+EDELIB_NS_USING(window_center_on_screen)
 
 static Fl_Pixmap image_energy((const char**)energy_star_xpm);
 
@@ -245,6 +248,7 @@ int main(int argc, char **argv) {
 		close_button->callback(close_cb);
 	main_win->end();
 
+	window_center_on_screen(main_win);
 	main_win->show(argc, argv);
 	/* run preview immediately */
 	saver_list->do_callback();

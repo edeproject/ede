@@ -35,6 +35,7 @@
 
 #include <edelib/Color.h>
 #include <edelib/Window.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Resource.h>
 #include <edelib/Debug.h>
 #include <edelib/Util.h>
@@ -475,6 +476,7 @@ int main(int argc, char** argv) {
 		cancel->callback(close_cb, win);
 	win->end();
 	load_settings();
+	edelib::window_center_on_screen(win);
 	win->show(argc, argv);
 	return Fl::run();
 }

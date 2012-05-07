@@ -101,6 +101,8 @@ private:
 	bool moving;
 	bool do_dirwatch;
 
+	edelib::String desktop_dir_path;
+
 	SelectionOverlay*  selbox;
 
 	GlobalIconSettings* gisett;
@@ -134,7 +136,7 @@ private:
 
 	void select_in_area(void);
 
-	void dnd_drop_source(const char* src, int src_len, int x, int y);
+	//void dnd_drop_source(const char* src, int src_len, int x, int y);
 
 	DesktopIcon* below_mouse(int px, int py);
 
@@ -154,6 +156,7 @@ public:
 	void read_config(void);
 
 	bool add_icon_by_path(const char* path, edelib::Resource* conf);
+	bool remove_icon(DesktopIcon *d, bool real_delete);
 
 	void update_workarea(void);
 	void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }

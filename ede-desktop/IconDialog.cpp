@@ -17,6 +17,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Shared_Image.H>
 
 #include <edelib/Nls.h>
@@ -43,6 +44,12 @@ static Fl_Button *img, *browse, *ok, *cancel;
 static Fl_Input  *name, *comment, *execute;
 static Fl_Choice *icon_type;
 static String    img_path;
+
+/* the only supported type for now is application */
+static Fl_Menu_Item menu_items[] = {
+	{_("Application"), 0, 0, 0},
+	{0}
+};
 
 static bool is_empty(const char *str) {
 	if(!str) return true;
@@ -155,12 +162,14 @@ void icon_dialog_icon_create(void) {
 		browse = new Fl_Button(395, 70, 25, 25, "...");
 		icon_type = new Fl_Choice(205, 100, 215, 25, _("Type:"));
 		icon_type->down_box(FL_BORDER_BOX);
+		icon_type->menu(menu_items);
 
 		ok = new Fl_Button(235, 135, 90, 25, _("&OK"));
 		ok->callback(ok_cb);
 		cancel = new Fl_Button(330, 135, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb);
 	win->end();
+	win->set_modal();
 	win->show();
 }	
 

@@ -71,10 +71,6 @@ Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL
 	end();
 
 	panel = EDE_PANEL_GET_PANEL_OBJECT(this);
-
-	/* assure display is openned */
-	fl_open_display();
-
 	create_task_buttons();
 	netwm_callback_add(net_event_cb, this);
 }
@@ -128,10 +124,7 @@ void Taskbar::create_task_buttons(void) {
 				b->update_title_from_xid();
 				b->update_image_from_xid();
 
-				/* 
-				 * catch the name changes 
-				 * TODO: put this in Netwm.{h,cpp} 
-				 */
+				/* catch the name changes */
 				XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
 
 				b->callback((Fl_Callback*)button_cb, this);

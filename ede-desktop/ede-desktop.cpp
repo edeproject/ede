@@ -74,6 +74,8 @@
 EDELIB_NS_USING(MenuItem)
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(DesktopFile)
+EDELIB_NS_USING(DirWatch)
+EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(run_async)
 EDELIB_NS_USING(input)
 EDELIB_NS_USING(alert)
@@ -89,9 +91,18 @@ EDELIB_NS_USING(netwm_window_set_type)
 EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
 EDELIB_NS_USING(font_cache_find)
+EDELIB_NS_USING(file_test)
+EDELIB_NS_USING(dir_home)
+EDELIB_NS_USING(build_filename)
+EDELIB_NS_USING(FILE_TEST_IS_DIR)
+EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
 EDELIB_NS_USING(NETWM_WINDOW_TYPE_DESKTOP)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKAREA)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
+EDELIB_NS_USING(DW_CREATE)
+EDELIB_NS_USING(DW_MODIFY)
+EDELIB_NS_USING(DW_RENAME)
+EDELIB_NS_USING(DW_DELETE)
 
 static void background_conf_cb(Fl_Widget*, void*);
 static void icons_conf_cb(Fl_Widget*, void*);
@@ -148,8 +159,8 @@ static void folder_create_cb(Fl_Widget*, void*) {
 	const char *n = input(_("New folder with name"));
 	if(!n) return;
 
-	String h = edelib::dir_home();
-	String dp = edelib::build_filename(h.c_str(), "Desktop", n);
+	String h = dir_home();
+	String dp = build_filename(h.c_str(), "Desktop", n);
 
 	if(!dir_create(dp.c_str()))
 		alert(_("Unable to create directory '%s'! Please check if directory already exists or you have enough permissions to create it"), dp.c_str());
@@ -210,13 +221,11 @@ Desktop::~Desktop() {
 	delete selbox;
 	delete dbus;
 
-	edelib::DirWatch::shutdown();
+	DirWatch::shutdown();
 	foreign_callback_remove(settings_changed_cb);
 }
 
 void Desktop::init_internals(void) {
-	String p;
-
 	update_workarea();
 
 	/*
@@ -242,25 +251,22 @@ void Desktop::init_internals(void) {
 
 	/* read main config */
 	read_config();
+	/* location of Desktop folder */
+	desktop_dir_path = build_filename(dir_home().c_str(), "Desktop");
 
-	/* now try to load icons from "Desktop" directory */
-	p = edelib::dir_home();
-	String desktop_path = edelib::build_filename(p.c_str(), "Desktop");
+	if(file_test(desktop_dir_path.c_str(), FILE_TEST_IS_DIR)) {
+		/* now try load icons from "Desktop" directory */
+		load_icons(desktop_dir_path.c_str());
 
-	/* setup watcher used for Desktop directory */
-	edelib::DirWatch::init();
+		/* setup watcher used for Desktop directory */
+		DirWatch::init();
 
-	if(edelib::file_test(desktop_path.c_str(), edelib::FILE_TEST_IS_DIR)) {
-		load_icons(desktop_path.c_str());
-
-		if(!edelib::DirWatch::add(desktop_path.c_str(), 
-					edelib::DW_CREATE | edelib::DW_MODIFY | edelib::DW_RENAME | edelib::DW_DELETE)) 
-		{
-			E_WARNING(E_STRLOC ": Unable to watch %s\n", desktop_path.c_str());
-		}
+		if(!DirWatch::add(desktop_dir_path.c_str(), DW_CREATE | DW_MODIFY | DW_RENAME | DW_DELETE))
+			E_WARNING(E_STRLOC ": Unable to watch %s\n", desktop_dir_path.c_str());
+		else
+			DirWatch::callback(dir_watch_cb);
 	}
 
-	edelib::DirWatch::callback(dir_watch_cb);
 	running = true;
 }
 
@@ -309,7 +315,7 @@ void Desktop::update_workarea(void) {
 }
 
 void Desktop::read_config(void) {
-	edelib::Resource conf;
+	Resource conf;
 
 	if(!conf.load(CONFIG_NAME)) {
 		E_WARNING(E_STRLOC ": Can't load %s, using default values\n", CONFIG_NAME);
@@ -372,7 +378,7 @@ void Desktop::read_config(void) {
 
 void Desktop::load_icons(const char* path) {
 	E_ASSERT(path != NULL);
-	edelib::Resource conf, *conf_ptr = NULL;
+	Resource conf, *conf_ptr = NULL;
 
 	if(!conf.load(ICONS_CONFIG_NAME))
 		E_WARNING(E_STRLOC ": Can't load icons positions; arranging them somehow...\n");
@@ -397,7 +403,7 @@ void Desktop::load_icons(const char* path) {
 }
 
 void Desktop::save_icons_positions(void) {
-	edelib::Resource conf;
+	Resource conf;
 	char* icon_base;
 	DesktopIconListIter it = icons.begin(), it_end = icons.end();
 
@@ -472,7 +478,7 @@ IconSettings* Desktop::read_desktop_file(const char* path) {
 	return is;
 }
 
-bool Desktop::add_icon_by_path(const char* path, edelib::Resource* conf) {
+bool Desktop::add_icon_by_path(const char* path, Resource* conf) {
 	E_ASSERT(path != NULL);
 
 	IconSettings* is = NULL;
@@ -561,12 +567,17 @@ DesktopIcon* Desktop::find_icon_by_path(const char* path, DesktopIconListIter* r
 	return NULL;
 }
 
+bool Desktop::remove_icon(DesktopIcon *d, bool real_delete) {
+	bool ret = remove_icon_by_path(d->path().c_str());
+	return ret;
+}
+
 bool Desktop::remove_icon_by_path(const char* path) {
 	DesktopIconListIter pos;
 	DesktopIcon* ic = find_icon_by_path(path, &pos);
 
 	if(!ic) {
-		E_DEBUG(">>> Didn't find %s\n", path);
+		E_DEBUG(E_STRLOC ": Didn't find '%s' as path marked for removal\n", path);
 		return false;
 	}
 
@@ -752,13 +763,13 @@ void Desktop::select_in_area(void) {
 		if(intersects(ax, ay, ax+aw, ay+ah, ic->x(), ic->y(), ic->w()+ic->x(), ic->h()+ic->y())) {
 			if(!ic->is_focused()) {
 				ic->do_focus();
-				// updated from Desktop::draw()
+				/* updated from Desktop::draw() */
 				ic->damage(EDAMAGE_CHILD_LABEL);
 			}
 		} else {
 			if(ic->is_focused()) {
 				ic->do_unfocus();
-				// updated from Desktop::draw()
+				/* updated from Desktop::draw() */
 				ic->fast_redraw();
 				//ic->damage(EDAMAGE_CHILD_LABEL);
 				//ic->redraw();
@@ -794,6 +805,8 @@ void Desktop::notify_desktop_changed(void) {
 	XFreeStringList(names);
 }
 
+/* leaving for the future */
+#if 0
 void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	if(!src)
 		return;
@@ -831,7 +844,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 	else
 		sptr = src_copy;
 
-	if(!edelib::file_test(sptr, edelib::FILE_TEST_IS_REGULAR) || !edelib::file_test(sptr, edelib::FILE_TEST_IS_DIR)) {
+	if(!file_test(sptr, FILE_TEST_IS_REGULAR) || !file_test(sptr, FILE_TEST_IS_DIR)) {
 		edelib::message("Droping file content is not implemented yet ;)");
 		delete [] src_copy;
 		return;
@@ -900,6 +913,7 @@ void Desktop::dnd_drop_source(const char* src, int src_len, int x, int y) {
 
 	redraw();
 }
+#endif
 
 void Desktop::draw(void) {
 	if(!damage())
@@ -1124,7 +1138,7 @@ int Desktop::handle(int event) {
 			if(di)
 				return di->handle(event);
 
-			dnd_drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x(), Fl::event_y());
+			//dnd_drop_source(Fl::event_text(), Fl::event_length(), Fl::event_x(), Fl::event_y());
 			return 1;
 		}
 
