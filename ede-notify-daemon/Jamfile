@@ -1,0 +1,18 @@
+#
+# $Id: Jamfile 2331 2008-09-22 12:49:55Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2012 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-notify-daemon ;
+
+SOURCE = ede-notify-daemon.cpp NotifyWindow.cpp ;
+
+EdeProgram ede-notify-daemon : $(SOURCE) ;
+LinkAgainst ede-notify-daemon : $(EDELIB_DBUS_LIB) ;
+
+TranslationStrings  locale : $(SOURCE) ;
