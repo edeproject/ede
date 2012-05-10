@@ -32,10 +32,12 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 	box(FL_THIN_UP_BOX);
 	begin();
 		closeb = new Fl_Button(255, 10, 20, 20, "x");
-		closeb->box(FL_NO_BOX);
+		closeb->box(FL_FLAT_BOX);
+		closeb->down_box(FL_DOWN_BOX);
 		closeb->color(FL_BACKGROUND2_COLOR);
 		closeb->labelsize(12);
 		closeb->tooltip(_("Close this notification"));
+		closeb->clear_visible_focus();
 		closeb->callback(close_cb, this);
 
 		imgbox = new Fl_Box(10, 10, 48, 48);
@@ -44,10 +46,12 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 		summary = new Fl_Multiline_Output(65, 10, 185, 25);
 		/* use flat box so text can be drawn correctly */
 		summary->box(FL_FLAT_BOX);
+		summary->cursor_color(FL_BACKGROUND2_COLOR);
 
 		body = new Fl_Multiline_Output(65, 31, 185, 25);
 		/* use flat box so text can be drawn correctly */
 		body->box(FL_FLAT_BOX);
+		body->cursor_color(FL_BACKGROUND2_COLOR);
 	end();
 	border(0);
 }
