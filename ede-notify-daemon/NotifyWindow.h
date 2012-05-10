@@ -4,19 +4,17 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Box.H>
-#include <FL/Fl_Output.H>
+#include <FL/Fl_Multiline_Output.H>
 
 /* just keep it greater than FL_WINDOW or FL_DOUBLE_WINDOW */
 #define NOTIFYWINDOW_TYPE 0xF9
 
 class NotifyWindow : public Fl_Window {
 private:
-	int       id;
-	int       exp;
+	int       id, exp;
 	Fl_Button *closeb;
 	Fl_Box    *imgbox;
-	Fl_Output *summary;
-	Fl_Output *body;
+	Fl_Multiline_Output *summary, *body;
 
 public:
 	NotifyWindow();
@@ -25,8 +23,8 @@ public:
 	int  get_id(void) { return id; }
 
 	void set_icon(const char *img);
-	void set_summary(const char *s);
-	void set_body(const char *s);
+	void set_summary(const char *s) { summary->value(s); }
+	void set_body(const char *s) { body->value(s); }
 
 	/*
 	 * match to spec: if is -1, then we handle it, if is 0, then window will not be closed and
@@ -34,6 +32,8 @@ public:
 	 */
 	void set_expire(int t) { exp = t; }
 	void show(void);
+
+	virtual void resize(int X, int Y, int W, int H);
 };
 
 #endif

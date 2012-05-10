@@ -4,6 +4,8 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Shared_Image.H>
+
+#include <edelib/Ede.h>
 #include <edelib/Debug.h>
 #include <edelib/EdbusConnection.h>
 #include <edelib/EdbusMessage.h>
@@ -12,6 +14,7 @@
 #include <edelib/EdbusDict.h>
 #include <edelib/IconLoader.h>
 #include <edelib/Netwm.h>
+#include <edelib/Missing.h>
 
 #include "NotifyWindow.h"
 
@@ -36,6 +39,7 @@
 #define WINDOWS_PADDING 10
 
 #define IS_MEMBER(m, s1) (strcmp((m->member()), (s1)) == 0)
+#define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
 EDELIB_NS_USING(EdbusConnection)
 EDELIB_NS_USING(EdbusMessage)
@@ -278,7 +282,30 @@ static int notifications_dbus_signal_cb(const EdbusMessage *m, void *d) {
 }	
 #endif
 
+static void help(void) {
+	puts("Usage: ede-notify-daemon [OPTIONS]");
+	puts("Background service responsible for displaying various notifications");
+	puts("Options:");
+	puts("  -h, --help       this help");
+	puts("  -n, --no-daemon  do not run in background");
+}
+
 int main(int argc, char **argv) {
+	/* daemon behaves as GUI app, as will use icon theme and etc. */
+	EDE_APPLICATION("ede-notify-daemon");
+
+	bool daemonize = true;
+	if(argc > 1) {
+		if(CHECK_ARGV(argv[1], "-h", "--help")) {
+			help();
+			return 0;
+		}
+
+		if(CHECK_ARGV(argv[1], "-n", "--no-daemon")) {
+			daemonize = false;
+		}
+	}
+
 	server_running  = false;
 	notify_id       = 0;
 	EdbusConnection dbus;
@@ -296,6 +323,8 @@ int main(int argc, char **argv) {
 		E_WARNING(E_STRLOC ": Seems notification daemon is already running. Quitting...\n");
 		return 1;
 	}
+
+	if(daemonize) edelib_daemon(0, 0);
 
 	dbus.register_object(NOTIFICATIONS_DBUS_PATH);
 	dbus.method_callback(notifications_dbus_method_cb, &dbus);
