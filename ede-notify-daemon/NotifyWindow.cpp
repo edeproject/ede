@@ -33,7 +33,7 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 
 	type(NOTIFYWINDOW_TYPE);
 	color(FL_BACKGROUND2_COLOR);
-	box(FL_THIN_UP_BOX);
+	box(FL_BORDER_BOX);
 	begin();
 		closeb = new Fl_Button(255, 10, 20, 20, "x");
 		closeb->box(FL_FLAT_BOX);
