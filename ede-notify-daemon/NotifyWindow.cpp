@@ -51,11 +51,13 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 		/* use flat box so text can be drawn correctly */
 		summary->box(FL_FLAT_BOX);
 		summary->cursor_color(FL_BACKGROUND2_COLOR);
+		summary->value(0);
 
-		body = new Fl_Multiline_Output(65, 31, 185, 25);
+		body = new Fl_Multiline_Output(65, 35, 185, 25);
 		/* use flat box so text can be drawn correctly */
 		body->box(FL_FLAT_BOX);
 		body->cursor_color(FL_BACKGROUND2_COLOR);
+		body->value(0);
 	end();
 	border(0);
 }
@@ -78,8 +80,14 @@ void NotifyWindow::show(void) {
 }
 
 void NotifyWindow::resize(int X, int Y, int W, int H) {
+	/*
+	 * do not call further if window is shown: different strategy is needed as every time
+	 * window is re-configured, this will be called
+	 */
+	if(shown()) return;
+
 	/* resize summary if needed */
-	if(summary->value()) {
+	if(summary->value() && summary->size() > 0) {
 		int fw = 0, fh = 0;
 		fl_font(summary->textfont(), summary->textsize());
 		fl_measure(summary->value(), fw, fh);
@@ -92,7 +100,7 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 			closeb->position(closeb->x() + d, closeb->y());
 
 			/* resize body too */
-			body->size(body->w() + d, body->h());
+			if(body->visible()) body->size(body->w() + d, body->h());
 			
 			W += d;
 			/* this depends on window position */
@@ -104,7 +112,7 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 			summary->size(summary->w(), fh);
 
 			/* move body down */
-			body->position(body->x(), body->y() + d);
+			if(body->visible()) body->position(body->x(), body->y() + d);
 
 			H += d;
 			Y -= d;
@@ -112,7 +120,7 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 	}
 
 	/* resize body if needed */
-	if(body->value()) {
+	if(body->value() && body->size() > 0) {
 		int fw = 0, fh = 0;
 		fl_font(body->textfont(), body->textsize());
 		fl_measure(body->value(), fw, fh);
