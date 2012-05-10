@@ -25,11 +25,11 @@ SubInclude TOP ede-desktop ;
 SubInclude TOP ede-desktop-conf ;
 SubInclude TOP ede-dialog ;
 SubInclude TOP ede-keyboard-conf ;
+SubInclude TOP ede-notify-daemon ;
 SubInclude TOP ede-screensaver-conf ;
 SubInclude TOP ede-screen-lock ;
 SubInclude TOP ede-help ;
 SubInclude TOP ede-image-view ;
-SubInclude TOP elma ;
 SubInclude TOP ede-launch ;
 SubInclude TOP emountd ;
 SubInclude TOP ede-timedate ;
@@ -46,8 +46,3 @@ if ! $(SUN_COMPILER) {
 }
 
 SubInclude TOP pekwm ;
-
-# efiler is not compileable at all
-if $(WITH_EFILER) = 1 {
-	SubInclude TOP efiler ;
-}
