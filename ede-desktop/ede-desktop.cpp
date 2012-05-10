@@ -25,9 +25,13 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Output.H>
 
 #include <edelib/Debug.h>
 #include <edelib/FileTest.h>
+#include <edelib/File.h>
 #include <edelib/Directory.h>
 #include <edelib/DesktopFile.h>
 #include <edelib/DirWatch.h>
@@ -92,6 +96,7 @@ EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
 EDELIB_NS_USING(font_cache_find)
 EDELIB_NS_USING(file_test)
+EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(dir_home)
 EDELIB_NS_USING(build_filename)
 EDELIB_NS_USING(FILE_TEST_IS_DIR)
@@ -568,7 +573,12 @@ DesktopIcon* Desktop::find_icon_by_path(const char* path, DesktopIconListIter* r
 }
 
 bool Desktop::remove_icon(DesktopIcon *d, bool real_delete) {
-	bool ret = remove_icon_by_path(d->path().c_str());
+	bool ret = true;
+
+	if(real_delete)
+		ret = file_remove(d->path().c_str());
+
+	remove_icon_by_path(d->path().c_str());
 	return ret;
 }
 

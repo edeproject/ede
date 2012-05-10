@@ -19,6 +19,7 @@
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Shared_Image.H>
+#include <FL/Fl_File_Chooser.H>
 
 #include <edelib/Nls.h>
 #include <edelib/String.h>
@@ -152,14 +153,22 @@ static void img_browse_cb(Fl_Widget*, void*) {
 	img->redraw();
 }	
 
+static void file_browse_cb(Fl_Widget*, void*) {
+	const char *p = fl_file_chooser(_("Choose program path to execute"), "*", 0, 0);
+	if(!p) return;
+	execute->value(p);
+}
+
 void icon_dialog_icon_create(void) {
 	win = new Fl_Window(430, 170, _("Create desktop icon"));
 		img = new Fl_Button(10, 10, 75, 75);
 		img->callback(img_browse_cb);
+		img->tooltip(_("Click to select icon"));
 		name = new Fl_Input(205, 10, 215, 25, _("Name:"));
 		comment = new Fl_Input(205, 40, 215, 25, _("Comment:"));
 		execute = new Fl_Input(205, 70, 185, 25, _("Execute:"));
 		browse = new Fl_Button(395, 70, 25, 25, "...");
+		browse->callback(file_browse_cb);
 		icon_type = new Fl_Choice(205, 100, 215, 25, _("Type:"));
 		icon_type->down_box(FL_BORDER_BOX);
 		icon_type->menu(menu_items);
