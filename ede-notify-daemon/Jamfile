@@ -16,3 +16,5 @@ EdeProgram ede-notify-daemon : $(SOURCE) ;
 LinkAgainst ede-notify-daemon : $(EDELIB_DBUS_LIB) ;
 
 TranslationStrings  locale : $(SOURCE) ;
+
+EdeManual ede-notify-daemon.txt ;

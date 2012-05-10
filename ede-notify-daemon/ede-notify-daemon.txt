@@ -1,0 +1,16 @@
+ede-notify-daemon documentation
+===============================
+
+ede-notify-daemon is EDE service responsible for accepting and displaying notifications.
+
+It supports link:http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html[Desktop Notifications Specification]
+so all conforming applications will use it (e.g. Firefox will happily report download status with it).
+
+Options
+-------
+
+--no-daemon::
+	Do not run in background. ede-notify-daemon will by default run in background.
+
+--help::
+	Show help.

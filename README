@@ -1,30 +1,27 @@
-Readme for EDE 2.0
-==================
+Readme for EDE
+==============
 
-Please read this document before using or contributing to EDE 2.0 source code.
+Thank you for showing interest in EDE project. EDE is small and fast desktop environment
+that uses http://www.fltk.org[FLTK Toolkit]. For more details and philosophy behind it, check
+http://equinox-project.org/wiki/AboutEde[about EDE on our wiki].
 
-[NOTE]
-.This is beta product
-===================================
-EDE 2.0 is not finished yet and many components are not completed,
-can crash or misbehave
-===================================
+As every software project, EDE is always in development so your contribution is always welcome!
 
 Build requirements
 ------------------
 
-EDE 2.0 is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time 
-of this writing, latest stable version is 1.3.0.
+EDE is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time 
+of this writing, latest stable tree is 1.3.x.
 
 Since FLTK lacks many things needed for developing a full *nix desktop 
 environment, we have developed a small add-on library called 'edelib'. This 
-library is also required for compiling EDE 2.0 and should be released together with EDE.
+library is also required for compiling EDE and is released together with EDE.
 
-We *strongly* recommend that you use matching versions of ede and 
-edelib (e.g. released at the same time) or that you do SVN checkout at the same time due
+We *strongly* recommend that you use matching versions of EDE and 
+edelib (e.g. released at the same time) or you make repository checkout at the same time due
 their frequent changes.
 
-Also you will need a Jam tool. Jam is a make replacement and you can find it on our repository.
+Also you will need a 'jam' tool. Jam is a make replacement and you will find it on our repository.
 
 Downloading the code
 --------------------
@@ -56,3 +53,6 @@ In order to build and install EDE do the following steps:
 5. jam
 
 6. jam install
+
+Please note how this document is quick and short tutorial about EDE installation. For more details,
+please check http://equinox-project.org/wiki/InstallationHowTo[Installation Howto] on our wiki.
