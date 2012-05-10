@@ -1,8 +1,10 @@
 #include <FL/Fl.H>
+#include <FL/x.H>
 #include <FL/fl_draw.H>
 #include <edelib/Debug.h>
 #include <edelib/IconLoader.h>
 #include <edelib/Nls.h>
+#include <edelib/Netwm.h>
 #include "NotifyWindow.h"
 
 /* default sizes for window */
@@ -11,7 +13,9 @@
 #define DEFAULT_EXPIRE 2000
 
 EDELIB_NS_USING(IconLoader)
+EDELIB_NS_USING(netwm_window_set_type)
 EDELIB_NS_USING(ICON_SIZE_MEDIUM)
+EDELIB_NS_USING(NETWM_WINDOW_TYPE_NOTIFICATION)
 
 extern int FL_NORMAL_SIZE;
 
@@ -70,6 +74,7 @@ void NotifyWindow::show(void) {
 	}
 
 	Fl_Window::show();
+	netwm_window_set_type(fl_xid(this), NETWM_WINDOW_TYPE_NOTIFICATION);
 }
 
 void NotifyWindow::resize(int X, int Y, int W, int H) {
