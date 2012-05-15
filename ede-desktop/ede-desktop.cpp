@@ -575,10 +575,16 @@ DesktopIcon* Desktop::find_icon_by_path(const char* path, DesktopIconListIter* r
 bool Desktop::remove_icon(DesktopIcon *d, bool real_delete) {
 	bool ret = true;
 
-	if(real_delete)
+	if(real_delete) {
+		dir_watch_off();
 		ret = file_remove(d->path().c_str());
+		Fl::wait(1);
+		dir_watch_on();
+	}
 
 	remove_icon_by_path(d->path().c_str());
+	/* TODO: reimplement as 'fast_redraw()' from DesktopIcon */
+	redraw();
 	return ret;
 }
 
@@ -610,7 +616,6 @@ bool Desktop::remove_icon_by_path(const char* path) {
 	/* Fl_Group::remove() does not delete child, just pops it out */
 	remove(ic);
 	delete ic;
-
 	return true;
 }
 

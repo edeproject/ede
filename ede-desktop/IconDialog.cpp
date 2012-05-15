@@ -31,13 +31,16 @@
 #include <edelib/StrUtil.h>
 #include <edelib/Util.h>
 #include <edelib/MessageBox.h>
+#include <edelib/IconLoader.h>
 
 #include "IconDialog.h"
 #include "DesktopIcon.h"
 #include "ede-desktop.h"
 
-EDELIB_NS_USING_LIST(9, (str_tolower, icon_chooser, dir_home, build_filename, alert,
-						 ICON_SIZE_HUGE, String, DesktopFile, DESK_FILE_TYPE_APPLICATION))
+EDELIB_NS_USING_LIST(10, (str_tolower, icon_chooser, dir_home, build_filename, alert,
+						  ICON_SIZE_HUGE, String, IconLoader, DesktopFile, DESK_FILE_TYPE_APPLICATION))
+
+#define DEFAULT_ICON "empty"
 
 /* it is safe to be globals */
 static Fl_Window *win;
@@ -100,7 +103,7 @@ static void ok_cb(Fl_Widget*, void*) {
 			df.set_icon(p);
 		}	
 	} else {
-		df.set_icon("empty");
+		df.set_icon(DEFAULT_ICON);
 	}
 
 	df.set_exec(execute->value());
@@ -164,6 +167,7 @@ void icon_dialog_icon_create(void) {
 		img = new Fl_Button(10, 10, 75, 75);
 		img->callback(img_browse_cb);
 		img->tooltip(_("Click to select icon"));
+		IconLoader::set(img, DEFAULT_ICON, ICON_SIZE_HUGE);
 		name = new Fl_Input(205, 10, 215, 25, _("Name:"));
 		comment = new Fl_Input(205, 40, 215, 25, _("Comment:"));
 		execute = new Fl_Input(205, 70, 185, 25, _("Execute:"));
