@@ -183,6 +183,8 @@ void icon_dialog_icon_create(void) {
 		cancel->callback(cancel_cb);
 	win->end();
 	win->set_modal();
+
+	Fl::focus(name);
 	win->show();
 }	
 
