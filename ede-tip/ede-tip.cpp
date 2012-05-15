@@ -33,6 +33,7 @@
 #include <edelib/Util.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Directory.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/Ede.h>
 
 #include "icons/hint.xpm"
@@ -44,6 +45,7 @@ EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(dir_create_with_parents)
 EDELIB_NS_USING(user_config_dir)
 EDELIB_NS_USING(alert)
+EDELIB_NS_USING(window_center_on_screen)
 EDELIB_NS_USING(DESK_FILE_TYPE_APPLICATION)
 
 static Fl_Pixmap image_hint((const char**)hint_xpm);
@@ -217,6 +219,7 @@ int main(int argc, char **argv) {
 		close_button->take_focus();
 
 	win->end();
+	window_center_on_screen(win);
 	win->show(argc, argv);
 
 	Fl::run();
