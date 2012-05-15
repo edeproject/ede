@@ -24,7 +24,7 @@ public:
 
 	void set_icon(const char *img);
 	void set_summary(const char *s) { summary->value(s); }
-	void set_body(const char *s) { body->value(s); }
+	void set_body(const char *s);
 
 	/*
 	 * match to spec: if is -1, then we handle it, if is 0, then window will not be closed and

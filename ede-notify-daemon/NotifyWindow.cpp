@@ -51,14 +51,19 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 		/* use flat box so text can be drawn correctly */
 		summary->box(FL_FLAT_BOX);
 		summary->cursor_color(FL_BACKGROUND2_COLOR);
-		summary->value(0);
 
 		body = new Fl_Multiline_Output(65, 35, 185, 25);
 		/* use flat box so text can be drawn correctly */
 		body->box(FL_FLAT_BOX);
 		body->cursor_color(FL_BACKGROUND2_COLOR);
-		body->value(0);
 	end();
+
+	/*
+	 * by default body text is hidden and summary is lowered a little bit
+	 * NOTE: I'm using 'resize' as 'position' for Fl_Input/Fl_Output means something different
+	 */
+	summary->resize(summary->x(), summary->y() + (summary->h() / 2), summary->w(), summary->h());
+	body->hide();
 	border(0);
 }
 
@@ -67,6 +72,13 @@ void NotifyWindow::set_icon(const char *img) {
 	E_RETURN_IF_FAIL(img != NULL);
 
 	IconLoader::set(imgbox, img, ICON_SIZE_MEDIUM);
+}
+
+void NotifyWindow::set_body(const char *s) {
+	summary->resize(summary->x(), summary->y() - (summary->h() / 2), summary->w(), summary->h());
+
+	body->value(s);
+	body->show();
 }
 
 void NotifyWindow::show(void) {
@@ -79,6 +91,8 @@ void NotifyWindow::show(void) {
 	netwm_window_set_type(fl_xid(this), NETWM_WINDOW_TYPE_NOTIFICATION);
 }
 
+#define INPUT_VALID(i) ((i)->visible() && (i)->size() > 0)
+
 void NotifyWindow::resize(int X, int Y, int W, int H) {
 	/*
 	 * do not call further if window is shown: different strategy is needed as every time
@@ -87,20 +101,20 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 	if(shown()) return;
 
 	/* resize summary if needed */
-	if(summary->value() && summary->size() > 0) {
+	if(summary->size() > 0) {
 		int fw = 0, fh = 0;
 		fl_font(summary->textfont(), summary->textsize());
 		fl_measure(summary->value(), fw, fh);
 
 		if(fw > summary->w()) {
 			int d = fw - summary->w();
-			summary->size(fw, summary->h());
+			summary->resize(summary->x(), summary->y(), fw, summary->h());
 
 			/* move X button */
 			closeb->position(closeb->x() + d, closeb->y());
 
 			/* resize body too */
-			if(body->visible()) body->size(body->w() + d, body->h());
+			if(INPUT_VALID(body)) body->resize(body->x(), body->y(), body->w() + d, body->h());
 			
 			W += d;
 			/* this depends on window position */
@@ -109,10 +123,10 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 
 		if(fh > summary->h()) {
 			int d = fh - summary->h();
-			summary->size(summary->w(), fh);
+			summary->resize(summary->x(), summary->y(), summary->w(), fh);
 
 			/* move body down */
-			if(body->visible()) body->position(body->x(), body->y() + d);
+			if(INPUT_VALID(body)) body->resize(body->x(), body->y() + d, body->w(), body->h());
 
 			H += d;
 			Y -= d;
@@ -120,14 +134,14 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 	}
 
 	/* resize body if needed */
-	if(body->value() && body->size() > 0) {
+	if(INPUT_VALID(body)) {
 		int fw = 0, fh = 0;
 		fl_font(body->textfont(), body->textsize());
 		fl_measure(body->value(), fw, fh);
 
 		if(fw > body->w()) {
 			int d = fw - body->w();
-			body->size(fw, body->h());
+			body->resize(body->x(), body->y(), fw, body->h());
 
 			/* move X button again */
 			closeb->position(closeb->x() + d, closeb->y());
@@ -138,7 +152,7 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 
 		if(fh > body->h()) {
 			int d = fh - body->h();
-			body->size(body->w(), fh);
+			body->resize(body->x(), body->y(), body->w(), fh);
 
 			H += d;
 			Y -= d;
