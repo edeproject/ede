@@ -582,6 +582,20 @@ bool Desktop::remove_icon(DesktopIcon *d, bool real_delete) {
 	return ret;
 }
 
+bool Desktop::rename_icon(DesktopIcon *d, const char *n) {
+	DesktopFile f;
+	const char *p = d->path().c_str();
+
+	E_RETURN_VAL_IF_FAIL(f.load(p), false);
+
+	dir_watch_off();
+	f.set_name(n);
+	bool ret = f.save(p);
+	dir_watch_on();
+
+	return ret;
+}
+
 bool Desktop::remove_icon_by_path(const char* path) {
 	DesktopIconListIter pos;
 	DesktopIcon* ic = find_icon_by_path(path, &pos);

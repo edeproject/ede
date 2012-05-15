@@ -83,8 +83,11 @@ static void open_cb(Fl_Widget*, void* d) {
 static void rename_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
 
-	const char* new_name = input(_("New name"), di->label());
-	di->rename(new_name);
+	const char* new_name = input(_("Change desktop icon name to:"), di->label());
+	if(new_name) {
+		di->rename(new_name);
+		Desktop::instance()->rename_icon(di, new_name);
+	}
 }
 
 static void delete_cb(Fl_Widget*, void* d) {
@@ -95,7 +98,7 @@ static void delete_cb(Fl_Widget*, void* d) {
 }
 
 static void props_cb(Fl_Widget*, void* d) {
-	DesktopIcon* di = (DesktopIcon*)d;
+	//DesktopIcon* di = (DesktopIcon*)d;
 }
 
 DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 

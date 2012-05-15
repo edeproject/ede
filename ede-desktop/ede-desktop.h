@@ -157,6 +157,7 @@ public:
 
 	bool add_icon_by_path(const char* path, edelib::Resource* conf);
 	bool remove_icon(DesktopIcon *d, bool real_delete);
+	bool rename_icon(DesktopIcon *d, const char *n);
 
 	void update_workarea(void);
 	void area(int& X, int& Y, int& W, int& H) { X = x(); Y = y(); W = w(); H = h(); }
