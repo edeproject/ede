@@ -1,0 +1,14 @@
+#
+# $Id: Jamfile 2316 2008-09-04 10:16:55Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2012 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP data wallpapers ;
+
+FILES = [ Wildcard *.jpg ] ;
+InstallData $(EDE_WALLPAPERS_DIR) : $(FILES) ;

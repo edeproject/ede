@@ -52,6 +52,7 @@ EDE_CONFIG_DIR        ?= "$(sysconfdir)/xdg/$(EDE_PREFIX_SUBDIR)" ;
 EDE_MENU_DIR          ?= "$(sysconfdir)/xdg/menus" ; # use XDG default for menu dir
 EDE_ICON_DIR          ?= "$(EDE_DATA_DIR)/icons" ;
 EDE_MIME_DIR          ?= "$(EDE_DATA_DIR)/mime" ; # use XDG mime path
+EDE_WALLPAPERS_DIR    ?= "$(EDE_DATA_DIR)/wallpapers" ; # default path
 EDE_DOC_DIR           ?= "$(docdir)/ede-$(EDE_VERSION)" ;
 EDE_THEMES_DIR        ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/themes" ;
 EDE_TIPS_DIR          ?= "$(EDE_DATA_DIR)/$(EDE_PREFIX_SUBDIR)/tips" ;

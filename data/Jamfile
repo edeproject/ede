@@ -24,3 +24,4 @@ SubInclude TOP data icon-themes ;
 SubInclude TOP data menu ;
 SubInclude TOP data desktop-links ;
 SubInclude TOP data pekwm ;
+SubInclude TOP data wallpapers ;
