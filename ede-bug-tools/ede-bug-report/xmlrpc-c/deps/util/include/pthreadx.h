@@ -27,8 +27,10 @@
 #define PTHREADX_H_INCLUDED
 
 #ifndef WIN32
+# ifndef _REENTRANT   /* gcc warns since is already defined by default */
 #  define _REENTRANT
-#  include <pthread.h>
+# endif
+# include <pthread.h>
 #elif defined (WIN32)
 #include <windows.h>
 

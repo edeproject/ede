@@ -83,7 +83,11 @@
 #include "xmlrpc-c/time_int.h"
 
 #include <curl/curl.h>
-#include <curl/types.h>
+
+#ifdef HAVE_CURLTYPES_H
+# include <curl/types.h>
+#endif
+
 #include <curl/easy.h>
 #include <curl/multi.h>
 
