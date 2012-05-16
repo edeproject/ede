@@ -10,25 +10,32 @@
 
 #include <FL/x.H>
 
-/* delay in msecs */
-#define PANEL_MOVE_DELAY 200
+/* delay in secs */
+#define PANEL_MOVE_DELAY 0.0015
+/* how fast we will move X axis */
+#define PANEL_ANIM_SPEED 50 
 
 static void hide_cb(Fl_Widget*, void *h);
 
 class Hider : public Fl_Button {
 private:
-	int old_x, old_y, is_hidden, old_px;
+	int old_x, old_y, is_hidden, old_px, stop_x;
 public:
-	Hider() : Fl_Button(0, 0, 10, 25, "@>"), old_x(0), old_y(0), is_hidden(0), old_px(0) {
+	Hider() : Fl_Button(0, 0, 10, 25, "@>"), old_x(0), old_y(0), is_hidden(0), old_px(0), stop_x(0) {
 		labelsize(8);
 		box(FL_FLAT_BOX);
 		tooltip(_("Hide panel"));
 		callback(hide_cb, this);
 	}
 
-	void panel_hide(void);
-	void panel_show(void);
 	int  panel_hidden(void) { return is_hidden; }
+	void panel_hidden(int s) { is_hidden = s; }
+
+	void panel_show(void);
+	void panel_hide(void);
+	void post_show(void);
+	void post_hide(void);
+	void animate(void);
 };
 
 static void hide_cb(Fl_Widget*, void *h) {
@@ -39,26 +46,55 @@ static void hide_cb(Fl_Widget*, void *h) {
 		hh->panel_hide();
 }
 
+static void animate_cb(void *h) {
+	Hider *hh = (Hider*)h;
+	hh->animate();
+}
+
+void Hider::animate(void) {
+	Panel *p = EDE_PANEL_GET_PANEL_OBJECT(this);
+
+	if(!panel_hidden()) {
+		/* hide */
+		if(p->x() < stop_x) {
+			int X = p->x() + PANEL_ANIM_SPEED;
+			p->position(X, p->y());
+			Fl::repeat_timeout(PANEL_MOVE_DELAY, animate_cb, this);
+		} else {
+			post_hide();
+		}
+	} else {
+		/* show */
+		if(p->x() > stop_x) {
+			int X = p->x() - PANEL_ANIM_SPEED;
+			p->position(X, p->y());
+			Fl::repeat_timeout(PANEL_MOVE_DELAY, animate_cb, this);
+		} else {
+			post_show();
+		}
+	}
+}	
+
 void Hider::panel_hide(void) {
 	Panel *p = EDE_PANEL_GET_PANEL_OBJECT(this);
-	int X, Y, W, H, end;
+	int X, Y, W, H;
 
 	p->screen_size(X, Y, W, H);
-	end = X + W - w();
+	stop_x = X + W - w();
 	old_px = p->x();
 
-	for(int i = p->x(); i < end; i+=10) {
-		p->position(i, p->y());
-		usleep(PANEL_MOVE_DELAY);
-		XFlush(fl_display);
-	}
+	Fl::add_timeout(0.1, animate_cb, this);
+}
+
+void Hider::post_hide(void) {
+	Panel *p = EDE_PANEL_GET_PANEL_OBJECT(this);
 
 	/* align to bounds */
-	p->position(end, p->y());
+	p->position(stop_x, p->y());
 	p->allow_drag(false);
 	p->apply_struts(false);
 
-	/* hide all children on panel */
+	/* hide all children on panel except us */
 	for(int i = 0; i < p->children(); i++) {
 		if(p->child(i) != this)
 			p->child(i)->hide();
@@ -71,18 +107,16 @@ void Hider::panel_hide(void) {
 	position(0 + Fl::box_dx(p->box()), y());
 	label("@<");
 
-	is_hidden = 1;
+	panel_hidden(1);
 	tooltip(_("Show panel"));
 }
 
 void Hider::panel_show(void) {
-	Panel *p = EDE_PANEL_GET_PANEL_OBJECT(this);
+	Fl::add_timeout(0.1, animate_cb, this);
+}
 
-	for(int i = p->x(); i > old_px; i-=10) {
-		p->position(i, p->y());
-		usleep(PANEL_MOVE_DELAY);
-		XFlush(fl_display);
-	}
+void Hider::post_show(void) {
+	Panel *p = EDE_PANEL_GET_PANEL_OBJECT(this);
 
 	/* align to bounds */
 	p->position(old_px, p->y());
@@ -99,7 +133,7 @@ void Hider::panel_show(void) {
 	position(old_x, old_y);
 	label("@>");
 
-	is_hidden = 0;
+	panel_hidden(0);
 	tooltip(_("Hide panel"));
 }
 
