@@ -2,7 +2,7 @@ dnl
 dnl $Id: configure.in 1719 2006-08-15 08:56:42Z karijes $
 dnl
 dnl Part of Equinox Desktop Environment (EDE).
-dnl Copyright (c) 2000-2008 EDE Authors.
+dnl Copyright (c) 2000-2012 EDE Authors.
 dnl 
 dnl This program is licenced under terms of the 
 dnl GNU General Public Licence version 2 or newer.
@@ -184,6 +184,21 @@ if test -n "$CURL_CONFIG"; then
 	CURL_CFLAGS=`$CURL_CONFIG --cflags`
 	CURL_LIBS=`$CURL_CONFIG --libs`
 	AC_DEFINE(HAVE_CURL, 1, [Define to 1 if you have curl library])
+
+	AC_LANG_SAVE
+	AC_LANG_C
+	AC_TRY_COMPILE([
+		#include <curl/curl.h>
+		#include <curl/types.h>
+	],[
+		CURL *curl;
+		curl = curl_easy_init();
+	],[have_curltypes_h=yes],[])
+	AC_LANG_RESTORE
+
+	if test "$have_curltype_h" = "yes"; then
+		AC_DEFINE(HAVE_CURLTYPES_H, 1, [Define to 1 if you have curl/types.h file])
+	fi
 fi
 
 dnl emits PTHREAD_CFLAGS and PTHREAD_LIBS
