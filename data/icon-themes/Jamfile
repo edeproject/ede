@@ -57,6 +57,10 @@ if $(BUILD_ICON_THEMES) = 1 {
 	InstallIconTheme "edeneu" : $(ICON_SIZES) : $(ICON_CATEGORIES) ;
 }
 
+if $(INSTALL_ICON_THEMES) = 1 {
+	InstallIconTheme "edeneu" : $(ICON_SIZES) : $(ICON_CATEGORIES) ;
+}
+
 # install kbflags icons
 KBFLAGS_ICONS_DIR = [ FDirName "kbflags" "21x14" ] ;
 KBFLAGS_ICONS     = [ Wildcard $(KBFLAGS_ICONS_DIR) : *.png : $(KBFLAGS_ICONS_DIR) ] ;
