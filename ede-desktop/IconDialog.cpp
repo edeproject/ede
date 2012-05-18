@@ -115,12 +115,12 @@ static void ok_cb(Fl_Widget*, void*) {
 	str_tolower((unsigned char*)fp);
 	file += ".desktop";
 
-	/* TODO: let 'Desktop' (class) returns full desktop path */
-	String path = build_filename(dir_home().c_str(), "Desktop", file.c_str());
-
-	/* go through path and replace spaces with '_' */
-	for(char *p = (char*)path.c_str(); p && *p; p++)
+	/* go through the file and replace spaces with '_' */
+	for(char *p = (char*)file.c_str(); p && *p; p++)
 		if(isspace(*p)) *p = '_';
+
+	/* TODO: let 'Desktop' (class) returns full desktop path */
+	String path = build_filename(Desktop::instance()->desktop_path(), file.c_str());
 
 	/*
 	 * disable watching on folder and explicitly add file (probably as notification will be fired up faster than

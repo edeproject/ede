@@ -167,6 +167,8 @@ public:
 	void dir_watch(const char* dir, const char* changed, int flags);
 	void dir_watch_on(void) { do_dirwatch = true; }
 	void dir_watch_off(void) { do_dirwatch = false; }
+
+	const char *desktop_path(void) { return desktop_dir_path.c_str(); }
 };
 
 #endif
