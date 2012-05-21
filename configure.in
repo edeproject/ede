@@ -9,7 +9,7 @@ dnl GNU General Public Licence version 2 or newer.
 dnl See COPYING for details.
 
 m4_define([ede_major_version], [2])
-m4_define([ede_minor_version], [0])
+m4_define([ede_minor_version], [1])
 m4_define([ede_patch_version], [0])
 m4_define([ede_version], [ede_major_version.ede_minor_version.ede_patch_version])
 
