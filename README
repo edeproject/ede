@@ -10,14 +10,14 @@ As every software project, EDE is always in development so your contribution is 
 Build requirements
 ------------------
 
-EDE is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time 
+EDE is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At the time
 of this writing, latest stable tree is 1.3.x.
 
-Since FLTK lacks many things needed for developing a full *nix desktop 
-environment, we have developed a small add-on library called 'edelib'. This 
+Since FLTK lacks many things needed for developing a full *nix desktop
+environment, we have developed a small add-on library called 'edelib'. This
 library is also required for compiling EDE and is released together with EDE.
 
-We *strongly* recommend that you use matching versions of EDE and 
+We *strongly* recommend that you use matching versions of EDE and
 edelib (e.g. released at the same time) or you make repository checkout at the same time due
 their frequent changes.
 
@@ -40,8 +40,8 @@ Compiling and installing
 
 In order to build and install EDE do the following steps:
 
-1. compile and install jam first; going to jam source directory and running 'make' will do 
-   the job; after that you should get 'bin.YOUR_PLATFORM' directory (on Linux it will be 
+1. compile and install jam first; going to jam source directory and running 'make' will do
+   the job; after that you should get 'bin.YOUR_PLATFORM' directory (on Linux it will be
    bin.linux) and copy 'jam' executable in your $PATH, e.g. /usr/local/bin
 
 2. compile and install edelib; please read README file in edelib directory
