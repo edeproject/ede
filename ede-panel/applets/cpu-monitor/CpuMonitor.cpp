@@ -41,7 +41,6 @@
 # include <sys/stat.h>
 #endif
 
-#include "Applet.h"
 #include "CpuMonitor.h"
 
 #ifdef __FreeBSD__

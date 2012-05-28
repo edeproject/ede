@@ -5,7 +5,6 @@
 #include <FL/fl_draw.H>
 #include <edelib/Color.h>
 #include <edelib/Missing.h>
-#include "Applet.h"
 #include "MemMonitor.h"
 
 EDELIB_NS_USING(color_rgb_to_fltk)

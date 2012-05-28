@@ -1,5 +1,3 @@
-#include "Applet.h"
-
 #include <FL/Fl.H>
 #include <FL/Fl_Button.H>
 #include <edelib/Debug.h>

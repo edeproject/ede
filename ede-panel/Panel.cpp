@@ -23,8 +23,8 @@
 #define DEFAULT_PANEL_H 35
 
 #undef MIN
-#define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #undef MAX
+#define MIN(x,y)  ((x) < (y) ? (x) : (y))
 #define MAX(x,y)  ((x) > (y) ? (x) : (y))
 
 EDELIB_NS_USING_LIST(10, (list,

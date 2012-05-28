@@ -2,8 +2,9 @@
 #define __MEMMONITOR_H__
 
 #include <FL/Fl_Box.H>
+#include "Applet.h"
 
-class MemMonitor : public Fl_Box {
+EDE_PANEL_APPLET_CLASS(MemMonitor, Fl_Box) {
 private:
 	int mem_usedp, swap_usedp;
 	

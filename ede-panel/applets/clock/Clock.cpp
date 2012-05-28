@@ -11,7 +11,7 @@ EDELIB_NS_USING(run_async)
 
 static void clock_refresh(void *o);
 
-class Clock : public Fl_Box {
+EDE_PANEL_APPLET_CLASS(Clock, Fl_Box) {
 private:
 	int  hour;
 	char buf[64], tbuf[128];

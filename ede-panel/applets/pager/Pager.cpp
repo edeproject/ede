@@ -18,7 +18,7 @@ EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 
-class Pager : public Fl_Group {
+EDE_PANEL_APPLET_CLASS(Pager, Fl_Group) {
 public:
 	Pager();
 	~Pager();

@@ -4,6 +4,7 @@
 #include <FL/Fl_Group.H>
 #include <FL/x.H>
 #include <edelib/List.h>
+#include "Applet.h"
 
 EDELIB_NS_USING(list)
 
@@ -15,7 +16,7 @@ struct WinInfo {
 typedef list<WinInfo> WinList;
 typedef list<WinInfo>::iterator WinListIt;
 
-class Tray : public Fl_Group {
+EDE_PANEL_APPLET_CLASS(Tray, Fl_Group) {
 private:
 	Atom    opcode, message_data;
 	WinList win_list;

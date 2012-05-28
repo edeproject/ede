@@ -2,11 +2,12 @@
 #define __TASKBAR_H__
 
 #include <FL/Fl_Group.H>
+#include "Applet.h"
 
 class TaskButton;
 class Panel;
 
-class Taskbar : public Fl_Group {
+EDE_PANEL_APPLET_CLASS(Taskbar, Fl_Group) {
 public:
 	TaskButton *curr_active, *prev_active;
 	Panel      *panel;

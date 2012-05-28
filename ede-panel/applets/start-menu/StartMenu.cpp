@@ -13,7 +13,7 @@ EDELIB_NS_USING(MenuBase)
 
 /* some of this code was ripped from Fl_Menu_Button.cxx */
 
-class StartMenu : public MenuBase {
+EDE_PANEL_APPLET_CLASS(StartMenu, MenuBase) {
 private:
 	MenuItem *mcontent;
 public:

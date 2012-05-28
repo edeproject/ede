@@ -4,7 +4,6 @@
 #include <FL/Fl_Window.H>
 #include <edelib/Debug.h>
 
-#include "Applet.h"
 #include "Panel.h"
 #include "Tray.h"
 

@@ -2,6 +2,7 @@
 #define __CPUMONITOR_H__
 
 #include <FL/Fl_Box.H>
+#include "Applet.h"
 
 /*
 #ifdef HAVE_KSTAT_H
@@ -18,7 +19,7 @@ enum {
     IWM_STATES
 };
 
-class CPUMonitor : public Fl_Box {
+EDE_PANEL_APPLET_CLASS(CPUMonitor, Fl_Box) {
 private:
     bool m_draw_label;
     int  m_old_samples;
