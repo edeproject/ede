@@ -16,7 +16,7 @@ struct WinInfo {
 typedef list<WinInfo> WinList;
 typedef list<WinInfo>::iterator WinListIt;
 
-EDE_PANEL_APPLET_CLASS(Tray, Fl_Group) {
+class Tray : public Fl_Group {
 private:
 	Atom    opcode, message_data;
 	WinList win_list;

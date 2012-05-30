@@ -14,7 +14,7 @@
 
 EDELIB_NS_USING(run_async)
 
-EDE_PANEL_APPLET_CLASS(QuickLaunch, Fl_Input) {
+class QuickLaunch : public Fl_Input {
 private:
 	Fl_Image *img;
 	int img_x, img_y;

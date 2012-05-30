@@ -19,7 +19,7 @@ enum {
     IWM_STATES
 };
 
-EDE_PANEL_APPLET_CLASS(CPUMonitor, Fl_Box) {
+class CPUMonitor : public Fl_Box {
 private:
     bool m_draw_label;
     int  m_old_samples;

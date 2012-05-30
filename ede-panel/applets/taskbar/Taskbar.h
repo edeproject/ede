@@ -7,7 +7,7 @@
 class TaskButton;
 class Panel;
 
-EDE_PANEL_APPLET_CLASS(Taskbar, Fl_Group) {
+class Taskbar : public Fl_Group {
 public:
 	TaskButton *curr_active, *prev_active;
 	Panel      *panel;

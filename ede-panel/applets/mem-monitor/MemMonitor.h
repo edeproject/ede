@@ -4,7 +4,7 @@
 #include <FL/Fl_Box.H>
 #include "Applet.h"
 
-EDE_PANEL_APPLET_CLASS(MemMonitor, Fl_Box) {
+class MemMonitor : public Fl_Box {
 private:
 	int mem_usedp, swap_usedp;
 	

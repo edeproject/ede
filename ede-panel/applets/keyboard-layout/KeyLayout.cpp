@@ -41,7 +41,7 @@ EDELIB_NS_USING(RES_SYS_ONLY)
 
 static Atom _XA_XKB_RF_NAMES_PROP_ATOM = 0;
 
-EDE_PANEL_APPLET_CLASS(KeyLayout, Fl_Button) {
+class KeyLayout : public Fl_Button {
 private:
 	bool      should_show_flag;
 	String    path, curr_layout;

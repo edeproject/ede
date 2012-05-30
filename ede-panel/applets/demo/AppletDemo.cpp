@@ -4,7 +4,7 @@
 #include <FL/Fl.H>
 #include <stdio.h>
 
-EDE_PANEL_APPLET_CLASS(MyButton, Fl_Button) {
+class MyButton : public Fl_Button {
 public:
 	MyButton() : Fl_Button(0, 0, 90, 25, "xxx") { 
 		color(FL_RED);
