@@ -26,9 +26,6 @@ class Fl_Widget;
 /* stored version in each applet shared library in case interface get changed */
 #define EDE_PANEL_APPLET_INTERFACE_VERSION 0x01
 
-/* all panel widgets are marked with this type (make sure it is greater than FL_DOUBLE_WINDOW */
-#define EDE_PANEL_WIDGET_TYPE 0xFA
-
 /*
  * Options assigned to each applet: how it will be resizable (horizontally or vertically)
  * and how it will be aligned. Each applet is by default aligned left without resizing ability.
@@ -63,9 +60,7 @@ typedef float       (*applet_version_t)(void);
  */
 #define EDE_PANEL_APPLET_EXPORT(klass, aoptions, aname, aversion, aicon, aauthor) \
 extern "C" Fl_Widget *ede_panel_applet_create(void) {                             \
-    klass *k = new klass;                                                         \
-    k->type(EDE_PANEL_WIDGET_TYPE);                                               \
-    return k;                                                                     \
+    return new klass;                                                             \
 }                                                                                 \
                                                                                   \
 extern "C" void ede_panel_applet_destroy(Fl_Widget *w) {                          \
