@@ -54,6 +54,8 @@ public:
 
 	void show(void);
 	void hide(void);
+	void update_size_and_pos(bool create_xid, bool update_strut);
+	void update_size_and_pos(bool create_xid, bool update_strut, int X, int Y, int W, int H);
 	int  handle(int e);
 	void load_applets(void);
 

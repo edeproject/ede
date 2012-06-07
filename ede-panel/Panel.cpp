@@ -61,6 +61,9 @@ EDELIB_NS_USING_LIST(10, (list,
 typedef list<Fl_Widget*> WidgetList;
 typedef list<Fl_Widget*>::iterator WidgetListIt;
 
+/* used only insid x_events */
+static Panel *gpanel;
+
 inline bool intersects(Fl_Widget *o1, Fl_Widget *o2) {
 	    return (MAX(o1->x(), o2->x()) <= MIN(o1->x() + o1->w(), o2->x() + o2->w()) &&
 	            MAX(o1->y(), o2->y()) <= MIN(o1->y() + o1->h(), o2->y() + o2->h()));
@@ -95,6 +98,25 @@ static int xerror_handler(Display *d, XErrorEvent *e) {
 
 static void make_me_dock(Fl_Window *win) {
 	netwm_window_set_type(fl_xid(win), NETWM_WINDOW_TYPE_DOCK);
+}
+
+static int x_events(int ev) {
+	/*
+	 * This is quite stupid to do, but hopefully very reliable. When screen is resized
+	 * root window was resized too and using those sizes, panel is placed. Tracking workarea changes
+	 * isn't much of use, as setting struts dimensions will affect workarea dimension too.
+	 */
+	if(fl_xevent->type == ConfigureNotify &&
+	   (fl_xevent->xconfigure.window == RootWindow(fl_display, fl_screen))) {
+			gpanel->update_size_and_pos(false, false,
+										fl_xevent->xconfigure.x,
+										fl_xevent->xconfigure.y,
+										fl_xevent->xconfigure.width,
+										fl_xevent->xconfigure.height);
+	}
+
+	/* let others receive the same event */
+	return 0;
 }
 
 /* horizontaly centers widget in the panel */
@@ -195,6 +217,8 @@ static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 #endif
 
 Panel::Panel() : PanelWindow(300, 30) {
+	gpanel = this;
+
 	clicked = 0; 
 	sx = sy = 0;
 	vpos = PANEL_POSITION_BOTTOM;
@@ -338,19 +362,36 @@ void Panel::show(void) {
 		return;
 	}
 
-	int X, Y, W, H;
-
-	fl_open_display();
-
 	/* 
 	 * hush known FLTK bug with XGetImage; a lot of errors will be print when menu icons goes
 	 * outside screen; this also make ede-panel, at some point, unresponsible
 	 */
 	XSetErrorHandler((XErrorHandler) xerror_handler);
+	update_size_and_pos(true, true);
 
-	/* position it */
+	/* collect messages */
+	Fl::add_handler(x_events);
+}
+
+void Panel::hide(void) {
+	Fl::remove_handler(x_events);
+	save_config();
+}
+
+void Panel::update_size_and_pos(bool create_xid, bool update_strut) {
+	int X, Y, W, H;
+
+	/* figure out screen dimensions */
 	if(!netwm_workarea_get_size(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
+
+	update_size_and_pos(create_xid, update_strut, X, Y, W, H);
+}
+
+void Panel::update_size_and_pos(bool create_xid, bool update_strut, int X, int Y, int W, int H) {
+	/* do not update ourself if we screen sizes are the same */
+	if(screen_x == X && screen_y == Y && screen_w == W && screen_h == H)
+		return;
 
 	screen_x = X;
 	screen_y = Y;
@@ -368,23 +409,24 @@ void Panel::show(void) {
 	size(W, DEFAULT_PANEL_H);
 
 	do_layout();
-	window_xid_create(this, make_me_dock);
+
+	if(create_xid) window_xid_create(this, make_me_dock);
 
 	/* position it, this is done after XID was created */
 	if(vpos == PANEL_POSITION_BOTTOM) {
 		position(X, screen_h - h());
-		if(width_perc >= 100)
+		if(width_perc >= 100 && update_strut) {
+			netwm_window_remove_strut(fl_xid(this));
 			netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
+		}
 	} else {
 		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
 		position(X, Y);
-		if(width_perc >= 100)
+		if(width_perc >= 100 && update_strut) {
+			netwm_window_remove_strut(fl_xid(this));
 			netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
+		}
 	}
-}
-
-void Panel::hide(void) {
-	save_config();
 }
 
 int Panel::handle(int e) {

@@ -916,7 +916,7 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 		mi[pos].labelsize_ = FL_NORMAL_SIZE;
 		mi[pos].labelcolor_ = FL_BLACK;
 
-		mi[pos].image(NULL);
+		MenuItem::init_extensions(&mi[pos]);
 
 		/* set image for menu */
 		if(cc->icon && IconLoader::inited()) {
@@ -952,13 +952,16 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 				mi[pos].labelfont_ = FL_HELVETICA;
 				mi[pos].labelsize_ = FL_NORMAL_SIZE;
 				mi[pos].labelcolor_ = FL_BLACK;
-				mi[pos].image(NULL);
+				MenuItem::init_extensions(&mi[pos]);
 
 				/* set image for menu item*/
 				if((*ds)->get_icon() && IconLoader::inited()) {
 					Fl_Image *img = IconLoader::get((*ds)->get_icon(), ICON_SIZE_SMALL);
 					mi[pos].image(img);
 				}
+
+				/* set tooltip if we have; it is actually a comment from .desktop file */
+				mi[pos].tooltip((*ds)->get_comment());
 			}
 		}
 
@@ -973,11 +976,11 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 
 			mi[pos].flags = 0;
 			mi[pos].shortcut_ = 0;
-			mi[pos].image(NULL);
 			mi[pos].labeltype_ = FL_NORMAL_LABEL;
 			mi[pos].labelfont_ = FL_HELVETICA;
 			mi[pos].labelsize_ = FL_NORMAL_SIZE;
 			mi[pos].labelcolor_ = FL_BLACK;
+			MenuItem::init_extensions(&mi[pos]);
 
 			/* set callback and callback data to be current entry */
 			mi[pos].callback_ = logout_cb;
@@ -993,7 +996,7 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 
 		/* end this menu */
 		mi[pos].text = NULL;
-		mi[pos].image(NULL);
+		MenuItem::init_extensions(&mi[pos]);
 
 		//E_DEBUG("{0}\n");
 
@@ -1026,7 +1029,7 @@ MenuItem *xdg_menu_load(void) {
 	 * MenuItem does not have constructor, so everywhere where we access MenuItem object, image
 	 * member must be NULL-ed too
 	 */
-	mi[pos].image(NULL);
+	MenuItem::init_extensions(&mi[pos]);
 
 	E_ASSERT(pos <= sz + 2);
 	return mi;
