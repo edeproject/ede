@@ -1,3 +1,23 @@
+/*
+ * $Id: ede-panel.cpp 3330 2012-05-28 10:57:50Z karijes $
+ *
+ * Copyright (C) 2012 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+ 
 #include <FL/Fl.H>
 #include <FL/x.H>
 #include <FL/fl_draw.H>
@@ -30,6 +50,8 @@ static void timeout_cb(void *w) {
 
 NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 	FL_NORMAL_SIZE = 12;
+
+	timer_set = 0;
 
 	type(NOTIFYWINDOW_TYPE);
 	color(FL_BACKGROUND2_COLOR);
@@ -67,6 +89,24 @@ NotifyWindow::NotifyWindow() : Fl_Window(DEFAULT_W, DEFAULT_H) {
 	border(0);
 }
 
+void NotifyWindow::add_timeout(void) {
+	E_DEBUG(E_STRLOC ": adding timer\n");
+	if(timer_set) return;
+
+	if(exp == -1) exp = DEFAULT_EXPIRE;
+	Fl::add_timeout((double)exp / (double)1000, timeout_cb, this);
+
+	timer_set = 1;
+}
+
+void NotifyWindow::remove_timeout(void) {
+	E_DEBUG(E_STRLOC ": removing timer\n");
+	if(!timer_set) return;
+
+	Fl::remove_timeout(timeout_cb);
+	timer_set = 0;
+}
+
 void NotifyWindow::set_icon(const char *img) {
 	E_RETURN_IF_FAIL(IconLoader::inited());
 	E_RETURN_IF_FAIL(img != NULL);
@@ -82,10 +122,9 @@ void NotifyWindow::set_body(const char *s) {
 }
 
 void NotifyWindow::show(void) {
-	if(exp != 0) {
-		if(exp == -1) exp = DEFAULT_EXPIRE;
-		Fl::add_timeout((double)exp / (double)1000, timeout_cb, this);
-	}
+	/* the case when timer should not be added */
+	if(exp != 0)
+		add_timeout();
 
 	Fl_Window::show();
 	netwm_window_set_type(fl_xid(this), NETWM_WINDOW_TYPE_NOTIFICATION);
@@ -160,4 +199,18 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 	}
 
 	Fl_Window::resize(X, Y, W, H);
+}
+
+int NotifyWindow::handle(int event) {
+	switch(event) {
+		case FL_ENTER:
+			remove_timeout();
+			goto done;
+		case FL_LEAVE:
+			add_timeout();
+			goto done;
+	}
+
+done:
+	return Fl_Window::handle(event);
 }
