@@ -241,9 +241,6 @@ void Desktop::init_internals(void) {
 		dmenu = new edelib::MenuButton(0, 0, 500, 0);
 		dmenu->menu(desktop_menu);
 		desktop_menu[1].image(edelib::IconLoader::get("folder", edelib::ICON_SIZE_TINY));
-		desktop_menu[6].image(edelib::IconLoader::get("edit-copy", edelib::ICON_SIZE_TINY));
-		desktop_menu[7].image(edelib::IconLoader::get("edit-paste", edelib::ICON_SIZE_TINY));
-
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
 
