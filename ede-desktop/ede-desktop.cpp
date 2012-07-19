@@ -114,7 +114,7 @@ static void icons_conf_cb(Fl_Widget*, void*);
 static void folder_create_cb(Fl_Widget*, void*);
 static void launcher_create_cb(Fl_Widget*, void*);
 
-MenuItem desktop_menu[] = {
+static MenuItem desktop_menu[] = {
 	{_("Create &launcher..."), 0, launcher_create_cb},
 	{_("Create &folder..."), 0, folder_create_cb, 0, FL_MENU_DIVIDER},
 	{_("&Icons settings..."), 0, icons_conf_cb, 0},
