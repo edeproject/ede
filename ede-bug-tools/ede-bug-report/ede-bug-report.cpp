@@ -25,6 +25,7 @@
 #include <FL/Fl_Button.H>
 
 #include <edelib/Window.h>
+#include <edelib/WindowUtils.h>
 #include <edelib/MessageBox.h>
 #include <edelib/String.h>
 #include <edelib/Regex.h>
@@ -41,6 +42,7 @@ EDELIB_NS_USING(String)
 EDELIB_NS_USING(Regex)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(message)
+EDELIB_NS_USING(window_center_on_screen)
 EDELIB_NS_USING(RX_CASELESS)
 
 #ifdef HAVE_CURL
@@ -156,7 +158,7 @@ int main(int argc, char** argv) {
 
 		Fl_Box *description_box = new Fl_Box(80, 45, 390, 95, _("To help us to improve the future EDE versions, "
 		"please describe the problem with much details as possible.\n\nNote: valid email address is required, so "
-		"developers could contact you for more informations if necessary."));
+		"developers can contact you for more informations if necessary."));
 
 		description_box->align(133|FL_ALIGN_INSIDE);
 
@@ -194,6 +196,7 @@ int main(int argc, char** argv) {
 		Fl_Group::current()->resizable(rbox);
 	win->window_icon(bug_xpm);
 	/* win->show(argc, argv); */
+	window_center_on_screen(win);
 	win->show();
 	return Fl::run();
 #endif /* HAVE_CURL */

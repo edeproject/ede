@@ -18,7 +18,7 @@ Function {} {open
     Fl_Box {} {
       label {To help us to improve the future EDE versions, please describe the problem with much details as possible.
 
-Note: valid email address is required, so developers could contact you for more informations if necessary.}
+Note: valid email address is required, so developers can contact you for more informations if necessary.}
       xywh {80 45 390 95} align 149
     }
     Fl_Input {} {
