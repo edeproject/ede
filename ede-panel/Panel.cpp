@@ -375,6 +375,9 @@ void Panel::show(void) {
 
 void Panel::hide(void) {
 	Fl::remove_handler(x_events);
+
+	/* strange; this is not called when panel goes out :S */
+	mgr.clear();
 	save_config();
 }
 

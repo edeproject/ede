@@ -148,9 +148,9 @@ void CPUMonitor::clear()
 	if(!cpu) return;
 
 	for (int i = 0; i < samples(); i++)
-		delete cpu[i]; 
+		delete [] cpu[i]; 
 
-	delete cpu;
+	delete [] cpu;
 	cpu = 0;
 
 	m_old_samples = -1;

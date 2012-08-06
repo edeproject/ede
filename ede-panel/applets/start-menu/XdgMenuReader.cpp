@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Copyright (C) 2012 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
@@ -6,9 +26,7 @@
 #include <FL/Fl_Shared_Image.H>
 #include <edelib/TiXml.h>
 #include <edelib/Debug.h>
-#include <edelib/String.h>
 #include <edelib/StrUtil.h>
-#include <edelib/List.h>
 #include <edelib/Util.h>
 #include <edelib/FileTest.h>
 #include <edelib/Directory.h>
@@ -21,9 +39,7 @@
 #include "MenuRules.h"
 #include "XdgMenuReader.h"
 
-EDELIB_NS_USING(String)
 EDELIB_NS_USING(DesktopFile)
-EDELIB_NS_USING(list)
 EDELIB_NS_USING(IconLoader)
 EDELIB_NS_USING(system_config_dirs)
 EDELIB_NS_USING(system_data_dirs)
@@ -204,25 +220,11 @@ static void menu_parse_context_append_desktop_files(MenuParseContext *ctx, const
 
 static void menu_parse_context_append_desktop_files_from_xdg_data_dirs(MenuParseContext *ctx) {
 	StrList lst;
-	if(system_data_dirs(lst) < 1)
-		return;
+	xdg_menu_applications_location(lst);
 
 	StrListIt it = lst.begin(), it_end = lst.end();
-	String tmp;
-
-	for(; it != it_end; ++it) {
-		tmp = build_filename((*it).c_str(), "applications");
-		menu_parse_context_append_desktop_files(ctx, tmp.c_str(), tmp.c_str());
-	}
-
-	/* 
-	 * Add user directory too; the spec is unclear about this, but official menu spec tests
-	 * requires it. Also, users will be able to add menu items without superuser permissions.
-	 */
-	String user_dir = user_data_dir();
-
-	tmp = build_filename(user_dir.c_str(), "applications");
-	menu_parse_context_append_desktop_files(ctx, tmp.c_str(), tmp.c_str());
+	for(; it != it_end; ++it)
+		menu_parse_context_append_desktop_files(ctx, it->c_str(), it->c_str());
 }
 
 static void scan_include_exclude_tag(TiXmlNode *elem, MenuRulesList &rules) {
@@ -547,8 +549,8 @@ static MenuContext *menu_parse_context_to_menu_context(MenuParseContext *m,
 	 * figure out the name first; if returns false, either menu should not be displayed, or something
 	 * went wrong
 	 */
-	String *n, *ic;
-	bool   should_be_displayed;
+	String *n = NULL, *ic = NULL;
+	bool   should_be_displayed = false;
 
 	if(!menu_context_construct_name_and_get_icon(m, top, &n, &ic, &should_be_displayed))
 		return NULL;
@@ -568,7 +570,6 @@ static MenuContext *menu_parse_context_to_menu_context(MenuParseContext *m,
 	ctx->name = n;
 	ctx->icon = ic;
 	ctx->display_it = should_be_displayed;
-
 	//E_DEBUG("+ Menu: %s %i\n", ctx->name->c_str(), m->include_rules.size());
 
 	/* fill MenuContext items, depending on what list was passed */
@@ -868,9 +869,18 @@ void xdg_menu_dump_for_test_suite(void) {
 	menu_all_parse_lists_clear(pl, cl);
 }
 
-/* used only for xdg_menu_load() and xdg_menu_delete() */
-static MenuParseList   global_parse_list;
-static MenuContextList global_context_list;
+/* public API */
+
+struct XdgMenuContent {
+	MenuItem *fltk_menu;
+
+	/*
+	 * We are keeping them as fltk_menu references some objects, like text.
+	 * This is since FLTK menu can't free label strings as MenuItem is plain struct.
+	 */
+	MenuParseList   parse_list;
+	MenuContextList context_list;
+};
 
 static void item_cb(Fl_Widget*, void *en) {
 	DesktopEntry *entry = (DesktopEntry*)en;
@@ -1009,20 +1019,37 @@ static unsigned int construct_edelib_menu(MenuContextList &lst, MenuItem *mi, un
 	return pos;
 }
 
-MenuItem *xdg_menu_load(void) {
-	/* assure they are empty */
-	E_RETURN_VAL_IF_FAIL(global_parse_list.empty() == true, NULL);
-	E_RETURN_VAL_IF_FAIL(global_context_list.empty() == true, NULL);
+void xdg_menu_applications_location(StrList &lst) {
+	lst.clear();
+
+	if(system_data_dirs(lst) < 1)
+		return;
+
+	StrListIt it = lst.begin(), it_end = lst.end();
+
+	for(; it != it_end; ++it)
+		*it = build_filename(it->c_str(), "applications");
+
+	/* 
+	 * Add user directory too; the spec is unclear about this, but official menu spec tests
+	 * requires it. Also, users will be able to add menu items without superuser permissions.
+	 */
+	String user_dir = user_data_dir();
+	lst.push_back(build_filename(user_dir.c_str(), "applications"));
+}
+
+XdgMenuContent *xdg_menu_load(void) {
+	XdgMenuContent *content = new XdgMenuContent();
 
 	/* load everything */
-	menu_all_parse_lists_load(global_parse_list, global_context_list);
+	menu_all_parse_lists_load(content->parse_list, content->context_list);
 
-	unsigned int sz = menu_context_list_count(global_context_list);
+	unsigned int sz = menu_context_list_count(content->context_list);
 	E_RETURN_VAL_IF_FAIL(sz > 0, NULL);
 
 	MenuItem *mi = new MenuItem[sz + 2]; /* plus logout + ending NULL */
 
-	unsigned int pos = construct_edelib_menu(global_context_list, mi, 0);
+	unsigned int pos = construct_edelib_menu(content->context_list, mi, 0);
 	mi[pos].text = NULL;
 
 	/* 
@@ -1032,10 +1059,20 @@ MenuItem *xdg_menu_load(void) {
 	MenuItem::init_extensions(&mi[pos]);
 
 	E_ASSERT(pos <= sz + 2);
-	return mi;
+
+	content->fltk_menu = mi;
+	return content;
 }
 
-void xdg_menu_delete(MenuItem *m) {
-	delete [] m;
-	menu_all_parse_lists_clear(global_parse_list, global_context_list);
+void xdg_menu_delete(XdgMenuContent *m) {
+	E_RETURN_IF_FAIL(m != NULL);
+
+	delete [] m->fltk_menu;
+	menu_all_parse_lists_clear(m->parse_list, m->context_list);
+	delete m;
+}
+
+MenuItem *xdg_menu_to_fltk_menu(XdgMenuContent *m) {
+	E_RETURN_VAL_IF_FAIL(m != NULL, NULL);
+	return m->fltk_menu;
 }
