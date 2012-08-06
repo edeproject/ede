@@ -196,7 +196,7 @@ void StartMenu::popup(void) {
 	Fl::release_widget_pointer(mb);
 
 	menu_opened = false;
-
+#ifdef EDE_PANEL_MENU_AUTOUPDATE
 	/* if we have menu that wants to be updated, swap them as soon as menu window was closed */
 	if(mcontent_pending) {
 		XdgMenuContent *tmp = mcontent;
@@ -208,6 +208,7 @@ void StartMenu::popup(void) {
 		xdg_menu_delete(mcontent_pending);
 		mcontent_pending = NULL;
 	}
+#endif
 }
 
 int StartMenu::handle(int e) {
@@ -289,8 +290,8 @@ bool StartMenu::can_reload(void) {
 }
 
 void StartMenu::reload_menu(void) {
+#ifdef EDE_PANEL_MENU_AUTOUPDATE
 	if(menu_opened) {
-		E_DEBUG("pending...\n");
 		mcontent_pending = xdg_menu_load();
 	} else {
 		xdg_menu_delete(mcontent);
@@ -298,6 +299,7 @@ void StartMenu::reload_menu(void) {
 		mcontent = xdg_menu_load();
 		setup_menu(mcontent);
 	}
+#endif
 }
 
 EDE_PANEL_APPLET_EXPORT (
