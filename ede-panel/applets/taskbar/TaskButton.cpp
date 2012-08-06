@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Copyright (C) 2012 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 #include <stdlib.h>
 
 #include <FL/Fl.H>
@@ -24,12 +44,14 @@ EDELIB_NS_USING(IconLoader)
 EDELIB_NS_USING(ICON_SIZE_TINY)
 EDELIB_NS_USING(netwm_window_close)
 EDELIB_NS_USING(netwm_window_set_active)
-EDELIB_NS_USING(netwm_window_maximize)
 EDELIB_NS_USING(netwm_window_get_title)
+EDELIB_NS_USING(netwm_window_set_state)
 EDELIB_NS_USING(wm_window_ede_restore)
 EDELIB_NS_USING(wm_window_get_state)
 EDELIB_NS_USING(wm_window_set_state)
 EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
+EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
+EDELIB_NS_USING(NETWM_STATE_MAXIMIZED)
 
 static Fl_Pixmap image_window(window_xpm);
 
@@ -79,7 +101,7 @@ static void maximize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
 	netwm_window_set_active(bb->get_window_xid());
-	netwm_window_maximize(bb->get_window_xid());
+	netwm_window_set_state(bb->get_window_xid(), NETWM_STATE_MAXIMIZED, NETWM_STATE_ACTION_TOGGLE);
 
 	redraw_whole_panel(bb);
 }
