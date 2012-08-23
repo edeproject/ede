@@ -185,7 +185,11 @@ void StartMenu::popup(void) {
 	redraw();
 
 	Fl_Widget *mb = this;
+
+#if (FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3)
 	Fl::watch_widget_pointer(mb);
+#endif
+
 	if(!box() || type())
 		m = menu()->popup(Fl::event_x(), Fl::event_y(), label(), mvalue(), this);
 	else
@@ -193,7 +197,10 @@ void StartMenu::popup(void) {
 
 	picked(m);
 	pressed_menu_button = 0;
+
+#if (FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3)
 	Fl::release_widget_pointer(mb);
+#endif
 
 	menu_opened = false;
 #ifdef EDE_PANEL_MENU_AUTOUPDATE
