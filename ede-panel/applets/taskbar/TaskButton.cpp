@@ -45,6 +45,7 @@ EDELIB_NS_USING(ICON_SIZE_TINY)
 EDELIB_NS_USING(netwm_window_close)
 EDELIB_NS_USING(netwm_window_set_active)
 EDELIB_NS_USING(netwm_window_get_title)
+EDELIB_NS_USING(netwm_window_get_icon)
 EDELIB_NS_USING(netwm_window_set_state)
 EDELIB_NS_USING(wm_window_ede_restore)
 EDELIB_NS_USING(wm_window_get_state)
@@ -203,64 +204,13 @@ void TaskButton::update_title_from_xid(void) {
 	}
 }
 
-/* stolen from pekwm */
 void TaskButton::update_image_from_xid(void) {
 	E_RETURN_IF_FAIL(xid >= 0);
 
-	Atom real;
-	int  format;
-	unsigned long n, extra;
-	unsigned char *prop = 0;
-	long len = 2;
-
-	int status = XGetWindowProperty(fl_display, xid,
-			net_wm_icon , 0L, len, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
-
-	if((status != Success) || (real != XA_CARDINAL)) {
-		if(prop) XFree(prop);
-		return;
-	}
-
-	long *data = (long*)prop;
-	unsigned int width, height;
-
-	width  = data[0];
-	height = data[1];
-	XFree(prop);
-
-	len += width * height;
-
-	format = 0;
-	prop   = 0;
-	real   = 0;
-
-	status = XGetWindowProperty(fl_display, xid,
-			net_wm_icon , 0L, len, False, XA_CARDINAL, &real, &format, &n, &extra, (unsigned char**)&prop);
-
-	if((status != Success) || (real != XA_CARDINAL)) {
-		if(prop) XFree(prop);
-		return;
-	}
-
-	data = (long*)prop;
-
-	unsigned char *img_data = new unsigned char[width * height * 4];
-	unsigned char *ptr = img_data;
-	int            pixel;
-
-	for(int i = 2; i < len; i++) {
-		pixel = data[i];
-
-		*ptr++ = pixel >> 16 & 0xff;
-		*ptr++ = pixel >> 8  & 0xff;
-		*ptr++ = pixel & 0xff;
-		*ptr++ = pixel >> 24 & 0xff;
-	}
-
-	XFree(prop);
-
-	Fl_RGB_Image *img = new Fl_RGB_Image(img_data, width, height, 4);
-	img->alloc_array = 1;
+	Fl_RGB_Image *img = netwm_window_get_icon(xid, TASKBUTTON_ICON_W);
+	if(!img) return;
+	
+	int width = img->w(), height = img->h();
 
 	/* some safety, scale it if needed */
 	if((width  > TASKBUTTON_ICON_W) || (height > TASKBUTTON_ICON_H)) {

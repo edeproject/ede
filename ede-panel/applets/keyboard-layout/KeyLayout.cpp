@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Copyright (C) 2011-2012 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 #include "Applet.h"
 
 #ifdef HAVE_CONFIG_H
@@ -61,11 +81,12 @@ static  KeyLayoutList    keylayout_objects;
 #ifdef HAVE_XKBRULES
 /* Xkb does not provide this */
 static void xkbrf_names_prop_free(XkbRF_VarDefsRec &vd, char *tmp) {
-	XFree(tmp);
-	XFree(vd.model);
-	XFree(vd.layout);
-	XFree(vd.options);
-	XFree(vd.variant);
+	if(tmp)            free(tmp);
+	if(vd.model)       XFree(vd.model);
+	if(vd.layout)      XFree(vd.layout);
+	if(vd.options)     XFree(vd.options);
+	if(vd.variant)     XFree(vd.variant);
+	if(vd.extra_names) XFree(vd.extra_names);
 }
 #endif
 
@@ -172,8 +193,10 @@ void KeyLayout::do_key_layout(void) {
 
 	if(XkbRF_GetNamesProp(fl_display, &tmp, &vd)) {
 		/* do nothing if layout do not exists or the same was catched */
-		if(!vd.layout || (curr_layout == vd.layout))
+		if(!vd.layout || (curr_layout == vd.layout)) {
+			xkbrf_names_prop_free(vd, tmp);
 			return;
+		}
 
 		/* just store it, so update_flag() can do the rest */
 		curr_layout = vd.layout;
