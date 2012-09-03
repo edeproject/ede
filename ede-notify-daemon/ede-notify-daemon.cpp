@@ -175,11 +175,11 @@ static void show_window(unsigned int id,
 		px = sw - WINDOWS_PADDING - win->w();
 		py = sh - WINDOWS_PADDING - win->h();
 
-		Fl::lock();
-
 		/*
 		 * iterate through shown windows and find position where to put our one
 		 * FIXME: this is quite primitive window position deducing facility
+		 *
+		 * TODO: add locking here
 		 */
 		Fl_Window *wi;
 		for(wi = Fl::first_window(); wi; wi = Fl::next_window(wi)) {
@@ -193,7 +193,6 @@ static void show_window(unsigned int id,
 			}
 		}
 
-		Fl::unlock();
 		win->position(px, py);
 	}
 
