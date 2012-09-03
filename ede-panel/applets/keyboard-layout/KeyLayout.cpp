@@ -30,6 +30,7 @@
 #include <FL/Fl.H>
 
 #include <stdio.h> /* needed for XKBrules.h */
+#include <stdlib.h>
 
 #ifdef HAVE_XKBRULES
 # include <X11/XKBlib.h>
