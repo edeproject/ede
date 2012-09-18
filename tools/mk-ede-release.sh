@@ -6,12 +6,21 @@ RELEASE_VERSION="2.0"
 
 ############################################
 
+script_dir="$( cd "$( dirname "$0" )" && pwd )"
+release_dir="release-$RELEASE_VERSION"
+release_dir_full="`pwd`/$release_dir"
+
 dprint() {
 	echo "* $1"
 }
 
-release_dir="release-$RELEASE_VERSION"
-release_dir_full="`pwd`/$release_dir"
+generate_changelog() {
+	$script_dir/svn2cl/svn2cl.sh --authors=$script_dir/svn2cl/authors.xml -o $1/ChangeLog $1
+}
+
+upload_file() {
+	scp $1-$2.tar.gz karijes@frs.sourceforge.net:/home/frs/project/ede/$1/$2/$1-$2.tar.gz
+}
 
 # prepare location dir
 rm -Rf $release_dir
@@ -31,12 +40,14 @@ svn copy "$ede_svn_trunk/edelib" "$ede_svn_tags/edelib-$RELEASE_VERSION" -m "Tag
 dprint "Tagging ede"
 svn copy "$ede_svn_trunk/ede2"   "$ede_svn_tags/ede-$RELEASE_VERSION" -m "Tagging ede to $RELEASE_VERSION"
 
-############################################
+###########################################
 
 package="edelib-$RELEASE_VERSION"
 
 dprint "Getting edelib..."
 svn co "$ede_svn_trunk/edelib" $package
+
+generate_changelog $package
 
 cd $package
 find . -name ".svn" -type d | xargs rm -Rf
@@ -53,6 +64,8 @@ package="ede-$RELEASE_VERSION"
 
 dprint "Getting ede..."
 svn co "$ede_svn_trunk/ede2" $package
+
+generate_changelog $package
 
 cd $package
 find . -name ".svn" -type d | xargs rm -Rf
@@ -77,3 +90,7 @@ cd ..
 tar -czpvf $package.tar.gz $package
 md5sum $package.tar.gz >> checksum
 
+############################################
+
+#upload_file edelib $RELEASE_VERSION
+#upload_file ede $RELEASE_VERSION

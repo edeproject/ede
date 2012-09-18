@@ -26,11 +26,13 @@
 #include <string.h>
 #include <limits.h>
 
+#include <edelib/Ede.h>
+#include <edelib/Debug.h>
+
+#ifdef EDELIB_HAVE_DBUS
 #include <FL/Fl.H>
 #include <FL/Fl_Shared_Image.H>
 
-#include <edelib/Ede.h>
-#include <edelib/Debug.h>
 #include <edelib/EdbusConnection.h>
 #include <edelib/EdbusMessage.h>
 #include <edelib/EdbusData.h>
@@ -63,7 +65,6 @@
 #define WINDOWS_PADDING 10
 
 #define IS_MEMBER(m, s1) (strcmp((m->member()), (s1)) == 0)
-#define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
 EDELIB_NS_USING(EdbusConnection)
 EDELIB_NS_USING(EdbusMessage)
@@ -298,6 +299,8 @@ static int notifications_dbus_method_cb(const EdbusMessage *m, void *d) {
 	return 1;
 }
 
+#endif /* EDELIB_HAVE_DBUS */
+
 #if 0
 static int notifications_dbus_signal_cb(const EdbusMessage *m, void *d) {
 	E_DEBUG("+=> %s\n", m->member());
@@ -312,6 +315,8 @@ static void help(void) {
 	puts("  -h, --help       this help");
 	puts("  -n, --no-daemon  do not run in background");
 }
+
+#define CHECK_ARGV(argv, pshort, plong) ((strcmp(argv, pshort) == 0) || (strcmp(argv, plong) == 0))
 
 int main(int argc, char **argv) {
 	/* daemon behaves as GUI app, as will use icon theme and etc. */
@@ -329,6 +334,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
+#ifdef EDELIB_HAVE_DBUS
 	server_running  = false;
 	notify_id       = 0;
 	EdbusConnection dbus;
@@ -359,5 +365,8 @@ int main(int argc, char **argv) {
 		Fl::wait(FOREVER);
 	
 	IconLoader::shutdown();
+#else
+	E_WARNING(E_STRLOC ": edelib is compiled without DBus so notification daemon is not able to receive notification messages\n");
+#endif
 	return 0;
 }

@@ -224,7 +224,10 @@ Desktop::~Desktop() {
 
 	delete gisett;
 	delete selbox;
+
+#ifdef EDELIB_HAVE_DBUS
 	delete dbus;
+#endif
 
 	DirWatch::shutdown();
 	foreign_callback_remove(settings_changed_cb);
@@ -244,12 +247,14 @@ void Desktop::init_internals(void) {
 		wallpaper = new Wallpaper(0, 0, w(), h());
 	end();
 
+#ifdef EDELIB_HAVE_DBUS
 	dbus = new edelib::EdbusConnection();
 	if(!dbus->connect(edelib::EDBUS_SESSION)) {
 		E_WARNING(E_STRLOC ": Unable to connect to session bus. Disabling dbus interface...\n");
 		delete dbus;
 		dbus = NULL;
 	}
+#endif
 
 	/* read main config */
 	read_config();
@@ -820,6 +825,7 @@ void Desktop::notify_desktop_changed(void) {
 		return;
 	}
 
+#ifdef EDELIB_HAVE_DBUS
 	if(dbus) {
 		edelib::EdbusMessage msg;
 		/* send org.equinoxproject.Desktop.DesktopChanged(int32, string) signal */
@@ -827,6 +833,7 @@ void Desktop::notify_desktop_changed(void) {
 		msg << num << names[num];
 		dbus->send(msg);
 	}
+#endif
 
 	XFreeStringList(names);
 }

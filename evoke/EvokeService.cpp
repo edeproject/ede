@@ -26,8 +26,11 @@
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
+
+#if EDELIB_HAVE_DBUS
 #include <edelib/EdbusMessage.h>
 #include <edelib/EdbusConnection.h>
+#endif
 
 #include "EvokeService.h"
 #include "Splash.h"
@@ -37,11 +40,6 @@
 
 EDELIB_NS_USING(Config)
 EDELIB_NS_USING(Resource)
-EDELIB_NS_USING(EdbusMessage)
-EDELIB_NS_USING(EdbusConnection)
-EDELIB_NS_USING(EdbusError)
-EDELIB_NS_USING(EDBUS_SESSION)
-EDELIB_NS_USING(EDBUS_SYSTEM)
 EDELIB_NS_USING(RES_SYS_ONLY)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_test)
@@ -50,6 +48,14 @@ EDELIB_NS_USING(run_sync)
 EDELIB_NS_USING(alert)
 EDELIB_NS_USING(ask)
 EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
+
+#if EDELIB_HAVE_DBUS
+EDELIB_NS_USING(EdbusMessage)
+EDELIB_NS_USING(EdbusConnection)
+EDELIB_NS_USING(EdbusError)
+EDELIB_NS_USING(EDBUS_SESSION)
+EDELIB_NS_USING(EDBUS_SYSTEM)
+#endif
 
 #ifdef USE_LOCAL_CONFIG
 # define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
@@ -90,17 +96,21 @@ static int get_int_property_value(Atom at) {
 }
 
 static void send_dbus_ede_quit(void) {
+#ifdef EDELIB_HAVE_DBUS
 	EdbusConnection c;
 	E_RETURN_IF_FAIL(c.connect(EDBUS_SESSION));
 
 	EdbusMessage msg;
 	msg.create_signal("/org/equinoxproject/Shutdown", "org.equinoxproject.Shutdown", "Shutdown");
 	c.send(msg);
+#endif
 }
 
 static bool do_shutdown_or_restart(bool restart) {
 	const char *action;
+	int r = 1;
 
+#ifdef EDELIB_HAVE_DBUS
 	EdbusConnection c;
 	if(!c.connect(EDBUS_SYSTEM)) {
 		alert(_("Unable to connect to HAL daemon. Make sure both D-BUS and HAL daemons are running"));
@@ -131,8 +141,9 @@ static bool do_shutdown_or_restart(bool restart) {
 	if((*it).to_bool() == true)
 		return true;
 
-	int r = ask(_("You are not allowed to execute this command. Please consult ConsoleKit documentation on how to allow privileged actions. "
-				  "Would you like to try to execute system commands?"));
+	r = ask(_("You are not allowed to execute this command. Please consult ConsoleKit documentation on how to allow privileged actions. "
+			  "Would you like to try to execute system commands?"));
+#endif /* EDELIB_HAVE_DBUS */
 
 	/* try to do things manually */
 	if(!r) return false;

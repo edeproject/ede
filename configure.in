@@ -106,10 +106,7 @@ else
 fi
 
 if test -n "$with_edelib_path"; then
-	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$with_edelib_path"
-else
-	dnl TODO: remove this in release
-	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/ede/lib/pkgconfig"
+	export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$with_edelib_path/lib/pkgconfig"
 fi
 
 PKG_CHECK_MODULES(EDELIB, [edelib],, [have_edelib=no])
@@ -129,7 +126,7 @@ fi
 
 PKG_CHECK_MODULES(EDELIB_DBUS, [edelib-dbus],, [have_edelib_dbus=no])
 if test "$have_edelib_dbus" = "no"; then
-	AC_MSG_ERROR(edelib-dbus not found! You must install it first)
+	AC_MSG_RESULT(edelib is compiled without DBus so EDE will be compiled without DBus support)
 fi
 
 dnl find edelib documentation

@@ -26,7 +26,10 @@
 #include <edelib/File.h>
 #include <edelib/Resource.h>
 #include <edelib/Nls.h>
-#include <edelib/EdbusList.h>
+
+#ifdef EDELIB_HAVE_DBUS
+# include <edelib/EdbusList.h>
+#endif
 
 #include "Xsm.h"
 
@@ -41,9 +44,12 @@ EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(XSettingsSetting)
 EDELIB_NS_USING(XSettingsList)
 
+#ifdef EDELIB_HAVE_DBUS
 EDELIB_NS_USING(EdbusMessage)
 EDELIB_NS_USING(EdbusData)
 EDELIB_NS_USING(EdbusList)
+EDELIB_NS_USING(EDBUS_SESSION)
+#endif
 
 EDELIB_NS_USING(dir_home)
 EDELIB_NS_USING(file_remove)
@@ -58,7 +64,8 @@ EDELIB_NS_USING(color_fltk_to_html)
 EDELIB_NS_USING(XSETTINGS_TYPE_COLOR)
 EDELIB_NS_USING(XSETTINGS_TYPE_INT)
 EDELIB_NS_USING(XSETTINGS_TYPE_STRING)
-EDELIB_NS_USING(EDBUS_SESSION)
+
+#define STR_CMP(s1, s2) (strcmp((s1), (s2)) == 0)
 
 struct ResourceMap {
 	const char* name;
@@ -83,6 +90,7 @@ static int ignore_xerrors(Display* display, XErrorEvent* xev) {
 	return True;
 }
 
+#ifdef EDELIB_HAVE_DBUS
 static void handle_get_type(XSettingsData* mdata, const EdbusMessage* orig, EdbusMessage& reply) {
 	if(orig->size() != 1) {
 		reply.create_error_reply(*orig, _("This function accepts only one parameter"));
@@ -247,13 +255,75 @@ static void handle_set(Xsm* xsm, XSettingsData* mdata, const EdbusMessage* orig,
 	}
 }
 
+#define XSM_OBJECT_PATH "/org/equinoxproject/Xsettings"
+
+#define XSM_INTROSPECTION_XML \
+"<node>\n"\
+" <interface name=\"org.equinoxproject.Xsettings\">\n" \
+"  <method name=\"GetType\">\n"	\
+"    <arg name=\"name\" type=\"s\" direction=\"in\"/>\n" \
+"    <arg name=\"type\" type=\"s\" direction=\"out\"/>\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Returns type for given name.\" />\n" \
+"  </method>\n"	\
+"  <method name=\"GetAll\">\n" \
+"    <arg name=\"all\" type=\"as\" direction=\"out\"/>\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Get all settings currently registered.\" />\n" \
+"  </method>\n" \
+"  <method name=\"GetValue\">\n" \
+"    <arg name=\"name\" type=\"s\" direction=\"in\"/>\n" \
+"    <arg name=\"value\" type=\"v\" direction=\"out\"/>\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Returns value for named setting.\" />\n" \
+"  </method>\n" \
+"  <method name=\"Remove\">\n" \
+"    <arg name=\"name\" type=\"s\" direction=\"in\"/>\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Removes named setting. If not exists, does nothing.\" />\n" \
+"  </method>\n" \
+"  <method name=\"Flush\">\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Flushes all settings to disk.\" />\n" \
+"  </method>\n" \
+"  <method name=\"Set\">\n" \
+"    <arg name=\"status\" type=\"b\" direction=\"out\"/>\n" \
+"    <arg name=\"name\" type=\"s\" direction=\"in\"/>\n" \
+"    <arg name=\"value\" type=\"v\" direction=\"in\"/>\n" \
+"    <annotation name=\"org.equinoxproject.DBus.DocString\" value=\"Set named setting to given value. Returns true if set or false if failed.\" />\n" \
+"  </method>\n" \
+" </interface>\n" \
+"</node>\n";
 
 static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 	Xsm* x = (Xsm*)data;
 	XSettingsData* md = x->get_manager_data();
 
+	/* introspection */
+	if(STR_CMP(m->member(), "Introspect") &&
+	   STR_CMP(m->interface(), "org.freedesktop.DBus.Introspectable") &&
+	   STR_CMP(m->destination(), "org.equinoxproject.Xsettings"))
+	{
+		String ret = EDBUS_INTROSPECTION_DTD;
+		
+		if(STR_CMP(m->path(), XSM_OBJECT_PATH)) {
+			ret += XSM_INTROSPECTION_XML;
+		} else {
+			ret += "<node>\n <node ";
+			if(STR_CMP(m->path(), "/"))
+				ret += "name=\"org\"";
+			else if(STR_CMP(m->path(), "/org"))
+				ret += "name=\"equinoxproject\"";
+			else if(STR_CMP(m->path(), "/org/equinoxproject"))
+				ret += "name=\"Xsettings\"";
+
+			ret += " />\n</node>\n";
+		}
+
+		EdbusMessage reply;
+		reply.create_reply(*m);
+		reply << EdbusData::from_string(ret.c_str());
+		x->get_dbus_connection()->send(reply);
+		return 1;
+	}
+
 	/* string GetType(string name) */
-	if(strcmp(m->member(), "GetType") == 0) {
+	if(STR_CMP(m->member(), "GetType")) {
 		EdbusMessage reply;
 		handle_get_type(md, m, reply);
 
@@ -262,7 +332,7 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 	}
 
 	/* string-array GetAll(void) */
-	if(strcmp(m->member(), "GetAll") == 0) {
+	if(STR_CMP(m->member(), "GetAll")) {
 		EdbusMessage reply;
 		handle_get_all(md, m, reply);
 
@@ -272,7 +342,7 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 	}
 
 	/* [string|array|int32] GetValue(string name) */
-	if(strcmp(m->member(), "GetValue") == 0) {
+	if(STR_CMP(m->member(), "GetValue")) {
 		EdbusMessage reply;
 		handle_get_value(md, m, reply);
 
@@ -282,19 +352,19 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 	}
 
 	/* void Remove(string name) */
-	if(strcmp(m->member(), "Remove") == 0) {
+	if(STR_CMP(m->member(), "Remove")) {
 		handle_remove(x, md, m);
 		return 1;
 	}
 
 	/* void Flush(void) */
-	if(strcmp(m->member(), "Flush") == 0) {
+	if(STR_CMP(m->member(), "Flush")) {
 		x->save_serialized();
 		return 1;
 	}
 
 	/* bool Set(string name, [string|array|int32] value) */
-	if(strcmp(m->member(), "Set") == 0) {
+	if(STR_CMP(m->member(), "Set")) {
 		EdbusMessage reply;
 		handle_set(x, md, m, reply);
 
@@ -302,13 +372,10 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
-Xsm::~Xsm() { 
-	E_DEBUG(E_STRLOC ": Xsm::~Xsm()\n"); 
-	delete dbus_conn;
-}
+#endif /* EDELIB_HAVE_DBUS */
 
 /*
  * This is a short explaination how evoke's XSETTINGS part is combined
@@ -373,7 +440,7 @@ void Xsm::xresource_replace(void) {
 		/* check if resource is present */
 		status = XrmGetResource(db, resource_map[i].xresource_key, resource_map[i].xresource_klass, &type, &xrmv);
 
-		if(status && strcmp(type, "String") == 0) {
+		if(status && STR_CMP(type, "String")) {
 			E_DEBUG(E_STRLOC ": %s.%s found in database\n", 
 					resource_map[i].xresource_klass, resource_map[i].xresource_key);
 		}
@@ -427,6 +494,7 @@ void Xsm::xresource_undo(void) {
 }
 
 void Xsm::xsettings_dbus_serve(void) {
+#ifdef EDELIB_HAVE_DBUS
 	E_RETURN_IF_FAIL(!dbus_conn);
 
 	EdbusConnection* d = new EdbusConnection;
@@ -443,11 +511,12 @@ void Xsm::xsettings_dbus_serve(void) {
 		return;
 	}
 
-	d->register_object("/org/equinoxproject/Xsettings");
+	d->register_object(XSM_OBJECT_PATH);
 	d->method_callback(xsettings_dbus_cb, this);
 
 	d->setup_listener_with_fltk();
 	dbus_conn = d;
+#endif /* EDELIB_HAVE_DBUS */
 }
 
 bool Xsm::load_serialized(void) {
@@ -481,7 +550,7 @@ bool Xsm::load_serialized(void) {
 		return false;
 
 	for(elem = elem->FirstChildElement(); elem; elem = elem->NextSibling()) {
-		if(strcmp(elem->Value(), "setting") != 0) {
+		if(!STR_CMP(elem->Value(), "setting")) {
 			E_WARNING(E_STRLOC ": Got unknown child in 'ede-setting' %s\n", elem->Value());
 			continue;
 		}
@@ -498,11 +567,11 @@ bool Xsm::load_serialized(void) {
 			continue;
 		}
 
-		if(strcmp(type, "int") == 0)
+		if(STR_CMP(type, "int"))
 			cmp = 1;
-		else if(strcmp(type, "string") == 0)
+		else if(STR_CMP(type, "string"))
 			cmp = 2;
-		else if(strcmp(type, "color") == 0)
+		else if(STR_CMP(type, "color"))
 			cmp = 3;
 		else {
 			E_WARNING(E_STRLOC ": Unknown type %s\n", type);

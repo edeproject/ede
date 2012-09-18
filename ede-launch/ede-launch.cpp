@@ -1,13 +1,21 @@
 /*
  * $Id$
  *
- * ede-launch, launch external application
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2008-2009 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2012 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,6 +55,7 @@
 #include <edelib/StrUtil.h>
 #include <edelib/Debug.h>
 #include <edelib/Regex.h>
+#include <edelib/Util.h>
 #include <edelib/Ede.h>
 #include "StartupNotify.h"
 
@@ -63,13 +72,14 @@
 #define REGEX_PATTERN_URL  "((http|https|ftp|gopher|!file):\\/\\/|www)[a-zA-Z0-9\\-\\._]+\\/?[a-zA-Z0-9_\\.\\-\\?\\+\\/~=&#;,]*[a-zA-Z0-9\\/]{1}"
 
 EDELIB_NS_USING_AS(Window, LaunchWindow)
-EDELIB_NS_USING_LIST(12, (Resource,
+EDELIB_NS_USING_LIST(14, (Resource,
 						  Regex,
 						  String,
+						  list,
 						  DesktopFile,
 					  	  RES_USER_ONLY,
 						  DESK_FILE_TYPE_APPLICATION,
-						  run_sync, run_async, alert, file_path, window_center_on_screen, str_ends))
+						  run_sync, run_async, alert, file_path, window_center_on_screen, str_ends, system_data_dirs))
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
@@ -346,6 +356,17 @@ static bool start_desktop_file(const char *cmd) {
 
 FAIL:
 	return false;
+}
+
+static bool start_via_mime_cache(const char *arg) {
+	list<String> dirs;
+	E_RETURN_VAL_IF_FAIL(system_data_dirs(dirs) > 0, false);
+
+	DesktopFile d;
+	list<String>::iterator it = dirs.begin(), ite = dirs.end();
+
+	for(; it != ite; ++it) {
+	}
 }
 
 /* concat all arguments preparing it for start_child() */

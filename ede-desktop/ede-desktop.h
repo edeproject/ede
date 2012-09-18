@@ -27,8 +27,11 @@
 #include <edelib/String.h>
 #include <edelib/Resource.h>
 #include <edelib/List.h>
-#include <edelib/EdbusConnection.h>
 #include <edelib/MenuButton.h>
+
+#ifdef EDELIB_HAVE_DBUS
+# include <edelib/EdbusConnection.h>
+#endif
 
 #define EDAMAGE_CHILD_LABEL    0x10
 #define EDAMAGE_OVERLAY        0x20
@@ -109,7 +112,10 @@ private:
 
 	edelib::MenuButton*      dmenu;
 	Wallpaper*               wallpaper;
+
+#ifdef EDELIB_HAVE_DBUS
 	edelib::EdbusConnection* dbus;
+#endif
 
 	DesktopIconList icons;
 	DesktopIconList selectionbuf;
