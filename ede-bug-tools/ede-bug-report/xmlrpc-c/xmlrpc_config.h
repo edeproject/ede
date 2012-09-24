@@ -29,8 +29,9 @@
 /* We hope to replace xmlrpc_amconfig.h some day with something that 
    doesn't require a whole special set of software to build, to make
    Xmlrpc-c approachable by dumber developers.
-*/
+
 #include "xmlrpc_amconfig.h"
+*/
 
 /* EDE top config file */
 #ifdef HAVE_CONFIG_H

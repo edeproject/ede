@@ -56,6 +56,17 @@ AC_PATH_XTRA
 
 AC_HEADER_STDC
 
+dnl for xmlrpc-c
+AC_CHECK_FUNC(pselect, AC_DEFINE(HAVE_PSELECT, 1, [Define to 1 if you have pselect()]))
+AC_CHECK_FUNC(setgroups, AC_DEFINE(HAVE_SETGROUPS, 1, [Define to 1 if you have setgroups()]))
+AC_CHECK_FUNC(asprintf, AC_DEFINE(HAVE_ASPRINTF, 1, [Define to 1 if you have asprintf()]))
+AC_CHECK_FUNC(setenv, AC_DEFINE(HAVE_SETENV, 1, [Define to 1 if you have setenv()]))
+AC_CHECK_FUNC(wcsncmp, AC_DEFINE(HAVE_WCSNCMP, 1, [Define to 1 if you have wcsncmp()]))
+AC_CHECK_FUNC(gettimeofday, AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Define to 1 if you have gettimeofday()]))
+AC_CHECK_FUNC(localtime_r, AC_DEFINE(HAVE_LOCALTIME_R, 1, [Define to 1 if you have localtime_r()]))
+AC_CHECK_FUNC(gmtime_r, AC_DEFINE(HAVE_GMTIME_R, 1, [Define to 1 if you have gmtime_r()]))
+AC_CHECK_FUNC(strcasecmp, AC_DEFINE(HAVE_STRCASECMP, 1, [Define to 1 if you have strcasecmp()]))
+
 if test "$enable_profile" = "yes"; then
 	enable_debug=yes
 fi
