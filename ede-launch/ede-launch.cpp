@@ -277,6 +277,11 @@ static int start_child_process(const char* cmd) {
 }
 
 static int start_child_process_with_core(const char* cmd) {
+#ifndef __minix
+	/* 
+	 * Minix does not have setrlimit() so we disable everything as by default it
+	 * will dump core.
+	 */
 	struct rlimit r;
 	errno = 0;
 
@@ -292,14 +297,16 @@ static int start_child_process_with_core(const char* cmd) {
 		E_WARNING(E_STRLOC ": setrlimit() failed with '%s'\n", strerror(errno));
 		return -1;
 	}
-
+#endif
 	int ret = start_child_process(cmd);
 
+#ifndef __minix
 	r.rlim_cur = old;
 	if(setrlimit(RLIMIT_CORE, &r) == -1) {
 		E_WARNING(E_STRLOC ": setrlimit() failed with '%s'\n", strerror(errno));
 		return -1;
 	}
+#endif
 
 	return ret;
 }
