@@ -365,17 +365,6 @@ FAIL:
 	return false;
 }
 
-static bool start_via_mime_cache(const char *arg) {
-	list<String> dirs;
-	E_RETURN_VAL_IF_FAIL(system_data_dirs(dirs) > 0, false);
-
-	DesktopFile d;
-	list<String>::iterator it = dirs.begin(), ite = dirs.end();
-
-	for(; it != ite; ++it) {
-	}
-}
-
 /* concat all arguments preparing it for start_child() */
 static void join_args(int start, int argc, char **argv, const char *program, String &ret, bool is_mailto = false) {
 	String       args;
