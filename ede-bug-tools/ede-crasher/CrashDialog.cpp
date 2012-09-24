@@ -14,11 +14,11 @@
 #include <config.h>
 #endif
 
-#include <sys/utsname.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/utsname.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
