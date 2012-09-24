@@ -442,7 +442,12 @@ do_iconv (iconv_t ic, const char **inp, size_t *in_bytes,
 #ifdef ICONV_CONST
     return iconv(ic, inp, in_bytes, outp, out_bytes);
 #else // !ICONV_CONST
+# ifdef __minix
+    // this is as MESS across OS-es...
+    return iconv(ic, (const char**)inp, in_bytes, outp, out_bytes);
+# else
     return iconv(ic, const_cast<char**>(inp), in_bytes, outp, out_bytes);
+# endif
 #endif // ICONV_CONST
 }
 

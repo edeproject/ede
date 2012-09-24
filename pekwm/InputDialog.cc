@@ -23,6 +23,11 @@
 
 extern "C" {
 #include <X11/Xutil.h>
+
+#ifdef __minix
+# define XK_MISCELLANY
+# include <X11/keysymdef.h>
+#endif
 }
 
 using std::list;
