@@ -29,6 +29,7 @@
 #include <libhal-storage.h>
 #include <edelib/List.h>
 #include <edelib/Missing.h>
+#include <edelib/StrUtil.h>
 
 /* HAL can return NULL as error message if not checked */
 #define CHECK_STR(s) ((s != NULL) ? s : "<unknown>")
@@ -38,6 +39,9 @@
 
 #define EDE_SHUTDOWN_INTERFACE "org.equinoxproject.Shutdown"
 #define EDE_SHUTDOWN_MEMBER    "Shutdown"
+
+EDELIB_NS_USING(list)
+EDELIB_NS_USING(str_hash)
 
 struct DeviceInfo {
 	unsigned int udi_hash;
@@ -58,8 +62,8 @@ struct DeviceAudioInfo {
 	const char*  device_file;
 };
 
-typedef edelib::list<unsigned int>           UIntList;
-typedef edelib::list<unsigned int>::iterator UIntListIter;
+typedef list<unsigned int>           UIntList;
+typedef list<unsigned int>::iterator UIntListIter;
 
 static int             quit_signaled = 0;
 static DBusConnection* bus_connection = NULL;
@@ -67,24 +71,6 @@ static UIntList        known_audio_udis;
 
 void quit_signal(int sig) {
 	quit_signaled = 1;
-}
-
-/* A hash function from Dr.Dobbs Journal.  */
-unsigned int do_hash(const char* key, int keylen) {
-	unsigned hash ;
-	int i;
-
-	for (i = 0, hash = 0; i < keylen ;i++) {
-		hash += (long)key[i] ;
-		hash += (hash<<10);
-		hash ^= (hash>>6) ;
-	}
-
-	hash += (hash <<3);
-	hash ^= (hash >>11);
-	hash += (hash <<15);
-
-	return hash ;
 }
 
 void send_dbus_signal_mounted(DeviceInfo* info) {
@@ -217,7 +203,7 @@ void device_info_send(LibHalContext* ctx, const char* udi) {
 		if(drive) {
 			const char* label = libhal_device_get_property_string(ctx, udi, "volume.label", 0);
 			const char* dev   = libhal_drive_get_device_file(drive);
-			unsigned int udi_hash = do_hash(udi, strlen(udi));
+			unsigned int udi_hash = str_hash(udi);
 
 			/* for audio CD's we send special signals */
 			if(libhal_volume_disc_has_audio(vol) && !libhal_volume_disc_has_data(vol)) {
@@ -280,7 +266,7 @@ void device_added(LibHalContext* ctx, const char* udi) {
 }
 
 void device_removed(LibHalContext* ctx, const char* udi) {
-	unsigned int udi_hash = do_hash(udi, strlen(udi));
+	unsigned int udi_hash = str_hash(udi);
 
 	/* signal audio CD removal if udi match ours */
 	UIntListIter it = known_audio_udis.begin(), it_end = known_audio_udis.end();
