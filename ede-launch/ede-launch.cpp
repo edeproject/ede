@@ -175,7 +175,7 @@ static bool allowed_launch_type(const char *t) {
 	return false;
 }
 
-static void start_crasher(const char* cmd, int sig) {
+static void start_crasher(const char* cmd, int sig, int pid) {
 	const char* base = get_basename(cmd);
 	const char* ede_app_flag = "";
 
@@ -186,11 +186,11 @@ static void start_crasher(const char* cmd, int sig) {
 	 * determine is our app by checking the prefix; we don't want user to send bug reports about crashes 
 	 * of foreign applications
 	 */
-	if(strncmp(base, "ede-", 4) == 0)
+	if((strncmp(base, "ede-", 4) == 0) || (strncmp(base, "edelib-", 7) == 0))
 		ede_app_flag = "--edeapp";
 
 	/* call edelib implementation instead start_child_process() to prevents loops if 'ede-crasher' crashes */
-	run_sync(PREFIX "/bin/ede-crasher %s --appname %s --apppath %s --signal %i", ede_app_flag, base, cmd, sig);
+	run_sync(PREFIX "/bin/ede-crasher %s --appname %s --apppath %s --signal %i --pid %i", ede_app_flag, base, cmd, sig, pid);
 }
 
 static int start_child_process(const char* cmd) {
@@ -268,7 +268,7 @@ static int start_child_process(const char* cmd) {
 	if(WIFEXITED(status)) {
 		ret = WEXITSTATUS(status);
 	} else if(WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV) {
-		start_crasher(cmd, SIGSEGV);
+		start_crasher(cmd, SIGSEGV, pid);
 	} else {
 		E_WARNING(E_STRLOC ": child '%s' killed\n", cmd);
 	}
