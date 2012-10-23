@@ -27,6 +27,7 @@
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_File_Chooser.H>
+#include <FL/x.H>
 
 #include <edelib/Nls.h>
 #include <edelib/Window.h>
@@ -44,6 +45,12 @@
 
 #define WIN_H_NORMAL   130
 #define WIN_H_EXPANDED 340
+
+/* two levels of expansion to expand values and then to stringfy them */
+#define BUILD_VERSION_STR(maj, min, patch) STRINGFY(maj) "." STRINGFY(min) "." STRINGFY(patch)
+#define STRINGFY(s) #s
+
+#define FLTK_VERSION BUILD_VERSION_STR(FL_MAJOR_VERSION, FL_MINOR_VERSION, FL_PATCH_VERSION)
 
 EDELIB_NS_USING(String)
 EDELIB_NS_USING(TempFile)
@@ -77,14 +84,19 @@ static void save_as_cb(Fl_Widget*, void*) {
 
 static void write_host_info(void) {
 	txt_buf->append("---------- short summary ----------\n");
+
+	/* make first X version */
+	char buf[256];
+	snprintf(buf, sizeof(buf), "\nX version: %s %i %i.%i", XServerVendor(fl_display), XVendorRelease(fl_display), XProtocolVersion(fl_display), XProtocolRevision(fl_display));
+	txt_buf->append(buf);
+
+	txt_buf->append("\nFLTK version: " FLTK_VERSION);
 	txt_buf->append("\nEDE version: " PACKAGE_VERSION);
 	txt_buf->append("\nedelib version: " EDELIB_VERSION);
 
 	struct utsname ut;
 	if(uname(&ut) == 0) {
-		char buf[1024];
 		snprintf(buf, sizeof(buf), "%s %s %s %s %s", ut.sysname, ut.nodename, ut.release, ut.version, ut.machine);
-
 		txt_buf->append("\nSystem info: ");
 		txt_buf->append(buf);
 	}
