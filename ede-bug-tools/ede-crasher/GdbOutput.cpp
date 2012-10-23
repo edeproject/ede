@@ -22,7 +22,6 @@
 
 #include "GdbOutput.h"
 
-/* assume core is placed in current directory */
 #define CORE_FILE "core"
 
 EDELIB_NS_USING(String)
