@@ -82,16 +82,12 @@ bool gdb_output_generate(const char *path, TempFile &t, int pid) {
 		core_path.printf("%s.%i", CORE_FILE, pid);
 		if(file_test(core_path.c_str(), FILE_TEST_IS_REGULAR))
 			core_found = true;
-		else
-			E_WARNING(E_STRLOC ": Unable to find %s. Trying 'core'\n", core_path.c_str());
 	}
 
 	if(!core_found) {
 		core_path = CORE_FILE;
 		if(file_test(core_path.c_str(), FILE_TEST_IS_REGULAR))
 			core_found = true;
-		else
-			E_WARNING(E_STRLOC ": Unable to find core. Balling out\n");
 	}
 
 	if(!core_found) {

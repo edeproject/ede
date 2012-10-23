@@ -66,8 +66,7 @@ static void close_cb(Fl_Widget*, void*) {
 
 static void save_as_cb(Fl_Widget*, void*) {
 	const char *p = fl_file_chooser(_("Save details to..."), "Text Files (*.txt)\tAll Files(*)", "dump.txt");
-	if(!p)
-		return;
+	if(!p) return;
 
 	/* so we can have EOL */
 	txt_buf->append("\n");
@@ -171,7 +170,6 @@ static void report_cb(Fl_Widget*, void*) {
 
 	/* close it since we need the file name */
 	tmp.close();
-
 	txt_buf->savefile(tmp.name());
 
 	run_async("%s --gdb-dump %s", bug_tool.c_str(), tmp.name());
