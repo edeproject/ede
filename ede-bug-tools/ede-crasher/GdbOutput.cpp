@@ -37,7 +37,7 @@ static int write_str(int fd, const char *str) {
 	return ::write(fd, str, len);
 }
 
-bool gdb_output_generate(const char *path, TempFile &t) {
+bool gdb_output_generate(const char *path, TempFile &t, int pid) {
 	E_RETURN_VAL_IF_FAIL(path != NULL, false);
 
 	int      tfd = -1;
@@ -71,18 +71,41 @@ bool gdb_output_generate(const char *path, TempFile &t) {
 		return true;
 	}
 
-	if(!file_test(CORE_FILE, FILE_TEST_IS_REGULAR)) {
-		write_str(tfd, "Unable to find '"CORE_FILE"'. Backtrace will not be done.");
+	/*
+	 * to find core file, we will try these strategies: first try to open 'core.PID' if
+	 * we got PID (default on linux); if does not exists, try to open 'core'; everything is
+	 * assumed current folder, whatever it was set
+	 */
+	bool   core_found = false;
+	String core_path;
+	if(pid > -1) {
+		core_path.printf("%s.%i", CORE_FILE, pid);
+		if(file_test(core_path.c_str(), FILE_TEST_IS_REGULAR))
+			core_found = true;
+		else
+			E_WARNING(E_STRLOC ": Unable to find %s. Trying 'core'\n", core_path.c_str());
+	}
+
+	if(!core_found) {
+		core_path = CORE_FILE;
+		if(file_test(core_path.c_str(), FILE_TEST_IS_REGULAR))
+			core_found = true;
+		else
+			E_WARNING(E_STRLOC ": Unable to find core. Balling out\n");
+	}
+
+	if(!core_found) {
+		write_str(tfd, "Unable to find core file. Backtrace will not be done.");
 		/* see it as valid, so dialog could be shown */
 		return true;
 	}
 
-	pid_t pid = fork();
+	pid_t gdb_pid = fork();
 
-    if(pid == -1) {
+    if(gdb_pid == -1) {
 		E_WARNING(E_STRLOC ": Unable to fork the process\n");
         return false;
-    } else if(pid == 0) {
+    } else if(gdb_pid == 0) {
 		/* child; redirect to the file */
         dup2(tfd, 1);
 		t.close();
@@ -96,7 +119,7 @@ bool gdb_output_generate(const char *path, TempFile &t) {
         argv[3] = (char*)"-x";
         argv[4] = (char*)scr.name();
         argv[5] = (char*)path;
-        argv[6] = (char*)CORE_FILE;
+        argv[6] = (char*)core_path.c_str();
         argv[7] = 0;
 
         execvp(argv[0], argv);
@@ -104,12 +127,12 @@ bool gdb_output_generate(const char *path, TempFile &t) {
     } else {
         int status;
 
-        if(waitpid(pid, &status, 0) != pid) {
+        if(waitpid(gdb_pid, &status, 0) != gdb_pid) {
 			E_WARNING(E_STRLOC ": Failed to execute waitpid() properly\n");
             return false;
 		}
     }
 
-	file_remove(CORE_FILE);
+	file_remove(core_path.c_str());
 	return true;
 }

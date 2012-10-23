@@ -13,6 +13,6 @@
 #ifndef __GDBOUTPUT_H__
 #define __GDBOUTPUT_H__
 
-bool gdb_output_generate(const char *path, edelib::TempFile &t);
+bool gdb_output_generate(const char *path, edelib::TempFile &t, int pid = -1);
 
 #endif

@@ -15,6 +15,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -125,7 +126,11 @@ static void collect_info_once(void) {
 	TempFile tmp;
 	tmp.set_auto_delete(true);
 
-	if(gdb_output_generate(pdetails->path, tmp))
+	int pid = -1;
+	if(pdetails->pid)
+		pid = atoi(pdetails->pid);
+
+	if(gdb_output_generate(pdetails->path, tmp, pid))
 		txt_buf->appendfile(tmp.name());
 
 	info_was_collected = true;
