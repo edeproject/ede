@@ -338,7 +338,6 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 
 		x->get_dbus_connection()->send(reply);
 		return 1;
-
 	}
 
 	/* [string|array|int32] GetValue(string name) */
@@ -348,7 +347,6 @@ static int xsettings_dbus_cb(const EdbusMessage* m, void* data) {
 
 		x->get_dbus_connection()->send(reply);
 		return 1;
-
 	}
 
 	/* void Remove(string name) */
