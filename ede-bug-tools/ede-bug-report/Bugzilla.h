@@ -14,9 +14,11 @@
 #define __BUGZILLA_H__
 
 struct BugzillaData;
+typedef void (*BugzillaErrorCallback)(const char *str, void *data);
 
-BugzillaData  *bugzilla_new(const char *url);
+BugzillaData  *bugzilla_new(const char *url, BugzillaErrorCallback cb = NULL, void *data = NULL);
 void           bugzilla_free(BugzillaData *data);
+void           bugzilla_set_error_callback(BugzillaData *data, BugzillaErrorCallback cb, void *cb_data = NULL);
 
 /* return bugzilla version or empty string if fails; returned value must be free()-ed */
 char          *bugzilla_get_version(BugzillaData *data);
@@ -26,13 +28,15 @@ int            bugzilla_login(BugzillaData *data, const char *user, const char *
 void           bugzilla_logout(BugzillaData *data);
 
 /* return bug id or -1 if fails */
-int            bugzilla_submit_bug(BugzillaData *data,  const char *product,
-														const char *component,
-														const char *summary,
-														const char *version,
-														const char *description,
-														const char *op_sys,
-														const char *platform,
-														const char *priority,
-														const char *severity);
+int            bugzilla_submit_bug(BugzillaData *data,
+								   const char *product,
+								   const char *component,
+								   const char *summary,
+								   const char *version,
+								   const char *description,
+								   const char *op_sys,
+								   const char *platform,
+								   const char *priority,
+								   const char *severity,
+								   const char *cc);
 #endif

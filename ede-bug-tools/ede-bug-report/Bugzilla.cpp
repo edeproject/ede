@@ -28,14 +28,18 @@ struct BugzillaData {
 	xmlrpc_env      xenv;
 	xmlrpc_client  *xcli;
 	String          url;
+
+	BugzillaErrorCallback cb;
+	void                  *cb_data;
 };
 
-BugzillaData *bugzilla_new(const char *u) {
+BugzillaData *bugzilla_new(const char *url, BugzillaErrorCallback cb, void *cb_data) {
 	BugzillaData *data = new BugzillaData;
+	bugzilla_set_error_callback(data, cb, cb_data);
 
 	xmlrpc_env_init(&data->xenv);
 	xmlrpc_client_setup_global_const(&data->xenv);
-	data->url = u;
+	data->url = url;
 
 	/* 
 	 * to allow https connections; curl by default refuse connections without valid certificate
@@ -51,6 +55,7 @@ BugzillaData *bugzilla_new(const char *u) {
 	xmlrpc_client_create(&data->xenv, XMLRPC_CLIENT_NO_FLAGS, "ede-bug-report", "0.1", &gparms, sizeof(gparms), &data->xcli);
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to init xmlrpc client data (%s)\n", data->xenv.fault_string);
+		if(cb) cb(data->xenv.fault_string, cb_data);
 		delete data;
 		data = NULL;
 	}
@@ -68,6 +73,12 @@ void bugzilla_free(BugzillaData *data) {
 	delete data;
 }
 
+void bugzilla_set_error_callback(BugzillaData *data, BugzillaErrorCallback cb, void *cb_data) {
+	E_ASSERT(data != NULL);
+	data->cb = cb;
+	data->cb_data = cb_data;
+}
+
 char *bugzilla_get_version(BugzillaData *data) {
 	E_ASSERT(data != NULL);
 
@@ -76,12 +87,12 @@ char *bugzilla_get_version(BugzillaData *data) {
 
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to call xmlrpc function (%s)\n", data->xenv.fault_string);
+		if(data->cb) (data->cb)(data->xenv.fault_string, data->cb_data);
 		return (char*)"";
 	}
 
 	/* this value will be malloc()-ated by xmlrpc_decompose_value() and should be freeed by user */
 	char *ret;
-
 	xmlrpc_decompose_value(&data->xenv, result, "{s:s,*}", "version", &ret);
 	xmlrpc_DECREF(result);
 
@@ -103,6 +114,7 @@ int bugzilla_login(BugzillaData *data, const char *user, const char *passwd) {
 
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to perform login function (%s)\n", data->xenv.fault_string);
+		if(data->cb) (data->cb)(data->xenv.fault_string, data->cb_data);
 		return id;
 	}
 
@@ -120,41 +132,70 @@ void bugzilla_logout(BugzillaData *data) {
 
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to call xmlrpc function (%s)\n", data->xenv.fault_string);
+		if(data->cb) (data->cb)(data->xenv.fault_string, data->cb_data);
 		return;
 	}
 
 	xmlrpc_DECREF(result);
 }
 
-int bugzilla_submit_bug(BugzillaData *data, const char *product,
-											const char *component,
-											const char *summary,
-											const char *version,
-											const char *description,
-											const char *op_sys,
-											const char *platform,
-											const char *priority,
-											const char *severity)
+int bugzilla_submit_bug(BugzillaData *data,
+						const char *product,
+						const char *component,
+						const char *summary,
+						const char *version,
+						const char *description,
+						const char *op_sys,
+						const char *platform,
+						const char *priority,
+						const char *severity,
+						const char *cc)
 {
 	E_ASSERT(data != NULL);
 
 	int bug_id = -1;
 	xmlrpc_value *result;
 
-	xmlrpc_client_call2f(&data->xenv, data->xcli, data->url.c_str(), "Bug.create", &result,
-			"({s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s})",
-			"product", product,
-			"component", component,
-			"summary", summary,
-			"version", version,
-			"description", description,
-			"op_sys", op_sys,
-			"platform", platform,
-			"priority", priority,
-			"severity", severity);
+	/* if given CC, add it so bugzilla assign that email as notification receiver */
+	if(cc) {
+		/* as for now we only support single email address */
+		xmlrpc_value *cc_array, *cc_str;
+
+		cc_array = xmlrpc_array_new(&data->xenv);
+		cc_str = xmlrpc_string_new(&data->xenv, (const char *const)cc);
+		xmlrpc_array_append_item(&data->xenv, cc_array, cc_str);
+		xmlrpc_DECREF(cc_str);
+
+		xmlrpc_client_call2f(&data->xenv, data->xcli, data->url.c_str(), "Bug.create", &result,
+							 "({s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:A})",
+							 "product", product,
+							 "component", component,
+							 "summary", summary,
+							 "version", version,
+							 "description", description,
+							 "op_sys", op_sys,
+							 "platform", platform,
+							 "priority", priority,
+							 "severity", severity,
+							 "cc", cc_array);
+		xmlrpc_DECREF(cc_array);
+	} else {
+		xmlrpc_client_call2f(&data->xenv, data->xcli, data->url.c_str(), "Bug.create", &result,
+							 "({s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s,s:s})",
+							 "product", product,
+							 "component", component,
+							 "summary", summary,
+							 "version", version,
+							 "description", description,
+							 "op_sys", op_sys,
+							 "platform", platform,
+							 "priority", priority,
+							 "severity", severity);
+	}
 
 	if(data->xenv.fault_occurred) {
 		E_WARNING(E_STRLOC ": Unable to perform submit function (%s)\n", data->xenv.fault_string);
+		if(data->cb) (data->cb)(data->xenv.fault_string, data->cb_data);
 		return bug_id;
 	}
 

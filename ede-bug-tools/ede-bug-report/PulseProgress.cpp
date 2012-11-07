@@ -43,7 +43,7 @@ void PulseProgress::draw(void) {
 
 	draw_box(box(), x(), y(), w(), h(), color());
 
-	fl_clip(xoff, yoff, woff, hoff);
+	fl_push_clip(xoff, yoff, woff, hoff);
 		Fl_Color c = fl_color();
 		fl_color(color2());
 
@@ -63,6 +63,7 @@ void PulseProgress::draw(void) {
 		fl_color(c);
 	fl_pop_clip();
 
+	labelcolor(fl_contrast(labelcolor(), color()));
 	draw_label(x() + bx, y() + by, w() - bw, h() - bh);
 }
 

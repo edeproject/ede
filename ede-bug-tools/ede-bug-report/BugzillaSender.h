@@ -13,6 +13,8 @@
 #ifndef __BUGZILLASENDER_H__
 #define __BUGZILLASENDER_H__
 
-bool bugzilla_send_with_progress(const char *title, const char *content);
+bool bugzilla_send_with_progress(const char *title,
+								 const char *content,
+								 const char *cc);
 
 #endif

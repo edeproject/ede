@@ -27,10 +27,10 @@
 #include <edelib/String.h>
 
 #include "PulseProgress.h"
-#include "BugzillaSender.h"
 #include "Bugzilla.h"
+#include "BugzillaSender.h"
 
-#define EDE_BUGZILLA_XMLRPC_URL   "http://bugs.equinox-project.org/xmlrpc.cgi"
+#define EDE_BUGZILLA_XMLRPC_URL "http://bugs.equinox-project.org/xmlrpc.cgi"
 
 /* must match to existing user */
 #define EDE_BUGZILLA_USER "ede-bugs@lists.sourceforge.net"
@@ -49,6 +49,7 @@ EDELIB_NS_USING(String)
 struct BugContent {
 	const char *bug_title;
 	const char *bug_content;
+	const char *bug_sender;
 };
 
 static Fl_Double_Window *win;
@@ -176,12 +177,12 @@ static void* thread_worker(void *d) {
 		goto done;
 	}
 
-	/* wait some time if user decided to press 'Cancel' */
-	sleep(1);
-
 	pthread_mutex_lock(&runner_mutex);
 	should_cancel = cancel_sending;
 	pthread_mutex_unlock(&runner_mutex);
+
+	/* allow user to cancel it */
+	sleep(1);
 
 	if(should_cancel) {
 		write_string(report_pipe[1], "CANCELED");
@@ -190,18 +191,18 @@ static void* thread_worker(void *d) {
 
 	write_string(report_pipe[1], _("Submitting the report..."));
 	ret = bugzilla_submit_bug(bdata,
-			"ede", 
-			"general", 
-			data->bug_title, 
-			"unspecified", 
-			data->bug_content, 
-			"All", 
-			"All", 
-			"P5", 
-			"normal");
-
+							  "ede", 
+							  "general", 
+							  data->bug_title, 
+							  "unspecified", 
+							  data->bug_content, 
+							  "All", 
+							  "All", 
+							  "P5", 
+							  "normal",
+							  data->bug_sender);
 	if(ret == -1) {
-		write_string_fail(report_pipe[1], _("Unable to properly submit the data. Please try again"));
+		write_string_fail(report_pipe[1], _("Unable to send the data. Either your email address is not registered on EDE Tracker or the host is temporarily down"));
 		goto done;
 	}
 
@@ -214,11 +215,11 @@ done:
 	delete data;
 	pthread_exit(NULL);
 
-	/* shutup compiler */
+	/* shutup the compiler */
 	return NULL;
 }
 
-static void perform_send(const char *title, const char *content) {
+static void perform_send(const char *title, const char *content, const char *sender) {
 	pthread_t thread;
 
 	/* 
@@ -228,6 +229,7 @@ static void perform_send(const char *title, const char *content) {
 	BugContent *c = new BugContent;
 	c->bug_title = title;
 	c->bug_content = content;
+	c->bug_sender = sender;
 
 	/* Create joinable thread. Some implementations prefer this explicitly was set. */
 	pthread_attr_t attr;
@@ -244,33 +246,36 @@ static void perform_send(const char *title, const char *content) {
 	pthread_attr_destroy(&attr);
 }
 
-bool bugzilla_send_with_progress(const char *title, const char *content) {
+bool bugzilla_send_with_progress(const char *title, const char *content, const char *cc) {
 	data_submitted = false;
 	cancel_sending = false;
 
-	bdata = bugzilla_new(EDE_BUGZILLA_XMLRPC_URL);
-	if(!bdata) {
-		alert(_("Unable to initialize bugzilla interface!"));
-		return false;
-	}
-
+	/* setup communication as soon as possible */
 	if(pipe(report_pipe) != 0) {
 		alert(_("Unable to initialize communication pipe"));
 		return false;
 	}
 
-	/* prepare mutex */
-	pthread_mutex_init(&runner_mutex, NULL);
+	Fl_Button *cancel;
 
 	/* register our callback on pipe */
 	Fl::add_fd(report_pipe[0], FL_READ, report_pipe_cb);
+
+	bdata = bugzilla_new(EDE_BUGZILLA_XMLRPC_URL);
+	if(!bdata) {
+		alert(_("Unable to initialize bugzilla interface!"));
+		goto send_done;
+	}
+
+	/* prepare mutex */
+	pthread_mutex_init(&runner_mutex, NULL);
 
 	win = new Fl_Double_Window(275, 90, _("Sending report data"));
 	win->begin();
 		progress = new PulseProgress(10, 20, 255, 25, _("Sending report..."));
 		progress->selection_color((Fl_Color)137);
 
-		Fl_Button *cancel = new Fl_Button(175, 55, 90, 25, _("&Cancel"));
+		cancel = new Fl_Button(175, 55, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb);
 	win->end();
 
@@ -280,16 +285,17 @@ bool bugzilla_send_with_progress(const char *title, const char *content) {
 	progress->label(_("Preparing data..."));
 	Fl::add_timeout(PROGRESS_STEP_REFRESH, progress_timeout);
 
-	perform_send(title, content);
+	perform_send(title, content, cc);
 
 	while(win->shown())
 		Fl::wait();
 
+	pthread_mutex_destroy(&runner_mutex);
+
+send_done:
 	/* clear pipe callback */
 	Fl::remove_fd(report_pipe[0]);
 	clear_timeouts();
-
-	pthread_mutex_destroy(&runner_mutex);
 
 	close(report_pipe[0]);
 	close(report_pipe[1]);

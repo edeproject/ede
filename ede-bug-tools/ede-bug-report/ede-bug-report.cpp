@@ -23,6 +23,7 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Text_Buffer.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 
 #include <edelib/Window.h>
 #include <edelib/WindowUtils.h>
@@ -49,6 +50,7 @@ EDELIB_NS_USING(RX_CASELESS)
 static Fl_Input        *bug_title_input;
 static Fl_Input        *email_input;
 static Fl_Text_Buffer  *text_buf;
+static Fl_Check_Button *notify_reporter;
 
 /* check if string has spaces */
 static bool empty_entry(const char *en) {
@@ -67,7 +69,7 @@ static bool valid_email(const char *e) {
 	Regex r;
 
 	/* regex stolen from http://www.regular-expressions.info/email.html */
-	if(!r.compile("\\b[A-Z0-9._%-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b", RX_CASELESS)) {
+	if(!r.compile("^\\b[A-Z0-9._%-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}\\b$", RX_CASELESS)) {
 		E_WARNING(E_STRLOC ": Unable to properly compile regex pattern");
 		return false;
 	}
@@ -81,8 +83,8 @@ static void close_cb(Fl_Widget*, void *w) {
 }
 
 static void send_cb(Fl_Widget*, void *w) {
-	const char     *txt;
-	String         title, content;
+	const char *txt, *cc = NULL;
+	String     title, content;
 
 	if(empty_entry(bug_title_input->value())) {
 		alert(_("Report title is missing"));
@@ -102,7 +104,7 @@ static void send_cb(Fl_Widget*, void *w) {
 	}
 
 	if(!valid_email(email_input->value())) {
-		alert(_("Email address is invalid. Please use the valid email address"));
+		alert(_("Email address is invalid. Please use the valid email address so developers can contact you in case more details are needed"));
 		return;
 	}
 
@@ -126,7 +128,10 @@ static void send_cb(Fl_Widget*, void *w) {
 
 	free((void *) txt);
 
-	if(bugzilla_send_with_progress(title.c_str(), content.c_str()))
+	if(notify_reporter->value())
+		cc = email_input->value();
+
+	if(bugzilla_send_with_progress(title.c_str(), content.c_str(), cc))
 		close_cb(0, w);
 }
 #endif /* HAVE_CURL */
@@ -184,6 +189,10 @@ int main(int argc, char** argv) {
 				E_WARNING(E_STRLOC ": Unable to read '%s' as debugger output. Continuing...\n");
 		}
 
+		notify_reporter = new Fl_Check_Button(10, 330, 265, 25, _("Receive notifications"));
+		notify_reporter->tooltip(_("Receive notifications when developers updates or comments this issue. You have to create EDE Bugzilla account first to get notifications."));
+		notify_reporter->down_box(FL_DOWN_BOX);
+
 		/* resizable box */
 		Fl_Box *rbox = new Fl_Box(180, 273, 55, 37);
 
@@ -195,9 +204,9 @@ int main(int argc, char** argv) {
 
 		Fl_Group::current()->resizable(rbox);
 	win->window_icon(bug_xpm);
-	/* win->show(argc, argv); */
+
 	window_center_on_screen(win);
-	win->show();
+	win->show(argc, argv);
 	return Fl::run();
 #endif /* HAVE_CURL */
 }
