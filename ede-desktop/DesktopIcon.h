@@ -22,8 +22,8 @@
 #include <edelib/String.h>
 #include <edelib/MenuButton.h>
 
-class GlobalIconSettings;
-class IconSettings;
+struct GlobalIconSettings;
+struct IconSettings;
 class MovableIcon;
 
 class DesktopIcon : public Fl_Widget {
