@@ -106,29 +106,36 @@ static void send_dbus_ede_quit(void) {
 #endif
 }
 
+#define CONSOLEKIT_SERVICE   "org.freedesktop.ConsoleKit"
+#define CONSOLEKIT_PATH      "/org/freedesktop/ConsoleKit/Manager"
+#define CONSOLEKIT_INTERFACE "org.freedesktop.ConsoleKit.Manager"
+
 static bool do_shutdown_or_restart(bool restart) {
 	const char *action;
 	int r = 1;
 
 #ifdef EDELIB_HAVE_DBUS
+	const char *can_do_action;
+
 	EdbusConnection c;
 	if(!c.connect(EDBUS_SYSTEM)) {
-		alert(_("Unable to connect to HAL daemon. Make sure both D-BUS and HAL daemons are running"));
+		alert(_("Unable to connect to DBus daemon. Make sure system DBus daemon is running and have permissions to access it"));
 		return false;
 	}
 
 	/* determine what to check first; ConsoleKit shutdown action calls 'Stop' */
-	action = restart ? "Restart" : "Stop";
+	can_do_action = restart ? "CanRestart" : "CanStop";
+	action        = restart ? "Restart" : "Stop";
 
 	EdbusMessage msg, ret;
-	msg.create_method_call("org.freedesktop.ConsoleKit",
-						   "/org/freedesktop/ConsoleKit/Manager",
-						   "org.freedesktop.ConsoleKit.Manager",
-						   action);
+	msg.create_method_call(CONSOLEKIT_SERVICE,
+						   CONSOLEKIT_PATH,
+						   CONSOLEKIT_INTERFACE,
+						   can_do_action);
 
 	if(!c.send_with_reply_and_block(msg, 100, ret)) {
 		EdbusError *err = c.error();
-		alert(_("Unable to complete this action. Got '%s' (%s)"), err->name(), err->message());
+		alert(_("Unable to communicate with DBus properly. Got '%s' (%s)"), err->name(), err->message());
 		return false;
 	}
 
@@ -138,8 +145,15 @@ static bool do_shutdown_or_restart(bool restart) {
 	}
 
 	EdbusMessage::iterator it = ret.begin();
-	if((*it).to_bool() == true)
+	if(it->is_bool() && it->to_bool() == true) {
+		/* call action */
+		msg.create_method_call(CONSOLEKIT_SERVICE,
+							   CONSOLEKIT_PATH,
+							   CONSOLEKIT_INTERFACE,
+							   action);
+		c.send(msg);
 		return true;
+	}
 
 	r = ask(_("You are not allowed to execute this command. Please consult ConsoleKit documentation on how to allow privileged actions. "
 			  "Would you like to try to execute system commands?"));
@@ -147,17 +161,17 @@ static bool do_shutdown_or_restart(bool restart) {
 
 	/* try to do things manually */
 	if(!r) return false;
-	const char *cmd = _("restart");
+	action = _("restart");
 
 	if(restart) {
 		r = run_sync(REBOOT_CMD);
 	} else {
 		r = run_sync(POWEROFF_CMD);
-		cmd = _("shutdown");
+		action = _("shutdown");
 	}
 
 	if(r) {
-		alert(_("Unable to %s the computer. Probably you do not have enough permissions to do that"), cmd);
+		alert(_("Unable to %s the computer. Probably you do not have enough permissions to do that"), action);
 		return false;
 	}
 
