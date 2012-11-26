@@ -94,15 +94,11 @@ void Splash::show(void) {
 		return;
 
 	Fl_X::make_xid(this);
-	/* 
-	 * Edewm does not implement this for now. Alternative, working solution
-	 * is used via register_top()/unregister_top(); also looks like later 
-	 * is working on othe wm's too.
-	 */
+
 	Atom win_type   = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE", False);
 	Atom win_splash = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE_SPLASH", False);
 	XChangeProperty(fl_display, fl_xid(this), win_type, XA_ATOM, 32, PropModeReplace,
-			(unsigned char*)&win_splash, sizeof(Atom));
+					(unsigned char*)&win_splash, sizeof(Atom));
 }
 #endif
 
@@ -132,8 +128,7 @@ void Splash::run(void) {
 	splash_theme_path += *splash_theme;
 
 	if(!file_test(splash_theme_path.c_str(), FILE_TEST_IS_DIR)) {
-		E_WARNING(E_STRLOC ": Unable to locate '%s' in '%s' theme directory\n", 
-				splash_theme->c_str(), splash_theme_path.c_str());
+		E_WARNING(E_STRLOC ": Unable to locate '%s' in '%s' theme directory\n", splash_theme->c_str(), splash_theme_path.c_str());
 		return;
 	}
 
