@@ -28,7 +28,7 @@ EDELIB_NS_USING(list)
 EDELIB_NS_USING(String)
 
 struct MenuRules;
-struct DesktopEntry;
+class DesktopEntry;
 
 typedef list<MenuRules*> MenuRulesList;
 typedef list<MenuRules*>::iterator MenuRulesListIt;
