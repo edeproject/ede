@@ -5,6 +5,7 @@
 #include <FL/fl_draw.H>
 #include <edelib/Color.h>
 #include <edelib/Missing.h>
+#include <edelib/Nls.h>
 #include "MemMonitor.h"
 
 EDELIB_NS_USING(color_rgb_to_fltk)
@@ -47,8 +48,8 @@ void MemMonitor::update_status(void) {
 	long mem_total, mem_free, swap_total, swap_free;
 	mem_total = mem_free = swap_total = swap_free = 0;
 
-	char buf[128];
-	while(fgets(buf, 128, fd) != 0) {
+	static char buf[128];
+	while(fgets(buf, sizeof(buf), fd) != 0) {
 		if(STR_CMP(buf, "MemTotal:", 9))
 			mem_total = get_number(buf);
 		else if(STR_CMP(buf, "MemFree:", 8))
@@ -62,10 +63,10 @@ void MemMonitor::update_status(void) {
 	fclose(fd);
 
 	mem_usedp  = 100 - (int)(((float)mem_free / (float)mem_total) * 100);
-	swap_usedp = 100 - (int)(((float)swap_total / (float)swap_free) * 100);
+	swap_usedp = 100 - (int)(((float)swap_free / (float)swap_total) * 100);
 
 	static char tip[100];
-	snprintf(tip, sizeof(tip), "Memory used: %i%%\nSwap used: %i%%", mem_usedp, swap_usedp);
+	snprintf(tip, sizeof(tip), _("Memory used: %i%%\nSwap used: %i%%"), mem_usedp, swap_usedp);
 	tooltip(tip);
 
 	redraw();
