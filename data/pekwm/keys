@@ -20,10 +20,10 @@ Global {
 	KeyPress = "Mod4 Up" { Actions = "FocusDirectional Up" }
 	KeyPress = "Mod4 Down" { Actions = "FocusDirectional Down" }
 	# Moving in workspaces
-	KeyPress = "Ctrl Mod1 Left" { Actions = "GotoWorkspace Left" }
-	KeyPress = "Ctrl Mod1 Right" { Actions = "GotoWorkspace Right" }
-	KeyPress = "Ctrl Mod1 Up" { Actions = "GotoWorkspace Up" }
-	KeyPress = "Ctrl Mod1 Down" { Actions = "GotoWorkspace Down" }
+	KeyPress = "Ctrl Mod1 Left" { Actions = "HideAllMenus; GotoWorkspace Left" }
+	KeyPress = "Ctrl Mod1 Right" { Actions = "HideAllMenus; GotoWorkspace Right" }
+	KeyPress = "Ctrl Mod1 Up" { Actions = "HideAllMenus; GotoWorkspace Up" }
+	KeyPress = "Ctrl Mod1 Down" { Actions = "HideAllMenus; GotoWorkspace Down" }
 	KeyPress = "Mod4 1" { Actions = "GotoWorkspace 1" }
 	KeyPress = "Mod4 2" { Actions = "GotoWorkspace 2" }
 	KeyPress = "Mod4 3" { Actions = "GotoWorkspace 3" }
