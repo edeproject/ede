@@ -7,7 +7,6 @@ WindowMenu = "Window Menu" {
 	Entry = "(Un)Stick" { Actions = "Toggle Sticky" }
 	Entry = "(Un)Shade" { Actions = "Toggle Shaded" }
 	Entry = "Iconify" { Actions = "Set Iconified" }
-	Entry = "Command.." { Actions = "ShowCmdDialog" }
 
 	Submenu = "Maximize" {
 		Entry = "Toggle Full" { Actions = "Toggle Maximized True True" }
