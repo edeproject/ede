@@ -269,9 +269,8 @@ void Taskbar::activate_window(TaskButton *b) {
 
 	/* active or restore minimized */
 	netwm_window_set_active(xid, 1);
-	update_active_button(xid);
+	update_active_button(false, xid);
 
-	/* TODO: use stack for this (case when this can't handle: minimize three window, out of four on the workspace) */
 	prev_active = curr_active;
 	curr_active = b;
 }

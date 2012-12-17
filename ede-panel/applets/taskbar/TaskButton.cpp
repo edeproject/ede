@@ -48,9 +48,10 @@ EDELIB_NS_USING(netwm_window_get_title)
 EDELIB_NS_USING(netwm_window_get_icon)
 EDELIB_NS_USING(netwm_window_set_state)
 EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
-EDELIB_NS_USING(NETWM_STATE_ACTION_ADD)
 EDELIB_NS_USING(NETWM_STATE_MAXIMIZED)
-EDELIB_NS_USING(NETWM_STATE_HIDDEN)
+
+EDELIB_NS_USING(wm_window_set_state)
+EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 
 static Fl_Pixmap image_window(window_xpm);
 
@@ -89,8 +90,8 @@ static void restore_cb(Fl_Widget*, void *b) {
 static void minimize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
-	netwm_window_set_state(bb->get_window_xid(), NETWM_STATE_HIDDEN, NETWM_STATE_ACTION_ADD);
-	redraw_whole_panel(bb);
+	/* WM_WINDOW_STATE_ICONIC is safer on other window managers than NETWM_STATE_HIDDEN */
+	wm_window_set_state(bb->get_window_xid(), WM_WINDOW_STATE_ICONIC);
 }
 
 static void maximize_cb(Fl_Widget*, void *b) {
