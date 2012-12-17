@@ -47,12 +47,10 @@ EDELIB_NS_USING(netwm_window_set_active)
 EDELIB_NS_USING(netwm_window_get_title)
 EDELIB_NS_USING(netwm_window_get_icon)
 EDELIB_NS_USING(netwm_window_set_state)
-EDELIB_NS_USING(wm_window_ede_restore)
-EDELIB_NS_USING(wm_window_get_state)
-EDELIB_NS_USING(wm_window_set_state)
-EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
+EDELIB_NS_USING(NETWM_STATE_ACTION_ADD)
 EDELIB_NS_USING(NETWM_STATE_MAXIMIZED)
+EDELIB_NS_USING(NETWM_STATE_HIDDEN)
 
 static Fl_Pixmap image_window(window_xpm);
 
@@ -83,25 +81,22 @@ static void close_cb(Fl_Widget*, void *b) {
 
 static void restore_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
-	wm_window_ede_restore(bb->get_window_xid());
 
-	netwm_window_set_active(bb->get_window_xid());
+	netwm_window_set_active(bb->get_window_xid(), 1);
 	redraw_whole_panel(bb);
 }
 
 static void minimize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
-	if(wm_window_get_state(bb->get_window_xid()) != WM_WINDOW_STATE_ICONIC)
-		wm_window_set_state(bb->get_window_xid(), WM_WINDOW_STATE_ICONIC);
-
+	netwm_window_set_state(bb->get_window_xid(), NETWM_STATE_HIDDEN, NETWM_STATE_ACTION_ADD);
 	redraw_whole_panel(bb);
 }
 
 static void maximize_cb(Fl_Widget*, void *b) {
 	TaskButton *bb = (TaskButton*)b;
 
-	netwm_window_set_active(bb->get_window_xid());
+	netwm_window_set_active(bb->get_window_xid(), 1);
 	netwm_window_set_state(bb->get_window_xid(), NETWM_STATE_MAXIMIZED, NETWM_STATE_ACTION_TOGGLE);
 
 	redraw_whole_panel(bb);

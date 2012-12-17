@@ -44,6 +44,7 @@ static int handle_xevent(int e) {
 		}
 	} else if(fl_xevent->type == DestroyNotify) {
 		XDestroyWindowEvent xev = fl_xevent->xdestroywindow;
+		E_DEBUG(E_STRLOC ": Unock request for %i\n", fl_xevent->xclient.data.l[2]);
 		curr_tray->unembed_window(xev.window);
 		return false;
 	} else if(fl_xevent->type == ConfigureNotify) {
@@ -67,6 +68,7 @@ static int validate_drawable(Display *d, Window xid) {
 }
 
 Tray::Tray() : Fl_Group(0, 0, 1, 25), opcode(0) {
+	//color(FL_RED);
 	box(FL_FLAT_BOX);
 	register_notification_area();
 }
@@ -87,6 +89,7 @@ void Tray::distribute_children(void) {
 	Y = y();
 	for(int i = 0; i < children(); i++) {
 		child(i)->position(X, Y);
+		E_DEBUG(E_STRLOC ": child %i at %i %i\n", i, child(i)->x(), child(i)->y());
 		X += child(i)->w() + TRAY_ICONS_SPACE;
 	}
 }

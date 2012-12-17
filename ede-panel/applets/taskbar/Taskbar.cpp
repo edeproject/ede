@@ -22,14 +22,15 @@
 #include <FL/Fl_Button.H>
 #include <edelib/Debug.h>
 #include <edelib/Netwm.h>
+#include <edelib/List.h>
 
 #include "TaskButton.h"
 #include "Taskbar.h"
-#include "Panel.h"
 
 #define DEFAULT_CHILD_W 175
 #define DEFAULT_SPACING 5
 
+EDELIB_NS_USING(list)
 EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
 EDELIB_NS_USING(netwm_window_get_all_mapped)
@@ -37,6 +38,7 @@ EDELIB_NS_USING(netwm_window_is_manageable)
 EDELIB_NS_USING(netwm_window_get_workspace)
 EDELIB_NS_USING(netwm_window_get_active)
 EDELIB_NS_USING(netwm_window_set_active)
+EDELIB_NS_USING(netwm_window_set_state)
 EDELIB_NS_USING(netwm_workspace_get_current)
 EDELIB_NS_USING(wm_window_set_state)
 EDELIB_NS_USING(wm_window_get_state)
@@ -46,6 +48,11 @@ EDELIB_NS_USING(NETWM_CHANGED_WINDOW_LIST)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_NAME)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_ICON)
 EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
+EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
+EDELIB_NS_USING(NETWM_STATE_HIDDEN)
+
+typedef list<Window> WindowList;
+typedef list<Window>::iterator WindowListIt;
 
 static void button_cb(TaskButton *b, void *t) {
 	Taskbar *tt = (Taskbar*)t;
@@ -59,22 +66,22 @@ static void button_cb(TaskButton *b, void *t) {
 static void net_event_cb(int action, Window xid, void *data) {
 	E_RETURN_IF_FAIL(data != NULL);
 
+	/* this is a message, so property is not changed and netwm_window_get_active() must be called */
+	if(action == NETWM_CHANGED_ACTIVE_WINDOW) {
+		Taskbar *tt = (Taskbar*)data;
+		tt->update_active_button();
+		return;
+	}
+
 	if(action == NETWM_CHANGED_CURRENT_WORKSPACE || action == NETWM_CHANGED_WINDOW_LIST) {
 		Taskbar *tt = (Taskbar*)data;
-		tt->create_task_buttons();
+		tt->update_task_buttons();
 		return;
 	}
 
 	if(action == NETWM_CHANGED_WINDOW_NAME) {
 		Taskbar *tt = (Taskbar*)data;
 		tt->update_child_title(xid);
-		return;
-	}
-
-	/* this is a message, so property is not changed and netwm_window_get_active() must be called */
-	if(action == NETWM_CHANGED_ACTIVE_WINDOW) {
-		Taskbar *tt = (Taskbar*)data;
-		tt->update_active_button();
 		return;
 	}
 
@@ -85,11 +92,10 @@ static void net_event_cb(int action, Window xid, void *data) {
 	}
 }
 
-Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL), panel(NULL) {
+Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
 	end();
 
-	panel = EDE_PANEL_GET_PANEL_OBJECT(this);
-	create_task_buttons();
+	update_task_buttons();
 	netwm_callback_add(net_event_cb, this);
 }
 
@@ -97,64 +103,92 @@ Taskbar::~Taskbar() {
 	netwm_callback_remove(net_event_cb);
 }
 
-void Taskbar::create_task_buttons(void) {
-	/* erase all current elements */
-	if(children())
-		clear();
+void Taskbar::update_task_buttons(void) {
+	Window *wins;
+	int nwins = netwm_window_get_all_mapped(&wins);
 
-	/* also current/prev storage */
-	curr_active = prev_active = NULL;
+	if(nwins < 1) {
+		if(children() > 0) clear();
+		return;
+	}
 
-	/* redraw it, in case no windows exists in this workspace */
-	panel_redraw();
+	TaskButton *b;
+	int curr_workspace = netwm_workspace_get_current();
+	bool need_full_redraw = false;
 
-	Window *wins, transient_prop_win;
-	int     nwins = netwm_window_get_all_mapped(&wins);
+	/*
+	 * first remove windows not available in list received by wm
+	 * 
+	 * TODO: FLTK 1.3.x got new function remove(int index) which will make
+	 * faster removal, comparing to remove(Fl_Widget*)
+	 */
+	for(int i = 0, found; i < children(); i++) {
+		found = 0;
+		b = (TaskButton*)child(i);
 
-	if(nwins > 0) {
-		TaskButton *b;
-		int         curr_workspace = netwm_workspace_get_current();
+		for(int j = 0; j < nwins; j++) {
+			if(b->get_window_xid() == wins[j]) {
+				found = 1;
+				break;
+			} 
+		}
 
-		for(int i = 0; i < nwins; i++) {
-			transient_prop_win = None;
+		if(!found) {
+			remove(b);
+			/* Fl_Group does not call delete on remove() */
+			delete b;
+			need_full_redraw = true;
+		} 
+	}
 
-			if(!netwm_window_is_manageable(wins[i]))
-				continue;
+	/* now see which one needs to create */
+	for(int i = 0, found; i < nwins; i++) {
+		found = 0;
 
-			/* 
-			 * see if it has WM_TRANSIENT_FOR hint set; transient_prop_win would point to parent window, but
-			 * parent should not be root window for this screen
-			 */
-			if(XGetTransientForHint(fl_display, wins[i], &transient_prop_win) 
-					&& (transient_prop_win != None)
-					&& (transient_prop_win != RootWindow(fl_display, fl_screen)))
-			{
-				continue;
-			}
+		for(int j = 0; j < children(); j++) {
+			b = (TaskButton*)child(j);
 
-			/* 
-			 * show window per workspace
-			 * TODO: allow showing all windows in each workspace
-			 */
-			if(curr_workspace == netwm_window_get_workspace(wins[i])) {
-				b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
-				b->set_window_xid(wins[i]);
-				b->update_title_from_xid();
-				b->update_image_from_xid();
-
-				/* catch the name changes */
-				XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
-
-				b->callback((Fl_Callback*)button_cb, this);
-				add(b);
+			if(b->get_window_xid() == wins[i]) {
+				found = 1;
+				break;
 			}
 		}
 
-		XFree(wins);
+		if(found || !netwm_window_is_manageable(wins[i]))
+			continue;
+
+		Window transient_prop_win = None;
+
+		/*
+		 * see if it has WM_TRANSIENT_FOR hint set; transient_prop_win would point to parent window, but
+		 * parent should not be root window for this screen
+		 */
+		if(XGetTransientForHint(fl_display, wins[i], &transient_prop_win) 
+		   && (transient_prop_win != None)
+		   && (transient_prop_win != RootWindow(fl_display, fl_screen)))
+		{
+			continue;
+		}
+		
+		/* TODO: allow showing all windows in each workspace */
+		if(curr_workspace == netwm_window_get_workspace(wins[i])) {
+			b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
+			b->set_window_xid(wins[i]);
+			b->update_title_from_xid();
+			b->update_image_from_xid();
+
+			/* catch the name changes */
+			XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
+			b->callback((Fl_Callback*)button_cb, this);
+			add(b);
+		}
 	}
 
+	XFree(wins);
 	layout_children();
-	update_active_button();
+	update_active_button(!need_full_redraw);
+
+	if(need_full_redraw) panel_redraw();
 }
 
 void Taskbar::resize(int X, int Y, int W, int H) {
@@ -193,7 +227,7 @@ void Taskbar::layout_children(void) {
 	}
 }
 
-void Taskbar::update_active_button(int xid) {
+void Taskbar::update_active_button(bool do_redraw, int xid) {
 	if(!children())
 		return;
 
@@ -212,7 +246,7 @@ void Taskbar::update_active_button(int xid) {
 			o->box(FL_UP_BOX);
 	}
 
-	redraw();
+	if(do_redraw) redraw();
 }
 
 void Taskbar::activate_window(TaskButton *b) {
@@ -239,7 +273,7 @@ void Taskbar::activate_window(TaskButton *b) {
 	} 
 
 	/* active or restore minimized */
-	netwm_window_set_active(xid);
+	netwm_window_set_active(xid, 1);
 	update_active_button(xid);
 
 	/* TODO: use stack for this (case when this can't handle: minimize three window, out of four on the workspace) */
@@ -277,8 +311,7 @@ void Taskbar::update_child_icon(Window xid) {
 }
 
 void Taskbar::panel_redraw(void) {
-	E_RETURN_IF_FAIL(panel != NULL);
-	panel->redraw();
+	parent()->redraw();
 }
 
 EDE_PANEL_APPLET_EXPORT (

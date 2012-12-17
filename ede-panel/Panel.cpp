@@ -357,10 +357,7 @@ void Panel::do_layout(void) {
 }
 
 void Panel::show(void) {
-	if(shown()) {
-		Fl_Window::show();
-		return;
-	}
+	if(shown()) return;
 
 	/* 
 	 * hush known FLTK bug with XGetImage; a lot of errors will be print when menu icons goes
@@ -375,10 +372,15 @@ void Panel::show(void) {
 
 void Panel::hide(void) {
 	Fl::remove_handler(x_events);
+	netwm_window_remove_strut(fl_xid(this));
+
+	E_DEBUG("Panel::hide()\n");
 
 	/* strange; this is not called when panel goes out :S */
 	mgr.clear();
 	save_config();
+
+	Fl_Window::hide();
 }
 
 void Panel::update_size_and_pos(bool create_xid, bool update_strut) {

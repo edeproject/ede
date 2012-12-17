@@ -31,28 +31,22 @@
 #include "Panel.h"
 #include "AppletManager.h"
 
-static bool running;
+static Panel *panel;
 
 static void exit_signal(int signum) {
-	running = false;
+	if(panel) panel->hide();
 }
 
 int main(int argc, char **argv) {
 	EDE_APPLICATION("ede-panel");
+	panel = NULL;
 
 	signal(SIGTERM, exit_signal);
 	signal(SIGKILL, exit_signal);
 	signal(SIGINT,  exit_signal);
 	
-	Panel *panel = new Panel();
+	panel = new Panel();
 	panel->load_applets();
 	panel->show();
-	running = true;
-
-	while(running)
-		Fl::wait();
-
-	/* so Panel::hide() can be called */
-	panel->hide();
-	return 0;
+	return Fl::run();
 }
