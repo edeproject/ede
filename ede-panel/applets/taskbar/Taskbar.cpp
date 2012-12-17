@@ -22,7 +22,6 @@
 #include <FL/Fl_Button.H>
 #include <edelib/Debug.h>
 #include <edelib/Netwm.h>
-#include <edelib/List.h>
 
 #include "TaskButton.h"
 #include "Taskbar.h"
@@ -50,9 +49,6 @@ EDELIB_NS_USING(NETWM_CHANGED_WINDOW_ICON)
 EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
 EDELIB_NS_USING(NETWM_STATE_HIDDEN)
-
-typedef list<Window> WindowList;
-typedef list<Window>::iterator WindowListIt;
 
 static void button_cb(TaskButton *b, void *t) {
 	Taskbar *tt = (Taskbar*)t;
