@@ -29,7 +29,6 @@
 #define DEFAULT_CHILD_W 175
 #define DEFAULT_SPACING 5
 
-EDELIB_NS_USING(list)
 EDELIB_NS_USING(netwm_callback_add)
 EDELIB_NS_USING(netwm_callback_remove)
 EDELIB_NS_USING(netwm_window_get_all_mapped)
