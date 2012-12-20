@@ -3,7 +3,7 @@
 # $Id$
 #
 # Part of Equinox Desktop Environment (EDE).
-# Copyright (c) 2007-2009 EDE Authors.
+# Copyright (c) 2007-2012 EDE Authors.
 #
 # This program is licensed under terms of the 
 # GNU General Public License version 2 or newer.
@@ -55,21 +55,9 @@ export XDG_MENU_PREFIX
 PATH=$PATH:$PREFIX:$PREFIX/bin
 export PATH
 
-userresources=$HOME/.Xdefaults
-sysresources=/usr/X11R6/lib/X11/xinit/.Xresources
-
-if [ -f $sysresources ]; then
-	xrdb -merge $sysresources
-fi
-
-if [ -f $userresources ]; then
-	xrdb -merge $userresources
-fi
-
-# set background inside X
-XSETROOT=`which xsetroot 2> /dev/null`
-if [ "$XSETROOT" ]; then
-	$XSETROOT -solid black
+# set the background color inside X
+if command -v xsetroot > /dev/null 2>&1; then
+	xsetroot -solid black
 fi
 
 # remove leftovers if evoke crashed
