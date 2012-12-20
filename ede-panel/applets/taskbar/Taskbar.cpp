@@ -67,8 +67,14 @@ static void net_event_cb(int action, Window xid, void *data) {
 		tt->update_active_button();
 		return;
 	}
+	
+	if(action == NETWM_CHANGED_CURRENT_WORKSPACE) {
+		Taskbar *tt = (Taskbar*)data;
+		tt->update_workspace_change();
+		return;
+	}
 
-	if(action == NETWM_CHANGED_CURRENT_WORKSPACE || action == NETWM_CHANGED_WINDOW_LIST) {
+	if(action == NETWM_CHANGED_WINDOW_LIST) {
 		Taskbar *tt = (Taskbar*)data;
 		tt->update_task_buttons();
 		return;
@@ -89,6 +95,10 @@ static void net_event_cb(int action, Window xid, void *data) {
 
 Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
 	end();
+	fixed_layout = false;
+
+	//box(FL_FLAT_BOX);
+	//color(FL_RED);
 
 	update_task_buttons();
 	netwm_callback_add(net_event_cb, this);
@@ -165,7 +175,7 @@ void Taskbar::update_task_buttons(void) {
 			continue;
 		}
 		
-		/* TODO: allow showing all windows in each workspace */
+		/* create button */
 		if(curr_workspace == netwm_window_get_workspace(wins[i])) {
 			b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
 			b->set_window_xid(wins[i]);
@@ -186,6 +196,26 @@ void Taskbar::update_task_buttons(void) {
 	if(need_full_redraw) panel_redraw();
 }
 
+void Taskbar::update_workspace_change(void) {
+	if(children() < 1) return;
+
+	TaskButton *b;
+	int p, curr_workspace = netwm_workspace_get_current();
+
+	for(int i = 0; i < children(); i++) {
+		b = (TaskButton*)child(i);
+		/*
+		 * get fresh value, as wm can change it without notification
+		 * (e.g. pekwm window drag to different workspace)
+		 */
+		p = netwm_window_get_workspace(b->get_window_xid());
+		(p == curr_workspace) ? b->show() : b->hide();
+	}	
+
+	layout_children();
+	redraw();
+}
+
 void Taskbar::resize(int X, int Y, int W, int H) {
 	Fl_Widget::resize(X, Y, W, H);
 	layout_children();
@@ -196,29 +226,45 @@ void Taskbar::layout_children(void) {
 		return;
 
 	Fl_Widget *o;
-	int X = x() + Fl::box_dx(box());
-	int Y = y() + Fl::box_dy(box());
-	int W = w() - Fl::box_dw(box());
+	int X, Y, W, reduce = 0, sz = 0, all_buttons_w = 0;
 
-	int child_w = DEFAULT_CHILD_W;
-	int sz = children();
-	int all_buttons_w = 0;
+	X = x() + Fl::box_dx(box());
+	Y = y() + Fl::box_dy(box());
+	W = w() - Fl::box_dw(box());
 
-	/* figure out the bounds */
-	for(int i = 0; i < sz; i++)
-		all_buttons_w += child(i)->w() + DEFAULT_SPACING;
+	for(int i = 0; i < children(); i++) {
+		o = child(i);
+		if(!o->visible()) continue;
 
-	if(all_buttons_w > W) {
-		int reduce = (all_buttons_w - W) / sz;
-		child_w -= reduce; 
+		sz++;
+
+		/* resize every child to default size so we can calculate total length */
+		o->resize(o->x(), o->y(), (fixed_layout ? DEFAULT_CHILD_W : W), o->h());
+		all_buttons_w += o->w();
+
+		/* do not include ending spaces */
+		if(i != children() - 1)
+			all_buttons_w += DEFAULT_SPACING;
 	}
 
-	/* now, position each child and resize it if needed */
-	for(int i = 0; i < sz; i++) {
-		o = child(i);
+	/*
+	 * find reduction size
+	 * TODO: due large number of childs, 'reduce' could be bigger than child
+	 * width, yielding drawing issues on borders
+	 */
+	if(all_buttons_w > W)
+		reduce = (all_buttons_w - W) / sz;
 
-		o->resize(X, Y, child_w, o->h());
-		X += o->w() + DEFAULT_SPACING;
+	/* now, position each child and resize it if needed */
+	for(int i = 0; i < children(); i++) {
+		o = child(i);
+		if(!o->visible()) continue;
+
+		o->resize(X, Y, o->w() - reduce, o->h());
+		X += o->w();
+
+		if(i != children() - 1)
+			X += DEFAULT_SPACING;
 	}
 }
 
@@ -234,6 +280,7 @@ void Taskbar::update_active_button(bool do_redraw, int xid) {
 	TaskButton *o;
 	for(int i = 0; i < children(); i++) {
 		o = (TaskButton*)child(i);
+		if(!o->visible()) continue;
 
 		if(o->get_window_xid() == (Window)xid)
 			o->box(FL_DOWN_BOX);
@@ -282,7 +329,7 @@ void Taskbar::update_child_title(Window xid) {
 	for(int i = 0; i < children(); i++) {
 		o = (TaskButton*)child(i);
 
-		if(o->get_window_xid() == xid) {
+		if(o->visible() && o->get_window_xid() == xid) {
 			o->update_title_from_xid();
 			break;
 		}
@@ -296,7 +343,7 @@ void Taskbar::update_child_icon(Window xid) {
 	for(int i = 0; i < children(); i++) {
 		o = (TaskButton*)child(i);
 
-		if(o->get_window_xid() == xid) {
+		if(o->visible() && o->get_window_xid() == xid) {
 			o->update_image_from_xid();
 			o->redraw();
 			break;

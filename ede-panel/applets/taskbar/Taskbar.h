@@ -29,11 +29,13 @@ class TaskButton;
 class Taskbar : public Fl_Group {
 public:
 	TaskButton *curr_active, *prev_active;
+	bool fixed_layout; /* fixed or streched layout of buttons */
 public:
 	Taskbar();
 	~Taskbar();
 
 	void update_task_buttons(void);
+	void update_workspace_change(void);
 
 	void resize(int X, int Y, int W, int H);
 	void layout_children(void);
