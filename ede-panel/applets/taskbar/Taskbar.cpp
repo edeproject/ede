@@ -186,6 +186,8 @@ void Taskbar::update_task_buttons(void) {
 			XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
 			b->callback((Fl_Callback*)button_cb, this);
 			add(b);
+
+			need_full_redraw = true;
 		}
 	}
 

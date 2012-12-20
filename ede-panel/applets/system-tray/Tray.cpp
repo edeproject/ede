@@ -205,7 +205,8 @@ void Tray::add_to_tray(Fl_Widget *win) {
 	w(w() + win->w() + TRAY_ICONS_SPACE);
 	
 	distribute_children();
-	redraw();
+
+	//redraw();
 	EDE_PANEL_GET_PANEL_OBJECT(this)->relayout();
 }
 
@@ -213,10 +214,13 @@ void Tray::remove_from_tray(Fl_Widget *win) {
 	remove(win);
 	w(w() - win->w() - TRAY_ICONS_SPACE);
 
+	win->hide();
+	delete win;
+
 	distribute_children();
 
-	redraw();
 	EDE_PANEL_GET_PANEL_OBJECT(this)->relayout();
+	EDE_PANEL_GET_PANEL_OBJECT(this)->redraw();
 }
 
 int Tray::handle(int e) {
