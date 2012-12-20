@@ -216,7 +216,7 @@ static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 }
 #endif
 
-Panel::Panel() : PanelWindow(300, 30) {
+Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 	gpanel = this;
 
 	clicked = 0; 

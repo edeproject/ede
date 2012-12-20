@@ -186,7 +186,7 @@ static void desktop_message_handler(int action, Window xid, void *data) {
 	}
 }
 
-Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "") {
+Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, "ede-desktop") {
 	selection_x = selection_y = 0;
 	last_px = last_py = -1;
 	moving = false;
