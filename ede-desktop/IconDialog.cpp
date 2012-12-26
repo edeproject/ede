@@ -87,25 +87,7 @@ static void ok_cb(Fl_Widget*, void*) {
 	if(comment->value())
 		df.set_comment(comment->value());
 
-	if(!img_path.empty() && img_path.length() > 1) {
-		/* figure out basename */
-		const char *s;
-		char *p, *e;
-
-		s = img_path.c_str();
-		p = (char*)strrchr(s, E_DIR_SEPARATOR);
-
-		if(p && *p++) {
-			/* now remove extension */
-			e = (char*)strrchr((const char*)p, '.');
-			if(e) *e = '\0';
-
-			df.set_icon(p);
-		}	
-	} else {
-		df.set_icon(DEFAULT_ICON);
-	}
-
+	df.set_icon((img_path.length() > 1) ? img_path.c_str() : DEFAULT_ICON);
 	df.set_exec(execute->value());
 
 	/* determine filename and save it */
