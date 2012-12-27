@@ -12,10 +12,14 @@ SubDir TOP ede-panel applets start-menu ;
 
 MENU_SRC = XdgMenuReader.cpp DesktopEntry.cpp MenuRules.cpp ;
 
-Library libmenu : $(MENU_SRC) ;
-ObjectC++Flags $(MENU_SRC) : -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
+if $(MENU_TESTS) {
+	Library libmenu : $(MENU_SRC) ;
+	ObjectC++Flags $(MENU_SRC) : -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
+ 
+	PanelApplet start_menu : StartMenu.cpp : -L$(SUBDIR) -lmenu ;
 
-PanelApplet start_menu : StartMenu.cpp : -L$(SUBDIR) -lmenu ;
-
-EdeProgram ede-menu-spec-test : ede-menu-spec-test.cpp ;
-LinkAgainstAsFirst ede-menu-spec-test : -L$(SUBDIR) -lmenu ;
+	EdeProgram ede-menu-spec-test : ede-menu-spec-test.cpp ;
+	LinkAgainstAsFirst ede-menu-spec-test : -L$(SUBDIR) -lmenu ;
+} else {
+	PanelApplet start_menu : StartMenu.cpp $(MENU_SRC) ;
+}
