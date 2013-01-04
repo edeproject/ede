@@ -129,13 +129,9 @@ static void ok_cb(Fl_Widget*, void*) {
 
 static void img_browse_cb(Fl_Widget*, void*) {
 	img_path = icon_chooser(ICON_SIZE_HUGE);
-	if(img_path.empty()) return;
 
-	Fl_Image* im = Fl_Shared_Image::get(img_path.c_str());
-	if(!im) return;
-
-	img->image(im);
-	img->redraw();
+	if(!img_path.empty())
+		IconLoader::set(img, img_path.c_str(), ICON_SIZE_HUGE);
 }	
 
 static void file_browse_cb(Fl_Widget*, void*) {
