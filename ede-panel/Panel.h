@@ -34,9 +34,13 @@ enum {
 	PANEL_POSITION_BOTTOM
 };
 
+class Hider;
+
 class Panel : public PanelWindow {
 private:
 	Fl_Widget *clicked;
+	Hider     *hider;
+
 	int        vpos;
 	int        sx, sy;
 	int        screen_x, screen_y, screen_w, screen_h, screen_h_half;

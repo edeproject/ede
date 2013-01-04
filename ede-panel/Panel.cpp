@@ -32,6 +32,7 @@
 #include <edelib/Netwm.h>
 
 #include "Panel.h"
+#include "Hider.h"
 
 /* empty space from left and right panel border */
 #define INITIAL_SPACING 5
@@ -218,6 +219,7 @@ static void move_widget(Panel *self, Fl_Widget *o, int &sx, int &sy) {
 
 Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 	gpanel = this;
+	hider = NULL;
 
 	clicked = 0; 
 	sx = sy = 0;
@@ -229,6 +231,9 @@ Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 
 	box(FL_UP_BOX); 
 	read_config();
+
+	hider = new Hider();
+	add(hider);
 }
 
 void Panel::read_config(void) {
@@ -261,7 +266,7 @@ void Panel::save_config(void) {
 }
 
 void Panel::do_layout(void) {
-	E_RETURN_IF_FAIL(mgr.napplets() > 0);
+	E_RETURN_IF_FAIL(children() > 0);
 
 	Fl_Widget     *o;
 	unsigned long  opts;
@@ -275,6 +280,12 @@ void Panel::do_layout(void) {
 
 		/* first center it vertically */
 		center_widget_h(o, this);
+
+		/* manage hider specifically */
+		if(hider && o == hider) {
+			right.push_back(o);
+			continue;
+		}
 
 		/* could be slow, but I'm relaying how number of loaded applets will not be that large */
 		if(!mgr.get_applet_options(o, opts)) {
@@ -500,7 +511,6 @@ void Panel::load_applets(void) {
 		"start_menu.so",
 		"quick_launch.so",
 		"pager.so",
-		"hider.so",
 		"clock.so",
 		"taskbar.so",
 		"keyboard_layout.so",
@@ -524,10 +534,9 @@ void Panel::load_applets(void) {
 
 	mgr.fill_group(this);
 #else
-	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/quick-launch/quick_launch.so");
+	mgr.load("./applets/start-menu/start_menu.so");
 	mgr.load("./applets/pager/pager.so");
-	mgr.load("./applets/hider/hider.so");
 	mgr.load("./applets/clock/clock.so");
 	mgr.load("./applets/taskbar/taskbar.so");
 	mgr.load("./applets/keyboard-layout/keyboard_layout.so");

@@ -103,6 +103,9 @@ static void net_event_cb(int action, Window xid, void *data) {
 Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
 	end();
 
+	//box(FL_FLAT_BOX);
+	//color(FL_RED);
+
 	fixed_layout = false;
 	ignore_workspace_value = false;
 
@@ -227,8 +230,7 @@ void Taskbar::resize(int X, int Y, int W, int H) {
 }
 
 void Taskbar::layout_children(void) {
-	if(!children())
-		return;
+	if(!children()) return;
 
 	Fl_Widget *o;
 	int X, Y, W, reduce = 0, sz = 0, all_buttons_w = 0;
@@ -252,11 +254,7 @@ void Taskbar::layout_children(void) {
 			all_buttons_w += DEFAULT_SPACING;
 	}
 
-	/*
-	 * find reduction size
-	 * TODO: due large number of childs, 'reduce' could be bigger than child
-	 * width, yielding drawing issues on borders
-	 */
+	/* find reduction size */
 	if(all_buttons_w > W)
 		reduce = (all_buttons_w - W) / sz;
 
@@ -265,11 +263,12 @@ void Taskbar::layout_children(void) {
 		o = child(i);
 		if(!o->visible()) continue;
 
-		o->resize(X, Y, o->w() - reduce, o->h());
-		X += o->w();
-
-		if(i != children() - 1)
-			X += DEFAULT_SPACING;
+		/*
+		 * I'm putting -1 here to leave a small space at the end of group; this will also
+		 * make children adaptive to not overflow group in case too many of them was created
+		 */
+		o->resize(X, Y, o->w() - reduce - 1, o->h());
+		X += o->w() + DEFAULT_SPACING;
 	}
 }
 

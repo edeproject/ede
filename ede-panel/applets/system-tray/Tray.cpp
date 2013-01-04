@@ -68,7 +68,6 @@ static int validate_drawable(Display *d, Window xid) {
 }
 
 Tray::Tray() : Fl_Group(0, 0, 1, 25), opcode(0) {
-	//color(FL_RED);
 	box(FL_FLAT_BOX);
 	register_notification_area();
 }
