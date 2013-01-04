@@ -28,11 +28,11 @@ class TaskButton : public Fl_Button {
 private:
 	/* window ID this button handles */
 	Window xid;
+	int    wspace;
 	bool   image_alloc;    
 	Atom   net_wm_icon;
 
 	void clear_image(void);
-
 public:
 	TaskButton(int X, int Y, int W, int H, const char *l = 0);
 	~TaskButton();
@@ -45,6 +45,9 @@ public:
 
 	void update_title_from_xid(void);
 	void update_image_from_xid(void);
+
+	void set_workspace(int s) { wspace = s; }
+	int  get_workspace(void) { return wspace; }
 };
 
 #endif

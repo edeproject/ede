@@ -24,12 +24,23 @@
 #include <FL/Fl_Group.H>
 #include "Applet.h"
 
+/* if button should be on visible on all workspaces */
+#define ALL_WORKSPACES -1
+
 class TaskButton;
 
 class Taskbar : public Fl_Group {
 public:
 	TaskButton *curr_active, *prev_active;
-	bool fixed_layout; /* fixed or streched layout of buttons */
+	bool fixed_layout;           /* fixed or streched layout of buttons */
+	bool ignore_workspace_value; /* should all windows be shown ignoring workspace value */
+
+	int  current_workspace;
+
+	bool visible_on_current_workspace(int ws) {
+		return ignore_workspace_value || (ws == ALL_WORKSPACES) || (ws == current_workspace);
+	}
+
 public:
 	Taskbar();
 	~Taskbar();
@@ -44,6 +55,7 @@ public:
 	void activate_window(TaskButton *b);
 	void update_child_title(Window xid);
 	void update_child_icon(Window xid);
+	void update_child_workspace(Window xid);
 
 	void panel_redraw(void);
 };

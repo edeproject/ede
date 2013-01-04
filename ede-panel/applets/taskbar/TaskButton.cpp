@@ -103,7 +103,9 @@ static void maximize_cb(Fl_Widget*, void *b) {
 	redraw_whole_panel(bb);
 }
 
-TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X, Y, W, H, l), xid(0), image_alloc(false) { 
+TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X, Y, W, H, l),
+																	xid(0), wspace(0), image_alloc(false), net_wm_icon(0)
+{ 
 	box(FL_UP_BOX);
 	align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 

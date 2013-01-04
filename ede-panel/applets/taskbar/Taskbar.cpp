@@ -45,6 +45,7 @@ EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKSPACE)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_LIST)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_NAME)
 EDELIB_NS_USING(NETWM_CHANGED_WINDOW_ICON)
+EDELIB_NS_USING(NETWM_CHANGED_WINDOW_DESKTOP)
 EDELIB_NS_USING(WM_WINDOW_STATE_ICONIC)
 EDELIB_NS_USING(NETWM_STATE_ACTION_TOGGLE)
 EDELIB_NS_USING(NETWM_STATE_HIDDEN)
@@ -60,7 +61,7 @@ static void button_cb(TaskButton *b, void *t) {
 
 static void net_event_cb(int action, Window xid, void *data) {
 	E_RETURN_IF_FAIL(data != NULL);
-
+	
 	/* this is a message, so property is not changed and netwm_window_get_active() must be called */
 	if(action == NETWM_CHANGED_ACTIVE_WINDOW) {
 		Taskbar *tt = (Taskbar*)data;
@@ -91,11 +92,21 @@ static void net_event_cb(int action, Window xid, void *data) {
 		tt->update_child_icon(xid);
 		return;
 	}
+
+	if(action == NETWM_CHANGED_WINDOW_DESKTOP) {
+		Taskbar *tt = (Taskbar*)data;
+		tt->update_child_workspace(xid);
+		return;
+	}
 }
 
 Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
 	end();
+
 	fixed_layout = false;
+	ignore_workspace_value = false;
+
+	current_workspace = netwm_workspace_get_current();
 
 	update_task_buttons();
 	netwm_callback_add(net_event_cb, this);
@@ -107,7 +118,7 @@ Taskbar::~Taskbar() {
 
 void Taskbar::update_task_buttons(void) {
 	Window *wins;
-	int nwins = netwm_window_get_all_mapped(&wins);
+	int ws, nwins = netwm_window_get_all_mapped(&wins);
 
 	if(nwins < 1) {
 		if(children() > 0) clear();
@@ -115,7 +126,6 @@ void Taskbar::update_task_buttons(void) {
 	}
 
 	TaskButton *b;
-	int curr_workspace = netwm_workspace_get_current();
 	bool need_full_redraw = false;
 
 	for(int i = 0, found; i < children(); i++) {
@@ -173,11 +183,13 @@ void Taskbar::update_task_buttons(void) {
 		}
 		
 		/* create button */
-		if(curr_workspace == netwm_window_get_workspace(wins[i])) {
+		ws = netwm_window_get_workspace(wins[i]);
+		if(visible_on_current_workspace(ws)) {
 			b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
 			b->set_window_xid(wins[i]);
 			b->update_title_from_xid();
 			b->update_image_from_xid();
+			b->set_workspace(ws);
 
 			/* catch the name changes */
 			XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
@@ -197,18 +209,12 @@ void Taskbar::update_task_buttons(void) {
 
 void Taskbar::update_workspace_change(void) {
 	if(children() < 1) return;
+	current_workspace = netwm_workspace_get_current();
 
 	TaskButton *b;
-	int p, curr_workspace = netwm_workspace_get_current();
-
 	for(int i = 0; i < children(); i++) {
 		b = (TaskButton*)child(i);
-		/*
-		 * get fresh value, as wm can change it without notification
-		 * (e.g. pekwm window drag to different workspace)
-		 */
-		p = netwm_window_get_workspace(b->get_window_xid());
-		(p == curr_workspace) ? b->show() : b->hide();
+		visible_on_current_workspace(b->get_workspace()) ? b->show() : b->hide();
 	}	
 
 	layout_children();
@@ -350,6 +356,25 @@ void Taskbar::update_child_icon(Window xid) {
 			break;
 		}
 	}
+}
+
+void Taskbar::update_child_workspace(Window xid) {
+	if(children() < 0) return;
+
+	TaskButton *o;
+	for(int i = 0; i < children(); i++) {
+		o = (TaskButton*)child(i);
+
+		if(o->get_window_xid() == xid) {
+			int ws = netwm_window_get_workspace(xid);
+			o->set_workspace(ws);
+			visible_on_current_workspace(ws) ? o->show() : o->hide();
+			break;
+		}
+	}
+
+	layout_children();
+	redraw();
 }
 
 void Taskbar::panel_redraw(void) {
