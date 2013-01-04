@@ -97,9 +97,6 @@ Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL
 	end();
 	fixed_layout = false;
 
-	//box(FL_FLAT_BOX);
-	//color(FL_RED);
-
 	update_task_buttons();
 	netwm_callback_add(net_event_cb, this);
 }
@@ -121,32 +118,32 @@ void Taskbar::update_task_buttons(void) {
 	int curr_workspace = netwm_workspace_get_current();
 	bool need_full_redraw = false;
 
-	/*
-	 * first remove windows not available in list received by wm
-	 * 
-	 * TODO: FLTK 1.3.x got new function remove(int index) which will make
-	 * faster removal, comparing to remove(Fl_Widget*)
-	 */
 	for(int i = 0, found; i < children(); i++) {
 		found = 0;
 		b = (TaskButton*)child(i);
 
 		for(int j = 0; j < nwins; j++) {
 			if(b->get_window_xid() == wins[j]) {
+				/* assure this window is on current workspace */
 				found = 1;
 				break;
 			} 
 		}
 
 		if(!found) {
+			/* FLTK since 1.3 optimized Fl_Group::remove() */
+#if (FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3)
+			remove(i);
+#else
 			remove(b);
+#endif
 			/* Fl_Group does not call delete on remove() */
 			delete b;
 			need_full_redraw = true;
 		} 
 	}
 
-	/* now see which one needs to create */
+	/* now see which one needs to be created */
 	for(int i = 0, found; i < nwins; i++) {
 		found = 0;
 
@@ -284,10 +281,12 @@ void Taskbar::update_active_button(bool do_redraw, int xid) {
 		o = (TaskButton*)child(i);
 		if(!o->visible()) continue;
 
-		if(o->get_window_xid() == (Window)xid)
+		if(o->get_window_xid() == (Window)xid) {
 			o->box(FL_DOWN_BOX);
-		else
+			curr_active = o;
+		} else {
 			o->box(FL_UP_BOX);
+		}
 	}
 
 	if(do_redraw) redraw();

@@ -26,6 +26,9 @@ class Fl_Widget;
 /* stored version in each applet shared library in case interface get changed */
 #define EDE_PANEL_APPLET_INTERFACE_VERSION 0x01
 
+/* random number (must be less than FL_WINDOW) so panel could know it is AppletWidget<> */
+#define EDE_PANEL_APPLET_TYPE 0x27
+
 /*
  * Options assigned to each applet: how it will be resizable (horizontally or vertically)
  * and how it will be aligned. Each applet is by default aligned left without resizing ability.
@@ -46,6 +49,19 @@ struct AppletInfo {
 	unsigned long  options;
 };
 
+/*
+ * each applet want to inherit this class if would like to exchange data with panel
+ * NOTE: new things could be added in future, but that will be reflected through EDE_PANEL_APPLET_INTERFACE_VERSION
+ */
+template <typename T>
+class AppletWidget : public T {
+public:
+	AppletWidget(int X, int Y, int W, int H, const char *l = 0) : T(X, Y, W, H, l) {
+		T::type(EDE_PANEL_APPLET_TYPE);
+	}
+};
+
+/* module stuff */
 typedef Fl_Widget*  (*applet_create_t)(void);
 typedef void        (*applet_destroy_t)(Fl_Widget *);
 
