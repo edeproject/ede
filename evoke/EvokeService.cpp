@@ -110,7 +110,7 @@ static void send_dbus_ede_quit(void) {
 #define CONSOLEKIT_PATH      "/org/freedesktop/ConsoleKit/Manager"
 #define CONSOLEKIT_INTERFACE "org.freedesktop.ConsoleKit.Manager"
 
-static bool do_shutdown_or_restart(bool restart) {
+static bool do_shutdown_or_restart(bool restart, void (*x_shutdown_func)(void)) {
 	const char *action;
 	int r = 1;
 
@@ -146,6 +146,9 @@ static bool do_shutdown_or_restart(bool restart) {
 
 	EdbusMessage::iterator it = ret.begin();
 	if(it->is_bool() && it->to_bool() == true) {
+		/* first close all X children */
+		x_shutdown_func();
+
 		/* call action */
 		msg.create_method_call(CONSOLEKIT_SERVICE,
 							   CONSOLEKIT_PATH,
@@ -196,12 +199,11 @@ EvokeService* EvokeService::instance(void) {
 }
 
 bool EvokeService::setup_lock(const char* name) {
-	if(file_test(name, FILE_TEST_IS_REGULAR))
-		return false;
+	E_RETURN_VAL_IF_FAIL(file_test(name, FILE_TEST_IS_REGULAR) == false, false);
 
 	FILE* f = fopen(name, "w");
-	if(!f) 
-		return false;
+	E_RETURN_VAL_IF_FAIL(f != NULL, false);
+
 	fclose(f);
 
 	lock_name = strdup(name);
@@ -209,8 +211,7 @@ bool EvokeService::setup_lock(const char* name) {
 }
 
 void EvokeService::remove_lock(void) {
-	if(!lock_name)
-		return;
+	E_RETURN_IF_FAIL(lock_name != NULL);
 
 	file_remove(lock_name);
 	free(lock_name);
@@ -218,14 +219,13 @@ void EvokeService::remove_lock(void) {
 }
 
 void EvokeService::clear_startup_items(void) {
-	if(startup_items.empty())
-		return;
+	E_RETURN_IF_FAIL(startup_items.size() > 0);
 
-	StartupItemListIter it = startup_items.begin(), it_end = startup_items.end();
-	for(; it != it_end; ++it)
+	StartupItemListIter it = startup_items.begin(), ite = startup_items.end();
+	while(it != ite) {
 		delete *it;
-
-	startup_items.clear();
+		it = startup_items.erase(it);
+	}
 }
 
 void EvokeService::read_startup(void) {
@@ -246,40 +246,37 @@ void EvokeService::read_startup(void) {
 		return;
 	}
 
-	char tok_buff[256], buff[256];
-
+	char tokbuf[128], buf[128];
 	/* if nothing found, exit */
-	if(!CONFIG_GET_STRVAL(c, "Startup", "start_order", tok_buff))
-		return;
+	E_RETURN_IF_FAIL(CONFIG_GET_STRVAL(c, "Startup", "start_order", tokbuf));
 
-	if(CONFIG_GET_STRVAL(c, "Startup", "splash_theme", buff))
-		splash_theme = buff;
+	if(CONFIG_GET_STRVAL(c, "Startup", "splash_theme", buf))
+		splash_theme = buf;
 
-	for(const char* sect = strtok(tok_buff, ","); sect; sect = strtok(NULL, ",")) {
+	for(const char* sect = strtok(tokbuf, ","); sect; sect = strtok(NULL, ",")) {
 		/* remove leading/ending spaces, if exists */
-		str_trim(buff);
+		str_trim(buf);
 
 		/* assure each startup item has 'exec' key */
-		if(!CONFIG_GET_STRVAL(c, sect, "exec", buff)) {
+		if(!CONFIG_GET_STRVAL(c, sect, "exec", buf)) {
 			E_WARNING(E_STRLOC ": Startup item '%s' does not have anything to execute. Skipping...\n", sect);
 			continue;
 		}
 
 		StartupItem *s = new StartupItem;
-		s->exec = buff;
+		s->exec = buf;
 
-		if(CONFIG_GET_STRVAL(c, sect, "icon", buff))
-			s->icon = buff;
-		if(CONFIG_GET_STRVAL(c, sect, "description", buff))
-			s->description = buff;
+		if(CONFIG_GET_STRVAL(c, sect, "icon", buf))
+			s->icon = buf;
+		if(CONFIG_GET_STRVAL(c, sect, "description", buf))
+			s->description = buf;
 
 		startup_items.push_back(s);
 	}
 }
 
 void EvokeService::run_startup(bool splash, bool dryrun) {
-	if(startup_items.empty())
-		return;
+	E_RETURN_IF_FAIL(startup_items.size() > 0);
 
 	Splash s(startup_items, splash_theme, splash, dryrun);
 	s.run();
@@ -290,7 +287,7 @@ void EvokeService::start_xsettings_manager(void) {
 	xsm = new Xsm;
 
 	if(Xsm::manager_running(fl_display, fl_screen)) {
-		int ret = edelib::ask(_("XSETTINGS manager already running on this screen. Would you like to replace it?"));
+		int ret = ask(_("XSETTINGS manager already running on this screen. Would you like to replace it?"));
 		if(ret < 1) {
 			stop_xsettings_manager(false);
 			return;
@@ -298,19 +295,16 @@ void EvokeService::start_xsettings_manager(void) {
 	}
 
 	if(!xsm->init(fl_display, fl_screen)) {
-		edelib::alert(_("Unable to load XSETTINGS manager properly :-("));
+		alert(_("Unable to load XSETTINGS manager properly"));
 		stop_xsettings_manager(false);
 	}
-
-	E_RETURN_IF_FAIL(xsm);
 
 	if(xsm->load_serialized())
 		xsm->notify();
 }
 
 void EvokeService::stop_xsettings_manager(bool serialize) {
-	if(!xsm)
-		return;
+	E_RETURN_IF_FAIL(xsm != NULL);
 
 	if(serialize)
 		xsm->save_serialized();
@@ -335,10 +329,12 @@ int EvokeService::handle(const XEvent* xev) {
 	if(xev->xproperty.atom == XA_EDE_EVOKE_SHUTDOWN_ALL) {
 		int val = get_int_property_value(XA_EDE_EVOKE_SHUTDOWN_ALL);
 		if(val == 1) {
-			int dw = DisplayWidth(fl_display, fl_screen);
-			int dh = DisplayHeight(fl_display, fl_screen);
+			int dw, dh, ret;
 
-			int ret = logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
+			dw = DisplayWidth(fl_display, fl_screen);
+			dh = DisplayHeight(fl_display, fl_screen);
+
+			ret = logout_dialog_show(dw, dh, LOGOUT_OPT_SHUTDOWN | LOGOUT_OPT_RESTART);
 			if(ret == LOGOUT_RET_CANCEL)
 				return 1;
 
@@ -346,12 +342,10 @@ int EvokeService::handle(const XEvent* xev) {
 
 			switch(ret) {
 				case LOGOUT_RET_RESTART:
-					if(!do_shutdown_or_restart(true))
-						return 1;
+					if(!do_shutdown_or_restart(true, x_shutdown)) return 1;
 					break;
 				case LOGOUT_RET_SHUTDOWN:
-					if(!do_shutdown_or_restart(false))
-						return 1;
+					if(!do_shutdown_or_restart(false, x_shutdown)) return 1;
 					break;
 				case LOGOUT_RET_LOGOUT:
 				default:

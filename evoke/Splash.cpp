@@ -10,7 +10,6 @@
  * See COPYING for details.
  */
 
-#include <stdio.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Shared_Image.H>
 #include <edelib/Debug.h>
@@ -20,6 +19,7 @@
 #include <edelib/FileTest.h>
 #include <edelib/Resource.h>
 #include <edelib/Run.h>
+#include <edelib/Netwm.h>
 
 #include "Splash.h"
 
@@ -31,8 +31,10 @@ EDELIB_NS_USING(Resource)
 EDELIB_NS_USING(build_filename)
 EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(netwm_window_set_type)
 EDELIB_NS_USING(RES_SYS_ONLY)
 EDELIB_NS_USING(FILE_TEST_IS_DIR)
+EDELIB_NS_USING(NETWM_WINDOW_TYPE_SPLASH)
 
 #ifndef EDEWM_HAVE_NET_SPLASH
 static Splash* global_splash = NULL;
@@ -54,17 +56,10 @@ static int splash_xmessage_handler(int e) {
 }
 #endif
 
-/*
- * repeatedly call runner() until all clients are 
- * started then hide splash window
- */
+/* repeatedly call runner() until all clients are started then hide splash window */
 static void runner_cb(void* s) {
 	Splash* sp = (Splash*)s;
-
-	if(sp->next_client())
-		Fl::repeat_timeout(TIMEOUT_CONTINUE, runner_cb, sp);
-	else
-		sp->hide();
+	sp->next_client() ? Fl::repeat_timeout(TIMEOUT_CONTINUE, runner_cb, sp) : sp->hide();
 }
 
 Splash::Splash(StartupItemList& s, String& theme, bool show_it, bool dr) : Fl_Double_Window(480, 365) {
@@ -77,28 +72,22 @@ Splash::Splash(StartupItemList& s, String& theme, bool show_it, bool dr) : Fl_Do
 
 	box(FL_BORDER_BOX);
 }
-	
 
 Splash::~Splash() {
 	E_DEBUG(E_STRLOC ": Cleaning splash data\n");
+
 	/* elements of icons cleans Fl_Group */
 	delete [] icons;
 	Fl::remove_timeout(runner_cb);
 }
 
-
-/* after edewm got _NET_WM_WINDOW_TYPE_SPLASH support */
+/* for wm's with _NET_WM_WINDOW_TYPE_SPLASH support */
 #if EDEWM_HAVE_NET_SPLASH
 void Splash::show(void) {
-	if(shown())
-		return;
+	if(shown()) return;
 
 	Fl_X::make_xid(this);
-
-	Atom win_type   = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE", False);
-	Atom win_splash = XInternAtom(fl_display, "_NET_WM_WINDOW_TYPE_SPLASH", False);
-	XChangeProperty(fl_display, fl_xid(this), win_type, XA_ATOM, 32, PropModeReplace,
-					(unsigned char*)&win_splash, sizeof(Atom));
+	netwm_window_set_type(fl_xid(this), NETWM_WINDOW_TYPE_SPLASH);
 }
 #endif
 
@@ -112,7 +101,6 @@ void Splash::run(void) {
 	}
 
 	fl_register_images();
-
 	String path, splash_theme_path;
 
 #ifdef USE_LOCAL_CONFIG
@@ -124,6 +112,7 @@ void Splash::run(void) {
 		return;
 	}
 #endif
+
 	splash_theme_path += E_DIR_SEPARATOR;
 	splash_theme_path += *splash_theme;
 
@@ -150,10 +139,7 @@ void Splash::run(void) {
 			bimg->image(splash_img);
 		}
 
-		/*
-		 * place message box at the bottom with
-		 * nice offset (10 px) from window borders
-		 */
+		/* place message box at the bottom with nice offset (10 px) from window borders */
 		msgbox = new Fl_Box(10, h() - 25 - 10, w() - 20, 25);
 
 		/*
@@ -213,21 +199,18 @@ void Splash::run(void) {
 
 	clear_border();
 
-	/*
-	 * If set_override() is used, message boxes will be
-	 * popped behind splash. Using it or not ???
-	 */
+	/* If set_override() is used, message boxes will be popped behind splash. Using it or not ??? */
 	set_override();
 
-	// make sure window is centered
+	/* make sure window is centered */
 	int sw = DisplayWidth(fl_display, fl_screen);
 	int sh = DisplayHeight(fl_display, fl_screen);
-	position(sw/2 - w()/2, sh/2 - h()/2);
+	position(sw / 2 - w() / 2, sh / 2 - h() / 2);
 
 	show();
 	Fl::add_timeout(TIMEOUT_START, runner_cb, this);
 
-	// to keep splash at the top
+	/* to keep splash at the top */
 #ifndef EDEWM_HAVE_NET_SPLASH
 	global_splash = this;
 	XSelectInput(fl_display, RootWindow(fl_display, fl_screen), SubstructureNotifyMask);
@@ -244,8 +227,7 @@ void Splash::run(void) {
 
 /* called when splash option is on */
 bool Splash::next_client(void) {
-	if(slist->empty())
-		return false;
+	E_RETURN_VAL_IF_FAIL(slist->size() > 0, false);
 
 	if(counter == 0)
 		slist_it = slist->begin();
@@ -255,11 +237,11 @@ bool Splash::next_client(void) {
 		return false;
 	}
 
-
 	E_ASSERT(counter < slist->size() && "Internal error; 'counter' out of bounds");
 
-	const char* msg = (*slist_it)->description.c_str();
-	const char* cmd = (*slist_it)->exec.c_str();
+	const char *msg, *cmd;
+	msg = (*slist_it)->description.c_str();
+	cmd = (*slist_it)->exec.c_str();
 
 	icons[counter]->show();
 	msgbox->label(msg);
@@ -276,8 +258,7 @@ bool Splash::next_client(void) {
 
 /* called when splash option is off */
 bool Splash::next_client_nosplash(void) {
-	if(slist->empty())
-		return false;
+	E_RETURN_VAL_IF_FAIL(slist->size() > 0, false);
 
 	if(counter == 0)
 		slist_it = slist->begin();
@@ -292,7 +273,7 @@ bool Splash::next_client_nosplash(void) {
 	const char* msg = (*slist_it)->description.c_str();
 	const char* cmd = (*slist_it)->exec.c_str();
 
-	printf("%s\n", msg);
+	E_DEBUG(E_STRLOC ": Starting '%s'...\n", msg);
 
 	/* run command */
 	if(!dryrun)
