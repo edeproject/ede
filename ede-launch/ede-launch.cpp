@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012 Sanel Zukan
+ * Copyright (C) 2012-2013 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,6 +54,7 @@
 #include <edelib/DesktopFile.h>
 #include <edelib/StrUtil.h>
 #include <edelib/Debug.h>
+#include <edelib/Directory.h>
 #include <edelib/Regex.h>
 #include <edelib/Util.h>
 #include <edelib/Ede.h>
@@ -67,9 +68,25 @@
 /* config name where all things are stored and read from */
 #define EDE_LAUNCH_CONFIG "ede-launch"
 
+/* default 'Preferred' key in config file */
+#define KEY_PREFERRED "Preferred"
+
 /* patterns for guessing user input */
 #define REGEX_PATTERN_MAIL "\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b"
 #define REGEX_PATTERN_URL  "((http|https|ftp|gopher|!file):\\/\\/|www)[a-zA-Z0-9\\-\\._]+\\/?[a-zA-Z0-9_\\.\\-\\?\\+\\/~=&#;,]*[a-zA-Z0-9\\/]{1}"
+
+/* list of known terminals */
+static const char *known_terminals[] = {
+	"xterm",
+	"rxvt",
+	"urxvt",
+	"mrxvt",
+	"st",
+	"Terminal",
+	"gnome-terminal",
+	"konsole",
+	0
+};
 
 EDELIB_NS_USING_AS(Window, LaunchWindow)
 EDELIB_NS_USING_LIST(14, (Resource,
@@ -83,7 +100,8 @@ EDELIB_NS_USING_LIST(14, (Resource,
 
 static Fl_Pixmap        image_run((const char**)run_xpm);
 static Fl_Input*        dialog_input;
-static Fl_Check_Button* in_term;
+static Fl_Check_Button *in_term;
+static Resource         launcher_resource; /* lazy loaded */
 
 static void help(void) {
 	puts("Usage: ede-launch [OPTIONS] [PROGRAM]");
@@ -113,34 +131,28 @@ static int re_match(const char *p, const char *str) {
 	return re.match(str);
 }
 
-static const char *resource_get(Resource &rc, const char *g, const char *k) {
+static const char *resource_get(const char *g, const char *k) {
+	if(!launcher_resource)
+		launcher_resource.load(EDE_LAUNCH_CONFIG);
+
+	E_RETURN_VAL_IF_FAIL(launcher_resource != false, NULL);
+
 	static char buf[64];
-
-	if(!rc) rc.load(EDE_LAUNCH_CONFIG);
-	E_RETURN_VAL_IF_FAIL(rc != false, NULL);
-
-	if(rc.get(g, k, buf, sizeof(buf)))
-		return (const char*)buf;
-
-	return NULL;
+	return launcher_resource.get(g, k, buf, sizeof(buf)) ? (const char*)buf : NULL;
 }
 
-static char* get_basename(const char* path) {
-	char *p = (char*)strrchr(path, '/');
-	if(p)
-		return (p + 1);
-
-	return (char*)p;
+static char *get_basename(const char* path) {
+	char *p = (char*)strrchr(path, E_DIR_SEPARATOR);
+	return p ? p + 1 : p;
 }
 
-static char** cmd_split(const char* cmd) {
-	int   sz = 10;
-	int   i = 0;
-	char* c = strdup(cmd);
+static char **cmd_split(const char* cmd) {
+	int i = 0, sz = 10;
+	char *c = strdup(cmd);
 
-	char** arr = (char**)malloc(sizeof(char*) * sz);
+	char **arr = (char**)malloc(sizeof(char*) * sz);
 
-	for(char* p = strtok(c, " "); p; p = strtok(NULL, " ")) {
+	for(char *p = strtok(c, " "); p; p = strtok(NULL, " ")) {
 		if(i >= sz) {
 			sz *= 2;
 			arr = (char**)realloc(arr, sizeof(char*) * sz);
@@ -175,9 +187,34 @@ static bool allowed_launch_type(const char *t) {
 	return false;
 }
 
+#define RETURN_IF_VALID_TERM(t, r) \
+do { \
+	if(t && ((strcmp(t, "linux") != 0) || (strcmp(t, "dumb") != 0))) { \
+		r = file_path(t, false); \
+		if(E_UNLIKELY(r.empty())) return true; \
+	} \
+} while(0)
+
+static bool find_terminal(String &ret) {
+	const char *term = resource_get(KEY_PREFERRED, "terminal");
+	if(term) {
+		ret = term;
+		return true;
+	}
+
+	term = getenv("EDE_LAUNCH_TERMINAL");
+	RETURN_IF_VALID_TERM(term, ret);
+
+	for(int i = 0; known_terminals[i]; i++) {
+		term = known_terminals[i];
+		RETURN_IF_VALID_TERM(term, ret);
+	}
+
+	return false;
+}
+
 static void start_crasher(const char* cmd, int sig, int pid) {
-	const char* base = get_basename(cmd);
-	const char* ede_app_flag = "";
+	const char *ede_app_flag = "", *base = get_basename(cmd);
 
 	/* this means the app was called without full path */
 	if(!base) base = cmd;
@@ -311,13 +348,15 @@ static int start_child_process_with_core(const char* cmd) {
 	return ret;
 }
 
-static bool start_child(const char* cmd) {
+static bool start_child(const char *cmd, bool notify = false) {
 	E_DEBUG(E_STRLOC ": Starting '%s'\n", cmd);
+	StartupNotify *n;
 
-	StartupNotify *n = startup_notify_start(cmd, "applications-order");
+	if(notify) n = startup_notify_start(cmd, "applications-order");
+
 	int ret = start_child_process_with_core(cmd);
 
-	startup_notify_end(n);
+	if(notify) startup_notify_end(n);
 
 	if(ret == 199) {
 		alert(_("Program '%s' not found.\n\nPlease check if given path to the "
@@ -340,29 +379,44 @@ static bool start_child(const char* cmd) {
 	return true;
 }
 
+static bool start_child_in_term(const char *cmd, bool notify = false) {
+	String term;
+
+	if(!find_terminal(term)) {
+		E_WARNING(E_STRLOC ": unable to find any suitable terminal\n");
+		return false;
+	}
+
+	/* construct TERM -e cmd */
+	term += " -e ";
+	term += cmd;
+	return start_child(term.c_str(), notify);
+}
+
 static bool start_desktop_file(const char *cmd) {
 	DesktopFile d;
 
 	if(!d.load(cmd)) {
 		alert(_("Unable to load .desktop file '%s'. Got: %s"), cmd, d.strerror());
-		goto FAIL;
+		return false;
 	}
 
 	if(d.type() != DESK_FILE_TYPE_APPLICATION) {
 		alert(_("Starting other types of .desktop files except 'Application' is not supported now"));
-		goto FAIL;
+		return false;
 	}
 
 	char buf[PATH_MAX];
 	if(!d.exec(buf, PATH_MAX)) {
 		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
-		goto FAIL;
+		return false;
 	}
 
-	return start_child(buf);
+	bool notify = d.startup_notify();
+	if(d.terminal())
+		return start_child_in_term(buf, notify);
 
-FAIL:
-	return false;
+	return start_child(buf, notify);
 }
 
 /* concat all arguments preparing it for start_child() */
@@ -415,48 +469,6 @@ static void cancel_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
-#define RETURN_IF_VALID_TERM(t, r) \
-do { \
-	if(t && ((strcmp(t, "linux") != 0) || (strcmp(t, "dumb") != 0))) { \
-		r = file_path(t, false); \
-		if(E_UNLIKELY(r.empty())) return true; \
-	} \
-} while(0)
-
-static bool find_terminal(String &ret) {
-	/* before goint to list, try to read it from config file */
-	Resource rc;
-	const char *t = resource_get(rc, "Preferred", "terminal");
-	if(t) {
-		ret = t;
-		return true;
-	}
-
-	/* list of known terminals */
-	static const char *terms[] = {
-		"xterm",
-		"rxvt",
-		"Terminal",
-		"gnome-terminal",
-		"konsole",
-		0
-	};
-
-	const char* term = getenv("TERM");
-
-	RETURN_IF_VALID_TERM(term, ret);
-
-	term = getenv("COLORTERM");
-	RETURN_IF_VALID_TERM(term, ret);
-
-	for(int i = 0; terms[i]; i++) {
-		term = terms[i];
-		RETURN_IF_VALID_TERM(term, ret);
-	}
-
-	return false;
-}
-
 static void ok_cb(Fl_Widget*, void* w) {
 	LaunchWindow* win = (LaunchWindow*)w;
 	const char* cmd = dialog_input->value();
@@ -468,19 +480,7 @@ static void ok_cb(Fl_Widget*, void* w) {
 	Fl::check();
 
 	/* TODO: is 'cmd' safe after hide? */
-	if(in_term->value()) {
-		char buf[128];
-		String term;
-
-		if(find_terminal(term)) {
-			snprintf(buf, sizeof(buf), "%s -e %s", term.c_str(), cmd);
-			started = start_child(buf);
-		} else {
-			E_WARNING(E_STRLOC ": unable to find any suitable terminal\n");
-		}
-	} else {
-		started = start_child(cmd);
-	}
+	started = (in_term->value()) ? start_child_in_term(cmd) : start_child(cmd);
 
 	if(!started) {
 		/* show dialog again */
@@ -490,6 +490,7 @@ static void ok_cb(Fl_Widget*, void* w) {
 			dialog_input->position(0, dialog_input->size());
 	} else {
 		Resource rc;
+
 		/* so could load previous content */
 		rc.load(EDE_LAUNCH_CONFIG);
 		rc.set("History", "open", cmd);
@@ -508,12 +509,9 @@ static int start_dialog(int argc, char** argv) {
 
 		dialog_input = new Fl_Input(70, 90, 290, 25, _("Open:"));
 
-		Resource rc;
-		char     buf[128];
-
-		if(rc.load(EDE_LAUNCH_CONFIG) && rc.get("History", "open", buf, sizeof(buf))) {
-			dialog_input->value(buf);
-
+		const char *cmd = resource_get("History", "open");
+		if(cmd) {
+			dialog_input->value(cmd);
 			/* make text appear selected */
 			dialog_input->position(0, dialog_input->size());
 		}
@@ -614,19 +612,17 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 	}
-
 	/* check if we have .desktop file */
 	if(argv[ca] && str_ends(argv[ca], ".desktop"))
 		return RETURN_FROM_BOOL(start_desktop_file(argv[ca]));
 
 	/* make arguments and exec program */
 	String     args;
-	Resource   rc;
 	const char *prog = NULL;
 
 	if(launch_type) {
 		/* explicitly launch what user requested */
-		prog = resource_get(rc, "Preferred", launch_type);
+		prog = resource_get(KEY_PREFERRED, launch_type);
 
 		if(!prog) {
 			E_WARNING(E_STRLOC ": Unable to find out launch type\n");
@@ -642,7 +638,7 @@ int main(int argc, char** argv) {
 		 * Note however how this matching works on only one argument; other would be ignored
 		 */
 		if(re_match(REGEX_PATTERN_MAIL, argv[ca]) > 0) {
-			prog = resource_get(rc, "Preferred", "mail");
+			prog = resource_get(KEY_PREFERRED, "mail");
 			if(!prog) {
 				E_WARNING(E_STRLOC ": Unable to find mail agent\n");
 				return 1;
@@ -653,7 +649,7 @@ int main(int argc, char** argv) {
 			/* use only one argumet */
 			argc = ca + 1;
 		} else if(re_match(REGEX_PATTERN_URL, argv[ca]) > 0) {
-			prog = resource_get(rc, "Preferred", "browser");
+			prog = resource_get(KEY_PREFERRED, "browser");
 			if(!prog) {
 				E_WARNING(E_STRLOC ": Unable to find browser\n");
 				return 1;
