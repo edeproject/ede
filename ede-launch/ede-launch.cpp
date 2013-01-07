@@ -137,7 +137,7 @@ static const char *resource_get(const char *g, const char *k) {
 
 	E_RETURN_VAL_IF_FAIL(launcher_resource != false, NULL);
 
-	static char buf[64];
+	static char buf[128];
 	return launcher_resource.get(g, k, buf, sizeof(buf)) ? (const char*)buf : NULL;
 }
 
