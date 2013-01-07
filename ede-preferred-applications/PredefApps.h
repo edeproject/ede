@@ -40,7 +40,9 @@ static KnownApp app_filemanagers[] = {
 static KnownApp app_terminals[] = {
 	{"X11 terminal", "xterm"},
 	{"Rxvt", "rxvt"},
+	{"Rxvt Unicode", "urxvt"},
 	{"Mrxvt", "mrxvt"},
+	{"Small Terminal", "st"},
 	{"Xfce Terminal", "xfterm4"},
 	{"GNOME Terminal", "gnome-terminal"},
 	KNOWN_APP_END
