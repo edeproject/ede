@@ -1,19 +1,53 @@
-/* assume Linux here */
-#include <sys/sysinfo.h>
+/*
+ * $Id: Panel.cpp 3512 2013-01-09 13:45:49Z karijes $
+ *
+ * Copyright (C) 2012-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 
+#include <FL/Fl_Box.H>
+#include "Applet.h"
+#include <edelib/Nls.h>
+
+#if defined(linux2)
+#include <sys/sysinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <edelib/Color.h>
 #include <edelib/Missing.h>
-#include <edelib/Nls.h>
-#include "MemMonitor.h"
 
 EDELIB_NS_USING(color_rgb_to_fltk)
 
 #define UPDATE_INTERVAL 1.0f
 #define STR_CMP(first, second, n) (strncmp(first, second, n) == 0)
+
+class MemMonitor : public Fl_Box {
+private:
+	int mem_usedp, swap_usedp;
+public:
+	MemMonitor() : Fl_Box(0, 0, 45, 25), mem_usedp(0), swap_usedp(0) {
+		box(FL_THIN_DOWN_BOX);
+	}
+
+	void update_status(void);
+	void draw(void);
+	int  handle(int e);
+};
 
 inline int height_from_perc(int perc, int h) {
 	return (perc * h) / 100;
@@ -22,10 +56,6 @@ inline int height_from_perc(int perc, int h) {
 static void mem_timeout_cb(void *d) {
 	((MemMonitor*)d)->update_status();
 	Fl::repeat_timeout(UPDATE_INTERVAL, mem_timeout_cb, d);
-}
-
-MemMonitor::MemMonitor() : Fl_Box(0, 0, 45, 25), mem_usedp(0), swap_usedp(0) {
-	box(FL_THIN_DOWN_BOX);
 }
 
 void MemMonitor::update_status(void) {
@@ -81,11 +111,24 @@ int MemMonitor::handle(int e) {
 	return Fl_Box::handle(e);
 }
 
+#else 
+
+class MemMonitor : public Fl_Box {
+public:
+	MemMonitor() : Fl_Box(0, 0, 45, 25) {
+		box(FL_THIN_DOWN_BOX);
+		label("n/a");
+		tooltip(_("Memory information not available for this platform"));
+	}
+};
+
+#endif /* linux */
+
 EDE_PANEL_APPLET_EXPORT (
  MemMonitor, 
  EDE_PANEL_APPLET_OPTION_ALIGN_RIGHT,
  "Memory monitor",
- "0.1",
+ "0.2",
  "empty",
  "Sanel Zukan"
 )
