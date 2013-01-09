@@ -800,7 +800,7 @@ static TiXmlNode *load_menu_file(TiXmlDocument &doc) {
 	String    tmp;
 	StrListIt it = paths.begin(), it_end = paths.end();
 
-	for(; it != paths.end(); ++it) {
+	for(; it != it_end; ++it) {
 		tmp = build_filename((*it).c_str(), "menus", menu_file.c_str());
 
 		if(doc.LoadFile(tmp.c_str()))
