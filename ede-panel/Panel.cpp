@@ -387,10 +387,13 @@ void Panel::hide(void) {
 
 	E_DEBUG("Panel::hide()\n");
 
-	/* strange; this is not called when panel goes out :S */
-	mgr.clear();
-	save_config();
+	/* clear loaded widgets */
+	mgr.clear(this);
 
+	/* clear whatever was left out, but was not part of applet manager */
+	clear();
+
+	save_config();
 	Fl_Window::hide();
 }
 

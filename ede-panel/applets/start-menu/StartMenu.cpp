@@ -184,9 +184,8 @@ void StartMenu::popup(void) {
 	pressed_menu_button = this;
 	redraw();
 
-	Fl_Widget *mb = this;
-
 #if (FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3)
+	Fl_Widget *mb = this;
 	Fl::watch_widget_pointer(mb);
 #endif
 
@@ -287,7 +286,7 @@ bool StartMenu::can_reload(void) {
 	time_t c, diff;
 
 	c = time(NULL);
-	diff = difftime(c, last_reload);
+	diff = (time_t)difftime(c, last_reload);
 	last_reload = c;
 
 	if(diff >= MENU_UPDATE_DIFF) return true;

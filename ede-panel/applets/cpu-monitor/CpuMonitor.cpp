@@ -9,6 +9,10 @@
  * For ede-panel by Sanel Zukan 2009
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <limits.h>
 #include <unistd.h>
 #include <stdarg.h>
@@ -26,8 +30,10 @@
 # include <sys/sysinfo.h>
 #endif
 
-#ifdef HAVE_KSTAT_H
+#ifdef HAVE_KSTAT
 # include <kstat.h>
+# include <sys/sysinfo.h>
+# include <string.h> /* strncmp */
 #endif
 
 #ifdef __FreeBSD__
@@ -335,11 +341,10 @@ void CPUMonitor::get_cpu_info() {
 
 #endif /* linux */
 
-#ifdef HAVE_KSTAT_H
+#ifdef HAVE_KSTAT
 # ifdef HAVE_OLD_KSTAT
 # define ui32 ul
 #endif
-
 	static kstat_ctl_t	*kc = NULL;
 	static kid_t		kcid;
 	kid_t				new_kcid;

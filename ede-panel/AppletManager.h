@@ -36,9 +36,8 @@ class AppletManager {
 private:
 	AList applet_list;
 public:
-	~AppletManager();
 	bool load(const char *path);
-	void clear(void);
+	void clear(Panel *p);
 	void fill_group(Panel *p);
 	void unfill_group(Panel *p);
 

@@ -30,13 +30,13 @@ rule PanelApplet
 	}
 
 	# append default extension
-	target = $(<:S=$(SUFLIB_SHARED)) ;
+	target = $(1:S=$(SUFLIB_SHARED)) ;
 
-	Main $(target) : $(>) ;
-	ObjectC++Flags $(>) : $(GLOBALFLAGS) -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
+	Main $(target) : $(2) ;
+	ObjectC++Flags $(2) : $(GLOBALFLAGS) -fPIC $(FLTKINCLUDE) -I [ FDirName $(TOP) ede-panel ] $(EDELIBINCLUDE) ;
 
 	LinkAgainst $(target) : $(3) $(EDELIBLIB) $(EDELIB_GUI_LIB) $(FLTKLIB) $(STDLIB) ;
-	LINKFLAGS on $(target) = $(linker_stuff) [ on $(target) return $(LINKFLAGS) ] ;
+	LINKFLAGS on $(target) = $(linker_stuff) [ on $(target) return $(LINKFLAGS) ] $(3) ;
 
 	InstallProgram $(EDE_PANEL_APPLETS_DIR) : $(target) ;
 

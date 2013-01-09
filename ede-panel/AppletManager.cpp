@@ -55,10 +55,6 @@ static void clear_applet(AppletData *a) {
 	delete a;
 }
 
-AppletManager::~AppletManager() {
-	clear();
-}
-
 bool AppletManager::load(const char *path) {
 	dlerror();
 	const char *dl_err = NULL;
@@ -130,11 +126,12 @@ bool AppletManager::load(const char *path) {
 	return true;
 }
 
-void AppletManager::clear(void) {
+void AppletManager::clear(Panel *p) {
 	E_RETURN_IF_FAIL(applet_list.size() > 0);
 
 	AListIter it = applet_list.begin(), ite = applet_list.end();
 	while(it != ite) {
+		p->remove((*it)->awidget);	
 		clear_applet(*it);
 		it = applet_list.erase(it);
 	}

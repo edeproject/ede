@@ -257,6 +257,30 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+dnl kstat/solaris
+AC_CHECK_HEADER(kstat.h, [have_kstat_h=yes],)
+if test "x$have_kstat_h" = "xyes"; then
+	AC_MSG_CHECKING([for kstat presence])
+
+	AC_LANG_SAVE
+	AC_LANG_C
+	AC_TRY_COMPILE([
+		#include <kstat.h>
+	],[
+		kstat_named_t k;
+		k.value.ui32;
+	],[have_kstat=yes],[])
+	AC_LANG_RESTORE
+
+	if test "x$have_kstat" = "xyes"; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_KSTAT, 1, [Define to 1 if you have kstat])
+		KSTAT_LIBS=" -lkstat"
+	else
+		AC_MSG_RESULT(no)
+	fi
+fi
+
 dnl pekwm specific macros
 EDE_CHECK_PEKWM_DEPENDENCIES
 
@@ -277,6 +301,7 @@ AC_SUBST(CURL_LIBS)
 AC_SUBST(LARGEFILE)
 AC_SUBST(XKB_LIBS)
 AC_SUBST(my_sysconfdir)
+AC_SUBST(KSTAT_LIBS)
 AC_SUBST(PEKWM_CXXFLAGS)
 AC_SUBST(PEKWM_LIBS)
 

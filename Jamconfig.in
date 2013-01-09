@@ -133,6 +133,9 @@ XKB_LIBS ?= @XKB_LIBS@ ;
 CURL_CFLAGS  ?= @CURL_CFLAGS@ ;
 CURL_LIBS    ?= @CURL_LIBS@ ;
 
+# kstat
+KSTAT_LIBS ?= @KSTAT_LIBS@ ;
+
 # platform specific pthread flags
 # FIXME: a quick hack to work everything on SunStudio
 if $(SUN_COMPILER) {
