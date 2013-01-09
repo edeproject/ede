@@ -1,5 +1,7 @@
+/* assume Linux here */
+#include <sys/sysinfo.h>
+
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
@@ -13,25 +15,10 @@ EDELIB_NS_USING(color_rgb_to_fltk)
 #define UPDATE_INTERVAL 1.0f
 #define STR_CMP(first, second, n) (strncmp(first, second, n) == 0)
 
-static int height_from_perc(int perc, int h) {
+inline int height_from_perc(int perc, int h) {
 	return (perc * h) / 100;
 }
 
-static long get_number(const char *ln) {
-	char *s = edelib_strndup(ln, 128);
-	int i = 1;
-
-	for(char *p = strtok(s, " "); p; p = strtok(NULL, " "), i++) {
-		if(i == 2) {
-			long ret = atol(p);
-			free(s);
-			return ret;
-		}
-	}
-
-	free(s);
-	return 0;
-}
 static void mem_timeout_cb(void *d) {
 	((MemMonitor*)d)->update_status();
 	Fl::repeat_timeout(UPDATE_INTERVAL, mem_timeout_cb, d);
@@ -42,25 +29,14 @@ MemMonitor::MemMonitor() : Fl_Box(0, 0, 45, 25), mem_usedp(0), swap_usedp(0) {
 }
 
 void MemMonitor::update_status(void) {
-	FILE *fd = fopen("/proc/meminfo", "r");
-	if(!fd) return;
+	struct sysinfo sys;
+	if(sysinfo(&sys) != 0) return;
 
 	long mem_total, mem_free, swap_total, swap_free;
-	mem_total = mem_free = swap_total = swap_free = 0;
-
-	static char buf[128];
-	while(fgets(buf, sizeof(buf), fd) != 0) {
-		if(STR_CMP(buf, "MemTotal:", 9))
-			mem_total = get_number(buf);
-		else if(STR_CMP(buf, "MemFree:", 8))
-			mem_free = get_number(buf);
-		else if(STR_CMP(buf, "SwapTotal:", 10))
-			swap_total = get_number(buf);
-		else if(STR_CMP(buf, "SwapFree:", 9))
-			swap_free = get_number(buf);
-	}
-
-	fclose(fd);
+	mem_total = (float)sys.totalram * (float)sys.mem_unit / 1048576.0f;
+	mem_free  = (float)sys.freeram * (float)sys.mem_unit / 1048576.0f;
+	swap_total = (float)sys.totalswap * (float)sys.mem_unit / 1048576.0f;
+	swap_free  = (float)sys.freeswap * (float)sys.mem_unit / 1048576.0f;
 
 	mem_usedp  = 100 - (int)(((float)mem_free / (float)mem_total) * 100);
 	swap_usedp = 100 - (int)(((float)swap_free / (float)swap_total) * 100);

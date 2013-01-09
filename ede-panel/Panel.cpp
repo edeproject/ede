@@ -534,8 +534,8 @@ void Panel::load_applets(void) {
 
 	mgr.fill_group(this);
 #else
-	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/start-menu/start_menu.so");
+	mgr.load("./applets/quick-launch/quick_launch.so");
 	mgr.load("./applets/pager/pager.so");
 	mgr.load("./applets/clock/clock.so");
 	mgr.load("./applets/taskbar/taskbar.so");

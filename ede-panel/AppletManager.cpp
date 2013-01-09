@@ -33,10 +33,10 @@ struct AppletData {
 	Fl_Widget             *awidget; /* widget from the applet */
 	AppletInfo            *ainfo;   /* applet informations */
 
-	applet_create_t        create_func;
-	applet_destroy_t       destroy_func;
+	applet_create_t       create_func;
+	applet_destroy_t      destroy_func;
 
-	applet_destroy_info_t  destroy_info_func;
+	applet_destroy_info_t destroy_info_func;
 };
 
 static void clear_applet(AppletData *a) {
@@ -112,7 +112,6 @@ bool AppletManager::load(const char *path) {
 		return false;
 	}
 
-
 	AppletData *data = new AppletData;
 	data->dl = a;
 	data->awidget = NULL;
@@ -132,11 +131,10 @@ bool AppletManager::load(const char *path) {
 }
 
 void AppletManager::clear(void) {
-	if(applet_list.empty())
-		return;
+	E_RETURN_IF_FAIL(applet_list.size() > 0);
 
-	AListIter it = applet_list.begin(), it_end = applet_list.end();
-	while(it != it_end) {
+	AListIter it = applet_list.begin(), ite = applet_list.end();
+	while(it != ite) {
 		clear_applet(*it);
 		it = applet_list.erase(it);
 	}
@@ -147,29 +145,29 @@ void AppletManager::clear(void) {
  * added to the group.
  */
 void AppletManager::fill_group(Panel *p) {
-	AListIter it = applet_list.begin(), it_end = applet_list.end();
+	AListIter it = applet_list.begin(), ite = applet_list.end();
 	AppletData *applet;
 
-	for(; it != it_end; ++it) {
+	for(; it != ite; ++it) {
 		applet = *it;
 
-		/* allocate memory for widget and append it to group */
+		/* allocate memory for widget and append it to the group */
 		applet->awidget = applet->create_func();
 		p->add(applet->awidget);
 	}
 }
 
 void AppletManager::unfill_group(Panel *p) {
-	AListIter it = applet_list.begin(), it_end = applet_list.end();
+	AListIter it = applet_list.begin(), ite = applet_list.end();
 
-	for(; it != it_end; ++it)
+	for(; it != ite; ++it)
 		p->remove((*it)->awidget);
 }
 
 bool AppletManager::get_applet_options(Fl_Widget *o, unsigned long &opts) {
-	AListIter it = applet_list.begin(), it_end = applet_list.end();
+	AListIter it = applet_list.begin(), ite = applet_list.end();
 
-	for(; it != it_end; ++it) {
+	for(; it != ite; ++it) {
 		if(o == (*it)->awidget) {
 			opts = (*it)->ainfo->options;
 			return true;
