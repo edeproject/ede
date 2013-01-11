@@ -22,7 +22,7 @@
 #include "Applet.h"
 #include <edelib/Nls.h>
 
-#if defined(linux2)
+#if defined(linux)
 #include <sys/sysinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 
 EDELIB_NS_USING(color_rgb_to_fltk)
 
-#define UPDATE_INTERVAL 1.0f
+#define UPDATE_INTERVAL 2.0f
 #define STR_CMP(first, second, n) (strncmp(first, second, n) == 0)
 
 class MemMonitor : public Fl_Box {
@@ -42,6 +42,7 @@ private:
 public:
 	MemMonitor() : Fl_Box(0, 0, 45, 25), mem_usedp(0), swap_usedp(0) {
 		box(FL_THIN_DOWN_BOX);
+		update_status();
 	}
 
 	void update_status(void);
