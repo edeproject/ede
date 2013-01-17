@@ -36,15 +36,15 @@
 #define EDE_PANEL_MENU_AUTOUPDATE 1
 
 #ifdef EDE_PANEL_MENU_AUTOUPDATE
- #include <edelib/DirWatch.h>
+# include <edelib/DirWatch.h>
  EDELIB_NS_USING(DirWatch)
  EDELIB_NS_USING_LIST(4, (DW_CREATE, DW_MODIFY, DW_DELETE, DW_REPORT_RENAME))
 
  /* when menu needs to be update, after how long to do real update */
- #define MENU_UPDATE_TIMEOUT 5.0
+# define MENU_UPDATE_TIMEOUT 5.0
 
  /* elapsed seconds between changes reports from DirWatch; to prevent event throttling */
- #define MENU_UPDATE_DIFF 5
+# define MENU_UPDATE_DIFF 5
 #endif
 
 EDELIB_NS_USING(MenuBase)

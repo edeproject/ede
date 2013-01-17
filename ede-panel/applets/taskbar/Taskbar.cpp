@@ -233,11 +233,12 @@ void Taskbar::layout_children(void) {
 	if(!children()) return;
 
 	Fl_Widget *o;
-	int X, Y, W, reduce = 0, sz = 0, all_buttons_w = 0;
+	int X, Y, W, child_h, reduce = 0, sz = 0, all_buttons_w = 0;
 
 	X = x() + Fl::box_dx(box());
 	Y = y() + Fl::box_dy(box());
 	W = w() - Fl::box_dw(box());
+	child_h = parent()->h() - 10; /* same sizes as in panel */
 
 	for(int i = 0; i < children(); i++) {
 		o = child(i);
@@ -246,7 +247,7 @@ void Taskbar::layout_children(void) {
 		sz++;
 
 		/* resize every child to default size so we can calculate total length */
-		o->resize(o->x(), o->y(), (fixed_layout ? DEFAULT_CHILD_W : W), o->h());
+		o->resize(o->x(), o->y(), (fixed_layout ? DEFAULT_CHILD_W : W), child_h);
 		all_buttons_w += o->w();
 
 		/* do not include ending spaces */
@@ -267,7 +268,7 @@ void Taskbar::layout_children(void) {
 		 * I'm putting -1 here to leave a small space at the end of group; this will also
 		 * make children adaptive to not overflow group in case too many of them was created
 		 */
-		o->resize(X, Y, o->w() - reduce - 1, o->h());
+		o->resize(X, Y, o->w() - reduce - 1, child_h);
 		X += o->w() + DEFAULT_SPACING;
 	}
 }

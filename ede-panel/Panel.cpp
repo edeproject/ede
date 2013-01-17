@@ -80,8 +80,7 @@ static int xerror_handler(Display *d, XErrorEvent *e) {
 	 * construct the similar message format like X11 is using by default, but again, little
 	 * bit different so we knows it comes from here
 	 */
-
-	sprintf(buf, "%d", e->request_code);
+	snprintf(buf, sizeof(buf), "%d", e->request_code);
 
 	XGetErrorDatabaseText(d, "XRequest", buf, "%d", buf, sizeof(buf));
 	fprintf(stderr, "%s: ", buf);
@@ -121,12 +120,12 @@ static int x_events(int ev) {
 }
 
 /* horizontaly centers widget in the panel */
-static void center_widget_h(Fl_Widget *o, Panel *self) {
-	int ph, wy;
+static void fix_widget_h(Fl_Widget *o, Panel *self) {
+	int ph, wy, H = self->h() - 10;
 
 	ph = self->panel_h() / 2;
-	wy = ph - (o->h() / 2);
-	o->position(o->x(), wy);
+	wy = ph - (H / 2);
+	o->resize(o->x(), wy, o->w(), H);
 }
 
 static void add_from_list(WidgetList &lst, Panel *self, int &X, bool inc) {
@@ -278,8 +277,8 @@ void Panel::do_layout(void) {
 	for(int i = 0; i < children(); i++) {
 		o = child(i);
 
-		/* first center it vertically */
-		center_widget_h(o, this);
+		/* first resize it to some reasonable height and center it vertically */
+		fix_widget_h(o, this);
 
 		/* manage hider specifically */
 		if(hider && o == hider) {
