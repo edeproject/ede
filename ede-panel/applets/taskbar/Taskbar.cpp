@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012 Sanel Zukan
+ * Copyright (C) 2012-2013 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -310,6 +310,7 @@ void Taskbar::activate_window(TaskButton *b) {
 
 			if(prev_active && 
 			   prev_active != b && 
+			   prev_active->get_workspace() == b->get_workspace() &&
 			   wm_window_get_state(prev_active->get_window_xid()) != WM_WINDOW_STATE_ICONIC) 
 			{
 				xid = prev_active->get_window_xid();
