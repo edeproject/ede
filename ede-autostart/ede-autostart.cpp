@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
+#include <errno.h>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Check_Browser.H>
@@ -41,7 +42,7 @@
 #include <edelib/Ede.h>
 
 EDELIB_NS_USING_AS(Window, AppWindow)
-EDELIB_NS_USING_LIST(15, (String,
+EDELIB_NS_USING_LIST(17, (String,
 						  DesktopFile,
 						  IconLoader,
 						  list,
@@ -49,8 +50,10 @@ EDELIB_NS_USING_LIST(15, (String,
 						  system_config_dirs,
 						  user_config_dir,
 						  str_ends,
+						  str_tolower,
 						  run_async,
 						  ask,
+						  alert,
 						  file_test,
                           window_center_on_screen,
 						  FILE_TEST_IS_REGULAR,
@@ -135,8 +138,8 @@ static void unique_by_basename(StringList& lst) {
 }
 
 static void entry_list_run_clear(DialogEntryList& l, bool run) {
-	DialogEntryListIter dit = l.begin(), dit_end = l.end();
-	for(; dit != dit_end; ++dit) {
+	DialogEntryListIter dit = l.begin(), dite = l.end();
+	for(; dit != dite; ++dit) {
 		if(run)
 			AUTOSTART_RUN((*dit)->exec.c_str());
 		delete *dit;
@@ -188,8 +191,8 @@ static void run_autostart_dialog(DialogEntryList& l) {
 		txt->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_WRAP);
 		cbrowser = new Fl_Check_Browser(10, 75, 350, 185);
 
-		DialogEntryListIter it = l.begin(), it_end = l.end();
-		for(; it != it_end; ++it) {
+		DialogEntryListIter it = l.begin(), ite = l.end();
+		for(; it != ite; ++it) {
 			if((*it)->comment.empty())
 				cbrowser->add((*it)->name.c_str());
 			else {
@@ -222,13 +225,13 @@ static void perform_autostart(bool safe) {
 	adir += AUTOSTART_DIRNAME;
 
 	StringList dfiles, sysdirs, tmp;
-	StringListIter it, it_end, tmp_it, tmp_it_end;
+	StringListIter it, ite, tmp_it, tmp_ite;
 
 	dir_list(adir.c_str(), dfiles, true);
 
 	system_config_dirs(sysdirs);
 	if(!sysdirs.empty()) {
-		for(it = sysdirs.begin(), it_end = sysdirs.end(); it != it_end; ++it) {
+		for(it = sysdirs.begin(), ite = sysdirs.end(); it != ite; ++it) {
 			*it += AUTOSTART_DIRNAME;
 
 			/*
@@ -237,22 +240,18 @@ static void perform_autostart(bool safe) {
 			 * probably via merge() member
 			 */
 			dir_list((*it).c_str(), tmp, true);
-			for(tmp_it = tmp.begin(), tmp_it_end = tmp.end(); tmp_it != tmp_it_end; ++tmp_it)
+			for(tmp_it = tmp.begin(), tmp_ite = tmp.end(); tmp_it != tmp_ite; ++tmp_it)
 				dfiles.push_back(*tmp_it);
 		}
 	}
 
-	if(dfiles.empty())
-		return;
+	if(dfiles.empty()) return;
 
 	/*
-	 * Remove duplicates where first one seen have priority to be keept. 
-	 * This way is required by spec. 
+	 * Remove duplicates where first one seen have priority to be keept. This way is required by spec. 
 	 *
-	 * Also handle this case (noted in spec): 
-	 * if $XDG_CONFIG_HOME/autostart/foo.desktop and $XDG_CONFIG_DIRS/autostart/foo.desktop
-	 * exists, but $XDG_CONFIG_HOME/autostart/foo.desktop have 'Hidden = true',
-	 * $XDG_CONFIG_DIRS/autostart/foo.autostart is ignored too.
+	 * Also handle this case (noted in spec): * if $XDG_CONFIG_HOME/autostart/foo.desktop and $XDG_CONFIG_DIRS/autostart/foo.desktop
+	 * exists, but $XDG_CONFIG_HOME/autostart/foo.desktop have 'Hidden = true', * $XDG_CONFIG_DIRS/autostart/foo.autostart is ignored too.
 	 *
 	 * Later is implied via unique_by_basename().
 	 */
@@ -263,7 +262,7 @@ static void perform_autostart(bool safe) {
 	DesktopFile df;
 	DialogEntryList entry_list;
 
-	for(it = dfiles.begin(), it_end = dfiles.end(); it != it_end; ++it) {
+	for(it = dfiles.begin(), ite = dfiles.end(); it != ite; ++it) {
 		if((*it).empty())
 			continue;
 
@@ -276,12 +275,23 @@ static void perform_autostart(bool safe) {
 			E_WARNING(E_STRLOC ": Can't load '%s'. Skipping...\n", name);
 			continue;
 		}
+
+		/* obey to OnlyShowIn rule */
+		if(df.only_show_in(buf, sizeof(buf))) {
+			str_tolower((unsigned char*)buf);
+			if(strstr(buf, "ede") == NULL)
+				continue;
+		}
+
+		/* obey to NotShowIn rule */
+		if(df.not_show_in(buf, sizeof(buf))) {
+			str_tolower((unsigned char*)buf);
+			if(strstr(buf, "ede") != NULL)
+				continue;
+		}
 		
  		/* files marked as hidden must be skipped */
-		if(df.hidden())
-			continue;
-
-		if(!df.exec(buf, sizeof(buf)))
+		if(df.hidden() || !df.exec(buf, sizeof(buf)))
 			continue;
 
 		DialogEntry* en = new DialogEntry;
@@ -321,8 +331,11 @@ static void perform_autostart_scripts(const char* dir) {
 					 "Would you like to start them?"), dir))
 			{
 				/* spec said how we must chdir to the root of the medium */
-				chdir(dir);
-				AUTOSTART_RUN(path);
+				errno = 0;
+				if(chdir(dir) == 0)
+					AUTOSTART_RUN(path);
+				else
+					alert(_("Unable to change folder: %s"), strerror(errno));
 			}
 
 			/* we only match the one file */
