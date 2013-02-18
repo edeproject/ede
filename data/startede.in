@@ -3,7 +3,7 @@
 # $Id$
 #
 # Part of Equinox Desktop Environment (EDE).
-# Copyright (c) 2007-2012 EDE Authors.
+# Copyright (c) 2007-2013 EDE Authors.
 #
 # This program is licensed under terms of the 
 # GNU General Public License version 2 or newer.
@@ -41,6 +41,8 @@ if [ "x$XDG_MENU_PREFIX" = "x" ]; then
 	XDG_MENU_PREFIX="ede-"
 fi
 
+XDG_CURRENT_DESKTOP="EDE"
+
 [ -d $XDG_DATA_HOME ] || mkdir -p $XDG_DATA_HOME
 [ -d $XDG_CONFIG_HOME ] || mkdir -p $XDG_CONFIG_HOME
 [ -d $XDG_CACHE_HOME ] || mkdir -p $XDG_CACHE_HOME
@@ -51,6 +53,7 @@ export XDG_CACHE_HOME
 export XDG_DATA_DIRS
 export XDG_CONFIG_DIRS
 export XDG_MENU_PREFIX
+export XDG_CURRENT_DESKTOP
 
 PATH=$PATH:$PREFIX:$PREFIX/bin
 export PATH
