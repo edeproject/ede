@@ -34,6 +34,13 @@ enum {
 	PANEL_POSITION_BOTTOM
 };
 
+/* combination of what to do with strut data */
+enum {
+	PANEL_STRUT_REMOVE = (1 << 1),
+	PANEL_STRUT_BOTTOM = (1 << 2),
+	PANEL_STRUT_TOP    = (1 << 3)
+};
+
 class Hider;
 
 class Panel : public PanelWindow {
@@ -52,7 +59,7 @@ private:
 	void read_config(void);
 	void save_config(void);
 	void do_layout(void);
-
+	void set_strut(short state);
 public:
 	Panel();
 

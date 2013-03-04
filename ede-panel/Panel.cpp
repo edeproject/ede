@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012 Sanel Zukan
+ * Copyright (C) 2012-2013 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -366,6 +366,24 @@ void Panel::do_layout(void) {
 	}
 }
 
+void Panel::set_strut(short state) {
+	if(state & PANEL_STRUT_REMOVE)
+		netwm_window_remove_strut(fl_xid(this));
+
+	/* no other flags */
+	if(state == PANEL_STRUT_REMOVE) return;
+
+	int sizes[4] = {0, 0, 0, 0};
+
+	if(state & PANEL_STRUT_BOTTOM)
+		sizes[3] = h();
+	else
+		sizes[2] = h();
+
+	/* TODO: netwm_window_set_strut_partial() */
+	netwm_window_set_strut(fl_xid(this), sizes[0], sizes[1], sizes[2], sizes[3]);
+}
+
 void Panel::show(void) {
 	if(shown()) return;
 
@@ -382,9 +400,7 @@ void Panel::show(void) {
 
 void Panel::hide(void) {
 	Fl::remove_handler(x_events);
-	netwm_window_remove_strut(fl_xid(this));
-
-	E_DEBUG("Panel::hide()\n");
+	set_strut(PANEL_STRUT_REMOVE);
 
 	/* clear loaded widgets */
 	mgr.clear(this);
@@ -433,17 +449,13 @@ void Panel::update_size_and_pos(bool create_xid, bool update_strut, int X, int Y
 	/* position it, this is done after XID was created */
 	if(vpos == PANEL_POSITION_BOTTOM) {
 		position(X, screen_h - h());
-		if(width_perc >= 100 && update_strut) {
-			netwm_window_remove_strut(fl_xid(this));
-			netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
-		}
+		if(width_perc >= 100 && update_strut)
+			set_strut(PANEL_STRUT_REMOVE | PANEL_STRUT_BOTTOM);
 	} else {
 		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
 		position(X, Y);
-		if(width_perc >= 100 && update_strut) {
-			netwm_window_remove_strut(fl_xid(this));
-			netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
-		}
+		if(width_perc >= 100 && update_strut)
+			set_strut(PANEL_STRUT_REMOVE | PANEL_STRUT_TOP);
 	}
 }
 
@@ -472,14 +484,14 @@ int Panel::handle(int e) {
 			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
 				position(x(), screen_y);
 				if(width_perc >= 100)
-					netwm_window_set_strut(fl_xid(this), 0, 0, h(), 0);
+					set_strut(PANEL_STRUT_TOP);
 				vpos = PANEL_POSITION_TOP;
 			} 
 				
 			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
 				position(x(), screen_h - h());
 				if(width_perc >= 100)
-					netwm_window_set_strut(fl_xid(this), 0, 0, 0, h());
+					set_strut(PANEL_STRUT_BOTTOM);
 				vpos = PANEL_POSITION_BOTTOM;
 			}
 
