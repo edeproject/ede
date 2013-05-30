@@ -1,13 +1,21 @@
 /*
- * $Id: DesktopIcon.cpp 3032 2011-08-03 12:20:37Z karijes $
+ * $Id: ede-panel.cpp 3463 2012-12-17 15:49:33Z karijes $
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2011 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,8 +23,9 @@
 #endif
 
 #define FL_LIBRARY 1
+
 #include <FL/Fl.H>
-#include <FL/x.H>
+#include <FL/Fl_Image.H>
 #include <edelib/Debug.h>
 
 #ifdef HAVE_SHAPE
@@ -27,7 +36,9 @@
 #include "DesktopIcon.h"
 #include "Utils.h"
 
-MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic), mask(0), opacity_atom(0) {
+MovableIcon::MovableIcon(DesktopIcon* ic) :
+Fl_Window(ic->x(), ic->y(), ic->w(), ic->h()), icon(ic), mask(0), opacity_atom(0) 
+{
 	E_ASSERT(icon != NULL);
 
 	set_override();
@@ -36,7 +47,7 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(),
 	begin();
 		/* force box be same width/height as icon so it can fit inside masked window */
 #ifdef HAVE_SHAPE 
-		Fl_Image* img = ic->icon_image();
+		Fl_Image* img = ic->image();
 		if(img)
 			icon_box = new Fl_Box(0, 0, img->w(), img->h());
 		else
@@ -44,7 +55,7 @@ MovableIcon::MovableIcon(DesktopIcon* ic) : Fl_Window(ic->x(), ic->y(), ic->w(),
 #else
 		icon_box = new Fl_Box(0, 0, w(), h());
 #endif
-		icon_box->image(ic->icon_image());
+		icon_box->image(ic->image());
 	end();
 
 	opacity_atom = XInternAtom(fl_display, "_NET_WM_WINDOW_OPACITY", False);
@@ -60,8 +71,8 @@ void MovableIcon::show(void) {
 		Fl_X::make_xid(this);
 
 #ifdef HAVE_SHAPE
-	if(icon->icon_image()) {
-		mask = create_mask(icon->icon_image());
+	if(icon->image()) {
+		mask = create_mask(icon->image());
 		if(mask) {
 			XShapeCombineMask(fl_display, fl_xid(this), ShapeBounding, 0, 0, mask, ShapeSet);
 

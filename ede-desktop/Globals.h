@@ -1,7 +1,7 @@
 /*
  * $Id: ede-panel.cpp 3463 2012-12-17 15:49:33Z karijes $
  *
- * Copyright (C) 2006-2013 Sanel Zukan
+ * Copyright (C) 2013 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,13 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef __ICONDIALOG_H__
-#define __ICONDIALOG_H__
+#ifndef __EDE_DESKTOP_GLOBAL_H__
+#define __EDE_DESKTOP_GLOBAL_H__
 
-class DesktopIcon;
-class Desktop;
+#include <edelib/Resource.h>
 
-void icon_dialog_icon_create(Desktop *d);
-void icon_dialog_icon_property(DesktopIcon *d);
+/* alias it so we don't have to use EDELIB_NS_PREPEND */
+EDELIB_NS_USING_AS(Resource, DesktopConfig)
+
+#define EDE_DESKTOP_DAMAGE_CHILD_LABEL    0x10
+#define EDE_DESKTOP_DAMAGE_OVERLAY        0x20
+#define EDE_DESKTOP_DAMAGE_CLEAR_OVERLAY  0x30
 
 #endif

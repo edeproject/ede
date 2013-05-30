@@ -1,17 +1,24 @@
 /*
  * $Id$
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #include <string.h>
-#include <FL/x.H>
 #include <edelib/Debug.h>
 
 #include "Utils.h"
@@ -26,8 +33,7 @@ static Fl_Window* overlay_drawable = NULL;
 static char dash_list[] = {1};
 
 void draw_overlay_rect(void) {
-	if(overlay_w <= 0 || overlay_h <= 0)
-		return;
+	E_RETURN_IF_FAIL(overlay_w > 0 && overlay_h > 0);
 
 	XSetDashes(fl_display, fl_gc, 0, dash_list, 1);
 	XSetLineAttributes(fl_display, fl_gc, 2, LineOnOffDash, CapButt, JoinMiter);
@@ -35,11 +41,7 @@ void draw_overlay_rect(void) {
 	XSetFunction(fl_display, fl_gc, GXxor);
 	XSetForeground(fl_display, fl_gc, 0xffffffff);
 
-	Window ow;
-	if(overlay_drawable)
-		ow = fl_xid(overlay_drawable);
-	else
-		ow = fl_window;
+	Window ow = overlay_drawable ? fl_xid(overlay_drawable) : fl_window;
 	XDrawRectangle(fl_display, ow, fl_gc, overlay_x, overlay_y, overlay_w-1, overlay_h-1);
 
 	XSetFunction(fl_display, fl_gc, GXcopy);

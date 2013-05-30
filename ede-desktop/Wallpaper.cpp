@@ -1,52 +1,53 @@
 /*
  * $Id$
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2009 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <string.h> // memcpy
-#include <stdlib.h> // malloc
-
+#include <string.h>
+#include <stdlib.h>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_RGB_Image.H>
 #include <FL/fl_draw.H>
-#include <FL/x.H>
-
 #include <edelib/Debug.h>
 
 #include "Wallpaper.h"
-#include "Utils.h"
 
-#define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask) \
-	tmp = 0;                                    \
-	if(rshift >= 0)                             \
-		tmp |= (((int)r << rshift) & rmask);    \
-	else                                        \
-		tmp |= (((int)r >> (-rshift)) & rmask); \
-                                                \
-	if(gshift >= 0)                             \
-		tmp |= (((int)g << gshift) & gmask);    \
-	else                                        \
-		tmp |= (((int)g >> (-gshift)) & gmask); \
-                                                \
-	if(bshift >= 0)                             \
-		tmp |= (((int)b << bshift) & bmask);    \
-	else                                        \
+#define CALC_PIXEL(tmp, rshift, rmask, gshift, gmask, bshift, bmask)	\
+	tmp = 0;															\
+	if(rshift >= 0)														\
+		tmp |= (((int)r << rshift) & rmask);							\
+	else																\
+		tmp |= (((int)r >> (-rshift)) & rmask);							\
+																		\
+	if(gshift >= 0)														\
+		tmp |= (((int)g << gshift) & gmask);							\
+	else																\
+		tmp |= (((int)g >> (-gshift)) & gmask);							\
+																		\
+	if(bshift >= 0)														\
+		tmp |= (((int)b << bshift) & bmask);							\
+	else																\
 		tmp |= (((int)b >> (-bshift)) & bmask)
 
 
 static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, int wp_h) {
-	if(!img)
-		return 0;
-
-	if(pix)
-		XFreePixmap(fl_display, pix);
+	if(!img) return 0;
+	if(pix) XFreePixmap(fl_display, pix);
 
 	unsigned long rmask = fl_visual->visual->red_mask;
 	unsigned long gmask = fl_visual->visual->green_mask;
@@ -108,15 +109,9 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 	int iw = img->w();
 	int ih = img->h();
 	int id = img->d();
-
-	bool msb = false;
-	if(ImageByteOrder(fl_display) == MSBFirst)
-		msb = true;
-	else
-		msb = false;
+	bool msb = (ImageByteOrder(fl_display) == MSBFirst) ? true : false;
 
 	unsigned int r, g, b, tmp;
-	//unsigned char* dest = (unsigned char*)malloc(sizeof(unsigned char) * iw * ih * id);
 	unsigned char* dest = (unsigned char*)malloc(ih * (*xim)->bytes_per_line);
 	unsigned char* destptr = dest;
 	unsigned char* src = (unsigned char*)img->data()[0];
@@ -257,8 +252,8 @@ static Pixmap create_xpixmap(Fl_Image* img, XImage** xim, Pixmap pix, int wp_w, 
 	 *
 	 * FIXME: drawable background should be the same color as wallpaper background
 	 */
-	Window drawable = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 0, 0, wp_w,
-              wp_h, 0, 0, BlackPixel(fl_display, fl_screen));
+	Window drawable = XCreateSimpleWindow(fl_display, RootWindow(fl_display, fl_screen), 0, 0, wp_w, wp_h,
+										  0, 0, BlackPixel(fl_display, fl_screen));
 
 	pix = XCreatePixmap(fl_display, drawable, wp_w, wp_h, fl_visual->depth);
 
@@ -349,23 +344,18 @@ static void create_tile(Fl_Image* orig, Fl_RGB_Image** copied, int X, int Y, int
 }
 
 Wallpaper::~Wallpaper() { 
-	if(rootpmap_pixmap)
-		XFreePixmap(fl_display, rootpmap_pixmap);
-
+	if(rootpmap_pixmap) XFreePixmap(fl_display, rootpmap_pixmap);
 	delete stretched_alloc;
 }
 
 void Wallpaper::set_rootpmap(void) {
-	if(!image())
-		return;
+	E_RETURN_IF_FAIL(image() != NULL);
 
-	XImage* rootpmap_image = 0;
+	XImage *rootpmap_image = 0;
 	Atom    _XA_XROOTPMAP_ID;
-
+	
 	rootpmap_pixmap = create_xpixmap(image(), &rootpmap_image, rootpmap_pixmap, w(), h());
-
-	if(!rootpmap_pixmap)
-		return;
+	E_RETURN_IF_FAIL(rootpmap_pixmap != 0);
 
 	/* XDestroyImage function calls frees both the image structure and the data pointed to by the image structure */
 	if(rootpmap_image)
@@ -374,51 +364,59 @@ void Wallpaper::set_rootpmap(void) {
 	_XA_XROOTPMAP_ID = XInternAtom(fl_display, "_XROOTPMAP_ID", False);
 
 	XChangeProperty(fl_display, RootWindow(fl_display, fl_screen), 
-			_XA_XROOTPMAP_ID, XA_PIXMAP, 32, PropModeReplace, (unsigned char *)&rootpmap_pixmap, 1);	
+					_XA_XROOTPMAP_ID, XA_PIXMAP, 32, PropModeReplace, (unsigned char *)&rootpmap_pixmap, 1);	
 }
 
-bool Wallpaper::load(const char* path, WallpaperState s) {
+bool Wallpaper::load(const char *path, int s, bool rootpmap) {
 	E_ASSERT(path != NULL);
+	
+	/* in case this function gets multiple calls */
+	if(wpath == path && state == s && rootpmap == use_rootpmap)
+		return true;
 
-	Fl_Shared_Image* i = Fl_Shared_Image::get(path);
-	if(!i)
-		return false;
-
+	Fl_Shared_Image *img = Fl_Shared_Image::get(path);
+	E_RETURN_VAL_IF_FAIL(img != NULL, false);
+	
+	if(s != WALLPAPER_CENTER && s != WALLPAPER_TILE && s != WALLPAPER_STRETCH)
+		s = WALLPAPER_CENTER;
+	
 	if(s == WALLPAPER_TILE) {
-		Fl_RGB_Image* tiled;
+		Fl_RGB_Image *tiled;
 
-		create_tile((Fl_Image*)i, &tiled, x(), y(), w(), h());
+		create_tile((Fl_Image*)img, &tiled, x(), y(), w(), h());
 		image(tiled);
 	} else if(s == WALLPAPER_STRETCH) {
-		Fl_Image* stretched = NULL;
+		Fl_Image *stretched = NULL;
 
-		if(i->w() == w() && i->h() == h())
-			stretched = i;
+		if(img->w() == w() && img->h() == h())
+			stretched = img;
 		else {
 			/* valgrind reports it as possible lost, but FLTK should free it */
 			delete stretched_alloc;
 
-			stretched = i->copy(w(), h());
-			i->release();
-
+			stretched = img->copy(w(), h());
+			img->release();
 			stretched_alloc = stretched;
 		}
 
 		image(stretched);
 	} else {
-		image(i);
+		image(img);
 	}
 
-	state = s;
-
 	/* set root pixmap for pseudo transparency */
-	set_rootpmap();
+	if(rootpmap) set_rootpmap();
+	
+	state = s;
+	use_rootpmap = rootpmap;
+	/* prevent self assignment or bad things will happen */
+	if(wpath != path) wpath = path;
+
 	return true;
 }
 
 void Wallpaper::draw(void) {
-	if(!image())
-		return;
+	E_RETURN_IF_FAIL(image() != NULL);
 
 	int ix, iy, iw, ih;
 	Fl_Image* im = image();
@@ -426,8 +424,7 @@ void Wallpaper::draw(void) {
 	iw = im->w();
 	ih = im->h();
 
-	if(iw == 0 || ih == 0)
-		return;
+	E_RETURN_IF_FAIL(iw > 0 && ih > 0);
 
 	if(state == WALLPAPER_CENTER) {
 		ix = (w()/2) - (iw/2);
@@ -474,4 +471,21 @@ int Wallpaper::handle(int event) {
 	}
 
 	return 0;
+}
+
+void Wallpaper::resize(int X, int Y, int W, int H) {
+	if(X == x() && Y == y() && W == w() && H == h())
+		return;
+
+	Fl_Box::resize(X, Y, W, H);
+	if(image()) {
+		/*
+		 * It is safe to call 'load()' again, as Fl_Shared_Image::get() will cache successfully loaded image.
+		 * Also benefit is that image transormations (scaling, tiling) will be done again on original image, so
+		 * there will be no lost data.
+		 *
+		 * TODO: Fl_Shared_Image will eat a memory; this needs some investigation.
+		 */
+		load(wpath.c_str(), state, use_rootpmap);
+	}
 }

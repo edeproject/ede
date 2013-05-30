@@ -1,95 +1,119 @@
 /*
  * $Id$
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef __DESKTOPICON_H__
-#define __DESKTOPICON_H__
+#ifndef __DESKTOP_ICON_H__
+#define __DESKTOP_ICON_H__
 
 #include <FL/Fl_Widget.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Button.H>
 #include <FL/Fl_Image.H>
-
-#include <edelib/String.h>
 #include <edelib/MenuButton.h>
+#include <edelib/String.h>
 
-struct GlobalIconSettings;
-struct IconSettings;
+#include "Globals.h"
+
+enum {
+	DESKTOP_ICON_TYPE_NORMAL,
+	DESKTOP_ICON_TYPE_TRASH,
+	DESKTOP_ICON_TYPE_LINK,
+	DESKTOP_ICON_TYPE_FILE,
+	DESKTOP_ICON_TYPE_FOLDER
+};
+
+/* default icon sizes */
+#define DESKTOP_ICON_SIZE_W 48
+#define DESKTOP_ICON_SIZE_H 48
+
+/*
+ * Each DesktopIcon shares IconOptions, which is content of [Icons] section
+ * from configuration file. With this, 'Desktop' needs only to update content so all
+ * icons see it.
+ */
+struct IconOptions {
+	int  label_background;
+	int  label_foreground;
+	int  label_font;
+	int  label_fontsize;
+	int  label_maxwidth;
+	int  label_transparent;
+	int  label_visible;
+	bool one_click_exec;
+};
+
 class MovableIcon;
 
 class DesktopIcon : public Fl_Widget {
 private:
-	IconSettings*             settings;
-	const GlobalIconSettings* gsettings;
+	int  icon_type;
+	int  lwidth, lheight;
+	bool focused;
 
-	int  lwidth;
-	int  lheight;
-	bool focus;
+	Fl_Image    *darker_img;
+	IconOptions *opts;
+	MovableIcon *micon;
 
-	MovableIcon* micon;
-
-	Fl_Image*           darker_img;
-	edelib::MenuButton* imenu;
-
-	void load_icon(int face);
-	void update_label_font_and_size(void);
-	void fix_position(int X, int Y);
+	/* location of .desktop file and command to be executed */
+	EDELIB_NS_PREPEND(String) path, cmd;
+	EDELIB_NS_PREPEND(MenuButton) *imenu;
 
 public:
-	DesktopIcon(GlobalIconSettings* gisett, IconSettings* isett, int bg);
+	DesktopIcon(const char *l, int W = DESKTOP_ICON_SIZE_W, int H = DESKTOP_ICON_SIZE_H);
 	~DesktopIcon();
 
-	virtual void draw(void);
-	virtual int  handle(int event);
+	void set_icon_type(int c) { icon_type = c; }
+	int  get_icon_type(void) { return icon_type;}
+	void set_image(const char *name);
 
+	void update_label_font_and_size(void);
+
+	void set_options(IconOptions *o) {
+		opts = o;
+		update_label_font_and_size();
+	}
+
+	/* Here is implemented localy focus schema avoiding messy fltk one. Focus/unfocus is handled from Desktop. */
+	void do_focus(void)   { focused = true;  }
+	void do_unfocus(void) { focused = false; }
+	bool is_focused(void) { return focused;  }
+	
+	void        set_path(const char *p) { path = p; }
+	const char *get_path(void) { return path.c_str(); }
+
+	void        set_cmd(const char *c) { cmd = c; }
+	const char *get_cmd(void) { return cmd.c_str(); }
+
+	void fix_position(int X, int Y);
 	void drag(int x, int y, bool apply);
 	int  drag_icon_x(void);
 	int  drag_icon_y(void);
 
-	IconSettings* get_settings(void) { return settings; }
-
 	/*
-	 * This is 'enhanced' (in some sense) redraw(). Redrawing
-	 * icon will not fully redraw label nor focus box, which laid outside 
-	 * icon box. It will use damage() on given region, but called from
-	 * parent, so parent can redraw that region on itself (since label does
-	 * not laid on any box)
+	 * This is 'enhanced' (in some sense) redraw(). Redrawing icon will not fully redraw label nor
+	 * focus box, which laid outside icon box. It will use damage() on given region, but called from
+	 * parent, so parent can redraw that region on itself (since label does not laid on any box)
 	 *
-	 * Alternative way would be to redraw whole parent, but it is pretty unneeded
-	 * and slow.
+	 * Alternative way would be to redraw the whole parent, but it is pretty unneeded and slow.
 	 */
 	void fast_redraw(void);
 
-	/*
-	 * Here is implemented localy focus schema avoiding
-	 * messy fltk one. Focus/unfocus is handled from Desktop.
-	 */
-	void do_focus(void)   { focus = true;  }
-	void do_unfocus(void) { focus = false; }
-	bool is_focused(void) { return focus;  }
-
-	Fl_Image* icon_image(void) { return image(); }
-
-	void rename(const char* str);
-
-	/*
-	 * make sure this returns String since operator== is
-	 * further used, especially in Desktop
-	 */
-	const edelib::String& path(void);
-
-	int  icon_type(void);
-	void use_icon1(void);
-	void use_icon2(void);
+	void draw(void);
+	int handle(int event);
 };
 
 #endif

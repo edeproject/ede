@@ -1,13 +1,21 @@
 /*
- * $Id: IconProperties.h 2366 2008-10-02 09:42:19Z karijes $
+ * $Id: ede-panel.cpp 3463 2012-12-17 15:49:33Z karijes $
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2012 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #include <ctype.h>
@@ -35,7 +43,7 @@
 
 #include "IconDialog.h"
 #include "DesktopIcon.h"
-#include "ede-desktop.h"
+#include "Desktop.h"
 
 EDELIB_NS_USING_LIST(10, (str_tolower, icon_chooser, dir_home, build_filename, alert,
 						  ICON_SIZE_HUGE, String, IconLoader, DesktopFile, DESK_FILE_TYPE_APPLICATION))
@@ -73,13 +81,15 @@ static void cancel_cb(Fl_Widget*, void*) {
 	win->hide();
 }
 
-static void ok_cb(Fl_Widget*, void*) {
+static void ok_cb(Fl_Widget*, void *d) {
 	if(is_empty_input(name) || is_empty_input(execute) || !img->image()) {
 		/* do nothing */
 		win->hide();
 		return;
 	}
-
+	
+	Desktop *self = (Desktop*)d;
+	
 	DesktopFile df;
 	df.create_new(DESK_FILE_TYPE_APPLICATION);
 	df.set_name(name->value());
@@ -98,32 +108,19 @@ static void ok_cb(Fl_Widget*, void*) {
 	file += ".desktop";
 
 	/* go through the file and replace spaces with '_' */
-	for(char *p = (char*)file.c_str(); p && *p; p++)
-		if(isspace(*p)) *p = '_';
+	for(String::size_type i = 0; i < file.length(); i++)
+		if(isspace(file[i])) file[i] = '_';
 
-	/* TODO: let 'Desktop' (class) returns full desktop path */
-	String path = build_filename(Desktop::instance()->desktop_path(), file.c_str());
-
-	/*
-	 * disable watching on folder and explicitly add file (probably as notification will be fired up faster than
-	 * file will be available on that location)
-	 */
-	Desktop::instance()->dir_watch_off();
+	String path = build_filename(self->desktop_path(), file.c_str());
 
 	if(df.save(path.c_str())) {
-		/* explictly add file path */
-		Desktop::instance()->add_icon_by_path(path.c_str(), NULL);
-		/*
-		 * wait a second; this would remove event from the queue so watched does not complain how filed
-		 * does not exists
-		 */
-		Fl::wait(1);
-		Desktop::instance()->redraw();
+		DesktopIcon *ic = self->read_desktop_file(path.c_str(), file.c_str());
+		if(ic) self->add(ic);
+		self->redraw();
 	} else {
 		alert(_("Unable to create '%s' file. Received error is: %s\n"), path.c_str(), df.strerror());
 	}
 
-	Desktop::instance()->dir_watch_on();
 	win->hide();
 }
 
@@ -140,7 +137,7 @@ static void file_browse_cb(Fl_Widget*, void*) {
 	execute->value(p);
 }
 
-void icon_dialog_icon_create(void) {
+void icon_dialog_icon_create(Desktop *self) {
 	win = new Fl_Window(430, 170, _("Create desktop icon"));
 		img = new Fl_Button(10, 10, 75, 75);
 		img->callback(img_browse_cb);
@@ -156,7 +153,7 @@ void icon_dialog_icon_create(void) {
 		icon_type->menu(menu_items);
 
 		ok = new Fl_Button(235, 135, 90, 25, _("&OK"));
-		ok->callback(ok_cb);
+		ok->callback(ok_cb, self);
 		cancel = new Fl_Button(330, 135, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb);
 	win->end();

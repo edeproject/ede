@@ -1,13 +1,21 @@
 /*
  * $Id$
  *
- * ede-desktop, desktop and icon manager
- * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2006-2008 EDE Authors.
- *
- * This program is licensed under terms of the 
- * GNU General Public License version 2 or newer.
- * See COPYING for details.
+ * Copyright (C) 2006-2013 Sanel Zukan
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,20 +26,19 @@
 
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
-#include <FL/Fl_Shared_Image.H>
-#include <FL/x.H>
-
 #include <edelib/Debug.h>
 #include <edelib/IconLoader.h>
+#include <edelib/MenuItem.h>
 #include <edelib/MessageBox.h>
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 
-#include "ede-desktop.h"
 #include "DesktopIcon.h"
-#include "IconDialog.h"
 #include "MovableIcon.h"
-#include "Utils.h"
+#include "Desktop.h"
+
+/* label offset from icon y() + h(), so selection box can be drawn nicely */
+#define LABEL_OFFSET 2
 
 /* minimal icon sizes */
 #define ICON_SIZE_MIN_W 48
@@ -41,18 +48,16 @@
 #define OFFSET_W 16
 #define OFFSET_H 16
 
-/* label offset from icon y()+h(), so selection box can be drawn nicely */
-#define LABEL_OFFSET 2
-
-EDELIB_NS_USING(String)
 EDELIB_NS_USING(IconLoader)
-EDELIB_NS_USING(MenuItem)
+EDELIB_NS_USING(String)
 EDELIB_NS_USING(MenuButton)
-EDELIB_NS_USING(ICON_SIZE_HUGE)
-EDELIB_NS_USING(ICON_SIZE_TINY)
-EDELIB_NS_USING(input)
-EDELIB_NS_USING(ask)
+EDELIB_NS_USING(MenuItem)
 EDELIB_NS_USING(run_async)
+EDELIB_NS_USING(ask)
+EDELIB_NS_USING(alert)
+EDELIB_NS_USING(input)
+EDELIB_NS_USING(ICON_SIZE_TINY)
+EDELIB_NS_USING(ICON_SIZE_HUGE)
 
 static void open_cb(Fl_Widget*, void* d);
 static void rename_cb(Fl_Widget*, void* d);
@@ -62,22 +67,21 @@ static MenuItem icon_menu[] = {
 	{_("&Open"),   0, open_cb, 0},
 	{_("&Rename"), 0, rename_cb, 0},
 	{_("&Delete"), 0, delete_cb, 0},
-	/* {_("&Properties"), 0, props_cb, 0}, */
 	{0}
 };
 
+#if 0
 static MenuItem icon_trash_menu[] = {
 	{_("&Open"),       0, 0},
 	{_("&Properties"), 0, 0, 0, FL_MENU_DIVIDER},
 	{_("&Empty"),      0, 0},
 	{0}
 };
+#endif
 
 static void open_cb(Fl_Widget*, void* d) {
-	DesktopIcon* di = (DesktopIcon*)d;
-	IconSettings* s = di->get_settings();
-
-	run_async("ede-launch %s", s->cmd.c_str());
+	DesktopIcon* o = (DesktopIcon*)d;
+	run_async("ede-launch %s", o->get_cmd());
 }
 
 static void rename_cb(Fl_Widget*, void* d) {
@@ -85,137 +89,94 @@ static void rename_cb(Fl_Widget*, void* d) {
 
 	const char* new_name = input(_("Change desktop icon name to:"), di->label());
 	if(new_name) {
-		di->rename(new_name);
-		Desktop::instance()->rename_icon(di, new_name);
+		bool saved = ((Desktop*)di->parent())->rename_icon(di, new_name);
+		if(!saved)
+			alert(_("Unable to rename this icon. Please check if you have enough permissions to do so"));
 	}
 }
 
 static void delete_cb(Fl_Widget*, void* d) {
 	DesktopIcon* di = (DesktopIcon*)d;
 
-	if(ask(_("This icon will be permanently deleted. Proceed?")))
-		Desktop::instance()->remove_icon(di, true);
+	if(ask(_("This icon will be permanently deleted. Are you sure?")))
+		((Desktop*)di->parent())->remove_icon(di, true);
 }
 
-/* 
-static void props_cb(Fl_Widget*, void* d) {
-	DesktopIcon* di = (DesktopIcon*)d;
-	icon_dialog_icon_property(di);
-}
-*/
-
-DesktopIcon::DesktopIcon(GlobalIconSettings* gs, IconSettings* is, int bg) : 
-	Fl_Widget(is->x, is->y, ICON_SIZE_MIN_W, ICON_SIZE_MIN_H) {
-
-	E_ASSERT(gs != NULL);
-
-	lwidth = lheight = 0;
-	focus = false;
-	micon = NULL;
-	darker_img = NULL;
-
-	gsettings = gs;
-	settings = is;
-
-	label(settings->name.c_str());
-
-	imenu = new MenuButton(0, 0, 0, 0);
-	if(settings->type == ICON_TRASH)
-		imenu->menu(icon_trash_menu);
-	else {
-		icon_menu[2].image(IconLoader::get("edit-delete", ICON_SIZE_TINY));
-		imenu->menu(icon_menu);
-	}
-
-	load_icon(ICON_FACE_ONE);
-	fix_position(x(), y());
-
-	/* use desktop color as color for icon background */
-	color(bg);
-
+DesktopIcon::DesktopIcon(const char *l, int W, int H) : Fl_Widget(1, 1, W, H, l) {
+	box(FL_FLAT_BOX);
+	color(FL_RED);
+	label(l);
 	align(FL_ALIGN_WRAP);
-	update_label_font_and_size();
+	
+	/* default values unless given explicitly */
+	labelfont(FL_HELVETICA);
+	labelsize(12);
+	
+	darker_img = 0;
+	micon = 0;
+	lwidth = lheight = 0;
+	focused = false;
+	imenu = 0;
+
+	icon_menu[2].image((Fl_Image*)IconLoader::get("edit-delete", ICON_SIZE_TINY));
 }
 
-DesktopIcon::~DesktopIcon() { 
-	E_DEBUG("DesktopIcon::~DesktopIcon()\n");
-
-	delete settings;
-	delete micon;
+DesktopIcon::~DesktopIcon() {
 	delete darker_img;
+	delete micon;
 	delete imenu;
 }
 
-void DesktopIcon::load_icon(int face) {
-	const char* ic = NULL;
+void DesktopIcon::set_image(const char *name) {
+	E_RETURN_IF_FAIL(IconLoader::inited());
 
-	if(face != ICON_FACE_TWO) {
-		if(!settings->icon.empty())
-			ic = settings->icon.c_str();
-	} else {
-		if(!settings->icon2.empty())
-			ic = settings->icon2.c_str();
-	}
-
-	if(!ic)
-		return;
-
-	if(!IconLoader::set(this, ic, ICON_SIZE_HUGE)) {
-		E_DEBUG(E_STRLOC ": Unable to load %s icon\n", ic);
-		return;
-	}	
+	/* if not name give, use false name to trick IconLoader to use fallback icons */
+	if(!name) name = "THIS-ICON-DOES-NOT-EXISTS";
+	E_RETURN_IF_FAIL(IconLoader::set(this, name, ICON_SIZE_HUGE));
 
 	/* fetch image object for sizes */
 	Fl_Image* img = image();
 
-	int img_w = img->w();
-	int img_h = img->h();
+	int img_w = img->w(),
+		img_h = img->h();
 
 	/* resize box if icon is larger */
 	if(img_w > ICON_SIZE_MIN_W || img_h > ICON_SIZE_MIN_H)
 		size(img_w + OFFSET_W, img_h + OFFSET_H);
-
-	/* darker icon version for selection */
-	delete darker_img;
-
-	darker_img = img->copy(img->w(), img->h());
-	darker_img->color_average(FL_BLUE, 0.6);
 }
 
 void DesktopIcon::update_label_font_and_size(void) {
-	labelfont(gsettings->label_font);
-	labelsize(gsettings->label_fontsize);
-    lwidth = gsettings->label_maxwidth;
-    lheight= 0;
+	E_RETURN_IF_FAIL(opts != 0);
 
+	labelfont(opts->label_font);
+	labelsize(opts->label_fontsize);
+    lwidth  = opts->label_maxwidth;
+    lheight = 0;
+	
 	/*
 	 * make sure current font size/type is set (internaly to fltk)
 	 * so fl_measure() can correctly calculate label width and height
 	 */
-	int old = fl_font();
-	int old_sz = fl_size();
+	int old = fl_font(), old_sz = fl_size();
+
 	fl_font(labelfont(), labelsize());
-
 	fl_measure(label(), lwidth, lheight, align());
-
 	fl_font(old, old_sz);
 
-    lwidth += 12;
+    lwidth  += 12;
 	lheight += 5;
 }
 
 void DesktopIcon::fix_position(int X, int Y) {
-	int dx, dy, dw, dh;
-	Desktop::instance()->area(dx, dy, dw, dh);
+	int dx = parent()->x(),
+		dy = parent()->y(),
+		dw = parent()->w(),
+		dh = parent()->h();
 
-	if(X < dx)
-		X = dx;
-	if(Y < dy)
-		Y = dy;
-	if(X + w() > dw)
-		X = (dx + dw) - w();
-	if(Y + h() > dh)
-		Y = (dy + dh) - h();
+	if(X < dx) X = dx;
+	if(Y < dy) Y = dy;
+	if(X + w() > dw) X = (dx + dw) - w();
+	if(Y + h() > dh) Y = (dy + dh) - h();
 
 	position(X, Y);
 }
@@ -227,14 +188,17 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 		/* 
 		 * This is used to calculate correct window startup/ending
 		 * position since icon is placed in the middle of the box.
-		 *
-		 * Opposite, window (shaped) will have small but noticeable 'jump off' and
-		 * dropped icon position will not be at the exact place where was dropped.
 		 */
 		int ix = 0, iy = 0;
 		if(image()) {
 			ix = (w()/2) - (image()->w()/2);
 			iy = (h()/2) - (image()->h()/2);
+			
+			/* include parent offset since x/y are absolute locations */
+			if(parent()) {
+				ix += parent()->x();
+				iy += parent()->y();
+			}
 		}
 
 		micon->position(micon->x() + ix, micon->y() + iy);
@@ -251,7 +215,14 @@ void DesktopIcon::drag(int x, int y, bool apply) {
 		if(image()) {
 			ix = (w()/2) - (image()->w()/2);
 			iy = (h()/2) - (image()->h()/2);
+
+			/* also take into account offsets, as below we subtract it */
+			if(parent()) {
+				ix += parent()->x();
+				iy += parent()->y();
+			}
 		}
+
 		fix_position(micon->x() - ix, micon->y() - iy);
 #else
 		fix_position(micon->x(), micon->y());
@@ -276,38 +247,7 @@ int DesktopIcon::drag_icon_y(void) {
 	else
 		return micon->y();
 }
-
-void DesktopIcon::rename(const char* str) {
-	if(!str ||(str[0] == '\0'))
-		return;
-
-	if(settings->name == str)
-		return;
-
-	settings->name = str;
-	label(settings->name.c_str());
-	update_label_font_and_size();
-	redraw();
-}
-
-const String& DesktopIcon::path(void) {
-	return settings->full_path;
-}
-
-int DesktopIcon::icon_type(void) {
-	return settings->type;
-}
-
-void DesktopIcon::use_icon1(void) {
-	load_icon(ICON_FACE_ONE);
-	fast_redraw();
-}
-
-void DesktopIcon::use_icon2(void) {
-	load_icon(ICON_FACE_TWO);
-	fast_redraw();
-}
-
+	
 void DesktopIcon::fast_redraw(void) {
 	int wsz = w();
 	int xpos = x();
@@ -321,11 +261,9 @@ void DesktopIcon::fast_redraw(void) {
 	parent()->damage(FL_DAMAGE_ALL, xpos, y(), wsz, h() + lheight + LABEL_OFFSET + 2);
 }
 
-void DesktopIcon::draw(void) { 
-	// draw_box(FL_UP_BOX, FL_BLACK);
-
+void DesktopIcon::draw(void) {
 	if(image() && (damage() & FL_DAMAGE_ALL)) {
-		Fl_Image* im = image();
+		Fl_Image *im = image();
 
 		/* center image in the box */
 		int ix = (w()/2) - (im->w()/2);
@@ -333,23 +271,27 @@ void DesktopIcon::draw(void) {
 		ix += x();
 		iy += y();
 
-		/* darker_img is always present if image() is present */
-		if(is_focused())
+		if(is_focused()) {
+			/* create darker image only when needed */
+			if(!darker_img) {
+				darker_img = im->copy(im->w(), im->h());
+				darker_img->color_average(FL_BLUE, 0.6);
+			}
+
 			darker_img->draw(ix, iy);
-		else
+		} else {
 			im->draw(ix, iy);
-
-		E_DEBUG(E_STRLOC ": DesktopIcon icon redraw\n");
+		}
 	}
-
-	if(gsettings->label_draw && (damage() & (FL_DAMAGE_ALL | EDAMAGE_CHILD_LABEL))) {
+	
+	if(opts && opts->label_visible && (damage() & (FL_DAMAGE_ALL | EDE_DESKTOP_DAMAGE_CHILD_LABEL))) {
 		int X = x() + w()-(w()/2)-(lwidth/2);
 		int Y = y() + h() + LABEL_OFFSET;
 
 		Fl_Color old = fl_color();
 
-		if(!gsettings->label_transparent) {
-			fl_color(gsettings->label_background);
+		if(!opts->label_transparent) {
+			fl_color(opts->label_background);
 			fl_rectf(X, Y, lwidth, lheight);
 		}
 
@@ -358,12 +300,12 @@ void DesktopIcon::draw(void) {
 
 		/* draw with icon's font */
 		fl_font(labelfont(), labelsize());
-
+		
 		/* pseudo-shadow */
 		fl_color(FL_BLACK);
 		fl_draw(label(), X+1, Y+1, lwidth, lheight, align(), 0, 0);
 
-		fl_color(gsettings->label_foreground);
+		fl_color(opts->label_foreground);
 		fl_draw(label(), X, Y, lwidth, lheight, align(), 0, 0);
 
 		/* restore old font */
@@ -371,7 +313,7 @@ void DesktopIcon::draw(void) {
 
 		if(is_focused()) {
 			/* draw focused box on our way so later this can be used to draw customised boxes */
-			fl_color(gsettings->label_foreground);
+			fl_color(opts->label_foreground);
 			fl_line_style(FL_DOT);
 
 			fl_push_matrix();
@@ -390,7 +332,6 @@ void DesktopIcon::draw(void) {
 
 		/* revert to old color whatever that be */
 		fl_color(old);
-		E_DEBUG(E_STRLOC ": DesktopIcon label redraw\n");
 	}
 }
 
@@ -400,22 +341,33 @@ int DesktopIcon::handle(int event) {
 		case FL_UNFOCUS:
 		case FL_ENTER:
 		case FL_LEAVE:
-			return 1;
 		/* We have to handle FL_MOVE too, if want to get only once FL_ENTER when entered or FL_LEAVE when leaved */
 		case FL_MOVE:
 			return 1;
+
 		case FL_PUSH:
 			if(Fl::event_button() == 3) {
+				/*
+				 * init icon specific menu only when needed
+				 * TODO: since menu for all icons is mostly the same, it can be shared; Desktop can
+				 * have menu instance seeded to all icons
+				 */
+				if(!imenu) {
+					imenu = new MenuButton(0, 0, 0, 0);
+					imenu->menu(icon_menu);
+				}
+
 				/* MenuItem::popup() by default does not call callbacks */
-				const MenuItem* m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
+				const MenuItem *m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
 
 				if(m && m->callback())
 					m->do_callback(0, this);
 			}
 			return 1;
+
 		case FL_RELEASE:
-			if(Fl::event_clicks() > 0)
-				run_async("ede-launch %s", settings->cmd.c_str());
+			if(Fl::event_clicks() > 0 && !cmd.empty())
+				run_async("ede-launch %s", cmd.c_str());
 			return 1;
 
 		case FL_DND_ENTER:
