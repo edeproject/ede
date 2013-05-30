@@ -89,6 +89,7 @@ if test "$enable_shape" = "yes"; then
 
 	if test "$have_xshape" = "yes"; then
 		AC_DEFINE(HAVE_SHAPE, 1, [Define to 1 if you have XShape extension])
+		XSHAPE_LIBS="-lXext"
 	fi
 fi
 
@@ -300,6 +301,7 @@ AC_SUBST(CURL_CFLAGS)
 AC_SUBST(CURL_LIBS)
 AC_SUBST(LARGEFILE)
 AC_SUBST(XKB_LIBS)
+AC_SUBST(XSHAPE_LIBS)
 AC_SUBST(my_sysconfdir)
 AC_SUBST(KSTAT_LIBS)
 AC_SUBST(PEKWM_CXXFLAGS)
