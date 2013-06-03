@@ -24,6 +24,11 @@
 
 #include <stdio.h>
 #include <FL/Fl_Box.H>
+#include <edelib/Nls.h>
+#include "Applet.h"
+#undef EDELIB_HAVE_DBUS
+
+#ifdef EDELIB_HAVE_DBUS
 #include <edelib/EdbusConnection.h>
 #include <edelib/EdbusMessage.h>
 #include <edelib/EdbusList.h>
@@ -32,9 +37,6 @@
 #include <edelib/List.h>
 #include <edelib/Debug.h>
 #include <edelib/IconLoader.h>
-#include <edelib/Nls.h>
-
-#include "Applet.h"
 
 EDELIB_NS_USING(EdbusConnection)
 EDELIB_NS_USING(EdbusMessage)
@@ -254,6 +256,17 @@ void BatteryMonitor::set_icon(double percentage) {
 	const char *icon = (percentage >= 10) ? "battery" : "battery-caution";
 	IconLoader::set(this, icon, ICON_SIZE_SMALL);
 }
+
+#else /* EDELIB_HAVE_DBUS */
+class BatteryMonitor : public Fl_Box {
+public:
+	BatteryMonitor() : Fl_Box(0, 0, 30, 25) { 
+		tooltip(_("Battery status not available"));
+		label("bat");
+	}
+};
+#endif
+	
 
 EDE_PANEL_APPLET_EXPORT (
  BatteryMonitor, 
