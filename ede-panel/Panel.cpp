@@ -135,10 +135,10 @@ static void fix_widget_h(Fl_Widget *o, Panel *self) {
 }
 
 static void add_from_list(WidgetList &lst, Panel *self, int &X, bool inc) {
-	WidgetListIt it = lst.begin(), it_end = lst.end();
+	WidgetListIt it = lst.begin(), ite = lst.end();
 	Fl_Widget    *o;
 
-	while(it != it_end) {
+	while(it != ite) {
 		o = *it;
 
 		/* 'inc == false' means we are going from right to left */
@@ -367,11 +367,11 @@ void Panel::do_layout(void) {
 	 * since add_from_list() will already reserve some space by current child width and default spacing,
 	 * those values will be used again or holes will be made
 	 */
-	WidgetListIt it = resizable_h.begin(), it_end = resizable_h.end();
+	WidgetListIt it = resizable_h.begin(), ite = resizable_h.end();
 	o = resizable_h.front();
 	X = o->x();
 
-	while(it != it_end) {
+	while(it != ite) {
 		o = *it;
 
 		W = o->w() + free_w;

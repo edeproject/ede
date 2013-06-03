@@ -62,7 +62,7 @@ bool AppletManager::load(const char *path) {
 	void *a = dlopen(path, RTLD_LAZY);
 	if(!a) {
 		dl_err = dlerror();
-		E_WARNING(E_STRLOC ": Unable to load '%s' : '%s'\n", path, dl_err);
+		E_WARNING(E_STRLOC ": Unable to load '%s': '%s'\n", path, dl_err);
 		return false;
 	}
 

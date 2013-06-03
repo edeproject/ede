@@ -59,6 +59,10 @@ EDELIB_NS_USING(EDBUS_SYSTEM)
 #define UPOWER_INTERFACE "org.freedesktop.UPower.Device"
 #define UPOWER_PATH      "/org/freedesktop/UPower"
 
+#define BATTERY_MIN         10 /* minimal time before icon to BATTERY_CAUTION_IMG was changed */
+#define BATTERY_IMG         "battery"
+#define BATTERY_CAUTION_IMG "battery-caution"
+
 typedef list<EdbusObjectPath> BatteryList;
 typedef list<EdbusObjectPath>::iterator BatteryListIt;
 
@@ -70,12 +74,14 @@ typedef list<EdbusObjectPath>::iterator BatteryListIt;
  */
 class BatteryMonitor : public Fl_Box {
 private:
+    const char *bimg;
 	char tip[128];
+
 	EdbusConnection con;
 	BatteryList     batts;
 
 public:
-	BatteryMonitor() : Fl_Box(0, 0, 30, 25) { scan_and_init(); }
+	BatteryMonitor() : Fl_Box(0, 0, 30, 25), bimg(0) { scan_and_init(); }
 	EdbusConnection &connection() { return con; }
 
 	void tooltip_printf(const char *fmt, ...);
@@ -243,6 +249,8 @@ int BatteryMonitor::update_icon_and_tooltip(void) {
 	return 1;
 }
 
+#define BATTERY_MIN 10	
+
 void BatteryMonitor::set_icon(double percentage) {
 	if(E_UNLIKELY(IconLoader::inited() == false)) {
 		char buf[8];
@@ -252,8 +260,12 @@ void BatteryMonitor::set_icon(double percentage) {
 		return;
 	}
 	
-	const char *icon = (percentage >= 10) ? "battery" : "battery-caution";
+	const char *icon = (percentage >= BATTERY_MIN) ? BATTERY_IMG : BATTERY_CAUTION_IMG;
+	/* small check to prevent image loading when not needed */
+	if(icon == bimg) return;
+
 	IconLoader::set(this, icon, ICON_SIZE_SMALL);
+	bimg = icon;
 }
 
 #else /* EDELIB_HAVE_DBUS */
