@@ -1,0 +1,13 @@
+#
+# $Id: Jamfile 3515 2013-01-09 16:01:35Z karijes $
+#
+# Part of Equinox Desktop Environment (EDE).
+# Copyright (c) 2013 EDE Authors.
+#
+# This program is licensed under terms of the 
+# GNU General Public License version 2 or newer.
+# See COPYING for details.
+
+SubDir TOP ede-panel applets battery-monitor ;
+
+PanelApplet battery_monitor : BatteryMonitor.cpp : $(EDELIB_DBUS_LIB) ;
