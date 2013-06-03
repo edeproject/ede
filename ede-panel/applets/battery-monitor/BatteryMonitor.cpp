@@ -26,7 +26,6 @@
 #include <FL/Fl_Box.H>
 #include <edelib/Nls.h>
 #include "Applet.h"
-#undef EDELIB_HAVE_DBUS
 
 #ifdef EDELIB_HAVE_DBUS
 #include <edelib/EdbusConnection.h>
