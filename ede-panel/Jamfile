@@ -11,6 +11,7 @@
 SubDir TOP ede-panel ;
 
 EdeProgram  ede-panel : Hider.cpp Panel.cpp AppletManager.cpp ede-panel.cpp ;
+LinkAgainst ede-panel : -ldl ;
 #ObjectC++Flags Panel.cpp : -DEDE_PANEL_LOCAL_APPLETS ;
 
 if $(OS) != "SOLARIS" {

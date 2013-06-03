@@ -528,6 +528,7 @@ void Panel::load_applets(void) {
 		"clock.so",
 		"taskbar.so",
 		"keyboard_layout.so",
+		"battery_monitor.so",
 		"cpu_monitor.so",
 #ifdef __linux__
 		"mem_monitor.so",
@@ -554,6 +555,7 @@ void Panel::load_applets(void) {
 	mgr.load("./applets/clock/clock.so");
 	mgr.load("./applets/taskbar/taskbar.so");
 	mgr.load("./applets/keyboard-layout/keyboard_layout.so");
+	mgr.load("./applets/battery-monitor/battery_monitor.so");
 	mgr.load("./applets/cpu-monitor/cpu_monitor.so");
 	mgr.load("./applets/mem-monitor/mem_monitor.so");
 	mgr.load("./applets/system-tray/system_tray.so");
