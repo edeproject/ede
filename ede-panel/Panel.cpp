@@ -19,6 +19,8 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
@@ -30,6 +32,8 @@
 #include <edelib/Resource.h>
 #include <edelib/Util.h>
 #include <edelib/Netwm.h>
+#include <edelib/Directory.h>
+#include <edelib/StrUtil.h>
 
 #include "Panel.h"
 #include "Hider.h"
@@ -43,6 +47,8 @@
 /* default panel height */
 #define DEFAULT_PANEL_H 35
 
+#define APPLET_EXTENSION ".so"
+
 #undef MIN
 #undef MAX
 #define MIN(x,y)  ((x) < (y) ? (x) : (y))
@@ -52,12 +58,12 @@ EDELIB_NS_USING_LIST(10, (list,
 						  Resource,
 						  String,
 						  window_xid_create,
-						  build_filename,
+						  str_trim,
 						  netwm_window_set_strut,
 						  netwm_window_remove_strut,
 						  netwm_window_set_type,
 						  netwm_workarea_get_size,
-						  NETWM_WINDOW_TYPE_DOCK))
+						  NETWM_WINDOW_TYPE_DOCK)) 
 
 typedef list<Fl_Widget*> WidgetList;
 typedef list<Fl_Widget*>::iterator WidgetListIt;
@@ -230,9 +236,6 @@ Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 
 	box(FL_UP_BOX); 
 	read_config();
-
-	hider = new Hider();
-	add(hider);
 }
 
 void Panel::read_config(void) {
@@ -253,6 +256,19 @@ void Panel::read_config(void) {
 
 		width_perc = tmp;
 	}
+	
+	/* small button on the right edge for panel sliding */
+	r.get("Panel", "hider", tmp, 1);
+	if(tmp) {
+		hider = new Hider();
+		add(hider);
+	}
+	
+	char buf[128];
+	if(r.get("Panel", "applets", buf, sizeof(buf)))
+		load_applets(buf);
+	else
+		load_applets();
 }
 
 void Panel::save_config(void) {
@@ -518,49 +534,46 @@ int Panel::handle(int e) {
 	return Fl_Window::handle(e);
 }
 
-void Panel::load_applets(void) {
-#ifndef EDE_PANEL_LOCAL_APPLETS
-	/* FIXME: hardcoded order */
-	static const char *applets[] = {
-		"start_menu.so",
-		"quick_launch.so",
-		"pager.so",
-		"clock.so",
-		"taskbar.so",
-		"keyboard_layout.so",
-		"battery_monitor.so",
-		"cpu_monitor.so",
+void Panel::load_applets(const char *applets) {
+	/*
+	 * Hardcoded order, unless configuration file was found. For easier and uniform parsing
+	 * (similar string is expected from configuration), fallback is plain string.
+	 */
+	static const char *fallback =
+		"start_menu,"
+		"quick_launch,"
+		"pager,"
+		"clock,"
+		"taskbar,"
+		"keyboard_layout,"
+		"battery_monitor,"
+		"cpu_monitor,"
 #ifdef __linux__
-		"mem_monitor.so",
+		"mem_monitor,"
 #endif
-		"system_tray.so",
-		0
-	};
-
+		"system_tray";
+	
 	String dir = Resource::find_data("panel-applets");
-	if(dir.empty())
-		return;
+	E_RETURN_IF_FAIL(!dir.empty());
+	
+	char *dup = strdup(applets ? applets : fallback);
+	E_RETURN_IF_FAIL(dup != NULL);
 
-	String tmp;
-	for(int i = 0; applets[i]; i++) {
-		tmp = build_filename(dir.c_str(), applets[i]);
-		mgr.load(tmp.c_str());
+	char path[PATH_MAX];
+	for(char *tok = strtok(dup, ","); tok; tok = strtok(NULL, ",")) {
+		tok = str_trim(tok);
+
+#ifndef EDE_PANEL_LOCAL_APPLETS
+		snprintf(path, sizeof(path), "%s" E_DIR_SEPARATOR_STR "%s" APPLET_EXTENSION, dir.c_str(), tok);
+#else
+		/* only for testing, so path separator is hardcoded */
+		snprintf(path, sizeof(path), "./applets/%s/%s" APPLET_EXTENSION, dir.c_str(), tok);
+#endif
+		mgr.load(path);
 	}
 
+	free(dup);
 	mgr.fill_group(this);
-#else
-	mgr.load("./applets/start-menu/start_menu.so");
-	mgr.load("./applets/quick-launch/quick_launch.so");
-	mgr.load("./applets/pager/pager.so");
-	mgr.load("./applets/clock/clock.so");
-	mgr.load("./applets/taskbar/taskbar.so");
-	mgr.load("./applets/keyboard-layout/keyboard_layout.so");
-	mgr.load("./applets/battery-monitor/battery_monitor.so");
-	mgr.load("./applets/cpu-monitor/cpu_monitor.so");
-	mgr.load("./applets/mem-monitor/mem_monitor.so");
-	mgr.load("./applets/system-tray/system_tray.so");
-	mgr.fill_group(this);
-#endif
 }
 
 /* TODO: can be better */

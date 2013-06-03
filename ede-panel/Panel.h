@@ -68,7 +68,7 @@ public:
 	void update_size_and_pos(bool create_xid, bool update_strut);
 	void update_size_and_pos(bool create_xid, bool update_strut, int X, int Y, int W, int H);
 	int  handle(int e);
-	void load_applets(void);
+	void load_applets(const char *applets = 0);
 
 	int panel_w(void) { return w(); }
 	int panel_h(void) { return h(); }

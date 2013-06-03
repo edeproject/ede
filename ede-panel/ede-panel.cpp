@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
 	signal(SIGINT,  exit_signal);
 	
 	panel = new Panel();
-	panel->load_applets();
 	panel->show();
 	return Fl::run();
 }
