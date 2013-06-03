@@ -81,7 +81,11 @@ private:
 	BatteryList     batts;
 
 public:
-	BatteryMonitor() : Fl_Box(0, 0, 30, 25), bimg(0) { scan_and_init(); }
+	BatteryMonitor() : Fl_Box(0, 0, 30, 25), bimg(0) { 
+		box(FL_FLAT_BOX);
+		scan_and_init();
+	}
+
 	EdbusConnection &connection() { return con; }
 
 	void tooltip_printf(const char *fmt, ...);
