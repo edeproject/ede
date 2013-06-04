@@ -18,7 +18,7 @@ extern const char * const xmlrpc_strsol;
 void
 xmlrpc_vasprintf(const char ** const retvalP,
                  const char *  const fmt,
-                 va_list             varargs);
+                 va_list       varargs);
 
 void GNU_PRINTF_ATTR(2,3)
 xmlrpc_asprintf(const char ** const retvalP, const char * const fmt, ...);

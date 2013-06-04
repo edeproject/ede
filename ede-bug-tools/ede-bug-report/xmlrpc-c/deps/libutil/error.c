@@ -86,7 +86,7 @@ void
 xmlrpc_set_fault_formatted_v(xmlrpc_env * const envP,
                              int          const code,
                              const char * const format,
-                             va_list      const args) {
+                             va_list      args) {
 
     const char * faultDescription;
 
