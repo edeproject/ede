@@ -22,7 +22,7 @@
 #define __UTILS_H__
 
 #include <FL/Fl_Image.H>
-#include <Fl/x.h>
+#include <FL/x.H>
 
 void draw_xoverlay(int x, int y, int w, int h);
 void clear_xoverlay(void);

@@ -23,7 +23,7 @@
 
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
-#include <Fl/x.h>
+#include <FL/x.H>
 
 class DesktopIcon;
 
