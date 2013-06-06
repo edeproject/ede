@@ -165,6 +165,8 @@ static void folder_create_cb(Fl_Widget*, void *d) {
 
 Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, EDE_DESKTOP_APP) {
 	end();
+	/* use nice darker blue color as default for background */
+	color(fl_rgb_color(73, 64, 102));
 
 	conf = NULL;
 	selbox = new SelectionOverlay;
@@ -239,15 +241,14 @@ void Desktop::read_config(void) {
 	E_DEBUG(E_STRLOC ": Reading desktop config...\n");
 
 	if(!conf) conf = new DesktopConfig();
-	E_RETURN_IF_FAIL(conf->load(EDE_DESKTOP_APP));
-	
+	conf->load(EDE_DESKTOP_APP);
+
 	char buf[PATH_MAX];
 	bool wp_use = true;
 	int  bcolor;
-	
-	/* use nice darker blue color as default for background */
-	conf->get("Desktop", "color", bcolor, fl_rgb_color(73, 64, 102));
-	color(bcolor);
+
+	if(conf->get("Desktop", "color", bcolor, color()))
+	   color(bcolor);
 
 	conf->get("Desktop", "wallpaper_use", wp_use, wp_use);
 
@@ -256,7 +257,7 @@ void Desktop::read_config(void) {
 		if(conf->get("Desktop", "wallpaper", buf, sizeof(buf))) {
 			if(!wallpaper)
 				wallpaper = new Wallpaper(0, 0, w(), h());
-			
+
 			int s;
 			bool rootpmap_use;
 			conf->get("Desktop", "wallpaper_mode", s, WALLPAPER_CENTER);
@@ -269,26 +270,25 @@ void Desktop::read_config(void) {
 			 */
 			if(find(*wallpaper) == children())
 				insert(*wallpaper, 0);
-			
+
 			/* show it in case it got hidden before */
 			wallpaper->show();
 		}
 	} else {
 		if(wallpaper) wallpaper->hide();
 	}
-	
-	/* get options for icons */
+
 	if(!icon_opts) icon_opts = new IconOptions;
 
-#define ICON_CONF_GET(var, fallback) conf->get("Icons", #var, icon_opts->var, fallback)
-	ICON_CONF_GET(label_background, FL_BLACK);
-	ICON_CONF_GET(label_foreground, FL_WHITE);
-	ICON_CONF_GET(label_maxwidth, 75);
-	ICON_CONF_GET(label_transparent, 1);
-	ICON_CONF_GET(label_visible, 1);
-	ICON_CONF_GET(one_click_exec, false);
+#define ICON_CONF_GET(var) conf->get("Icons", #var, icon_opts->var, icon_opts->var)
+	ICON_CONF_GET(label_background);
+	ICON_CONF_GET(label_foreground);
+	ICON_CONF_GET(label_maxwidth);
+	ICON_CONF_GET(label_transparent);
+	ICON_CONF_GET(label_visible);
+	ICON_CONF_GET(one_click_exec);
 
-	if(ICON_CONF_GET(label_font, FL_HELVETICA) && ICON_CONF_GET(label_fontsize, 12))
+	if(ICON_CONF_GET(label_font) && ICON_CONF_GET(label_fontsize))
 		E_WARNING(E_STRLOC ": 'label_font' && 'label_fontsize' are deprecated. Use 'label_fontname' with full font name and size instead (e.g 'sans 12')\n");
 
 	/* if found new 'label_fontname' variable, overwrite 'label_font' && 'label_fontsize' */
@@ -297,11 +297,8 @@ void Desktop::read_config(void) {
 			E_WARNING(E_STRLOC ": Unable to find '%s' font. Using default values...\n", buf);
 	}
 
-	/* sanitize */
-	if(icon_opts->label_font < 0)      icon_opts->label_font = FL_HELVETICA;
-	if(icon_opts->label_fontsize < 8)  icon_opts->label_fontsize = 12;
-	if(icon_opts->label_maxwidth < 30) icon_opts->label_maxwidth = 75;
-	
+	icon_opts->sanitize_font();
+
 	/* doing this will redraw _all_ children, and they will in turn read modified 'icon_opts' */
 	if(visible()) redraw();
 }

@@ -54,6 +54,24 @@ struct IconOptions {
 	int  label_transparent;
 	int  label_visible;
 	bool one_click_exec;
+
+	IconOptions() {
+		label_background  = FL_BLACK;
+		label_foreground  = FL_WHITE;
+		label_maxwidth    = 75;
+		label_transparent = 1;
+		label_visible     = 1;
+		label_font        = FL_HELVETICA;
+		label_fontsize    = 12;
+		one_click_exec    = false;
+	}
+	
+	/* should be called only when values are assigned to fonts */
+	void sanitize_font(void) {
+		if(label_font < 0)      label_font = FL_HELVETICA;
+		if(label_fontsize < 8)  label_fontsize = 12;
+		if(label_maxwidth < 30) label_maxwidth = 75;
+	}
 };
 
 class MovableIcon;
