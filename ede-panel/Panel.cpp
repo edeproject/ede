@@ -244,6 +244,8 @@ void Panel::read_config(void) {
 	/* try to load applets even if panel configuration isn't present */
 	if(E_UNLIKELY(r.load("ede-panel") == false)) {
 		load_applets();
+		hider = new Hider();
+		add(hider);
 		return;
 	}
 
