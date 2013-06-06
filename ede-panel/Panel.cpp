@@ -240,8 +240,12 @@ Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 
 void Panel::read_config(void) {
 	Resource r;
-	if(!r.load("ede-panel"))
+
+	/* try to load applets even if panel configuration isn't present */
+	if(E_UNLIKELY(r.load("ede-panel") == false)) {
+		load_applets();
 		return;
+	}
 
 	int tmp;
 	if(r.get("Panel", "position", tmp, PANEL_POSITION_BOTTOM)) {
