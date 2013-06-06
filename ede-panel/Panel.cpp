@@ -240,14 +240,7 @@ Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 
 void Panel::read_config(void) {
 	Resource r;
-
-	/* try to load applets even if panel configuration isn't present */
-	if(E_UNLIKELY(r.load("ede-panel") == false)) {
-		load_applets();
-		hider = new Hider();
-		add(hider);
-		return;
-	}
+	r.load("ede-panel");
 
 	int tmp;
 	if(r.get("Panel", "position", tmp, PANEL_POSITION_BOTTOM)) {
@@ -266,8 +259,15 @@ void Panel::read_config(void) {
 	/* small button on the right edge for panel sliding */
 	r.get("Panel", "hider", tmp, 1);
 	if(tmp) {
-		hider = new Hider();
-		add(hider);
+		if(!hider) {
+			hider = new Hider();
+			add(hider);
+		}
+
+		/* in case was hidden before */
+		hider->show();
+	} else {
+		if(hider) hider->hide();
 	}
 	
 	char buf[128];
@@ -541,6 +541,8 @@ int Panel::handle(int e) {
 }
 
 void Panel::load_applets(const char *applets) {
+	mgr.clear(this);
+
 	/*
 	 * Hardcoded order, unless configuration file was found. For easier and uniform parsing
 	 * (similar string is expected from configuration), fallback is plain string.
