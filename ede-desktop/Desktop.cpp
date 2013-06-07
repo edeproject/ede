@@ -36,8 +36,8 @@
 #include <edelib/Run.h>
 #include <edelib/MessageBox.h>
 #include <edelib/IconLoader.h>
-#include <edelib/FileTest.h>
 #include <edelib/FontCache.h>
+#include <edelib/FileTest.h>
 #include <edelib/File.h>
 
 #include "Desktop.h"
@@ -69,6 +69,8 @@ EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(font_cache_find)
 EDELIB_NS_USING(FILE_TEST_IS_DIR)
+EDELIB_NS_USING(FILE_TEST_IS_REGULAR)
+EDELIB_NS_USING(FILE_TEST_IS_SYMLINK)
 EDELIB_NS_USING(NETWM_WINDOW_TYPE_DESKTOP)
 EDELIB_NS_USING(NETWM_CHANGED_CURRENT_WORKAREA)
 EDELIB_NS_USING(DESK_FILE_TYPE_UNKNOWN)
@@ -318,12 +320,27 @@ void Desktop::read_desktop_folder(const char *dpath) {
 		if(DOT_OR_DOTDOT(d->d_name))
 			continue;
 
-		if(d->d_type != DT_REG && d->d_type != DT_LNK && d->d_type != DT_DIR)
-			continue;
+		if(d->d_type > 0) {
+			if(d->d_type != DT_REG && d->d_type != DT_LNK && d->d_type != DT_DIR)
+				continue;
 
-		path = dpath;
-		path += E_DIR_SEPARATOR;
-		path += d->d_name;
+			path = dpath;
+			path += E_DIR_SEPARATOR;
+			path += d->d_name;
+		} else {
+			/* 
+			 * If we got here, it means d_type isn't set and we must do it via file_test() which could be much slower.
+			 * By POSIX standard, only d_name must be set, but many modern *nixes set all dirent members correctly. Except Slackware ;)
+			 */
+			path = dpath;
+			path += E_DIR_SEPARATOR;
+			path += d->d_name;
+
+			if(!(file_test(path.c_str(), FILE_TEST_IS_REGULAR) ||
+			     file_test(path.c_str(), FILE_TEST_IS_DIR)     ||
+			     file_test(path.c_str(), FILE_TEST_IS_SYMLINK)))
+				continue;
+		}
 
 		DesktopIcon *o = read_desktop_file(path.c_str(), (const char*)d->d_name, &pos);
 		if(o) add(o);
