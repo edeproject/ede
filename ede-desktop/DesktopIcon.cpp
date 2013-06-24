@@ -60,12 +60,12 @@ EDELIB_NS_USING(ICON_SIZE_TINY)
 EDELIB_NS_USING(ICON_SIZE_HUGE)
 
 static void open_cb(Fl_Widget*, void* d);
-static void rename_cb(Fl_Widget*, void* d);
+static void edit_cb(Fl_Widget*, void* d);
 static void delete_cb(Fl_Widget*, void* d);
 
 static MenuItem icon_menu[] = {
 	{_("&Open"),   0, open_cb, 0},
-	{_("&Rename"), 0, rename_cb, 0},
+	{_("&Edit"),   0, edit_cb, 0},
 	{_("&Delete"), 0, delete_cb, 0},
 	{0}
 };
@@ -80,23 +80,30 @@ static MenuItem icon_trash_menu[] = {
 #endif
 
 static void open_cb(Fl_Widget*, void* d) {
-	DesktopIcon* o = (DesktopIcon*)d;
+	DesktopIcon *o = (DesktopIcon*)d;
 	run_async("ede-launch %s", o->get_cmd());
 }
 
-static void rename_cb(Fl_Widget*, void* d) {
-	DesktopIcon* di = (DesktopIcon*)d;
+static void edit_cb(Fl_Widget*, void* d) {
+	DesktopIcon *di = (DesktopIcon*)d;
+	((Desktop*)di->parent())->edit_icon(di);
+}
 
-	const char* new_name = input(_("Change desktop icon name to:"), di->label());
+# if 0
+static void rename_cb(Fl_Widget*, void* d) {
+	DesktopIcon *di = (DesktopIcon*)d;
+
+	const char *new_name = input(_("Change desktop icon name to:"), di->label());
 	if(new_name) {
 		bool saved = ((Desktop*)di->parent())->rename_icon(di, new_name);
 		if(!saved)
 			alert(_("Unable to rename this icon. Please check if you have enough permissions to do so"));
 	}
 }
+#endif
 
 static void delete_cb(Fl_Widget*, void* d) {
-	DesktopIcon* di = (DesktopIcon*)d;
+	DesktopIcon *di = (DesktopIcon*)d;
 
 	if(ask(_("This icon will be permanently deleted. Are you sure?")))
 		((Desktop*)di->parent())->remove_icon(di, true);
@@ -135,7 +142,7 @@ void DesktopIcon::set_image(const char *name) {
 	E_RETURN_IF_FAIL(IconLoader::set(this, name, ICON_SIZE_HUGE));
 
 	/* fetch image object for sizes */
-	Fl_Image* img = image();
+	Fl_Image *img = image();
 
 	int img_w = img->w(),
 		img_h = img->h();
@@ -360,6 +367,7 @@ int DesktopIcon::handle(int event) {
 				/* MenuItem::popup() by default does not call callbacks */
 				const MenuItem *m = imenu->menu()->popup(Fl::event_x(), Fl::event_y());
 
+				/* call menu callbacks, passing correct parameters */
 				if(m && m->callback())
 					m->do_callback(0, this);
 			}

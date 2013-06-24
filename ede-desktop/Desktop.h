@@ -80,6 +80,7 @@ public:
 	void arrange_icons(void);
 	bool remove_icon(DesktopIcon *di, bool real_delete);
 	bool rename_icon(DesktopIcon *di, const char *name);
+	void edit_icon(DesktopIcon *di);
 	bool save_icons_positions(void);
 	bool create_folder(const char *name);
 

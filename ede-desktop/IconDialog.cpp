@@ -19,6 +19,7 @@
  */
 
 #include <ctype.h>
+#include <limits.h>
 
 #include <FL/Fl_Window.H>
 #include <FL/Fl.H>
@@ -44,8 +45,9 @@
 #include "IconDialog.h"
 #include "DesktopIcon.h"
 #include "Desktop.h"
+#include "Globals.h"
 
-EDELIB_NS_USING_LIST(10, (str_tolower, icon_chooser, dir_home, build_filename, alert,
+EDELIB_NS_USING_LIST(12, (str_tolower, icon_chooser, dir_home, build_filename, alert, ask, file_remove,
 						  ICON_SIZE_HUGE, String, IconLoader, DesktopFile, DESK_FILE_TYPE_APPLICATION))
 
 #define DEFAULT_ICON "empty"
@@ -55,7 +57,8 @@ static Fl_Window *win;
 static Fl_Button *img, *browse, *ok, *cancel;
 static Fl_Input  *name, *comment, *execute;
 static Fl_Choice *icon_type;
-static String    img_path;
+static String     img_path, old_desktop_path;
+static DesktopIcon *curr_icon;
 
 /* the only supported type for now is application */
 static Fl_Menu_Item menu_items[] = {
@@ -105,18 +108,36 @@ static void ok_cb(Fl_Widget*, void *d) {
 	const char *fp = file.c_str();
 
 	str_tolower((unsigned char*)fp);
-	file += ".desktop";
+	file += EDE_DESKTOP_DESKTOP_EXT;
 
 	/* go through the file and replace spaces with '_' */
 	for(String::size_type i = 0; i < file.length(); i++)
 		if(isspace(file[i])) file[i] = '_';
 
 	String path = build_filename(self->desktop_path(), file.c_str());
+	
+	int  X = 0, Y = 0;
+	if(curr_icon) {
+		X = curr_icon->x();
+		Y = curr_icon->y();
+		/* try to remove icon from filesystem only when we can't overwrite old icon path */
+		self->remove_icon(curr_icon, old_desktop_path != path);
+	}
 
 	if(df.save(path.c_str())) {
 		DesktopIcon *ic = self->read_desktop_file(path.c_str(), file.c_str());
-		if(ic) self->add(ic);
+		if(ic) {
+			if(X > 0 || Y > 0) ic->position(X, Y);
+			self->add(ic);
+		}
+
 		self->redraw();
+		
+		/* 
+		 * In case when we rename icon, icon position will not be saved (because they are saved by icon basename). So
+		 * with different paths we are assured the name was changed and we proceed further.
+		 */
+		if(old_desktop_path != path) self->save_icons_positions();
 	} else {
 		alert(_("Unable to create '%s' file. Received error is: %s\n"), path.c_str(), df.strerror());
 	}
@@ -133,21 +154,68 @@ static void img_browse_cb(Fl_Widget*, void*) {
 
 static void file_browse_cb(Fl_Widget*, void*) {
 	const char *p = fl_file_chooser(_("Choose program path to execute"), "*", 0, 0);
-	if(!p) return;
-	execute->value(p);
+	if(p) execute->value(p);
 }
 
-void icon_dialog_icon_create(Desktop *self) {
-	win = new Fl_Window(430, 170, _("Create desktop icon"));
+#define BUFSIZE PATH_MAX
+
+void icon_dialog_icon_edit(Desktop *self, DesktopIcon *d) {
+	const char  *lbl = d ? _("Edit desktop icon") : _("Create desktop icon");
+	DesktopFile *df  = NULL;
+	char        *buf = NULL;
+	old_desktop_path = "";
+	curr_icon        = d;
+	
+	if(d) {
+		df = new DesktopFile();
+		if(!df->load(d->get_path())) {
+			delete df;
+
+			int ret = ask(_("Unable to load .desktop file for this icon. Would you like to create new icon instead?"));
+			if(!ret) return;
+
+			/* force NULL on icon, so we can run dialog in 'create' mode */
+			d = NULL;
+		}
+		
+		buf = new char[BUFSIZE];
+		old_desktop_path = d->get_path();
+	}
+
+	win = new Fl_Window(430, 170, lbl);
 		img = new Fl_Button(10, 10, 75, 75);
 		img->callback(img_browse_cb);
 		img->tooltip(_("Click to select icon"));
-		IconLoader::set(img, DEFAULT_ICON, ICON_SIZE_HUGE);
+
+		if(d) {
+			E_ASSERT(df != NULL);
+			if(df->icon(buf, BUFSIZE)) {
+				IconLoader::set(img, buf, ICON_SIZE_HUGE);
+				img_path = buf;
+			} 
+		}
+
+		/* handles even the case when we are creating the new icon */
+		if(!img->image()) {
+			IconLoader::set(img, DEFAULT_ICON, ICON_SIZE_HUGE);
+			img_path = DEFAULT_ICON;
+		}
+
 		name = new Fl_Input(205, 10, 215, 25, _("Name:"));
+		if(d && df->name(buf, BUFSIZE))
+			name->value(buf);
+
 		comment = new Fl_Input(205, 40, 215, 25, _("Comment:"));
+		if(d && df->comment(buf, BUFSIZE))
+			comment->value(buf);
+
 		execute = new Fl_Input(205, 70, 185, 25, _("Execute:"));
+		if(d && df->exec(buf, BUFSIZE))
+			execute->value(buf);
+		
 		browse = new Fl_Button(395, 70, 25, 25, "...");
 		browse->callback(file_browse_cb);
+
 		icon_type = new Fl_Choice(205, 100, 215, 25, _("Type:"));
 		icon_type->down_box(FL_BORDER_BOX);
 		icon_type->menu(menu_items);
@@ -158,10 +226,10 @@ void icon_dialog_icon_create(Desktop *self) {
 		cancel->callback(cancel_cb);
 	win->end();
 	win->set_modal();
+	
+	delete df;
+	delete buf;
 
 	Fl::focus(name);
 	win->show();
-}	
-
-void icon_dialog_icon_property(DesktopIcon *d) {
 }	

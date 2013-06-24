@@ -365,7 +365,7 @@ DesktopIcon *Desktop::read_desktop_file(const char *path, const char *base, Desk
 		 * try to load it as plain .desktop file by looking only at extension
 		 * TODO: MimeType can be used here too
 		 */
-		if(!str_ends(path, ".desktop"))
+		if(!str_ends(path, EDE_DESKTOP_DESKTOP_EXT))
 			return ret;
 
 		DesktopFile df;
@@ -435,7 +435,7 @@ bool Desktop::remove_icon(DesktopIcon *di, bool real_delete) {
 	if(real_delete) {
 		if(di->get_icon_type() == DESKTOP_ICON_TYPE_FOLDER) {
 			if(!dir_empty(di->get_path())) {
-				alert(_("This folder is not empty. Recursive removal of not empty folders is not yet implemented :S"));
+				alert(_("This folder is not empty. Recursive removal of not empty folders is not yet supported"));
 				return false;
 			}
 			ret = dir_remove(di->get_path());
@@ -460,6 +460,10 @@ bool Desktop::rename_icon(DesktopIcon *di, const char *name) {
 	
 	df.set_name(name);
 	return df.save(di->get_path());
+}
+
+void Desktop::edit_icon(DesktopIcon *di) { 
+	icon_dialog_icon_edit(this, di);
 }
 
 bool Desktop::save_icons_positions(void) {

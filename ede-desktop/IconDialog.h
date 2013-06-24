@@ -24,7 +24,7 @@
 class DesktopIcon;
 class Desktop;
 
-void icon_dialog_icon_create(Desktop *d);
-void icon_dialog_icon_property(DesktopIcon *d);
+void icon_dialog_icon_edit(Desktop *self, DesktopIcon *di);
+inline void icon_dialog_icon_create(Desktop *d) { icon_dialog_icon_edit(d, NULL); }
 
 #endif

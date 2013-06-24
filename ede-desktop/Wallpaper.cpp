@@ -476,7 +476,7 @@ int Wallpaper::handle(int event) {
 void Wallpaper::resize(int X, int Y, int W, int H) {
 	if(X == x() && Y == y() && W == w() && H == h())
 		return;
-
+	
 	Fl_Box::resize(X, Y, W, H);
 	if(image()) {
 		/*

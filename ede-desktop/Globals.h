@@ -30,4 +30,6 @@ EDELIB_NS_USING_AS(Resource, DesktopConfig)
 #define EDE_DESKTOP_DAMAGE_OVERLAY        0x20
 #define EDE_DESKTOP_DAMAGE_CLEAR_OVERLAY  0x30
 
+#define EDE_DESKTOP_DESKTOP_EXT ".desktop"
+
 #endif
