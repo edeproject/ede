@@ -90,6 +90,10 @@ private:
 	EDELIB_NS_PREPEND(String) path, cmd;
 	EDELIB_NS_PREPEND(MenuButton) *imenu;
 
+#if !((FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3))
+	EDELIB_NS_PREPEND(String) ttip;
+#endif
+
 public:
 	DesktopIcon(const char *l, int W = DESKTOP_ICON_SIZE_W, int H = DESKTOP_ICON_SIZE_H);
 	~DesktopIcon();

@@ -153,7 +153,20 @@ void DesktopIcon::set_image(const char *name) {
 }
 
 void DesktopIcon::set_tooltip(const char *tip) {
+#if (FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3)
 	copy_tooltip(tip);
+#else
+	/*
+	 * in versions prior 1.3, copy_tooltip didn't exist and there wasn't any
+	 * way to store tooltip without manually managing the storage
+	 */
+	if(tip) {
+		ttip = tip;
+		tooltip(ttip.c_str());
+	} else {
+		tooltip(tip);
+	}
+#endif
 }
 
 void DesktopIcon::update_label_font_and_size(void) {

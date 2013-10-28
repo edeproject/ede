@@ -24,6 +24,7 @@
 
 #include <signal.h>
 #include <time.h>
+#include <stdlib.h>
 #include <FL/Fl.H>
 #include <edelib/Ede.h>
 

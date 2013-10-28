@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
