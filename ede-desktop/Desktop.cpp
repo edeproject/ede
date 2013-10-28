@@ -384,6 +384,9 @@ DesktopIcon *Desktop::read_desktop_file(const char *path, const char *base, Desk
 			ret->set_image(buf);
 		else
 			ret->set_image(NULL);
+		
+		if(df.comment(buf, sizeof(buf)))
+			ret->set_tooltip(buf);
 	
 		if(df.exec(buf, sizeof(buf))) ret->set_cmd(buf);
 	}

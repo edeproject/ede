@@ -97,6 +97,7 @@ public:
 	void set_icon_type(int c) { icon_type = c; }
 	int  get_icon_type(void) { return icon_type;}
 	void set_image(const char *name);
+	void set_tooltip(const char *tip);
 
 	void update_label_font_and_size(void);
 

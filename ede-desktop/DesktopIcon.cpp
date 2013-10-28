@@ -152,6 +152,10 @@ void DesktopIcon::set_image(const char *name) {
 		size(img_w + OFFSET_W, img_h + OFFSET_H);
 }
 
+void DesktopIcon::set_tooltip(const char *tip) {
+	copy_tooltip(tip);
+}
+
 void DesktopIcon::update_label_font_and_size(void) {
 	E_RETURN_IF_FAIL(opts != 0);
 
