@@ -378,18 +378,9 @@ DesktopIcon *Desktop::read_desktop_file(const char *path, const char *base, Desk
 		ret = new DesktopIcon(_("No Name"));
 		ret->set_icon_type(DESKTOP_ICON_TYPE_NORMAL);
 
-		if(df.name(buf, sizeof(buf)))
-			ret->copy_label(buf);
-	
-		if(df.icon(buf, sizeof(buf)))
-			ret->set_image(buf);
-		else
-			ret->set_image(NULL);
-		
-		if(df.comment(buf, sizeof(buf)))
-			ret->set_tooltip(buf);
-	
-		if(df.exec(buf, sizeof(buf))) ret->set_cmd(buf);
+		if(df.name(buf, sizeof(buf))) ret->copy_label(buf);
+		ret->set_image(df.icon(buf, sizeof(buf)) ? buf : NULL);
+		if(df.comment(buf, sizeof(buf))) ret->set_tooltip(buf);
 	}
 
 	/* try to put random icon position in the middle of the desktop, so it is easier to notice */

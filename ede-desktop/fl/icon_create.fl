@@ -1,42 +1,72 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0300 
+version 1.0302 
 header_name {.h} 
 code_name {.cxx}
 Function {} {open
 } {
   Fl_Window {} {open
-    xywh {474 344 430 170} type Double visible
+    xywh {426 288 450 220} type Double visible
   } {
-    Fl_Button {} {
-      xywh {10 10 75 75}
-    }
-    Fl_Input {} {
-      label {Name:}
-      xywh {205 10 215 25}
-    }
-    Fl_Input {} {
-      label {Comment:}
-      xywh {205 40 215 25}
-    }
-    Fl_Input {} {
-      label {Execute:} selected
-      xywh {205 70 185 25}
-    }
-    Fl_Button {} {
-      label {...}
-      xywh {395 70 25 25}
-    }
-    Fl_Choice {} {
-      label {Type:} open
-      xywh {205 100 215 25} down_box BORDER_BOX
-    } {}
-    Fl_Button {} {
-      label {&OK}
-      xywh {235 135 90 25}
+    Fl_Tabs {} {open
+      xywh {10 10 430 165}
+    } {
+      Fl_Group {} {
+        label Basic open
+        xywh {15 30 415 140}
+      } {
+        Fl_Button {} {selected
+          xywh {20 45 80 75}
+        }
+        Fl_Input {} {
+          label {Name:}
+          xywh {210 45 215 25}
+        }
+        Fl_Input {} {
+          label {Comment:}
+          xywh {210 75 215 25}
+        }
+        Fl_Input {} {
+          label {Execute:}
+          xywh {210 105 185 25}
+        }
+        Fl_Button {} {
+          label {...}
+          xywh {400 105 25 25}
+        }
+        Fl_Choice {} {
+          label {Type:} open
+          xywh {210 135 215 25} down_box BORDER_BOX
+        } {}
+      }
+      Fl_Group {} {
+        label Details open
+        xywh {15 30 420 140} hide
+      } {
+        Fl_Check_Button {} {
+          label {Run in terminal}
+          xywh {195 80 235 25} down_box DOWN_BOX
+        }
+        Fl_Input {} {
+          label {Working directory:}
+          xywh {195 45 205 25}
+        }
+        Fl_Button {} {
+          label {...}
+          xywh {405 45 25 25}
+        }
+        Fl_Check_Button {} {
+          label {Use startup notification}
+          xywh {195 110 235 25} down_box DOWN_BOX
+        }
+      }
     }
     Fl_Button {} {
       label {&Cancel}
-      xywh {330 135 90 25}
+      xywh {350 185 90 25}
+    }
+    Fl_Button {} {
+      label {&OK}
+      xywh {255 185 90 25}
     }
   }
 } 

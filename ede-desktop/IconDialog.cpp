@@ -1,7 +1,7 @@
 /*
  * $Id: ede-panel.cpp 3463 2012-12-17 15:49:33Z karijes $
  *
- * Copyright (C) 2006-2013 Sanel Zukan
+ * Copyright (C) 2006-2014 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,9 @@
 #include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Tabs.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Check_Button.H>
 
 #include <edelib/Nls.h>
 #include <edelib/String.h>
@@ -53,12 +56,13 @@ EDELIB_NS_USING_LIST(12, (str_tolower, icon_chooser, dir_home, build_filename, a
 #define DEFAULT_ICON "empty"
 
 /* it is safe to be globals */
-static Fl_Window *win;
-static Fl_Button *img, *browse, *ok, *cancel;
-static Fl_Input  *name, *comment, *execute;
-static Fl_Choice *icon_type;
-static String     img_path, old_desktop_path;
-static DesktopIcon *curr_icon;
+static Fl_Window       *win;
+static Fl_Button       *img, *browse, *ok, *cancel;
+static Fl_Input        *name, *comment, *execute, *workdir;
+static Fl_Choice       *icon_type;
+static Fl_Check_Button *run_in_terminal, *start_notify;
+static String          img_path, old_desktop_path;
+static DesktopIcon     *curr_icon;
 
 /* the only supported type for now is application */
 static Fl_Menu_Item menu_items[] = {
@@ -70,8 +74,9 @@ static bool is_empty(const char *str) {
 	if(!str) return true;
 	const char *p = str;
 
-	while(*p++)
+	while(*p++) {
 		if(!isspace(*p)) return false;
+	}
 
 	return true;
 }
@@ -102,6 +107,12 @@ static void ok_cb(Fl_Widget*, void *d) {
 
 	df.set_icon((img_path.length() > 1) ? img_path.c_str() : DEFAULT_ICON);
 	df.set_exec(execute->value());
+	
+	if(!is_empty_input(workdir))
+		df.set_path(workdir->value());
+	
+	df.set_startup_notify(start_notify->value());
+	df.set_terminal(run_in_terminal->value());
 
 	/* determine filename and save it */
 	String file = name->value();
@@ -157,6 +168,11 @@ static void file_browse_cb(Fl_Widget*, void*) {
 	if(p) execute->value(p);
 }
 
+static void dir_browse_cb(Fl_Widget*, void*) {
+	const char *p = fl_dir_chooser(_("Choose directory"), "*", 0);
+	if(p) workdir->value(p);
+}
+
 #define BUFSIZE PATH_MAX
 
 void icon_dialog_icon_edit(Desktop *self, DesktopIcon *d) {
@@ -170,8 +186,9 @@ void icon_dialog_icon_edit(Desktop *self, DesktopIcon *d) {
 		df = new DesktopFile();
 		if(!df->load(d->get_path())) {
 			delete df;
+			df = NULL;
 
-			int ret = ask(_("Unable to load .desktop file for this icon. Would you like to create new icon instead?"));
+			int ret = ask(_("Unable to load .desktop file for this icon. Would you like to create a new icon instead?"));
 			if(!ret) return;
 
 			/* force NULL on icon, so we can run dialog in 'create' mode */
@@ -181,49 +198,71 @@ void icon_dialog_icon_edit(Desktop *self, DesktopIcon *d) {
 		buf = new char[BUFSIZE];
 		old_desktop_path = d->get_path();
 	}
+	
+	win = new Fl_Window(450, 220, lbl);
+	Fl_Tabs *tabs = new Fl_Tabs(10, 10, 430, 165);
+	tabs->begin();
+		Fl_Group *g1 = new Fl_Group(15, 30, 415, 140, _("Basic"));
+		g1->begin();
+			img = new Fl_Button(20, 45, 80, 75);
+			img->callback(img_browse_cb);
+			img->tooltip(_("Click to select icon"));
+			
+			if(d) {
+				E_ASSERT(df != NULL);
+				if(df->icon(buf, BUFSIZE)) {
+					IconLoader::set(img, buf, ICON_SIZE_HUGE);
+					img_path = buf;
+				} 
+			}
 
-	win = new Fl_Window(430, 170, lbl);
-		img = new Fl_Button(10, 10, 75, 75);
-		img->callback(img_browse_cb);
-		img->tooltip(_("Click to select icon"));
-
-		if(d) {
-			E_ASSERT(df != NULL);
-			if(df->icon(buf, BUFSIZE)) {
-				IconLoader::set(img, buf, ICON_SIZE_HUGE);
-				img_path = buf;
-			} 
-		}
-
-		/* handles even the case when we are creating the new icon */
-		if(!img->image()) {
-			IconLoader::set(img, DEFAULT_ICON, ICON_SIZE_HUGE);
-			img_path = DEFAULT_ICON;
-		}
-
-		name = new Fl_Input(205, 10, 215, 25, _("Name:"));
-		if(d && df->name(buf, BUFSIZE))
-			name->value(buf);
-
-		comment = new Fl_Input(205, 40, 215, 25, _("Comment:"));
-		if(d && df->comment(buf, BUFSIZE))
-			comment->value(buf);
-
-		execute = new Fl_Input(205, 70, 185, 25, _("Execute:"));
-		if(d && df->exec(buf, BUFSIZE))
-			execute->value(buf);
+			/* handles even the case when we are creating the new icon */
+			if(!img->image()) {
+				IconLoader::set(img, DEFAULT_ICON, ICON_SIZE_HUGE);
+				img_path = DEFAULT_ICON;
+			}
+			
+			name = new Fl_Input(210, 45, 215, 25, _("Name:"));
+			if(d && df->name(buf, BUFSIZE)) name->value(buf);
+			
+			comment = new Fl_Input(210, 75, 215, 25, _("Comment:"));
+			if(d && df->comment(buf, BUFSIZE)) comment->value(buf);
+			
+			execute = new Fl_Input(210, 105, 185, 25, _("Execute:"));
+			if(d && df->exec(buf, BUFSIZE)) execute->value(buf);
+			
+			browse = new Fl_Button(400, 105, 25, 25, "...");
+			browse->callback(file_browse_cb);
+			
+			icon_type = new Fl_Choice(210, 135, 215, 25, _("Type:"));
+			icon_type->down_box(FL_BORDER_BOX);
+			icon_type->menu(menu_items);
+		g1->end();		   
 		
-		browse = new Fl_Button(395, 70, 25, 25, "...");
-		browse->callback(file_browse_cb);
+		Fl_Group *g2 = new Fl_Group(15, 30, 420, 140, _("Details"));
+		g2->hide();
+		g2->begin();
+			run_in_terminal = new Fl_Check_Button(195, 80, 235, 25, _("Run in terminal"));
+			run_in_terminal->down_box(FL_DOWN_BOX);
+			if(df) run_in_terminal->value(df->terminal());
 
-		icon_type = new Fl_Choice(205, 100, 215, 25, _("Type:"));
-		icon_type->down_box(FL_BORDER_BOX);
-		icon_type->menu(menu_items);
+			workdir = new Fl_Input(195, 45, 205, 25, _("Working directory:"));
+			if(df && df->path(buf, BUFSIZE)) workdir->value(buf);
 
-		ok = new Fl_Button(235, 135, 90, 25, _("&OK"));
-		ok->callback(ok_cb, self);
-		cancel = new Fl_Button(330, 135, 90, 25, _("&Cancel"));
-		cancel->callback(cancel_cb);
+			Fl_Button *browsedir = new Fl_Button(405, 45, 25, 25, "...");
+			browsedir->callback(dir_browse_cb);
+
+			start_notify = new Fl_Check_Button(195, 110, 235, 25, _("Use startup notification"));
+			start_notify->down_box(FL_DOWN_BOX);
+			if(df) start_notify->value(df->startup_notify());
+		g2->end();
+	tabs->end();	
+
+	ok = new Fl_Button(255, 185, 90, 25, _("&OK"));
+	ok->callback(ok_cb, self);
+	cancel = new Fl_Button(350, 185, 90, 25, _("&Cancel"));
+	cancel->callback(cancel_cb);
+
 	win->end();
 	win->set_modal();
 	
@@ -232,4 +271,4 @@ void icon_dialog_icon_edit(Desktop *self, DesktopIcon *d) {
 
 	Fl::focus(name);
 	win->show();
-}	
+}

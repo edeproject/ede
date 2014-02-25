@@ -86,8 +86,8 @@ private:
 	IconOptions *opts;
 	MovableIcon *micon;
 
-	/* location of .desktop file and command to be executed */
-	EDELIB_NS_PREPEND(String) path, cmd;
+	/* location of .desktop file */
+	EDELIB_NS_PREPEND(String) path;
 	EDELIB_NS_PREPEND(MenuButton) *imenu;
 
 #if !((FL_MAJOR_VERSION >= 1) && (FL_MINOR_VERSION >= 3))
@@ -117,9 +117,6 @@ public:
 	
 	void        set_path(const char *p) { path = p; }
 	const char *get_path(void) { return path.c_str(); }
-
-	void        set_cmd(const char *c) { cmd = c; }
-	const char *get_cmd(void) { return cmd.c_str(); }
 
 	void fix_position(int X, int Y);
 	void drag(int x, int y, bool apply);

@@ -81,7 +81,8 @@ static MenuItem icon_trash_menu[] = {
 
 static void open_cb(Fl_Widget*, void* d) {
 	DesktopIcon *o = (DesktopIcon*)d;
-	run_async("ede-launch %s", o->get_cmd());
+	/* run .desktop file directly, since it can contain startup details */
+	run_async("ede-launch %s", o->get_path());
 }
 
 static void edit_cb(Fl_Widget*, void* d) {
@@ -391,8 +392,8 @@ int DesktopIcon::handle(int event) {
 			return 1;
 
 		case FL_RELEASE:
-			if(Fl::event_clicks() > 0 && !cmd.empty())
-				run_async("ede-launch %s", cmd.c_str());
+			if(Fl::event_clicks() > 0 && !path.empty())
+				run_async("ede-launch %s", path.c_str());
 			return 1;
 
 		case FL_DND_ENTER:
