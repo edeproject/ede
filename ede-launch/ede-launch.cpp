@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012-2013 Sanel Zukan
+ * Copyright (C) 2012-2014 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -407,6 +407,18 @@ static bool start_desktop_file(const char *cmd) {
 	}
 
 	char buf[PATH_MAX];
+
+	/*
+	 * Determine working directory and set it first, to reuse buffer. Note that
+	 * it will override working directory path set from command line.
+	 */
+	if(d.path(buf, PATH_MAX)) {
+		errno = 0;
+		if(chdir(buf) < 0) {
+			alert(_("Unable to change directory to '%s'. Got '%s' (%i)"), buf, strerror(errno), errno);
+		}
+	}
+
 	if(!d.exec(buf, PATH_MAX)) {
 		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
 		return false;
