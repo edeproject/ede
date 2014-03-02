@@ -125,7 +125,10 @@ PDecor::Button::setState(ButtonState state)
                 ScreenResources::instance()->getPixmapHandler()->returnPixmap(shape);
             }
         } else {
-            XRectangle rect = {0 /* x */, 0 /* y */, _gm.width, _gm.height };
+            XRectangle rect;
+            rect.x = 0; rect.y = 0;
+            rect.width = _gm.width;
+            rect.height = _gm.height;
             XShapeCombineRectangles(_dpy, _window, ShapeBounding,
                                     0, 0, &rect, 1, ShapeSet, YXBanded);
         }

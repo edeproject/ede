@@ -171,7 +171,8 @@ public:
     
     Action(uint action, int param_i[3]) : _action(action)
     {
-        std::memcpy(_param_i, param_i, sizeof(param_i));
+        // used references explicitly to shout memcpy warning
+        std::memcpy(&_param_i, &param_i, sizeof(param_i));
     }
     Action(uint action, const std::string &param_s)
         : _action(action), _param_s(param_s)

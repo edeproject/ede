@@ -244,7 +244,9 @@ RootWO::RootWO(Window root)
     AtomUtil::setLong(_window, Atoms::getAtom(NET_NUMBER_OF_DESKTOPS), Config::instance()->getWorkspaces());
     AtomUtil::setLong(_window, Atoms::getAtom(NET_CURRENT_DESKTOP), 0);
 
-    long desktop_geometry[2] = { _gm.width, _gm.height };
+    long desktop_geometry[2];
+    desktop_geometry[0] = _gm.width;
+    desktop_geometry[1] = _gm.height;
     AtomUtil::setLongs(_window, Atoms::getAtom(NET_DESKTOP_GEOMETRY), desktop_geometry, 2);
 
     woListAdd(this);
@@ -339,7 +341,11 @@ RootWO::handleLeaveEvent(XCrossingEvent *ev)
 void
 RootWO::setEwmhWorkarea(const Geometry &workarea)
 {
-    long workarea_array[4] = { workarea.x, workarea.y, workarea.width, workarea.height };
+    long workarea_array[4];
+    workarea_array[0] = workarea.x;
+    workarea_array[1] = workarea.y;
+    workarea_array[2] = workarea.width;
+    workarea_array[3] = workarea.height;
     AtomUtil::setLongs(_window, Atoms::getAtom(NET_WORKAREA), workarea_array, 4);
 }
 
