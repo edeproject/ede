@@ -27,6 +27,8 @@
 #include <edelib/Nls.h>
 #include <edelib/Run.h>
 
+#include <FL/Fl.H>
+
 #if EDELIB_HAVE_DBUS
 #include <edelib/EdbusMessage.h>
 #include <edelib/EdbusConnection.h>

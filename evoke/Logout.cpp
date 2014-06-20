@@ -11,7 +11,7 @@
  */
 
 #include <FL/Fl_Box.H>
-#include <FL/Fl_Button.H>
+#include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl.H>
 #include <edelib/Window.h>
@@ -78,7 +78,7 @@ int logout_dialog_show(int screen_w, int screen_h, int opt) {
 		c->value(0);
 		description->label(logout_options[0].opt_long);
 
-		Fl_Button* ok = new Fl_Button(140, 145, 90, 25, _("&OK"));
+		Fl_Return_Button* ok = new Fl_Return_Button(140, 145, 90, 25, _("&OK"));
 		ok->callback(ok_cb, c);
 		Fl_Button* cancel = new Fl_Button(235, 145, 90, 25, _("&Cancel"));
 		cancel->callback(cancel_cb);
