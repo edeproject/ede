@@ -420,7 +420,7 @@ static bool start_desktop_file(const char *cmd) {
 	}
 
 	if(!d.exec(buf, PATH_MAX)) {
-		alert(_("Unable to run '%s'.\nProbably this file is malformed or 'Exec' key has non-installed program"), cmd);
+		alert(_("Unable to run '%s'.\nProbably the file is malformed or 'Exec' key has program which is not installed"), cmd);
 		return false;
 	}
 
@@ -624,6 +624,7 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 	}
+	
 	/* check if we have .desktop file */
 	if(argv[ca] && str_ends(argv[ca], ".desktop"))
 		return RETURN_FROM_BOOL(start_desktop_file(argv[ca]));
