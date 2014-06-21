@@ -2,7 +2,7 @@
 # download fresh repository copy of ede and edelib and do whatever magic is needed
 # to prepare release
 
-RELEASE_VERSION="2.0"
+RELEASE_VERSION="2.1"
 
 ############################################
 
@@ -27,7 +27,7 @@ rm -Rf $release_dir
 mkdir -p $release_dir
 cd $release_dir
 
-ede_svn_base="https://ede.svn.sourceforge.net/svnroot/ede"
+ede_svn_base="https://svn.code.sf.net/p/ede/code"
 ede_svn_trunk="$ede_svn_base/trunk"
 ede_svn_tags="$ede_svn_base/tags"
 
