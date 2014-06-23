@@ -2,14 +2,14 @@ dnl
 dnl $Id: configure.in 1719 2006-08-15 08:56:42Z karijes $
 dnl
 dnl Part of Equinox Desktop Environment (EDE).
-dnl Copyright (c) 2000-2012 EDE Authors.
+dnl Copyright (c) 2000-2014 EDE Authors.
 dnl 
 dnl This program is licenced under terms of the 
 dnl GNU General Public Licence version 2 or newer.
 dnl See COPYING for details.
 
 m4_define([ede_major_version], [2])
-m4_define([ede_minor_version], [1])
+m4_define([ede_minor_version], [2])
 m4_define([ede_patch_version], [0])
 m4_define([ede_version], [ede_major_version.ede_minor_version.ede_patch_version])
 
