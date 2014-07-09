@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012-2013 Sanel Zukan
+ * Copyright (C) 2012-2014 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -397,11 +397,7 @@ void Panel::set_strut(short state) {
 	if(state == PANEL_STRUT_REMOVE) return;
 
 	int sizes[4] = {0, 0, 0, 0};
-
-	if(state & PANEL_STRUT_BOTTOM)
-		sizes[3] = h();
-	else
-		sizes[2] = h();
+	sizes[state & PANEL_STRUT_BOTTOM ? 3 : 2] = h();
 
 	/* TODO: netwm_window_set_strut_partial() */
 	netwm_window_set_strut(fl_xid(this), sizes[0], sizes[1], sizes[2], sizes[3]);
@@ -475,8 +471,12 @@ void Panel::update_size_and_pos(bool create_xid, bool update_strut, int X, int Y
 		if(width_perc >= 100 && update_strut)
 			set_strut(PANEL_STRUT_REMOVE | PANEL_STRUT_BOTTOM);
 	} else {
-		/* FIXME: this does not work well with edewm (nor pekwm). kwin do it correctly. */
-		position(X, Y);
+		/*
+		 * I'm not sure what the hell is going on here; if 'y == 0', X will
+		 * move panel few pixels down, even if FLTK is reporting y() == 0.
+		 * Seems like 1 will solve this.
+		 */
+		position(X, Y == 0 ? 1 : Y);
 		if(width_perc >= 100 && update_strut)
 			set_strut(PANEL_STRUT_REMOVE | PANEL_STRUT_TOP);
 	}
