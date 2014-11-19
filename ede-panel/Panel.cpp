@@ -503,6 +503,12 @@ int Panel::handle(int e) {
 			/* are moving the panel; only vertical moving is supported */
 			cursor(FL_CURSOR_MOVE);
 
+			/* send drag events to children and do not drag panel in the mean time */
+			if(clicked && clicked != this) {
+				clicked->handle(e);
+				return 0;
+			}
+
 			/* snap it to the top or bottom, depending on pressed mouse location */
 			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
 				position(x(), screen_y);
@@ -549,6 +555,7 @@ void Panel::load_applets(const char *applets) {
 	 * (similar string is expected from configuration), fallback is plain string.
 	 */
 	static const char *fallback =
+#ifndef EDE_PANEL_LOCAL_APPLETS
 		"start_menu,"
 		"quick_launch,"
 		"pager,"
@@ -557,10 +564,25 @@ void Panel::load_applets(const char *applets) {
 		"keyboard_layout,"
 		"battery_monitor,"
 		"cpu_monitor,"
-#ifdef __linux__
+# ifdef __linux__
 		"mem_monitor,"
-#endif
-		"system_tray";
+# endif
+		"system_tray"
+#else /* EDE_PANEL_LOCAL_APPLETS */
+		"./applets/start-menu/start_menu,"
+		"./applets/quick-launch/quick_launch,"
+		"./applets/pager/pager,"
+		"./applets/clock/clock,"
+		"./applets/taskbar/taskbar,"
+		"./applets/keyboard-layout/keyboard_layout,"
+		"./applets/battery-monitor/battery_monitor,"
+		"./applets/cpu-monitor/cpu_monitor,"
+# ifdef __linux__
+		"./applets/mem-monitor/mem_monitor,"
+# endif
+		"./applets/system-tray/system_tray"
+#endif /* EDE_PANEL_LOCAL_APPLETS */
+		;
 	
 	String dir = Resource::find_data("panel-applets");
 	E_RETURN_IF_FAIL(!dir.empty());
@@ -576,7 +598,7 @@ void Panel::load_applets(const char *applets) {
 		snprintf(path, sizeof(path), "%s" E_DIR_SEPARATOR_STR "%s" APPLET_EXTENSION, dir.c_str(), tok);
 #else
 		/* only for testing, so path separator is hardcoded */
-		snprintf(path, sizeof(path), "./applets/%s/%s" APPLET_EXTENSION, dir.c_str(), tok);
+		snprintf(path, sizeof(path), "%s" APPLET_EXTENSION, tok);
 #endif
 		mgr.load(path);
 	}

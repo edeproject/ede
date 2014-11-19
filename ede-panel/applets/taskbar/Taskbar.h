@@ -58,6 +58,9 @@ public:
 	void update_child_workspace(Window xid);
 
 	void panel_redraw(void);
+
+	/* try to move child on place of other child, but only if it falls within x,y range */
+	void try_dnd(TaskButton *b, int x, int y);
 };
 
 #endif

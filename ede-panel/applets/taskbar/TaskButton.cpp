@@ -104,9 +104,10 @@ static void maximize_cb(Fl_Widget*, void *b) {
 }
 
 TaskButton::TaskButton(int X, int Y, int W, int H, const char *l) : Fl_Button(X, Y, W, H, l),
-																	xid(0), wspace(0), image_alloc(false), net_wm_icon(0)
+																	xid(0), wspace(0), old_value(0), image_alloc(false), dragged(false), net_wm_icon(0)
 { 
 	box(FL_UP_BOX);
+
 	align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT | FL_ALIGN_CLIP);
 
 	if(IconLoader::inited()) {
@@ -225,4 +226,31 @@ void TaskButton::update_image_from_xid(void) {
 	clear_image();
 	image(img);
 	image_alloc = true;
+}
+
+int TaskButton::handle(int e) {
+	switch(e) {
+		case FL_PUSH:
+			/*
+			 * Remember old value, as value() result affect will box be drawn as FL_UP_BOX or FL_DOWN_BOX.
+			 * This trick should return box to the old state in case of dragging.
+			 */
+			old_value = value();
+			return Fl_Button::handle(e);
+		case FL_DRAG:
+			dragged = true;
+			return 1;
+		case FL_RELEASE:
+			if(dragged) {
+				Taskbar *taskbar = (Taskbar*)parent();
+				taskbar->try_dnd(this, Fl::event_x(), Fl::event_y());
+				dragged = false;
+
+				value(old_value);
+				return 1;
+			}
+			/* fallthrough */
+	}
+	
+	return Fl_Button::handle(e);
 }

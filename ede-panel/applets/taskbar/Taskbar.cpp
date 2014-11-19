@@ -360,7 +360,7 @@ void Taskbar::update_child_icon(Window xid) {
 }
 
 void Taskbar::update_child_workspace(Window xid) {
-	if(children() < 0) return;
+	if(!children()) return;
 
 	TaskButton *o;
 	for(int i = 0; i < children(); i++) {
@@ -380,6 +380,49 @@ void Taskbar::update_child_workspace(Window xid) {
 
 void Taskbar::panel_redraw(void) {
 	parent()->redraw();
+}
+
+void Taskbar::try_dnd(TaskButton *b, int xpos, int ypos) {
+	if(!children()) return;
+	
+	/*
+	 * try to find position of incoming child, as the child, when is moved
+	 * forward, has to go on 'target_pos + 1' instead only 'target_pos'
+	 */
+	int child_pos = find(b);
+	E_RETURN_IF_FAIL(child_pos != children());
+
+	TaskButton *o;
+	for(int i = 0; i < children(); i++) {
+		o = (TaskButton*)child(i);
+		if(o == b) continue;
+
+		if((xpos > b->x() && xpos < b->x() + b->w()) &&
+		   (ypos > b->y() && ypos < b->y() + b->h()))
+		{
+			/* not moved outside child range */
+			return;
+		}
+
+		if((xpos > o->x() && xpos < o->x() + o->w()) &&
+		   (ypos > o->y() && ypos < o->y() + o->h())) 
+		{
+			/* Try to find widget position in array. Widgets in array are not sorted in any order. */
+			int pos = find(o);
+			if(pos == children()) {
+				/* not found, proceed with the search */
+				continue;
+			}
+		
+			/* increase just in case target position is in front */
+			pos += (pos > child_pos) ? 1 : 0;
+			insert(*b, pos);
+			break;
+		}
+	}
+	
+	layout_children();
+	redraw();
 }
 
 EDE_PANEL_APPLET_EXPORT (

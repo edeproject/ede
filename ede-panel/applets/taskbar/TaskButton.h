@@ -29,7 +29,9 @@ private:
 	/* window ID this button handles */
 	Window xid;
 	int    wspace;
+	char   old_value; /* for storing value() as it affects boxtype */
 	bool   image_alloc;    
+	bool   dragged;
 	Atom   net_wm_icon;
 
 	void clear_image(void);
@@ -48,6 +50,8 @@ public:
 
 	void set_workspace(int s) { wspace = s; }
 	int  get_workspace(void) { return wspace; }
+	
+	int handle(int e);
 };
 
 #endif
