@@ -72,6 +72,7 @@ public:
 
 	void show(void);
 	void update_workarea(void);
+	void update_workarea(int X, int Y, int W, int H);
 	void read_config(void);
 
 	void         read_desktop_folder(const char *dpath = NULL);

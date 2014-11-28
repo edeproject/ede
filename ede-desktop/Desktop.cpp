@@ -168,6 +168,7 @@ static void folder_create_cb(Fl_Widget*, void *d) {
 
 Desktop::Desktop() : EDE_DESKTOP_WINDOW(0, 0, 100, 100, EDE_DESKTOP_APP) {
 	end();
+
 	/* use nice darker blue color as default for background */
 	color(fl_rgb_color(73, 64, 102));
 
@@ -232,12 +233,30 @@ void Desktop::update_workarea(void) {
 	if(!netwm_workarea_get_size(X, Y, W, H))
 		Fl::screen_xywh(X, Y, W, H);
 
-	E_DEBUG(E_STRLOC ": resizing to %i %i %i %i\n", X, Y, W, H);
+	update_workarea(X, Y, W, H);
+}
+
+void Desktop::update_workarea(int X, int Y, int W, int H) {
+	/* prevent multiple calls with the same values */
+	if(X == x() && Y == y() && W == w() && H == h())
+		return;
+	
+	E_DEBUG(E_STRLOC ": resizing to %i %i %i %i (was: %i %i %i %i)\n",
+			X, Y, W, H, x(), y(), w(), h());
+
+	/*
+	 * Check if wallpaper needs resizing. Sometimes, while screen size is updated
+	 * X11 can change x/y, but keep w/h; here, wallpaper size update is not needed.
+	 */
+	bool resize_wallpaper = !(W == w() && H == h());
+
 	resize(X, Y, W, H);
 	
 	/* also resize wallpaper if given */
-	if(wallpaper && wallpaper->visible())
-		wallpaper->resize(0, 0, w(), h());
+	if(wallpaper && wallpaper->visible() && resize_wallpaper) {
+		E_DEBUG(E_STRLOC ": resizing wallpaper to %i %i\n", W, H);
+		wallpaper->resize(0, 0, W, H);
+	}
 }
 
 void Desktop::read_config(void) {

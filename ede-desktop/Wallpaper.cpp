@@ -370,10 +370,6 @@ void Wallpaper::set_rootpmap(void) {
 bool Wallpaper::load(const char *path, int s, bool rootpmap) {
 	E_ASSERT(path != NULL);
 	
-	/* in case this function gets multiple calls */
-	if(wpath == path && state == s && rootpmap == use_rootpmap)
-		return true;
-
 	Fl_Shared_Image *img = Fl_Shared_Image::get(path);
 	E_RETURN_VAL_IF_FAIL(img != NULL, false);
 	
@@ -423,7 +419,7 @@ void Wallpaper::draw(void) {
 
 	iw = im->w();
 	ih = im->h();
-
+	
 	E_RETURN_IF_FAIL(iw > 0 && ih > 0);
 
 	if(state == WALLPAPER_CENTER) {
@@ -476,7 +472,7 @@ int Wallpaper::handle(int event) {
 void Wallpaper::resize(int X, int Y, int W, int H) {
 	if(X == x() && Y == y() && W == w() && H == h())
 		return;
-	
+
 	Fl_Box::resize(X, Y, W, H);
 	if(image()) {
 		/*
