@@ -3,7 +3,7 @@
  *
  * Desktop configuration tool
  * Part of Equinox Desktop Environment (EDE).
- * Copyright (c) 2007-2008 EDE Authors.
+ * Copyright (c) 2007-2014 EDE Authors.
  *
  * This program is licensed under terms of the 
  * GNU General Public License version 2 or newer.
@@ -29,7 +29,6 @@
 #include <FL/Fl_Color_Chooser.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Shared_Image.H>
-#include <FL/Fl_Tiled_Image.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/x.H>
 
@@ -43,6 +42,9 @@
 #include <edelib/Directory.h>
 #include <edelib/ForeignCallback.h>
 #include <edelib/Ede.h>
+#include <edelib/Netwm.h>
+
+EDELIB_NS_USING(netwm_workarea_get_size)
 
 #define EDE_DESKTOP_CONFIG "ede-desktop"
 
@@ -53,7 +55,7 @@ Fl_Menu_Item mode_menu[] = {
 	{0}
 };
 
-// make sure this part matches array positions in mode_menu[]
+/* make sure this part matches array positions in mode_menu[] */
 #define IMG_CENTER  0
 #define IMG_STRETCH 1
 #define IMG_TILE    2
@@ -79,7 +81,79 @@ Fl_Input*        icon_font_txt;
 
 Fl_Check_Button* engage_with_one_click;
 
-void set_wallpaper(const char* path) {
+#define PIXEL_POS(x, y, w, d) ((((y) * (w)) + (x)) * (d))
+
+/* TODO: the same function exists in ede-desktop: move this to edelib */
+static Fl_RGB_Image* create_tile(Fl_Image *orig, int X, int Y, int W, int H) {
+	/* don't tile large image */
+	if(orig->w() >= W && orig->h() >= H)
+		return (Fl_RGB_Image*)orig;
+
+	int iw = orig->w();
+	int ih = orig->h();
+	int idepth = orig->d();
+	int tx = X - (X % iw);
+	int ty = Y - (Y % ih);
+	int tw = W + tx;
+	int th = H + ty;
+
+	unsigned char* dest = new unsigned char[tw * th * orig->d()];
+	unsigned char* destptr = dest;
+	unsigned char* src = (unsigned char*)orig->data()[0];
+	int ppos = 0;
+	/* for bounds checks */
+	int imax = iw * ih * idepth;
+
+	if(idepth == 3 || idepth == 4) {
+		for(int j = 0, cj = 0; j < th; j++, cj++) {
+			if(cj > ih) cj = 0;
+
+			for(int i = 0, ci = 0; i < tw; i++, ci++) {
+				if(ci > iw) ci = 0;
+				ppos = PIXEL_POS(ci, cj, iw, idepth);
+				if(ppos > imax) ppos = imax;
+
+				*destptr++ = src[ppos];
+				*destptr++ = src[ppos + 1];
+				*destptr++ = src[ppos + 2];
+
+				if(idepth == 4)
+					*destptr++ = src[ppos + 3];
+			}
+		}
+	} else if(idepth == 2) {
+		for(int j = 0, cj = 0; j < th; j++, cj++) {
+			if(cj > ih) cj = 0;
+
+			for(int i = 0, ci = 0; i < tw; i++, ci++) {
+				if(ci > iw) ci = 0;
+				ppos = PIXEL_POS(ci, cj, iw, idepth);
+				if(ppos > imax) ppos = imax;
+
+				*destptr++ = src[ppos];
+				*destptr++ = src[ppos + 1];
+			}
+		}
+	} else {
+		for(int j = 0, cj = 0; j < th; j++, cj++) {
+			if(cj > ih) cj = 0;
+
+			for(int i = 0, ci = 0; i < tw; i++, ci++) {
+				if(ci > iw) ci = 0;
+				ppos = PIXEL_POS(ci, cj, iw, idepth);
+				if(ppos > imax) ppos = imax;
+
+				*destptr++ = src[ppos];
+			}
+		}
+	}
+
+	Fl_RGB_Image* c = new Fl_RGB_Image(dest, tw, th, idepth, orig->ld());
+	c->alloc_array = 1;
+	return c;
+}
+
+static void set_wallpaper(const char* path) {
 	if(!path)
 		return;
 
@@ -101,19 +175,12 @@ void set_wallpaper(const char* path) {
 	 * Before doing anything with the image, first scale it relative to wallpaper box,
 	 * which is relative to the screen sizes.
 	 */
-	int display_w = DisplayWidth(fl_display, fl_screen);
-	int display_h = DisplayHeight(fl_display, fl_screen);
-	int scale_w_factor, scale_h_factor;
+	int X, Y, W, H;
+	if(!netwm_workarea_get_size(X, Y, W, H))
+		Fl::screen_xywh(X, Y, W, H);
 
-	if(display_w > area_w)
-		scale_w_factor = display_w / area_w;
-	else
-		scale_w_factor = 1;
-
-	if(display_h > area_h)
-		scale_h_factor = display_h / area_h;
-	else
-		scale_h_factor = 1;
+	int scale_w_factor = (W > area_w) ? W / area_w : 1;
+	int scale_h_factor = (H > area_h) ? H / area_h : 1;
 
 	Fl_Image* rel_img = img->copy(img->w() / scale_w_factor, img->h() / scale_h_factor);
 
@@ -134,9 +201,8 @@ void set_wallpaper(const char* path) {
 		}
 
 		case IMG_TILE: {
-			Fl_Tiled_Image* tiled = new Fl_Tiled_Image(rel_img, area_w, area_h);
 			wallpaper_img->size(area_w, area_h);
-			wallpaper_img->image(tiled);
+			wallpaper_img->image(create_tile(rel_img, 0, 0, area_w, area_h));
 			break;
 		}
 
@@ -168,7 +234,7 @@ void set_wallpaper(const char* path) {
 	}
 }
 
-void disable_wallpaper(bool doit) {
+static void disable_wallpaper(bool doit) {
 	if(doit) {
 		desk_use_wallpaper->value(0);
 		desk_background_mode->deactivate();
@@ -191,17 +257,12 @@ void disable_wallpaper(bool doit) {
 	wallpaper->redraw();
 }
 
-void set_rgb_color(Fl_Button* btn, unsigned char r, unsigned char g, unsigned char b) {
-	Fl_Color c = (Fl_Color)edelib::color_rgb_to_fltk(r, g, b);
-	btn->color(c);
-}
-
-void close_cb(Fl_Widget*, void* w) {
+static void close_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	win->hide();
 }
 
-void color_cb(Fl_Widget* btn, void*) {
+static void color_cb(Fl_Widget* btn, void*) {
 	unsigned char r, g, b;
 
 	edelib::color_fltk_to_rgb(btn->color(), r, g, b);
@@ -212,7 +273,7 @@ void color_cb(Fl_Widget* btn, void*) {
 	}
 }
 
-void wallpaper_color_cb(Fl_Widget*, void* w) {
+static void wallpaper_color_cb(Fl_Widget*, void* w) {
 	unsigned char r, g, b;
 
 	edelib::color_fltk_to_rgb(desk_background_color->color(), r, g, b);
@@ -227,7 +288,7 @@ void wallpaper_color_cb(Fl_Widget*, void* w) {
 	}
 }
 
-void browse_cb(Fl_Widget*, void*) {
+static void browse_cb(Fl_Widget*, void*) {
 	char* ret = fl_file_chooser(_("Background image"), "*.jpg\t*.png", desk_background->value());
 	if(!ret)
 		return;
@@ -237,7 +298,7 @@ void browse_cb(Fl_Widget*, void*) {
 	wallpaper->redraw();
 }
 
-void wallpaper_use_cb(Fl_Widget*, void*) {
+static void wallpaper_use_cb(Fl_Widget*, void*) {
 	if(desk_use_wallpaper->value()) {
 		disable_wallpaper(false);
 		set_wallpaper(desk_background->value());
@@ -245,13 +306,13 @@ void wallpaper_use_cb(Fl_Widget*, void*) {
 		disable_wallpaper(true);
 }
 
-void choice_cb(Fl_Widget*, void*) {
+static void choice_cb(Fl_Widget*, void*) {
 	set_wallpaper(desk_background->value());
 	wallpaper_img->redraw();
 	wallpaper->redraw();
 }
 
-void apply_cb(Fl_Widget*, void* w) {
+static void apply_cb(Fl_Widget*, void* w) {
 	edelib::Resource conf;
 	conf.set("Desktop", "color", (int)desk_background_color->color());
 	conf.set("Desktop", "wallpaper_use", desk_use_wallpaper->value());
@@ -273,7 +334,7 @@ void apply_cb(Fl_Widget*, void* w) {
 		edelib::foreign_callback_call("ede-desktop");
 }
 
-void ok_cb(Fl_Widget*, void* w) {
+static void ok_cb(Fl_Widget*, void* w) {
 	edelib::Window* win = (edelib::Window*)w;
 	apply_cb(0, win);
 	/* a hack so ede-desktop-conf can send a message before it was closed */
@@ -281,7 +342,7 @@ void ok_cb(Fl_Widget*, void* w) {
 	win->hide();
 }
 
-void browse_fonts_cb(Fl_Widget*, void* w) {
+static void browse_fonts_cb(Fl_Widget*, void* w) {
 	Fl_Input* in = (Fl_Input*)w;
 	int retsz;
 	const char* font_name = Fl::get_font_name((Fl_Font)icon_font, 0);
@@ -296,7 +357,7 @@ void browse_fonts_cb(Fl_Widget*, void* w) {
 	icon_font_size = retsz;
 }
 
-void load_settings(void) {
+static void load_settings(void) {
 	int b_mode = 0;
 	bool d_wp_use = false;
 	int d_background_color = fl_rgb_color(73, 64, 102); /* keep it in sync with default color in ede-desktop */
@@ -376,13 +437,11 @@ int main(int argc, char** argv) {
 				g1->hide();
 
 			g1->begin();
-			/*
 				Fl_Box* b1 = new Fl_Box(85, 196, 100, 15);
-				b1->box(FL_BORDER_BOX);
+				b1->box(FL_THIN_UP_BOX);
 
 				Fl_Box* b2 = new Fl_Box(30, 43, 210, 158);
 				b2->box(FL_THIN_UP_BOX);
-				*/
 
 				/* box size is intentionaly odd so preserve aspect ratio */
 				wallpaper = new Fl_Box(43, 53, 184, 138);
