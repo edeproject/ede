@@ -141,7 +141,7 @@ void AppletManager::clear(Panel *p) {
  * Must be called so widget can actually be added to FLTK parent. Widgets will be created and
  * added to the group.
  */
-void AppletManager::fill_group(Panel *p) {
+void AppletManager::fill_group(Panel *p, PanelResource *res) {
 	AListIter it = applet_list.begin(), ite = applet_list.end();
 	AppletData *applet;
 
@@ -150,6 +150,15 @@ void AppletManager::fill_group(Panel *p) {
 
 		/* allocate memory for widget and append it to the group */
 		applet->awidget = applet->create_func();
+
+		/* call configuration function if needed */
+		if(res && applet->awidget->type() == EDE_PANEL_APPLET_TYPE) {
+			/* a hackery to make compiler happy */
+			typedef AppletWidget<Fl_Widget> AW;
+			AW *tmp = (AW*)(applet->awidget);
+			tmp->configure(res);
+		}
+
 		p->add(applet->awidget);
 	}
 }

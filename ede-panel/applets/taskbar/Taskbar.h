@@ -22,28 +22,33 @@
 #define __TASKBAR_H__
 
 #include <FL/Fl_Group.H>
+#include <edelib/Resource.h>
 #include "Applet.h"
+
+EDELIB_NS_USING(Resource)
 
 /* if button should be on visible on all workspaces */
 #define ALL_WORKSPACES -1
 
 class TaskButton;
+typedef AppletWidget<Fl_Group> WidgetGroup;
 
-class Taskbar : public Fl_Group {
+class Taskbar : public WidgetGroup {
 public:
 	TaskButton *curr_active, *prev_active;
 	bool fixed_layout;           /* fixed or streched layout of buttons */
 	bool ignore_workspace_value; /* should all windows be shown ignoring workspace value */
-
 	int  current_workspace;
 
 	bool visible_on_current_workspace(int ws) {
-		return ignore_workspace_value || (ws == ALL_WORKSPACES) || (ws == current_workspace);
+		return (ignore_workspace_value == true) || (ws == ALL_WORKSPACES) || (ws == current_workspace);
 	}
 
 public:
 	Taskbar();
 	~Taskbar();
+	
+	void configure(Resource *res);
 
 	void update_task_buttons(void);
 	void update_workspace_change(void);

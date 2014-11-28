@@ -30,7 +30,6 @@
 #include <edelib/Debug.h>
 #include <edelib/List.h>
 #include <edelib/WindowXid.h>
-#include <edelib/Resource.h>
 #include <edelib/Util.h>
 #include <edelib/Netwm.h>
 #include <edelib/Directory.h>
@@ -233,7 +232,7 @@ Panel::Panel() : PanelWindow(300, 30, "ede-panel") {
 	screen_x = screen_y = screen_w = screen_h = screen_h_half = 0;
 	width_perc = 100;
 	can_move_widgets = false;
-	can_drag = true;
+	can_drag = false;
 
 	box(FL_UP_BOX); 
 	read_config();
@@ -273,9 +272,9 @@ void Panel::read_config(void) {
 	
 	char buf[128];
 	if(r.get("Panel", "applets", buf, sizeof(buf)))
-		load_applets(buf);
+		load_applets(buf, &r);
 	else
-		load_applets();
+		load_applets(0, &r);
 }
 
 void Panel::save_config(void) {
@@ -482,14 +481,63 @@ void Panel::update_size_and_pos(bool create_xid, bool update_strut, int X, int Y
 	}
 }
 
+#define PANEL_DRAG_KEY (Fl::event_state() == FL_ALT)
+
 int Panel::handle(int e) {
+#if 0
+	can_drag = PANEL_DRAG_KEY;
+	switch(e) {
+		case FL_PUSH:
+			if(can_drag) {
+				return 1;
+			}
+			/* fallthrough */
+
+		case FL_DRAG:
+			if(can_drag) {
+				cursor(FL_CURSOR_MOVE);
+				/* snap it to the top or bottom, depending on pressed mouse location */
+				if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
+					position(x(), screen_y);
+					if(width_perc >= 100)
+						set_strut(PANEL_STRUT_TOP);
+					vpos = PANEL_POSITION_TOP;
+				} 
+
+				if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
+					position(x(), screen_h - h());
+					if(width_perc >= 100)
+						set_strut(PANEL_STRUT_BOTTOM);
+					vpos = PANEL_POSITION_BOTTOM;
+				}
+
+				return 1;
+			}
+			/* fallthrough */
+
+		case FL_RELEASE:
+			if(can_drag) {
+				return 1;
+			}
+			/* fallthrough */
+
+		case FL_KEYBOARD:
+			/* do not quit on Esc key */
+			if(Fl::event_key() == FL_Escape)
+				return 1;
+			/* fallthrough */
+	}
+#endif
+	return Fl_Window::handle(e);
+
+#if 0
 	switch(e) {
 		case FL_PUSH:
 			clicked = Fl::belowmouse();
 
 			if(clicked == this)
 				clicked = 0;
-			else if(clicked && clicked->takesevents())
+			else if(clicked && Fl::event_inside(clicked) && clicked->takesevents())
 				clicked->handle(e);
 
 			/* record push position for possible child drag */
@@ -498,33 +546,32 @@ int Panel::handle(int e) {
 			return 1;
 
 		case FL_DRAG: {
-			if(!can_drag) return 1;
-
-			/* are moving the panel; only vertical moving is supported */
-			cursor(FL_CURSOR_MOVE);
-
 			/* send drag events to children and do not drag panel in the mean time */
-			if(clicked && clicked != this) {
-				clicked->handle(e);
-				return 0;
-			}
+			if(clicked && clicked != this && Fl::event_inside(clicked) && clicked->takesevents()) {
+				cursor(FL_CURSOR_MOVE);
+				return clicked->handle(e);
+			} else {
+				printf("XXXy %p %p\n", clicked, this);
+				if(!can_drag) return 1;
+				cursor(FL_CURSOR_MOVE);
 
-			/* snap it to the top or bottom, depending on pressed mouse location */
-			if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
-				position(x(), screen_y);
-				if(width_perc >= 100)
-					set_strut(PANEL_STRUT_TOP);
-				vpos = PANEL_POSITION_TOP;
-			} 
-				
-			if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
-				position(x(), screen_h - h());
-				if(width_perc >= 100)
-					set_strut(PANEL_STRUT_BOTTOM);
-				vpos = PANEL_POSITION_BOTTOM;
-			}
+				/* snap it to the top or bottom, depending on pressed mouse location */
+				if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
+					position(x(), screen_y);
+					if(width_perc >= 100)
+						set_strut(PANEL_STRUT_TOP);
+					vpos = PANEL_POSITION_TOP;
+				} 
 
-			return 1;
+				if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
+					position(x(), screen_h - h());
+					if(width_perc >= 100)
+						set_strut(PANEL_STRUT_BOTTOM);
+					vpos = PANEL_POSITION_BOTTOM;
+				}
+
+				return 1;
+			}
 		}
 
 		case FL_RELEASE:
@@ -543,11 +590,11 @@ int Panel::handle(int e) {
 				return 1;
 			/* fallthrough */
 	}
-
 	return Fl_Window::handle(e);
+#endif
 }
 
-void Panel::load_applets(const char *applets) {
+void Panel::load_applets(const char *applets, PanelResource *res) {
 	mgr.clear(this);
 
 	/*
@@ -604,7 +651,7 @@ void Panel::load_applets(const char *applets) {
 	}
 
 	free(dup);
-	mgr.fill_group(this);
+	mgr.fill_group(this, res);
 }
 
 /* TODO: can be better */

@@ -21,6 +21,9 @@
 #ifndef __APPLET_H__
 #define __APPLET_H__
 
+#include <edelib/Resource.h>
+
+EDELIB_NS_USING_AS(Resource, PanelResource)
 class Fl_Widget;
 
 /* stored version in each applet shared library in case interface get changed */
@@ -40,15 +43,6 @@ enum {
 	EDE_PANEL_APPLET_OPTION_ALIGN_RIGHT = (1 << 4)
 };
 
-struct AppletInfo {
-	const char    *name;
-	const char    *klass_name;
-	const char    *version;
-	const char    *icon;
-	const char    *author;
-	unsigned long  options;
-};
-
 /*
  * each applet want to inherit this class if would like to exchange data with panel
  * NOTE: new things could be added in future, but that will be reflected through EDE_PANEL_APPLET_INTERFACE_VERSION
@@ -59,6 +53,23 @@ public:
 	AppletWidget(int X, int Y, int W, int H, const char *l = 0) : T(X, Y, W, H, l) {
 		T::type(EDE_PANEL_APPLET_TYPE);
 	}
+
+	virtual ~AppletWidget() { }
+
+	/*
+	 * Override this method to access panel configuration. Note that 'PanelResource' object
+	 * will be destroyed after applets are loaded, so do not hold reference to this address.
+	 */
+	virtual void configure(PanelResource *conf) { }
+};
+
+struct AppletInfo {
+	const char    *name;
+	const char    *klass_name;
+	const char    *version;
+	const char    *icon;
+	const char    *author;
+	unsigned long  options;
 };
 
 /* module stuff */

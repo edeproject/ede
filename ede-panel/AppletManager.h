@@ -29,8 +29,8 @@ class  Panel;
 class  Fl_Widget;
 struct AppletData;
 
-typedef edelib::list<AppletData*> AList;
-typedef edelib::list<AppletData*>::iterator AListIter;
+typedef EDELIB_NS_PREPEND(list<AppletData*>) AList;
+typedef EDELIB_NS_PREPEND(list<AppletData*>::iterator) AListIter;
 
 class AppletManager {
 private:
@@ -38,7 +38,7 @@ private:
 public:
 	bool load(const char *path);
 	void clear(Panel *p);
-	void fill_group(Panel *p);
+	void fill_group(Panel *p, PanelResource *res);
 	void unfill_group(Panel *p);
 
 	bool get_applet_options(Fl_Widget *o, unsigned long &opts);

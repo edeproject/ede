@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (C) 2012-2013 Sanel Zukan
+ * Copyright (C) 2012-2014 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -100,12 +100,8 @@ static void net_event_cb(int action, Window xid, void *data) {
 	}
 }
 
-Taskbar::Taskbar() : Fl_Group(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
+Taskbar::Taskbar() : WidgetGroup(0, 0, 40, 25), curr_active(NULL), prev_active(NULL) {
 	end();
-
-	//box(FL_FLAT_BOX);
-	//color(FL_RED);
-
 	fixed_layout = false;
 	ignore_workspace_value = false;
 
@@ -119,6 +115,15 @@ Taskbar::~Taskbar() {
 	netwm_callback_remove(net_event_cb);
 }
 
+void Taskbar::configure(Resource *res) {
+	E_RETURN_IF_FAIL(res != NULL);
+	
+	res->get("Taskbar", "fixed_layout", fixed_layout, false);
+	res->get("Taskbar", "all_desktops", ignore_workspace_value, false);
+
+	if(visible()) update_task_buttons();
+}
+
 void Taskbar::update_task_buttons(void) {
 	Window *wins;
 	int ws, nwins = netwm_window_get_all_mapped(&wins);
@@ -127,10 +132,10 @@ void Taskbar::update_task_buttons(void) {
 		if(children() > 0) clear();
 		return;
 	}
-
+	
 	TaskButton *b;
 	bool need_full_redraw = false;
-
+	
 	for(int i = 0, found; i < children(); i++) {
 		found = 0;
 		b = (TaskButton*)child(i);
@@ -187,19 +192,25 @@ void Taskbar::update_task_buttons(void) {
 		
 		/* create button */
 		ws = netwm_window_get_workspace(wins[i]);
+		
+		b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
+		b->set_window_xid(wins[i]);
+		b->update_title_from_xid();
+		b->update_image_from_xid();
+		b->set_workspace(ws);
+		/* mark it hidden by default */
+		b->hide();
+
+		/* catch the name changes */
+		XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
+		b->callback((Fl_Callback*)button_cb, this);
+
+		/* add it to our list */
+		add(b);
+
 		if(visible_on_current_workspace(ws)) {
-			b = new TaskButton(0, 0, DEFAULT_CHILD_W, 25);
-			b->set_window_xid(wins[i]);
-			b->update_title_from_xid();
-			b->update_image_from_xid();
-			b->set_workspace(ws);
-
-			/* catch the name changes */
-			XSelectInput(fl_display, wins[i], PropertyChangeMask | StructureNotifyMask);
-			b->callback((Fl_Callback*)button_cb, this);
-			add(b);
-
-			need_full_redraw = true;
+			//need_full_redraw = true;
+			b->show();
 		}
 	}
 
@@ -211,9 +222,9 @@ void Taskbar::update_task_buttons(void) {
 }
 
 void Taskbar::update_workspace_change(void) {
-	if(children() < 1) return;
+	if(!children()) return;
 	current_workspace = netwm_workspace_get_current();
-
+	
 	TaskButton *b;
 	for(int i = 0; i < children(); i++) {
 		b = (TaskButton*)child(i);
