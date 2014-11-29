@@ -269,13 +269,11 @@ void Panel::read_config(void) {
 		if(hider) hider->hide();
 	}
 
-#if 0	
 	char buf[128];
 	if(r.get("Panel", "applets", buf, sizeof(buf)))
 		load_applets(buf, &r);
 	else
 		load_applets(0, &r);
-#endif
 }
 
 void Panel::save_config(void) {
