@@ -23,8 +23,6 @@
 #include <string.h>
 #include <limits.h>
 #include <FL/Fl.H>
-#include <FL/fl_draw.H>
-#include <FL/x.H>
 #include <X11/Xproto.h>
 
 #include <edelib/Debug.h>
@@ -80,7 +78,8 @@ static int xerror_handler(Display *d, XErrorEvent *e) {
 	if(e->request_code == X_GetImage)
 		return 0;
 
-	char buf[128];
+	/* keep it static as no multiple panels will be run */
+	static char buf[128];
 
 	/* 
 	 * construct the similar message format like X11 is using by default, but again, little
@@ -269,12 +268,14 @@ void Panel::read_config(void) {
 	} else {
 		if(hider) hider->hide();
 	}
-	
+
+#if 0	
 	char buf[128];
 	if(r.get("Panel", "applets", buf, sizeof(buf)))
 		load_applets(buf, &r);
 	else
 		load_applets(0, &r);
+#endif
 }
 
 void Panel::save_config(void) {
@@ -406,8 +407,8 @@ void Panel::show(void) {
 	if(shown()) return;
 
 	/* 
-	 * hush known FLTK bug with XGetImage; a lot of errors will be print when menu icons goes
-	 * outside screen; this also make ede-panel, at some point, unresponsible
+	 * hush known FLTK bug with XGetImage; a lot of errors will be printed when menu icons goes
+	 * outside screen; this can stuck ede-panel at some point
 	 */
 	XSetErrorHandler((XErrorHandler) xerror_handler);
 	update_size_and_pos(true, true);
@@ -481,53 +482,7 @@ void Panel::update_size_and_pos(bool create_xid, bool update_strut, int X, int Y
 	}
 }
 
-#define PANEL_DRAG_KEY (Fl::event_state() == FL_ALT)
-
 int Panel::handle(int e) {
-#if 0
-	can_drag = PANEL_DRAG_KEY;
-	switch(e) {
-		case FL_PUSH:
-			if(can_drag) {
-				return 1;
-			}
-			/* fallthrough */
-
-		case FL_DRAG:
-			if(can_drag) {
-				cursor(FL_CURSOR_MOVE);
-				/* snap it to the top or bottom, depending on pressed mouse location */
-				if(Fl::event_y_root() <= screen_h_half && y() > screen_h_half) {
-					position(x(), screen_y);
-					if(width_perc >= 100)
-						set_strut(PANEL_STRUT_TOP);
-					vpos = PANEL_POSITION_TOP;
-				} 
-
-				if(Fl::event_y_root() > screen_h_half && y() < screen_h_half) {
-					position(x(), screen_h - h());
-					if(width_perc >= 100)
-						set_strut(PANEL_STRUT_BOTTOM);
-					vpos = PANEL_POSITION_BOTTOM;
-				}
-
-				return 1;
-			}
-			/* fallthrough */
-
-		case FL_RELEASE:
-			if(can_drag) {
-				return 1;
-			}
-			/* fallthrough */
-
-		case FL_KEYBOARD:
-			/* do not quit on Esc key */
-			if(Fl::event_key() == FL_Escape)
-				return 1;
-			/* fallthrough */
-	}
-#endif
 	return Fl_Window::handle(e);
 
 #if 0
