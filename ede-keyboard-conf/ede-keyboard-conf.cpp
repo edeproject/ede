@@ -125,9 +125,17 @@ static void fetch_current_layout(String &current) {
 	XFree(vd.variant);
 }
 
+static int sort_cmp(const void *a, const void *b) {
+	XkbRF_VarDescPtr first = (XkbRF_VarDescPtr)a;
+	XkbRF_VarDescPtr second = (XkbRF_VarDescPtr)b;
+	
+	return strcmp(first->desc, second->desc);
+}
+
 static XkbRF_RulesPtr fetch_all_layouts(const String &current) {
-	char		   buf[256];
-	XkbRF_RulesPtr xkb_rules = NULL;
+	char buf[256];
+	XkbRF_RulesPtr        xkb_rules = NULL;
+	XkbRF_DescribeVarsPtr layouts = NULL;
 
 	/* try to locate rules file */
 	for(int i = 0; x11_dirs[i]; i++) {
@@ -144,13 +152,18 @@ static XkbRF_RulesPtr fetch_all_layouts(const String &current) {
 		E_WARNING(E_STRLOC ": Unable to load keyboard rules file\n");
 		return NULL;
 	}
-
+	
 done:
-	for(int i = 0; i < xkb_rules->layouts.num_desc; i++) {
-		snprintf(buf, sizeof(buf), "%s\t%s", xkb_rules->layouts.desc[i].name, xkb_rules->layouts.desc[i].desc);
+	layouts = &xkb_rules->layouts;
+
+	/* sort them */
+	qsort(layouts->desc, layouts->num_desc, sizeof(XkbRF_VarDescRec), sort_cmp);
+
+	for(int i = 0; i < layouts->num_desc; i++) {
+		snprintf(buf, sizeof(buf), "%s\t%s", layouts->desc[i].name, layouts->desc[i].desc);
 		layout_browser->add(buf);
 
-		if(current == xkb_rules->layouts.desc[i].name) {
+		if(current == layouts->desc[i].name) {
 			/* Fl_Browser counts items from 1 */
 			layout_browser->select(i + 1);
 		}
