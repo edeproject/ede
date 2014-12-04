@@ -43,6 +43,10 @@ static Fl_Spinner*       timeout_val;
 static Fl_Double_Window* main_win;
 static Fl_Double_Window* preview_win;
 
+static bool hacks_sorter(SaverHack* const& a, SaverHack* const& b) {
+	return a->name < b->name;
+}
+
 static void dpms_enable_cb(Fl_Widget* w, void* s) {
 	Fl_Check_Button* o = (Fl_Check_Button*)w;
 	SaverPrefs* sp = (SaverPrefs*)s;
@@ -170,6 +174,7 @@ int main(int argc, char **argv) {
 				if(sp->curr_hack >= sp->hacks.size())
 					sp->curr_hack = 0;
 
+				sp->hacks.sort(hacks_sorter);
 				HackListIter it = sp->hacks.begin(), it_end = sp->hacks.end();
 				for(int i = 1; it != it_end; ++it, i++) {
 					saver_list->add((*it)->name.c_str(), 0, 0);
