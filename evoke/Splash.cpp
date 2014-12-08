@@ -94,7 +94,7 @@ void Splash::show(void) {
 void Splash::run(void) {
 	E_ASSERT(slist != NULL);
 
-	if(!show_splash) {
+	if(!show_splash || (splash_theme && (strcasecmp(splash_theme->c_str(), "none") == 0))) {
 		while(next_client_nosplash()) 
 			;
 		return;
