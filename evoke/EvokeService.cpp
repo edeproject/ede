@@ -66,8 +66,11 @@ EDELIB_NS_USING(EDBUS_SYSTEM)
 #endif
 
 /* stolen from xfce's xfsm-shutdown-helper */
-#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__)
 # define POWEROFF_CMD  "/sbin/shutdown -p now"
+# define REBOOT_CMD    "/sbin/shutdown -r now"
+#elif defined(__OpenBSD__)
+# define POWEROFF_CMD  "/sbin/shutdown -hp now"
 # define REBOOT_CMD    "/sbin/shutdown -r now"
 #elif defined(sun) || defined(__sun)
 # define POWEROFF_CMD  "/usr/sbin/shutdown -i 5 -g 0 -y"

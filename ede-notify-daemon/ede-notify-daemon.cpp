@@ -1,7 +1,7 @@
 /*
  * $Id: ede-panel.cpp 3330 2012-05-28 10:57:50Z karijes $
  *
- * Copyright (C) 2012 Sanel Zukan
+ * Copyright (C) 2012-2014 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -83,7 +83,8 @@ static bool server_running;
  * list of server capabilities
  * check all available on: http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html
  */
-static const char *server_caps[] = {"actions", "body", "icon-static", 0};
+// static const char *server_caps[] = {"actions", "body", "icon-static", 0};
+static const char *server_caps[] = {"body", "icon-static", 0};
 
 /* increased every time new notification window is shown; must be less than UINT_MAX */
 static unsigned int notify_id;
@@ -128,22 +129,40 @@ static bool get_int_coordinate(const char *n, EdbusDict &hints, int &c) {
 	return true;
 }
 
-static void show_window(unsigned int id,
-						const char *app_name,
-						const char *app_icon,
-						const char *summary,
-						const char *body,
-						int expire_timeout,
-						EdbusDict &hints)
+static void show_or_update_window(bool update_only,
+								  unsigned int id,
+								  const char *app_name,
+								  const char *app_icon,
+								  const char *summary,
+								  const char *body,
+								  int expire_timeout,
+								  EdbusDict &hints)
 {
 	byte_t u = get_urgency_level(hints);
+	NotifyWindow *win = NULL;
 
-	NotifyWindow *win = new NotifyWindow();
+	if(update_only) {
+		E_DEBUG(E_STRLOC ": Requesting update\n");
+		/* try to find existing window with given id */
+		Fl_Window *wi;
+		NotifyWindow *tmp;
 
-	if(!empty_str(summary))
-		win->set_summary(summary);
-	if(!empty_str(body))
-		win->set_body(body);
+		for(wi = Fl::first_window(); wi; wi = Fl::next_window(wi)) {
+			if(wi->type() != NOTIFYWINDOW_TYPE) continue;
+			tmp = (NotifyWindow*)wi;
+			if(tmp->get_id() == id) {
+				E_DEBUG(E_STRLOC ": Requesting update - win found\n");
+				win = tmp;
+				break;
+			}
+		}
+	}
+	
+	/* window not found or new window requested */
+	if(!win) win = new NotifyWindow();
+
+	if(!empty_str(summary)) win->set_summary(summary);
+	if(!empty_str(body)) win->set_body(body);
 	if(empty_str(app_icon)) {
 		switch(u) {
 			case URGENCY_CRITICAL:
@@ -158,7 +177,7 @@ static void show_window(unsigned int id,
 
 	win->set_icon(app_icon);
 	win->set_id(id);
-	win->set_expire(expire_timeout);
+	win->set_expire(expire_timeout, update_only);
 
 	/* according to spec, both coordinates must exist so window can be positioned as desired */
 	int X, Y;
@@ -198,7 +217,8 @@ static void show_window(unsigned int id,
 	}
 
 	/* we are already running loop, so window will handle events */
-	win->show();
+	if(!win->shown()) 
+		win->show();
 }
 
 static int handle_notify(EdbusConnection *dbus, const EdbusMessage *m) {
@@ -209,7 +229,7 @@ static int handle_notify(EdbusConnection *dbus, const EdbusMessage *m) {
 
 	const char *app_name, *app_icon, *summary, *body;
 	app_name = app_icon = summary = body = NULL;
-	unsigned int replaces_id;
+	unsigned int replaces_id, id;
 	int expire_timeout;
 
 	EdbusMessage::const_iterator it = m->begin();
@@ -246,19 +266,33 @@ static int handle_notify(EdbusConnection *dbus, const EdbusMessage *m) {
 	E_RETURN_VAL_IF_FAIL(it->is_int32(), 0);
 	expire_timeout = it->to_int32();
 
-	/* specification dumb stuff: what if we got UINT_MAX?? here we will reverse to first ID */
-	if(++notify_id == UINT_MAX) notify_id = 1;
-
-	if(replaces_id) {
-		//replaces_id == notify_id;
+	if(replaces_id > 0) {
+		id = replaces_id;
 	} else {
-		show_window(notify_id, app_name, app_icon, summary, body, expire_timeout, hints);
+		/* by the spec, if we got MAX, reversing will be just fine */
+		if(++notify_id == UINT_MAX) notify_id = 1;
+		id = notify_id;
 	}
 
-	/* reply sent to client */
+	/* this should never happen */
+	E_RETURN_VAL_IF_FAIL(id != 0, 0);
+
+	show_or_update_window(replaces_id > 0, id, 
+						  app_name, app_icon, summary, body, expire_timeout, hints);
+#if 0
+	if(replaces_id) {
+		update_window(replaces_id, app_name, app_icon, summary, body, expire_timeout, hints);
+		sent_id = replaces_id;
+	} else {
+		show_window(notify_id, app_name, app_icon, summary, body, expire_timeout, hints);
+		sent_id = notify_id;
+	}
+#endif
+
+	/* reply sent to client, with used window id */
 	EdbusMessage reply;
 	reply.create_reply(*m);
-	reply << EdbusData::from_uint32(replaces_id);
+	reply << EdbusData::from_uint32(id);
 	dbus->send(reply);
 
 	return 1;
@@ -357,7 +391,6 @@ int main(int argc, char **argv) {
 
 	dbus.register_object(NOTIFICATIONS_DBUS_PATH);
 	dbus.method_callback(notifications_dbus_method_cb, &dbus);
-	//dbus.signal_callback(notifications_dbus_signal_cb, &dbus);
 	dbus.setup_listener_with_fltk();
 	server_running = true;
 

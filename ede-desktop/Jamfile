@@ -31,4 +31,4 @@ SOURCE = ede-desktop.cpp
 
 ObjectC++Flags $(SOURCE) : $(EDELIB_DBUS_INCLUDE) ;
 EdeProgram  ede-desktop : $(SOURCE) ;
-LinkAgainst ede-desktop : $(EDELIB_DBUS_LIB) $(XSHAPE_LIBS) ;
+LinkAgainst ede-desktop : $(EDELIB_DBUS_LIB) $(XSHAPE_LIBS) $(PTHREAD_LIBS) ;

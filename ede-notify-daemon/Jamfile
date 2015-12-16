@@ -13,7 +13,7 @@ SubDir TOP ede-notify-daemon ;
 SOURCE = ede-notify-daemon.cpp NotifyWindow.cpp ;
 
 EdeProgram ede-notify-daemon : $(SOURCE) ;
-LinkAgainst ede-notify-daemon : $(EDELIB_DBUS_LIB) ;
+LinkAgainst ede-notify-daemon : $(EDELIB_DBUS_LIB) $(PTHREAD_LIBS) ;
 
 TranslationStrings  locale : $(SOURCE) ;
 

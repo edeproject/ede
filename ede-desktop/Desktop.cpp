@@ -421,7 +421,6 @@ DesktopIcon *Desktop::read_desktop_file(const char *path, const char *base, Desk
 	return ret;
 }
 
-
 void Desktop::arrange_icons(void) {
 	int lw = icon_opts ? icon_opts->label_maxwidth : 75;
 	int X = (lw / 5) + 10;

@@ -102,11 +102,11 @@ const char* bold_keywords[] = {
 
 #define BOLD_KEYWORDS_LEN 8
 
-void close_cb(Fl_Widget*, void*) {
+static void close_cb(Fl_Widget*, void*) {
 	win->hide();
 }
 
-char* prepare_style(char* txt, int len) {
+static char* prepare_style(char* txt, int len) {
 	// paint all with 'A' style at startup
 	char* style = new char[len + 1];
 	memset(style, 'A', len - 1);
@@ -114,12 +114,13 @@ char* prepare_style(char* txt, int len) {
 
 	// find bold keywords and paint them
 	char* p = 0;
+	unsigned int ln;
 	for(int i = 0; i < BOLD_KEYWORDS_LEN; i++) {
 		p = strstr(txt, bold_keywords[i]);
-		if(!p)
-			continue;
-		unsigned int len = strlen(bold_keywords[i]);
-		memset(&style[p - txt], 'B', len);
+		if(!p) continue;
+
+		ln = strlen(bold_keywords[i]);
+		memset(&style[p - txt], 'B', ln);
 	}
 
 	return style;

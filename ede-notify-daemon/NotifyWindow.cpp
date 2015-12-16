@@ -115,7 +115,8 @@ void NotifyWindow::set_icon(const char *img) {
 }
 
 void NotifyWindow::set_body(const char *s) {
-	summary->resize(summary->x(), summary->y() - (summary->h() / 2), summary->w(), summary->h());
+	summary->resize(65, 10, 185, 25);
+	//summary->resize(summary->x(), summary->y() - (summary->h() / 2), summary->w(), summary->h());
 
 	body->value(s);
 	body->show();
@@ -137,7 +138,7 @@ void NotifyWindow::resize(int X, int Y, int W, int H) {
 	 * do not call further if window is shown: different strategy is needed as every time
 	 * window is re-configured, this will be called
 	 */
-	if(shown()) return;
+	//if(shown()) return;
 
 	/* resize summary if needed */
 	if(summary->size() > 0) {

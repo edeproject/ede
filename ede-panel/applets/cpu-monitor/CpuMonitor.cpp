@@ -36,13 +36,17 @@
 # include <string.h> /* strncmp */
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
 # include <sys/param.h>
 # include <sys/sysctl.h>
-# if __FreeBSD_version < 500101
-#  include <sys/dkstat.h>
+# if defined(__OpenBSD__)
+#  include <sys/sched.h>
 # else
-#  include <sys/resource.h>
+#  if __FreeBSD_version < 500101
+#   include <sys/dkstat.h>
+#  else
+#   include <sys/resource.h>
+#  endif
 # endif
 # include <sys/stat.h>
 #endif

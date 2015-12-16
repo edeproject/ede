@@ -99,7 +99,7 @@ if $(CURL_CFLAGS) || $(CURL_LIBS) {
 		curlmulti.c 
 		lock_pthread.c ;
 
-	ObjectCcFlags $(CURL_TRANSPORT_SRC) : $(CURL_CFLAGS) ;
+	ObjectCcFlags $(CURL_TRANSPORT_SRC) : $(XMLRPC_C_FLAGS) $(CURL_CFLAGS) ;
 
 	UTIL_SRC = 
 		casprintf.c 

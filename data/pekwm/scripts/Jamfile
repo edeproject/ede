@@ -10,4 +10,4 @@
 
 SubDir TOP data pekwm scripts ;
 
-InstallProgram "$(PEKWM_DATA_DIR)/scripts" : pekwm_themeset.sh pekwm_ws_menu.sh ;
+# InstallProgram "$(PEKWM_DATA_DIR)/scripts" : pekwm_themeset.sh pekwm_ws_menu.sh ;
