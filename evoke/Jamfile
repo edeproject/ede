@@ -27,7 +27,7 @@ ObjectC++Flags Splash.cpp : -DEDEWM_HAVE_NET_SPLASH ;
 ObjectC++Flags evoke.cpp : -DUSE_SIGHUP ;
 
 ObjectC++Flags EvokeService.cpp : $(EDELIB_DBUS_INCLUDE) ;
-LinkAgainstAsFirst evoke : $(EDELIB_DBUS_LIB) ;
+LinkAgainstAsFirst evoke : $(EDELIB_DBUS_LIB) $(PTHREAD_LIBS) ;
 
 EdeProgram evoke : $(SOURCE) ;
 
