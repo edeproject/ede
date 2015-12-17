@@ -42,7 +42,6 @@
 
 EDELIB_NS_USING(Config)
 EDELIB_NS_USING(Resource)
-EDELIB_NS_USING(RES_SYS_ONLY)
 EDELIB_NS_USING(file_remove)
 EDELIB_NS_USING(file_test)
 EDELIB_NS_USING(str_trim)
@@ -59,11 +58,7 @@ EDELIB_NS_USING(EDBUS_SESSION)
 EDELIB_NS_USING(EDBUS_SYSTEM)
 #endif
 
-#ifdef USE_LOCAL_CONFIG
-# define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
-#else
-# define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff), RES_SYS_ONLY)
-#endif
+#define CONFIG_GET_STRVAL(object, section, key, buff) object.get(section, key, buff, sizeof(buff))
 
 /* stolen from xfce's xfsm-shutdown-helper */
 #if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__)
