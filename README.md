@@ -1,14 +1,14 @@
 # EDE
 
 EDE is small and fast desktop environment that uses
-http://www.fltk.org[FLTK Toolkit]. For more details and philosophy
+[FLTK toolkit](http://www.fltk.org). For more details and philosophy
 behind it, check
-http://equinox-project.org/wiki/AboutEde[about EDE on our wiki].
+[about EDE on our wiki](http://equinox-project.org/wiki/AboutEde).
 
 ## Build requirements
 
-EDE is using FLTK toolkit from http://www.fltk.org[www.fltk.org]. At
-the time of this writing, latest stable tree is 1.3.x.
+EDE is using FLTK toolkit from http://www.fltk.org. At the time of
+this writing, the latest stable tree is 1.3.x.
 
 Since FLTK lacks many things needed for developing a full *nix desktop
 environment, we have developed a small add-on library called
@@ -52,4 +52,4 @@ In order to build and install EDE do the following steps:
 6. jam install
 
 Please note how this document is quick and short tutorial about EDE installation. For more details,
-please check http://equinox-project.org/wiki/InstallationHowTo[Installation Howto] on our wiki.
+please check [Installation Howto](http://equinox-project.org/wiki/InstallationHowTo) on our wiki.
