@@ -8,7 +8,7 @@
 # GNU General Public License version 2 or newer.
 # See COPYING for details.
 
-SVG_CONVERTOR = "rsvg" ;
+SVG_CONVERTOR = "rsvg-convert" ;
 
 # SvgToPng [target-png] : [source-svg] : [width] : [height] ;
 rule SvgToPng
