@@ -1,7 +1,5 @@
 /*
- * $Id: ede-panel.cpp 3463 2012-12-17 15:49:33Z karijes $
- *
- * Copyright (C) 2013 Sanel Zukan
+ * Copyright (C) 2013-2016 Sanel Zukan
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,9 +57,10 @@ EDELIB_NS_USING(EDBUS_SYSTEM)
 #define UPOWER_INTERFACE "org.freedesktop.UPower.Device"
 #define UPOWER_PATH      "/org/freedesktop/UPower"
 
-#define BATTERY_MIN         10 /* minimal time before icon to BATTERY_CAUTION_IMG was changed */
-#define BATTERY_IMG         "battery"
-#define BATTERY_CAUTION_IMG "battery-caution"
+#define BATTERY_MIN           10 /* minimal time before icon to BATTERY_CAUTION_IMG was changed */
+#define BATTERY_IMG           "battery"
+#define BATTERY_CAUTION_IMG   "battery-caution"
+#define BATTERY_NO_CONNECTION "dialog-warning"
 
 typedef list<EdbusObjectPath> BatteryList;
 typedef list<EdbusObjectPath>::iterator BatteryListIt;
@@ -83,15 +82,18 @@ private:
 public:
 	BatteryMonitor() : Fl_Box(0, 0, 30, 25), bimg(0) { 
 		box(FL_FLAT_BOX);
-		scan_and_init();
+		if(!scan_and_init()) {
+			set_icon(0, true);
+			tooltip(_("Failed to query battery status"));
+		}
 	}
 
 	EdbusConnection &connection() { return con; }
 
 	void tooltip_printf(const char *fmt, ...);
-	void scan_and_init(void);
+	int  scan_and_init(void);
 	int  update_icon_and_tooltip(void);
-	void set_icon(double percentage);
+	void set_icon(double percentage, bool failure = false);
 
 	BatteryList &get_batteries(void);
 };
@@ -186,19 +188,19 @@ void BatteryMonitor::tooltip_printf(const char *fmt, ...) {
 	tooltip(tip);
 }
 
-void BatteryMonitor::scan_and_init(void) {
-	if(con.connected()) return;
-	E_RETURN_IF_FAIL(con.connect(EDBUS_SYSTEM));
+int BatteryMonitor::scan_and_init(void) {
+	if(con.connected()) return 1;
+	E_RETURN_VAL_IF_FAIL(con.connect(EDBUS_SYSTEM), 0);
 	
 	/* get battery devices */
 	EdbusMessage msg, reply;
 	msg.create_method_call(UPOWER_SERVICE, UPOWER_PATH, UPOWER_SERVICE, "EnumerateDevices");
 
-	E_RETURN_IF_FAIL(con.send_with_reply_and_block(msg, 1000, reply));
-	E_RETURN_IF_FAIL(reply.size() == 1);
+	E_RETURN_VAL_IF_FAIL(con.send_with_reply_and_block(msg, 1000, reply), 0);
+	E_RETURN_VAL_IF_FAIL(reply.size() == 1, 0);
 
 	EdbusMessage::const_iterator it = reply.begin();
-	E_RETURN_IF_FAIL(it->is_array());
+	E_RETURN_VAL_IF_FAIL(it->is_array(), 0);
 
 	EdbusList arr = it->to_array();
 	it = arr.begin();
@@ -222,6 +224,7 @@ void BatteryMonitor::scan_and_init(void) {
 	/* ready to receive signals */
 	con.signal_callback(signal_cb, this);
 	con.setup_listener_with_fltk();
+	return 1;
 }
 
 int BatteryMonitor::update_icon_and_tooltip(void) {
@@ -255,16 +258,22 @@ int BatteryMonitor::update_icon_and_tooltip(void) {
 
 #define BATTERY_MIN 10	
 
-void BatteryMonitor::set_icon(double percentage) {
+void BatteryMonitor::set_icon(double percentage, bool failure) {
 	if(E_UNLIKELY(IconLoader::inited() == false)) {
 		char buf[8];
-
 		snprintf(buf, sizeof(buf), "%i%%", (int)percentage);
 		copy_label(buf);
+
 		return;
 	}
-	
-	const char *icon = (percentage >= BATTERY_MIN) ? BATTERY_IMG : BATTERY_CAUTION_IMG;
+
+	const char *icon;
+
+	if(failure)
+		icon = BATTERY_NO_CONNECTION;
+	else
+		icon = (percentage >= BATTERY_MIN) ? BATTERY_IMG : BATTERY_CAUTION_IMG;
+
 	/* small check to prevent image loading when not needed */
 	if(icon == bimg) return;
 
