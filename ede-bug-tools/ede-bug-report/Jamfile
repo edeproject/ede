@@ -50,16 +50,20 @@ if $(CURL_CFLAGS) || $(CURL_LIBS) {
 		$(PTHREAD_CFLAGS)
 		$(PTHREAD_LIBS) ;
 
+	MkDir $(XMLRPC_C_LIB_DIR) ;
+
 	# xmlrpc-c related builds
 	rule XmlrpcLibrary {
 		local lib = [ FDirName $(XMLRPC_C_LIB_DIR) $(<) ] ;
+		local libe = $(lib:S=$(SUFLIB)) ;
 
 		# compile it with OPTIMFLAGS got from top Jamconfig
 		ObjectCcFlags $(>) : $(XMLRPC_C_FLAGS) $(OPTIMFLAGS) ;
 		StaticLibrary $(lib) : $(>) ;
 
+		LocalDepends $(libe) : $(XMLRPC_C_LIB_DIR) ;
 		# make sure libraries are build first
-		LocalDepends $(BINARY) : $(lib:S=$(SUFLIB)) ;
+		LocalDepends $(BINARY) : $(libe) ;
 	}
 
 	SEARCH_SOURCE += [ FDirName $(XMLRPC_C_SRC_PATH) src ] ;
