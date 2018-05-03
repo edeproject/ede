@@ -215,12 +215,11 @@ int main(int argc, char **argv) {
 		Fl_Button* close_button = new Fl_Button(435, 224, 90, 25, _("&Close"));
 		close_button->callback(close_cb);
 
-		// check_button somehow steal focus
-		close_button->take_focus();
-
 	win->end();
 	window_center_on_screen(win);
 	win->show(argc, argv);
+	// check_button somehow steal focus
+	close_button->take_focus();
 
 	Fl::run();
 
