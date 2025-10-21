@@ -21,6 +21,7 @@ EDELIB_NS_USING(alert)
 #ifdef HAVE_XKBRULES
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <FL/Fl.H>
 #include <FL/x.H>
 #include <FL/Fl_Button.H>

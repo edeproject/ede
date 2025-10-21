@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_RGB_Image.H>
+#include <FL/Fl_Group.H>
 #include <FL/fl_draw.H>
 #include <edelib/Debug.h>
 
