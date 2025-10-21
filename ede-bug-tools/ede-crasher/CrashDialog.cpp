@@ -86,7 +86,7 @@ static void write_host_info(void) {
 	txt_buf->append("---------- short summary ----------\n");
 
 	/* make first X version */
-	char buf[256];
+	char buf[512];
 	snprintf(buf, sizeof(buf), "\nX version: %s %i %i.%i", XServerVendor(fl_display), XVendorRelease(fl_display), XProtocolVersion(fl_display), XProtocolRevision(fl_display));
 	txt_buf->append(buf);
 
