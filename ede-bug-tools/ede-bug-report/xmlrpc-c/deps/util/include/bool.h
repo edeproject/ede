@@ -5,6 +5,7 @@
    collision.
 */
 
+#if __STDC_VERSION__ < 202311L
 #ifndef __cplusplus
 /* At least the GNU compiler defines __bool_true_false_are_defined */
 #ifndef __bool_true_false_are_defined
@@ -15,4 +16,4 @@ typedef enum {
 } bool;
 #endif
 #endif
-
+#endif
