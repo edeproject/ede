@@ -37,7 +37,7 @@ public:
     const CfgParserKeyType get_type(void) const { return _type; }
 
     //! @brief Parses value and sets Key value.
-    virtual void parse_value(const std::string &value) throw (std::string&) { }
+    virtual void parse_value(const std::string &value) { }
 
 protected:
     CfgParserKeyType _type; //!< Key type.
@@ -82,7 +82,6 @@ public:
      */
     virtual void
     parse_value(const std::string &value_str)
-        throw (std::string&)
     {
         double value;
         char *endptr;
@@ -131,8 +130,7 @@ public:
     //! @brief CfgParserKeyBool destructor.
     virtual ~CfgParserKeyBool(void) { }
 
-    virtual void parse_value(const std::string &value) throw (std::string&);
-
+    virtual void parse_value(const std::string &value);
 private:
     bool &_set; //! Reference to stored parsed value in.
     const bool _default; //! Default value.
@@ -155,8 +153,7 @@ public:
     //! @brief CfgParserKeyString destructor.
     virtual ~CfgParserKeyString(void) { }
 
-    virtual void parse_value(const std::string &value) throw (std::string&);
-
+    virtual void parse_value(const std::string &value);
 private:
     std::string &_set; //!< Reference to store parsed value in.
     const std::string _default; //!< Default value.
@@ -179,8 +176,7 @@ public:
     //! @brief CfgParserKeyPath destructor.
     virtual ~CfgParserKeyPath(void) { }
 
-    virtual void parse_value(const std::string &value) throw (std::string&);
-
+    virtual void parse_value(const std::string &value);
 private:
     std::string &_set; //!< Reference to store parsed value in.
     std::string _default; //!< Default value.

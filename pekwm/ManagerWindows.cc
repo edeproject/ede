@@ -42,7 +42,7 @@ const unsigned long RootWO::EXPECTED_DESKTOP_NAMES_LENGTH = 256;
  * Hint window constructor, creates window and sets supported
  * protocols.
  */
-HintWO::HintWO(Window root, bool replace) throw (std::string&)
+HintWO::HintWO(Window root, bool replace)
     : PWinObj()
 {
     if (_instance) {

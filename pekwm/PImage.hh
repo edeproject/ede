@@ -23,7 +23,7 @@
 class PImage {
 public:
     //! @brief PImage constructor.
-    PImage(Display *dpy, const std::string &path="") throw(LoadException&);
+    PImage(Display *dpy, const std::string &path="");
     //! @brief PImage destructor.
     virtual ~PImage(void);
 
