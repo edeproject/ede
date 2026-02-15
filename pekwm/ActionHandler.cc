@@ -593,7 +593,7 @@ ActionHandler::actionSendToWorkspace(PDecor *decor, int direction)
     uint per_row = Config::instance()->getWorkspacesPerRow();
     uint cur_row = ws->getRow(), row_min = ws->getRowMin(), row_max = ws->getRowMax();
 
-    switch (direction) {
+    switch ((unsigned int) direction) {
     case WORKSPACE_LEFT:
     case WORKSPACE_PREV:
         if (ws->getActive() > row_min) {
