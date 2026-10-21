@@ -13,4 +13,5 @@ SubDir TOP ede-calc ;
 SOURCE = SciCalc.cpp Main.cpp ;
 
 FltkProgramBare ede-calc : $(SOURCE) ;
+LinkAgainst ede-calc : $(LIBM) ;
 EdeManual doc/ede-calc.txt : doc/ede-calc.jpg ;

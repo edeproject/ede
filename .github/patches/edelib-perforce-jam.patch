@@ -1,0 +1,114 @@
+diff --git a/Jamrules b/Jamrules
+index 228203b..e0fd5cc 100644
+--- a/Jamrules
++++ b/Jamrules
+@@ -120,10 +120,15 @@ rule MakeLibrary
+ {
+ 	local path = [ FFileName $(TOP) $(EDELIB_LIBDIR) $(1) ] ;
+ 
++	# Perforce Jam's Library/SharedLibrary keep the name they are given and
++	# do not add SOURCE_GRIST. Install* looks the product up with FGristFiles,
++	# so the built target has to carry that grist or `jam install` cannot make it.
++	local built = [ FGristFiles $(path) ] ;
++
+ 	if $(SHARED) = 1 {
+-		SharedLibrary $(path) : $(2) ;
++		SharedLibrary $(built) : $(2) ;
+ 	} else {
+-		Library $(path) : $(2) ;
++		Library $(built) : $(2) ;
+ 	}
+ 
+ 	if $(3) != "noinstall" {
+@@ -248,33 +253,36 @@ rule SharedObjects
+ rule MakeTest
+ {
+ 	local lpath ;
++	# Same grist InstallProgram applies, so `jam install` builds the tool
++	# instead of looking for a target Perforce Jam never defined.
++	local target = [ FGristFiles $(1) ] ;
+ 
+ 	lpath = [ FDirName $(TOP)/$(EDELIB_LIBDIR) ] ;
+ 
+-	Main $(1) : $(2) ;
++	Main $(target) : $(2) ;
+ 
+ 	if $(SHARED) = 1 {
+ 		if $(OS) = "SOLARIS" {
+ 			# network libraries are in libxnet
+-			LinkAgainst $(1) : -lxnet ;
++			LinkAgainst $(target) : -lxnet ;
+ 		}
+ 	}
+ 
+ 	if $(4) = "use-dbus" && $(DBUS_CFLAGS) {
+ 		if $(SHARED) = 1 { 
+-			LinkAgainst $(1) : -L$(lpath) -l$(EDELIB_DBUS) -l$(EDELIB_GUI) -l$(EDELIB) $(DBUS_LIBS) ;
++			LinkAgainst $(target) : -L$(lpath) -l$(EDELIB_DBUS) -l$(EDELIB_GUI) -l$(EDELIB) $(DBUS_LIBS) ;
+ 		} else {
+-			LinkAgainst $(1) : -L$(lpath) -l$(EDELIB_DBUS) -l$(EDELIB_GUI) -l$(EDELIB) ;
++			LinkAgainst $(target) : -L$(lpath) -l$(EDELIB_DBUS) -l$(EDELIB_GUI) -l$(EDELIB) ;
+ 		}
+ 	} else {
+-		LinkAgainst $(1) : -L$(lpath) -l$(EDELIB_GUI) -l$(EDELIB) ;
++		LinkAgainst $(target) : -L$(lpath) -l$(EDELIB_GUI) -l$(EDELIB) ;
+ 	}
+ 
+ 	if $(3) {
+-		LinkAgainst $(1) : $(3) ;
++		LinkAgainst $(target) : $(3) ;
+ 	}
+ 
+-	LinkAgainst $(1) : $(STDLIB) $(DMALLOC_LIBC) $(DMALLOC_LIBCXX) ;
++	LinkAgainst $(target) : $(STDLIB) $(DMALLOC_LIBC) $(DMALLOC_LIBCXX) ;
+ }
+ 
+ # MakeInstallPrivate <location-dir> : <targets> : <opt-file-mode> : <opt-chown> : <opt-chgrp> : <opt-name> ;
+diff --git a/pc/edelib-dbus.pc.in b/pc/edelib-dbus.pc.in
+index c75f760..0ce8f10 100644
+--- a/pc/edelib-dbus.pc.in
++++ b/pc/edelib-dbus.pc.in
+@@ -1,6 +1,6 @@
+ prefix=@prefix@
+ exec_prefix=${prefix}
+-libdir=${libdir}
++libdir=@libdir@
+ includedir=${prefix}/include
+ 
+ Name: edelib-dbus
+diff --git a/pc/edelib-gui-no-images.pc.in b/pc/edelib-gui-no-images.pc.in
+index 0e4b031..94534da 100644
+--- a/pc/edelib-gui-no-images.pc.in
++++ b/pc/edelib-gui-no-images.pc.in
+@@ -1,6 +1,6 @@
+ prefix=@prefix@
+ exec_prefix=${prefix}
+-libdir=${libdir}
++libdir=@libdir@
+ includedir=${prefix}/include
+ 
+ Name: edelib-gui
+diff --git a/pc/edelib-gui.pc.in b/pc/edelib-gui.pc.in
+index faa8118..39c222c 100644
+--- a/pc/edelib-gui.pc.in
++++ b/pc/edelib-gui.pc.in
+@@ -1,6 +1,6 @@
+ prefix=@prefix@
+ exec_prefix=${prefix}
+-libdir=${libdir}
++libdir=@libdir@
+ includedir=${prefix}/include
+ 
+ Name: edelib-gui
+diff --git a/pc/edelib.pc.in b/pc/edelib.pc.in
+index 17e5d9e..866e02f 100644
+--- a/pc/edelib.pc.in
++++ b/pc/edelib.pc.in
+@@ -1,6 +1,6 @@
+ prefix=@prefix@
+ exec_prefix=${prefix}
+-libdir=${libdir}
++libdir=@libdir@
+ includedir=${prefix}/include
+ edelibdocdir=${prefix}/share/doc/edelib-@EDELIB_API_VERSION@
+ 

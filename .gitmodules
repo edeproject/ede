@@ -1,0 +1,3 @@
+[submodule "external/edelib"]
+	path = external/edelib
+	url = https://github.com/edeproject/edelib.git

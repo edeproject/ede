@@ -1,0 +1,27 @@
+name: Linux
+
+on:
+  push:
+    branches: [master, main, add/action]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: linux-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  jam:
+    name: Ubuntu 24.04 (system Jam)
+    runs-on: ubuntu-24.04
+    env:
+      PREFIX: ${{ github.workspace }}/.prefix
+
+    steps:
+      - name: Checkout EDE and edelib
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build with system Jam
+        run: bash .github/workflows/linux.sh
